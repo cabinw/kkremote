@@ -7,7 +7,7 @@ struct LabApp: App {
     @Environment(\.scenePhase) private var scenePhase
     init() {
         #if os(macOS)
-        if CommandLine.arguments.contains("--self-test") { LabSelfTest.run() }
+        if CommandLine.arguments.contains("--self-test") || CommandLine.arguments.contains("--lab-role") { LabCLI.run() }
         #endif
     }
     var body: some Scene {
@@ -49,6 +49,12 @@ struct LabView: View {
                             TextField("主机地址，如 Mac 的 Tailscale IP 或 name.sgponte", text: $model.host)
                                 .textFieldStyle(.roundedBorder)
                             TextField("信令端口", text: $model.port).textFieldStyle(.roundedBorder)
+                            Picker("媒体路径", selection: $model.mediaRoute) {
+                                ForEach(MediaRoute.allCases) { Text($0.title).tag($0) }
+                            }.disabled(model.running)
+                            if model.mediaRoute == .ponteUDP {
+                                TextField("主机 UDP 媒体端口", text: $model.mediaPort).textFieldStyle(.roundedBorder).disabled(model.running)
+                            }
                             if model.mode == "host" && model.running {
                                 Text("本次配对码（仅交给测试接收端）").font(.caption)
                                 Text(model.pairingKey).font(.system(.caption, design: .monospaced)).textSelection(.enabled)
@@ -56,7 +62,7 @@ struct LabView: View {
                             Picker("测试网络标签", selection: $model.networkLabel) {
                                 ForEach(["LAN", "Tailscale", "Surge Ponte", "本机回环（不代表远程网络）"], id: \.self) { Text($0) }
                             }
-                            Text("网络标签用于记录；此基线版仍需核对 ICE 实际选路，不能据此判断隧道直连或中继。")
+                            Text("Ponte 模式将媒体送到填写的主机名和主机配置的 UDP 端口；两端需选择相同模式。网络标签仅用于记录，无法判断 Ponte 外层通道。")
                                 .font(.caption).foregroundStyle(.secondary)
                             HStack {
                                 Button("连接主机") { model.connect() }.buttonStyle(.borderedProminent).disabled(model.running)
@@ -73,6 +79,9 @@ struct LabView: View {
                                 ForEach(["1280×720", "1920×1080", "2560×1440"], id: \.self) { Text($0) }
                             }
                             Picker("帧率", selection: $model.fps) { Text("30 fps").tag(30); Text("60 fps").tag(60) }
+                            Picker("测试内容", selection: $model.pattern) {
+                                ForEach(PatternKind.allCases) { Text($0.title).tag($0) }
+                            }
                             Picker("视频码率上限", selection: $model.megabits) {
                                 ForEach([8, 20, 25, 45, 80, 120], id: \.self) { Text("\($0) Mbps").tag($0) }
                             }
@@ -90,6 +99,13 @@ struct LabView: View {
                             metric("解码帧数", "\(model.sample.framesDecoded)")
                             metric("候选类型", model.sample.candidatePair)
                             metric("实际编码", model.sample.codec)
+                            metric("解码 / 抖动缓冲", "\(ms(model.sample.decodeMilliseconds)) / \(ms(model.sample.jitterBufferMilliseconds))")
+                            metric("丢帧 / 冻结", "\(model.sample.framesDropped) / \(model.sample.freezeCount)")
+                            if let bridge = model.sample.bridge {
+                                metric("UDP 认证 / 探测 RTT", "\(bridge.authenticated ? "已通过" : "等待") / \(ms(bridge.probeRTTMilliseconds))")
+                                metric("UDP 队列丢弃 / 超时分片", "\(bridge.queueDrops) / \(bridge.expiredAssemblies)")
+                                Text(bridge.endpointScope).font(.caption).foregroundStyle(.secondary)
+                            }
                             Text("往返时间不等于输入到显示延迟。此版本不采集桌面、不注入键鼠、不验证 HEVC/HDR。")
                                 .font(.caption).foregroundStyle(.secondary)
                         }.padding(4)
@@ -147,27 +163,5 @@ struct RemoteVideo: UIViewRepresentable {
     }
     func updateUIView(_ view: RTCMTLVideoView, context: Context) { context.coordinator.bind(track, to: view) }
     static func dismantleUIView(_ view: RTCMTLVideoView, coordinator: VideoCoordinator) { coordinator.track?.remove(view) }
-}
-#endif
-
-#if os(macOS)
-enum LabSelfTest {
-    static func run() -> Never {
-        let viewer = LabModel()
-        viewer.startLocalDemo()
-        let deadline = Date().addingTimeInterval(35)
-        while Date() < deadline {
-            RunLoop.main.run(until: Date().addingTimeInterval(0.1))
-            if let error = viewer.error { print("SELF_TEST_FAILED: \(error)"); viewer.stop(); exit(1) }
-            if viewer.decodedFrames >= 60, viewer.sample.controlRTTMilliseconds != nil {
-                let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys]
-                let metrics = (try? encoder.encode(viewer.sample)).flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
-                print("SELF_TEST_PASSED frames=\(viewer.decodedFrames) metrics=\(metrics)")
-                viewer.stop(); exit(0)
-            }
-        }
-        print("SELF_TEST_FAILED timeout status=\(viewer.status) decoded=\(viewer.decodedFrames)")
-        viewer.stop(); exit(1)
-    }
 }
 #endif

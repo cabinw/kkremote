@@ -4,11 +4,18 @@ import CoreGraphics
 import CoreText
 import WebRTC
 
+enum PatternKind: String, Codable, CaseIterable, Identifiable {
+    case grid, noise
+    var id: String { rawValue }
+    var title: String { self == .grid ? "移动网格 / 文字" : "高复杂度噪声（压力测试）" }
+}
+
 struct LabPreset: Codable, Equatable {
     var width = 1920
     var height = 1080
     var fps = 60
     var megabits = 25
+    var pattern = PatternKind.grid
 }
 
 final class TestPattern {
@@ -19,6 +26,7 @@ final class TestPattern {
     private var timer: DispatchSourceTimer?
     private var pool: CVPixelBufferPool?
     private var frameNumber = 0
+    private var noiseImages: [CGImage] = []
 
     init(source: RTCVideoSource, preset: LabPreset) throws {
         self.source = source
@@ -34,6 +42,26 @@ final class TestPattern {
             throw LabError.message("无法创建测试画面缓冲池")
         }
         source.adaptOutputFormat(toWidth: Int32(preset.width), height: Int32(preset.height), fps: Int32(preset.fps))
+        if preset.pattern == .noise {
+            // Precompute deterministic detail; no per-frame random-number loop or unbounded allocation.
+            var seed: UInt32 = 0x4b4b524d
+            for _ in 0..<3 {
+                var pixels = [UInt32](repeating: 0, count: preset.width * preset.height)
+                for i in pixels.indices {
+                    seed ^= seed << 13; seed ^= seed >> 17; seed ^= seed << 5
+                    pixels[i] = (seed & 0x00ffffff) | 0xff000000
+                }
+                let data = pixels.withUnsafeBytes { Data($0) }
+                guard let provider = CGDataProvider(data: data as CFData),
+                      let image = CGImage(width: preset.width, height: preset.height, bitsPerComponent: 8,
+                        bitsPerPixel: 32, bytesPerRow: preset.width * 4, space: CGColorSpaceCreateDeviceRGB(),
+                        bitmapInfo: CGBitmapInfo(rawValue: CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.noneSkipFirst.rawValue),
+                        provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent) else {
+                    throw LabError.message("无法创建高复杂度测试源")
+                }
+                noiseImages.append(image)
+            }
+        }
     }
 
     func start() {
@@ -63,14 +91,18 @@ final class TestPattern {
             CVPixelBufferUnlockBaseAddress(pixelBuffer, []); return
         }
         let width = CGFloat(preset.width), height = CGFloat(preset.height)
-        context.setFillColor(CGColor(gray: 0.055, alpha: 1))
-        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
-        let shift = frameNumber % 64
-        for y in stride(from: 0, to: preset.height, by: 64) {
-            for x in stride(from: -64, to: preset.width, by: 64) {
-                let value = CGFloat(((x / 64 + y / 64 + frameNumber / 120) % 7 + 7) % 7) / 9
-                context.setFillColor(CGColor(red: value, green: 0.18, blue: 0.7 - value / 2, alpha: 1))
-                context.fill(CGRect(x: x + shift, y: y, width: 61, height: 61))
+        if preset.pattern == .noise {
+            context.draw(noiseImages[frameNumber % noiseImages.count], in: CGRect(x: 0, y: 0, width: width, height: height))
+        } else {
+            context.setFillColor(CGColor(gray: 0.055, alpha: 1))
+            context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+            let shift = frameNumber % 64
+            for y in stride(from: 0, to: preset.height, by: 64) {
+                for x in stride(from: -64, to: preset.width, by: 64) {
+                    let value = CGFloat(((x / 64 + y / 64 + frameNumber / 120) % 7 + 7) % 7) / 9
+                    context.setFillColor(CGColor(red: value, green: 0.18, blue: 0.7 - value / 2, alpha: 1))
+                    context.fill(CGRect(x: x + shift, y: y, width: 61, height: 61))
+                }
             }
         }
         context.setFillColor(CGColor(gray: 0.03, alpha: 1))

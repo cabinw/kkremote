@@ -5,10 +5,25 @@ command -v xcodegen >/dev/null || { echo 'Install XcodeGen: brew install xcodege
 xcodegen generate
 mode="${1:-mac}"
 case "$mode" in
-  mac)
-    xcodebuild -project KKRemote.xcodeproj -scheme KKRemoteLabMac -configuration Debug \
+  mac|mac-release)
+    configuration=Debug
+    if [[ "$mode" == mac-release ]]; then configuration=Release; fi
+    # Release + hardened runtime requires app and embedded frameworks to share a real signing identity.
+    # Debug keeps ad-hoc local builds available without a developer account.
+    identity=-
+    if [[ "$mode" == mac-release ]]; then
+      identity="${MAC_SIGN_IDENTITY:-Apple Development}"
+    fi
+    xcodebuild -project KKRemote.xcodeproj -scheme KKRemoteLabMac -configuration "$configuration" \
       -destination 'platform=macOS' -derivedDataPath .build/DerivedData \
-      -clonedSourcePackagesDirPath .build/SourcePackages CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= build
+      -clonedSourcePackagesDirPath .build/SourcePackages CODE_SIGN_IDENTITY="$identity" build
+    if [[ "$mode" == mac-release ]]; then
+      app=.build/DerivedData/Build/Products/Release/KKRemoteLabMac.app
+      codesign --force --sign "$identity" --timestamp=none "$app/Contents/Frameworks/WebRTC.framework"
+      codesign --force --sign "$identity" --timestamp=none --options runtime \
+        --entitlements Config/TransportLabMac.entitlements "$app"
+      codesign --verify --deep --strict "$app"
+    fi
     ;;
   simulator)
     xcodebuild -project KKRemote.xcodeproj -scheme KKRemoteLab -configuration Debug \
@@ -23,5 +38,5 @@ case "$mode" in
       -clonedSourcePackagesDirPath .build/SourcePackages -archivePath .build/KKRemoteLab.xcarchive \
       -allowProvisioningUpdates CURRENT_PROJECT_VERSION="$BUILD_NUMBER" archive
     ;;
-  *) echo 'Usage: scripts/build-lab.sh mac|simulator|archive' >&2; exit 1 ;;
+  *) echo 'Usage: scripts/build-lab.sh mac|mac-release|simulator|archive' >&2; exit 1 ;;
 esac

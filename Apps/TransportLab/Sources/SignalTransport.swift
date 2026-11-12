@@ -9,6 +9,9 @@ struct SignalMessage: Codable {
     var candidate: String? = nil
     var mid: String? = nil
     var line: Int32? = nil
+    var bridgeVersion: Int? = nil
+    var mediaPort: UInt16? = nil
+    var mediaKey: String? = nil
 }
 
 /// TLS-PSK is only the lab's authenticated signaling transport.
