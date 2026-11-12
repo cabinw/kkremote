@@ -62,7 +62,7 @@ struct LabView: View {
                             if model.mode == "host" && model.running {
                                 Text("本次配对码（仅交给测试接收端）").font(.caption)
                                 Text(model.pairingKey).font(.system(.caption, design: .monospaced)).textSelection(.enabled)
-                            } else { SecureField("粘贴主机显示的完整配对码", text: $model.pairingKey).textFieldStyle(.roundedBorder) }
+                            } else { SecureField("配对码（6 位数字或完整密钥）", text: $model.pairingKey).textFieldStyle(.roundedBorder) }
                             Picker("测试网络标签", selection: $model.networkLabel) {
                                 ForEach(["LAN", "Tailscale", "Surge Ponte", "本机回环（不代表远程网络）"], id: \.self) { Text($0) }
                             }

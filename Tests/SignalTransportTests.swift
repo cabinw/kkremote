@@ -14,10 +14,10 @@ enum SignalTransportTests {
         return condition()
     }
 
-    static func runPair(wrongKey: Bool) throws {
+    static func runPair(wrongKey: Bool, shortCode: Bool = false) throws {
         let server = SignalTransport(), client = SignalTransport()
         defer { server.stop(); client.stop() }
-        let key = try SignalTransport.newPairingKey()
+        let key = try shortCode ? "482691" : SignalTransport.newPairingKey()
         let port = UInt16.random(in: 49000...59000)
         var listening = false, ready = false, failed = false
         var received: [SignalMessage] = []
@@ -71,6 +71,7 @@ enum SignalTransportTests {
         require(rejects(path), "persistent host rejects invalid key")
         print("PASS: persistent key reuse, exclusive creation, private file checks")
         try runPair(wrongKey: false)
+        try runPair(wrongKey: false, shortCode: true)
         try runPair(wrongKey: true)
         print("SIGNAL_TESTS_PASSED")
     }

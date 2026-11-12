@@ -2,13 +2,12 @@ import Foundation
 import VideoToolbox
 import WebRTC
 
-/// Upstream's macOS H.264 factory advertises Level 3.1, regardless of Mac hardware.
-/// Advertise High 5.1 via the factory only after VT accepts a hardware session at our maximum preset.
+/// SDK defaults can limit macOS to Level 3.1 and iOS peers to 4.1, below 1440p60.
+/// Advertise High 5.1 on either platform only after VT accepts a hardware session at our maximum preset.
 /// Negotiation still chooses the peer's supported level; no SDP profile rewriting.
 enum LabH264Capabilities {
     static let codecs: [RTCVideoCodecInfo] = {
         let defaults = RTCVideoEncoderFactoryH264().supportedCodecs()
-        #if os(macOS)
         guard VTIsHardwareDecodeSupported(kCMVideoCodecType_H264) else { return defaults }
         var session: VTCompressionSession?
         let specification = [kVTVideoEncoderSpecification_RequireHardwareAcceleratedVideoEncoder: true] as CFDictionary
@@ -26,10 +25,6 @@ enum LabH264Capabilities {
               VTCompressionSessionPrepareToEncodeFrames(session) == noErr else { return defaults }
         return [RTCVideoCodecInfo(name: "H264", parameters: ["profile-level-id": "640c33",
             "level-asymmetry-allowed": "1", "packetization-mode": "1"])] + defaults
-        #else
-        // The iOS SDK already derives levels from the device; don't inflate mobile capabilities.
-        return defaults
-        #endif
     }()
 }
 

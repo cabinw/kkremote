@@ -18,6 +18,8 @@ work.mkdir(parents=True, mode=0o700)
 output = root / '.build/live-testing' / run
 output.mkdir(parents=True, mode=0o700)
 key = work / 'pairing.key'
+key.write_text('482691')
+key.chmod(0o600)
 
 def port(kind):
     with socket.socket(socket.AF_INET, kind) as s:
@@ -72,7 +74,7 @@ try:
         assert len(list(work.glob('host.session-*.json'))) == 3
         assert (work / 'host.json').exists(), 'Live telemetry snapshot missing'
         assert len(json.loads((work / 'host.json').read_text())['samples']) <= 5
-        print('PASS: two authenticated video sessions, wrong key rejected, same host PID/key, session reports retained')
+        print('PASS: two authenticated video sessions with one six-digit code, wrong key rejected, same host PID/key, session reports retained')
 finally:
     if host is not None and host.poll() is None:
         host.terminate()

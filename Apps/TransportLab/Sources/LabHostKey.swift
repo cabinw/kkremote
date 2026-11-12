@@ -37,7 +37,7 @@ enum LabHostKey {
             throw LabError.message("配对码文件内容无效")
         }
         let key = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard Data(base64Encoded: key)?.count == 32 else { throw LabError.message("配对码文件内容无效") }
+        _ = try SignalTransport.pairingSecret(key)
         return key
     }
 }
