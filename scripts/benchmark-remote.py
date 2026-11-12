@@ -22,7 +22,7 @@ parser.add_argument('--duration', type=int, default=40)
 parser.add_argument('--resolution', choices=['1280x720', '1920x1080', '2560x1440'], default='1920x1080')
 parser.add_argument('--fps', type=int, choices=[30, 60], default=60)
 parser.add_argument('--mbps', type=int, default=25)
-parser.add_argument('--pattern', choices=['grid', 'noise'], default='grid')
+parser.add_argument('--pattern', choices=['grid', 'noise', 'desktop'], default='grid')
 args = parser.parse_args()
 if not 10 <= args.duration <= 600 or not 1 <= args.mbps <= 120 or not args.remote_app.startswith('/'):
     parser.error('duration 10...600, Mbps 1...120, absolute remote-app required')

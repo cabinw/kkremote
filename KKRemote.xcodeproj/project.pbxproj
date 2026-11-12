@@ -30,6 +30,7 @@
 		9102BDD6B600260E89F9281C /* LabModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78AC53B2E4A155687286D160 /* LabModel.swift */; };
 		A65BAB909E3C4D35C4859ABB /* LabHostKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC89DE1484D683E8F558EC2E /* LabHostKey.swift */; };
 		AFD9F57D8807FA30D65CB9AA /* LabHostKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC89DE1484D683E8F558EC2E /* LabHostKey.swift */; };
+		B449AD90ED4C74B58DAFB353 /* DesktopPattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = 685AE22A1ABE008C10BB9776 /* DesktopPattern.swift */; };
 		B8829874F7AC99761E0D114D /* WebRTC-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = F8AAC35B8C3A874444E7BAE4 /* WebRTC-LICENSE.txt */; };
 		BB365B5972D060AA8FCB76C5 /* LabApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36D6D3B59DA9FC7C09A7BC10 /* LabApp.swift */; };
 		BC64FA3DC65AA15DB4B0A274 /* MediaDatagram.swift in Sources */ = {isa = PBXBuildFile; fileRef = D006CB48F875AE64D3F8C885 /* MediaDatagram.swift */; };
@@ -38,6 +39,7 @@
 		CF26473C2028205C29AF3014 /* LabH264Factory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A10C974E08842CA72688791 /* LabH264Factory.swift */; };
 		D94A691C7924525A2CFDF7F3 /* TestPattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D315A4735594B08A7C94F94 /* TestPattern.swift */; };
 		DB1F20B2B65F40161CAC10B7 /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = 4EDA93A13EA3315BB904C42D /* WebRTC */; };
+		DF5BC1E91CDACFEEA843504F /* DesktopPattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = 685AE22A1ABE008C10BB9776 /* DesktopPattern.swift */; };
 		E29F093B5951967BB63DBB43 /* TestPattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D315A4735594B08A7C94F94 /* TestPattern.swift */; };
 		E9E3D391311379AA13355AB1 /* PeerEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41FBBE491584DE1A643FDD12 /* PeerEngine.swift */; };
 		F632A9CE96534DD5CC5DD34F /* DatagramBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E611FAAC103A193A4412063 /* DatagramBridge.swift */; };
@@ -53,6 +55,7 @@
 		3C547F1880EFAB4D73276855 /* KKRemoteLab.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = KKRemoteLab.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		41FBBE491584DE1A643FDD12 /* PeerEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerEngine.swift; sourceTree = "<group>"; };
 		48CAAFAAFE8C6DE9642FA41E /* WebRTCRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebRTCRuntime.swift; sourceTree = "<group>"; };
+		685AE22A1ABE008C10BB9776 /* DesktopPattern.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopPattern.swift; sourceTree = "<group>"; };
 		6D315A4735594B08A7C94F94 /* TestPattern.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestPattern.swift; sourceTree = "<group>"; };
 		78AC53B2E4A155687286D160 /* LabModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabModel.swift; sourceTree = "<group>"; };
 		7A10C974E08842CA72688791 /* LabH264Factory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabH264Factory.swift; sourceTree = "<group>"; };
@@ -100,6 +103,7 @@
 			isa = PBXGroup;
 			children = (
 				0E611FAAC103A193A4412063 /* DatagramBridge.swift */,
+				685AE22A1ABE008C10BB9776 /* DesktopPattern.swift */,
 				7BF48D0FE7946D410215DE8F /* EncoderTelemetry.swift */,
 				36D6D3B59DA9FC7C09A7BC10 /* LabApp.swift */,
 				E121061760F554354AB40CB3 /* LabCLI.swift */,
@@ -260,6 +264,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F632A9CE96534DD5CC5DD34F /* DatagramBridge.swift in Sources */,
+				DF5BC1E91CDACFEEA843504F /* DesktopPattern.swift in Sources */,
 				849B04AAFA0C8FC665FCF5D6 /* EncoderTelemetry.swift in Sources */,
 				49E7ED9DDC03729340AD423E /* LabApp.swift in Sources */,
 				257AF460DF6AECD8A4E76D36 /* LabCLI.swift in Sources */,
@@ -281,6 +286,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7B7FA50F7D6A5379E4EFF624 /* DatagramBridge.swift in Sources */,
+				B449AD90ED4C74B58DAFB353 /* DesktopPattern.swift in Sources */,
 				8EC1114DC3C4309DCF6E8A3E /* EncoderTelemetry.swift in Sources */,
 				BB365B5972D060AA8FCB76C5 /* LabApp.swift in Sources */,
 				43047BF2507DB56BB0705268 /* LabCLI.swift in Sources */,

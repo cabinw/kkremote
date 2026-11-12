@@ -2,6 +2,7 @@ import Foundation
 import WebRTC
 
 struct EncoderSample: Codable {
+    var submittedFrames = 0
     var encodedFrames = 0
     var submissionErrors = 0
     var requestedFPS: UInt32 = 0
@@ -26,6 +27,7 @@ final class EncoderTelemetry {
     private var sizes: [Int] = [], times: [Double] = []
     func begin(_ frame: RTCVideoFrame) {
         lock.lock(); defer { lock.unlock() }
+        state.submittedFrames += 1
         let now = ProcessInfo.processInfo.systemUptime
         let expired = submitted.filter { now - $0.value >= 2 }.map(\.key)
         state.unmatchedExpired += expired.count

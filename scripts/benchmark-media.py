@@ -19,7 +19,7 @@ parser.add_argument('--receive-depth', type=int, choices=[1, 16], default=16)
 parser.add_argument('--rates', default='20,45,80,120')
 parser.add_argument('--duration', type=int, default=40)
 parser.add_argument('--resolution', choices=['1280x720', '1920x1080', '2560x1440'], default='2560x1440')
-parser.add_argument('--pattern', choices=['grid', 'noise'], default='noise')
+parser.add_argument('--pattern', choices=['grid', 'noise', 'desktop'], default='noise')
 args = parser.parse_args()
 rates = [int(x) for x in args.rates.split(',')]
 if args.duration < 20 or any(x < 1 or x > 120 for x in rates):

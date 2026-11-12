@@ -6,6 +6,8 @@
 
 最新手机结果见 [iPhone 构建 5 压力测试](docs/testing/iPhone构建5压力测试.md)：异地 Ponte 1440p 视频已通；相同噪声源的约三分钟对照中，45 / 20 Mbps 上限分别得到 18.94 / 12.65 fps 实际编码帧率。20 Mbps 减少了重传与控制延迟尖峰，但流畅度未改善，两档均未达到 60 fps。五分钟双 Mac 对照见 [Ponte 接收调度优化](docs/testing/Ponte接收调度优化.md)；上一轮实现与 LAN / Ponte 高码率复测见 [高码率排队优化](docs/testing/高码率排队优化.md)；v1 历史记录见 [Ponte 固定 UDP 实验](docs/testing/Ponte固定UDP实验.md)。TestFlight 已调整为内部测试，流程与构建记录见 [TestFlight 与传输实验](docs/testing/TestFlight与传输实验.md)；构建 2 不含 Ponte 适配器。
 
+随后完成 [编码丢帧定位与桌面滚动验证](docs/testing/编码丢帧与桌面滚动.md)：原始噪声的主要降帧发生在进入编码器前；新增明确标注的合成桌面滚动源，在 1440p、20 Mbps 上限的两分钟本机回环中达到 60 fps，实际视频约 3.73 Mbps。用户继续用构建 5 经异地 Ponte 接收，反馈“60fps 流畅”；原始噪声压力目标仍未通过。
+
 ## 项目方向
 
 - **窗口优先**：从应用窗口开始，处理菜单、弹层、尺寸变化、焦点和输入映射。
@@ -72,6 +74,7 @@ M0–M4 的窗口功能版不依赖整屏模式或多主机功能。阶段范围
 
 | 文档 | 内容 |
 |---|---|
+| [编码丢帧与桌面滚动](docs/testing/编码丢帧与桌面滚动.md) | 编码提交计数、直接编码器探针、1440p 桌面式滚动与构建 5 复测 |
 | [iPhone 构建 5 压力测试](docs/testing/iPhone构建5压力测试.md) | 1440p 异地 Ponte 连通性、45 Mbps 噪声源的降帧、重传与延迟基线 |
 | [Ponte 接收调度优化](docs/testing/Ponte接收调度优化.md) | UDP socket、丢包分类、五分钟 LAN/Ponte 对照与剩余降帧问题 |
 | [高码率排队优化](docs/testing/高码率排队优化.md) | v2 封装、pacing、编码突发观测、LAN / Ponte 对照与限制 |
