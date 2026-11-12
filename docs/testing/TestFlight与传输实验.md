@@ -67,7 +67,7 @@ scripts/upload-testflight.sh
 
 归档在 `.build/KKRemoteLab.xcarchive`。上传使用 `app-store-connect`，保留外部测试资格，未启用 internal-only 分发。上传成功仅表示文件被接收；还需等待 Apple 处理，检查邮件及 TestFlight 中的最终构建状态。
 
-本次构建 1 已上传，但 Apple 后续处理以 `ITMS-90683` 拒绝：SDK 引用摄像头 API，需要用途说明。构建 2 已补充摄像头和麦克风用途说明，明确当前实验不会启用这些设备。不要为了通过检查虚构采集功能。
+本次构建 1 已上传，但 Apple 后续处理以 `ITMS-90683` 拒绝：SDK 引用摄像头 API，需要用途说明。构建 2 已补充摄像头和麦克风用途说明，明确当前实验不会启用这些设备，并于 2026-11-12 通过 Apple 上传后的处理检查。不要为了通过检查虚构采集功能。
 
 已知非阻断警告：上游 XCFramework 包不含 WebRTC 的 dSYM，上传可能提示 `Upload Symbols Failed`。App 自身有调试符号；WebRTC 内部崩溃的符号化仍受影响。正式稳定性阶段应补齐与该二进制 UUID 对应的符号，或采用可复现的源码构建。
 
@@ -77,11 +77,13 @@ scripts/upload-testflight.sh
 
 1. 完成 Beta 描述、反馈邮箱和审核联系人；不要求 App 登录。
 2. 按实际实现填写加密问卷。Network.framework 信令使用系统 TLS；WebRTC 包含自身的标准 DTLS/SRTP 实现，不能笼统申报为“仅使用 Apple 系统加密”。也不要未经判断直接设置 `ITSAppUsesNonExemptEncryption=false`。
-3. 建立专用外部测试群组，仅加入指定测试邮箱；不开放公共链接，也不授予 App Store Connect 开发者权限。
+3. 按 Apple 要求先建内部群组，再建立专用外部测试群组，仅加入指定测试邮箱；不开放公共链接，也不授予 App Store Connect 开发者权限。
 4. 为群组选择可测试构建，提交首次 Beta App Review。审核完成之前，上传成功不等于测试员已经能安装。
 5. 测试员在 iPad / iPhone 上安装 Apple TestFlight，以收到邀请的账号接受邀请，再安装 KKRemote Lab。
 
 审核可直接使用“本机回环自检”：无需远程 Mac、登录或外网服务。审核说明同时指出这只是安装验证，不是远程性能结论。
+
+截至本次初始化：已建立空的 `Development` 内部群组和 `Remote iPad Transport Lab` 外部群组，指定测试员已加入外部群组。构建 2 已处理完成；仍需确认法国分发范围、补充审核联系人电话，再提交 Beta 审核。此状态不代表邀请已发出或版本已可安装。
 
 ## 5. 第一轮远程连接
 
