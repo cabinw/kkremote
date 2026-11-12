@@ -4,7 +4,7 @@
 
 **当前进入 M0 传输验证阶段。** 仓库包含可构建的 **KKRemote Lab**（Mac 测试源与接收端、iPad / iPhone 接收端），用于验证 H.264 SDR 视频、配对连接和控制消息往返。已打通两台 Mac 经过 Ponte LAN 通道的 1080p60 合成视频；2026-11-13 用户确认 TestFlight 构建 3 经异地 Ponte 能在 iPhone 持续显示动态测试图，实际接收性能待报告量化。已减少高码率下的媒体分片并显著缩短 WebRTC 发送排队；新增 socket 接收路径在五分钟 Ponte LAN 测试中达到零 RTP 丢包与零 NACK，但平均 57.93 fps、仍有冻结，尚未达到稳定 60 fps 的低延迟验收目标。真实窗口捕获、远程输入、HEVC/HDR 与远程 iPad 尚未验证。产品架构版本仍为 v0.3，2026-11-12。
 
-最新五分钟对照见 [Ponte 接收调度优化](docs/testing/Ponte接收调度优化.md)；上一轮实现与 LAN / Ponte 高码率复测见 [高码率排队优化](docs/testing/高码率排队优化.md)；v1 历史记录见 [Ponte 固定 UDP 实验](docs/testing/Ponte固定UDP实验.md)。TestFlight 已调整为内部测试，流程与构建记录见 [TestFlight 与传输实验](docs/testing/TestFlight与传输实验.md)；构建 2 不含 Ponte 适配器。
+最新手机结果见 [iPhone 构建 5 压力测试](docs/testing/iPhone构建5压力测试.md)：异地 Ponte 1440p 视频已通；45 Mbps 噪声源约三分钟观察中，编码平均 18.94 fps、视频样本均值 30.41 Mbps，仍有卡顿，尚未达到 60 fps。五分钟双 Mac 对照见 [Ponte 接收调度优化](docs/testing/Ponte接收调度优化.md)；上一轮实现与 LAN / Ponte 高码率复测见 [高码率排队优化](docs/testing/高码率排队优化.md)；v1 历史记录见 [Ponte 固定 UDP 实验](docs/testing/Ponte固定UDP实验.md)。TestFlight 已调整为内部测试，流程与构建记录见 [TestFlight 与传输实验](docs/testing/TestFlight与传输实验.md)；构建 2 不含 Ponte 适配器。
 
 ## 项目方向
 
@@ -72,6 +72,7 @@ M0–M4 的窗口功能版不依赖整屏模式或多主机功能。阶段范围
 
 | 文档 | 内容 |
 |---|---|
+| [iPhone 构建 5 压力测试](docs/testing/iPhone构建5压力测试.md) | 1440p 异地 Ponte 连通性、45 Mbps 噪声源的降帧、重传与延迟基线 |
 | [Ponte 接收调度优化](docs/testing/Ponte接收调度优化.md) | UDP socket、丢包分类、五分钟 LAN/Ponte 对照与剩余降帧问题 |
 | [高码率排队优化](docs/testing/高码率排队优化.md) | v2 封装、pacing、编码突发观测、LAN / Ponte 对照与限制 |
 | [Ponte 固定 UDP 实验](docs/testing/Ponte固定UDP实验.md) | v1 历史实验、H.264 修正与初始双 Mac 媒体测试 |
