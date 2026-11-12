@@ -57,10 +57,10 @@ final class LabModel: ObservableObject {
         return LabPreset(width: size.first ?? 1920, height: size.last ?? 1080, fps: fps, megabits: megabits, pattern: pattern)
     }
 
-    func startHost() { start(isHost: true) }
+    func startHost(pairingKey: String? = nil) { start(isHost: true, hostKey: pairingKey) }
     func connect() { start(isHost: false) }
 
-    private func start(isHost: Bool) {
+    private func start(isHost: Bool, hostKey: String? = nil) {
         stop(); error = nil; samples.removeAll(); sample = LabSample(); exportedReport = nil
         guard let portNumber = UInt16(port), portNumber > 0 else { error = "端口应为 1–65535"; return }
         guard let mediaPortNumber = UInt16(mediaPort), mediaPortNumber > 0 else { error = "媒体端口应为 1–65535"; return }
@@ -69,7 +69,7 @@ final class LabModel: ObservableObject {
         mode = isHost ? "host" : "viewer"
         let token = UUID(); generation = token
         do {
-            if isHost { pairingKey = try SignalTransport.newPairingKey() }
+            if isHost { pairingKey = try hostKey ?? SignalTransport.newPairingKey() }
             let signal = SignalTransport()
             let engine = try PeerEngine(isHost: isHost, preset: activePreset, route: activeRoute, endpointHost: host, mediaPort: mediaPortNumber, receiveDepth: bridgeReceiveDepth, bridgeTransport: bridgeTransport)
             self.signal = signal; self.engine = engine
@@ -132,7 +132,7 @@ final class LabModel: ObservableObject {
         track = nil; running = false; status = "已停止"
     }
 
-    func exportReport(to destination: URL? = nil) {
+    func exportReport(to destination: URL? = nil, recentSamples: Int? = nil) {
         let report = LabReport(schemaVersion: 4,
             appVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown",
             build: Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown",
@@ -148,7 +148,9 @@ final class LabModel: ObservableObject {
                     "Queue age only covers the application adapter, not OS/overlay/encoder queues. P95 covers the latest 120 successful echoes; probe counters expose expiration.",
                     "Candidate host/UDP does not prove Tailscale direct or a Ponte channel type.",
                     "This is a synthetic H.264 SDR baseline, not HEVC/HDR or window-capture qualification.",
-                    "Report excludes pairing key, SDP, endpoint addresses, user input and video content."], samples: samples)
+                    "Report excludes pairing key, SDP, endpoint addresses, user input and video content."]
+                    + (recentSamples == nil ? [] : ["Live snapshot contains only the latest samples; session-end reports retain the full bounded history."]),
+            samples: recentSamples.map { Array(samples.suffix(max(0, $0))) } ?? samples)
         do {
             let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
             let path = destination ?? FileManager.default.temporaryDirectory.appendingPathComponent("KKRemote-Lab-\(UUID().uuidString.prefix(8)).json")

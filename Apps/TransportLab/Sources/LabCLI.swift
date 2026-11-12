@@ -9,16 +9,21 @@ enum LabCLI {
         do {
             let args = Array(CommandLine.arguments.dropFirst())
             let known: Set<String> = ["--lab-role", "--route", "--host", "--port", "--media-port", "--key-file", "--duration", "--resolution", "--fps", "--mbps", "--pattern", "--report", "--host-report", "--pacing", "--receive-depth", "--bridge-transport"]
+            var flags = Set<String>()
             var options: [String: String] = [:], i = 0
             while i < args.count {
-                if args[i] == "--self-test" { i += 1; continue }
+                if ["--self-test", "--persistent-host"].contains(args[i]) {
+                    guard flags.insert(args[i]).inserted else { throw LabError.message("重复参数") }
+                    i += 1; continue
+                }
                 guard known.contains(args[i]), i + 1 < args.count, !args[i + 1].hasPrefix("--"), options[args[i]] == nil else {
                     throw LabError.message("未知、重复或缺值参数：\(args[i])")
                 }
                 options[args[i]] = args[i + 1]; i += 2
             }
+            let persistentHost = flags.contains("--persistent-host")
             guard let route = MediaRoute(rawValue: options["--route"] ?? MediaRoute.ponteUDP.rawValue),
-                  let duration = Double(options["--duration"] ?? "35"), duration >= 5, duration <= 3600,
+                  let duration = Double(options["--duration"] ?? "35"), duration >= 5, duration <= (persistentHost ? 86400 : 3600),
                   let fps = Int(options["--fps"] ?? "60"), [30, 60].contains(fps),
                   let mbps = Int(options["--mbps"] ?? "25"), (1...120).contains(mbps),
                   let pattern = PatternKind(rawValue: options["--pattern"] ?? "grid") else { throw LabError.message("测试参数无效") }
@@ -38,19 +43,17 @@ enum LabCLI {
             reportURL = options["--report"].map { URL(fileURLWithPath: $0) }
             let role = options["--lab-role"] ?? (selfTest ? "self-test" : "")
             guard !selfTest || role == "self-test" else { throw LabError.message("self-test 不能与 lab-role 混用") }
+            guard !persistentHost || role == "host" else { throw LabError.message("常驻模式仅用于独立主机") }
+            var hostKey: String?
             if selfTest { model.startLocalDemo(endpoint: model.host, useCurrentPreset: true) }
             else {
                 guard ["host", "viewer"].contains(role), let keyFile = options["--key-file"] else {
                     throw LabError.message("独立进程需要 --lab-role host|viewer 和 --key-file 路径")
                 }
                 if role == "host" {
-                    // O_EXCL prevents clobbering credentials or following an existing symlink.
-                    let fd = open(keyFile, O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR)
-                    guard fd >= 0 else { throw LabError.message("配对码文件必须是可创建的新文件") }
-                    let handle = FileHandle(fileDescriptor: fd, closeOnDealloc: true)
-                    model.startHost()
+                    hostKey = try LabHostKey.loadOrCreate(at: keyFile, reuseExisting: persistentHost)
+                    model.startHost(pairingKey: hostKey)
                     guard model.running else { throw LabError.message(model.error ?? "主机启动失败") }
-                    try handle.write(contentsOf: Data(model.pairingKey.utf8)); try handle.close()
                 } else {
                     model.pairingKey = try String(contentsOfFile: keyFile, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines)
                     model.connect()
@@ -59,9 +62,33 @@ enum LabCLI {
             let deadline = Date().addingTimeInterval(duration)
             var passed = false
             var lastFrames = 0, lastProgress = Date()
+            var sessionNumber = 1, completedVideoSessions = 0
+            var nextSnapshot = Date().addingTimeInterval(5)
+            var retryAt: Date?
+            if persistentHost { print("LAB_HOST_LISTENING session=1"); fflush(stdout) }
             while Date() < deadline {
                 RunLoop.main.run(until: Date().addingTimeInterval(0.05))
-                if let error = model.error ?? model.localHostError { throw LabError.message(error) }
+                if let due = retryAt {
+                    if Date() < due { continue }
+                    retryAt = nil
+                    model.startHost(pairingKey: hostKey)
+                    print("LAB_HOST_LISTENING session=\(sessionNumber)"); fflush(stdout)
+                }
+                if let error = model.error ?? model.localHostError {
+                    guard persistentHost else { throw LabError.message(error) }
+                    if let reportURL {
+                        // Preserve the ended session before startHost clears its samples.
+                        let archived = reportURL.deletingPathExtension()
+                            .appendingPathExtension(String(format: "session-%03d.json", sessionNumber))
+                        model.exportReport(to: archived)
+                    }
+                    if passed { completedVideoSessions += 1 }
+                    print("LAB_HOST_SESSION_ENDED session=\(sessionNumber) video=\(passed) reason=\(error)"); fflush(stdout)
+                    sessionNumber += 1; passed = false; lastFrames = 0; lastProgress = Date()
+                    // Yield to cancellation callbacks before binding the same ports again.
+                    retryAt = Date().addingTimeInterval(1)
+                    continue
+                }
                 let frames = role == "host" ? model.sample.framesEncoded : model.decodedFrames
                 if frames > lastFrames { lastFrames = frames; lastProgress = Date() }
                 let video = role == "host" ? model.sample.videoMbps > 0 : model.decodedFrames >= 60
@@ -70,10 +97,20 @@ enum LabCLI {
                     passed = true
                     if selfTest && options["--duration"] == nil { break }
                 }
+                if persistentHost, let reportURL, Date() >= nextSnapshot {
+                    // Keep periodic encoding/writes bounded during latency tests.
+                    model.exportReport(to: reportURL, recentSamples: 5)
+                    if let error = model.error { throw LabError.message(error) }
+                    nextSnapshot = Date().addingTimeInterval(5)
+                }
             }
             if let reportURL { model.exportReport(to: reportURL) }
             if let path = options["--host-report"] { model.exportLocalHostReport(to: URL(fileURLWithPath: path)) }
             if let error = model.error { throw LabError.message(error) }
+            if persistentHost {
+                print("LAB_HOST_STOPPED videoSessions=\(completedVideoSessions + (passed ? 1 : 0))"); fflush(stdout)
+                model.stop(); exit(0)
+            }
             guard passed, Date().timeIntervalSince(lastProgress) < 3,
                   let controlAge = model.sample.controlResponseAgeMilliseconds, controlAge < 3000 else {
                 throw LabError.message("未达到持续视频及控制回声通过条件：\(model.status)")

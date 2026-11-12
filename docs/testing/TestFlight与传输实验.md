@@ -112,9 +112,28 @@ iPad / iPhone / 另一台 Mac：
 
 **Tailscale：**优先从 Mac 的 Tailscale 地址开始。WebRTC 必须收集并选择覆盖网可达的 UDP 候选；只有信令 TCP 可达还不够。需结合 Tailscale 自身诊断记录外层 direct / relay，Lab 的 `host/udp` 不能证明外层直连。两端不在同一个 LAN 的测试才能排除走本地网络的假阳性。
 
-**Surge Ponte：**`name.sgponte:45990` 能连接只验证了信令入口。本基线使用自动 ICE 候选和动态 UDP 媒体端口，没有做 Ponte 候选映射、固定媒体端口或自定义 socket 适配。如果出现“信令已通，ICE 失败”，应记录为适配缺口，而不是反复提高码率。后续按 [传输路线复核](../design/传输路线复核.md) 的 Ponte 关口决定端口/候选适配或 QUIC 对照。
+**Surge Ponte：**构建 2 只有自动 ICE 路径。构建 3 起，两端选择“固定 UDP v2（Ponte）”，信令使用 `name.sgponte:45990`、媒体使用同一主机的 UDP `45991`；可选择 Network.framework 或 IPv4 socket 适配器。固定 UDP 经过双向认证后承载 ICE / DTLS / SRTP / SCTP，仍需确认实际视频和控制回声；仅信令连接成功不代表媒体已通。外层 Ponte 是 LAN、直连还是中继仍需单独观察。
 
 不要据此开放公网端口。本轮假设两端已经通过 LAN、Tailscale 或 Ponte 建立受控可达性。
+
+### 固定配对码与重复压力测试
+
+2026-11-13 的首次手机测试结束后，旧命令行主机因客户端断开而退出，导致后续重连失败。按用户要求，人工压力测试改用 `--persistent-host`：复用私有配对文件，客户端断开或握手失败后重新监听。iPhone 构建 3 无需升级；切到后台仍会停止手机会话，返回后手动点击连接即可。
+
+```bash
+LAB_DATA="$HOME/Library/Containers/com.cabinw.kkremote.lab.mac/Data/LiveTesting"
+mkdir -p "$LAB_DATA"
+.build/DerivedData/Build/Products/Release/KKRemoteLabMac.app/Contents/MacOS/KKRemoteLabMac \
+  --lab-role host --persistent-host --duration 28800 \
+  --key-file "$LAB_DATA/pairing.key" --report "$LAB_DATA/host.json" \
+  --route fixed-udp-v2 --bridge-transport socket --pacing interactive \
+  --port 45990 --media-port 45991 \
+  --resolution 2560x1440 --fps 60 --mbps 45 --pattern noise
+```
+
+首次创建文件使用随机 32 字节密钥与 0600 权限；后续启动复用同一文件，拒绝符号链接、无效密钥和其他用户可读的文件。若已提供测试配对码，应保留对应私有文件，不要替换。固定的是配对 PSK；每次媒体连接仍新建会话 ID 和媒体密钥。默认非持续模式继续拒绝覆盖已有配对文件，批量性能基准的行为不变。
+
+持续模式每 5 秒写出最近 5 个样本，避免随测试时间增长而增加周期性序列化开销；每次断开另存 `host.session-NNN.json`，保留该会话最多 3600 个样本。`--duration` 是主机运行时间，持续模式最多 24 小时；重新启动可复用相同配对文件。验证使用 `scripts/test-signaling.sh` 与 `python3 scripts/test-persistent-host.py`，覆盖原码重复视频连接、错码拒绝、会话报告和有界实时快照。
 
 ## 6. 报告应如何解释
 
@@ -131,7 +150,7 @@ iPad / iPhone / 另一台 Mac：
 
 报告保留最多 3600 个每秒样本，时间为会话相对时间；没有配对密钥、SDP、端点地址、窗口内容或用户输入。只有点击分享后，报告才通过所选渠道离开设备。用户主动分享前可检查 JSON。
 
-目前合成移动网格容易压缩，设置 80 或 120 Mbps 上限不表示实际就会产生相应负载。**本版适合验证连接、视频、控制与安装链路，不足以给出高码率容量结论。** 下一版需要加入可控复杂度画面/媒体回放，结合真实窗口内容测试，并记录编码耗时、发送队列、解码队列、帧呈现与丢帧原因。不要把填充流量冒充画质改善。
+合成移动网格容易压缩，设置 80 或 120 Mbps 上限不表示实际就会产生相应负载。当前已提供高复杂度动态噪声 `noise`，用于给编码器和媒体路径施压；它不代表真实窗口内容，实际码率与帧率仍可能受编码复杂度和拥塞控制限制。应同时分析发送端和接收端报告中的编码、发送等待、抖动缓冲、丢包与帧率，不能把配置上限当作容量结论，也不能把填充流量冒充画质改善。
 
 ## 7. 下一步协议验收顺序
 

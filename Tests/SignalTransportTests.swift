@@ -49,6 +49,27 @@ enum SignalTransportTests {
     }
 
     static func main() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let path = directory.appendingPathComponent("pairing.key").path
+        let key = try LabHostKey.loadOrCreate(at: path, reuseExisting: true)
+        let reused = try LabHostKey.loadOrCreate(at: path, reuseExisting: true)
+        require(key == reused && Data(base64Encoded: key)?.count == 32, "persistent host reuses key")
+        func rejects(_ path: String, reuse: Bool = true) -> Bool {
+            do { _ = try LabHostKey.loadOrCreate(at: path, reuseExisting: reuse); return false }
+            catch { return true }
+        }
+        require(rejects(path, reuse: false), "ephemeral host refuses existing file")
+        let link = directory.appendingPathComponent("link.key").path
+        try FileManager.default.createSymbolicLink(atPath: link, withDestinationPath: path)
+        require(rejects(link), "persistent host rejects symlink")
+        chmod(path, 0o644)
+        require(rejects(path), "persistent host rejects shared-readable key")
+        chmod(path, 0o600)
+        try Data("invalid-key".utf8).write(to: URL(fileURLWithPath: path))
+        require(rejects(path), "persistent host rejects invalid key")
+        print("PASS: persistent key reuse, exclusive creation, private file checks")
         try runPair(wrongKey: false)
         try runPair(wrongKey: true)
         print("SIGNAL_TESTS_PASSED")
