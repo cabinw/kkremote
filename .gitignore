@@ -39,3 +39,11 @@ xcuserdata/
 *.pcap
 *.pcapng
 *.log
+
+# Developer-local signing and distribution credentials
+Config/*.local.xcconfig
+Config/ExportOptions.local.plist
+private_keys/
+AuthKey_*.p8
+*.p8
+/Vendor/
