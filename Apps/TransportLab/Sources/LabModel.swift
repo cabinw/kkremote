@@ -11,6 +11,7 @@ struct LabReport: Codable {
     let mode: String
     let networkLabel: String
     let actualOverlayPath: String
+    let mediaRoute: MediaRoute
     let preset: LabPreset
     let notes: [String]
     let samples: [LabSample]
@@ -20,10 +21,13 @@ final class LabModel: ObservableObject {
     @Published var host = ""
     @Published var port = "45990"
     @Published var pairingKey = ""
-    @Published var networkLabel = "Tailscale"
+    @Published var networkLabel = "Surge Ponte"
+    @Published var mediaRoute = MediaRoute.ponteUDP
+    @Published var mediaPort = "45991"
     @Published var resolution = "1920×1080"
     @Published var fps = 60
     @Published var megabits = 25
+    @Published var pattern = PatternKind.grid
     @Published var running = false
     @Published var status = "准备连接"
     @Published var error: String?
@@ -36,12 +40,13 @@ final class LabModel: ObservableObject {
     private var demoHost: LabModel?
     private var samples: [LabSample] = []
     private var activePreset = LabPreset()
+    private var activeRoute = MediaRoute.ponteUDP
     private var generation = UUID()
     var decodedFrames: Int { engine?.frameCounter.received ?? 0 }
 
     var preset: LabPreset {
         let size = resolution.split(separator: "×").compactMap { Int($0) }
-        return LabPreset(width: size.first ?? 1920, height: size.last ?? 1080, fps: fps, megabits: megabits)
+        return LabPreset(width: size.first ?? 1920, height: size.last ?? 1080, fps: fps, megabits: megabits, pattern: pattern)
     }
 
     func startHost() { start(isHost: true) }
@@ -50,13 +55,14 @@ final class LabModel: ObservableObject {
     private func start(isHost: Bool) {
         stop(); error = nil; samples.removeAll(); sample = LabSample(); exportedReport = nil
         guard let portNumber = UInt16(port), portNumber > 0 else { error = "端口应为 1–65535"; return }
-        activePreset = preset
+        guard let mediaPortNumber = UInt16(mediaPort), mediaPortNumber > 0 else { error = "媒体端口应为 1–65535"; return }
+        activePreset = preset; activeRoute = mediaRoute
         mode = isHost ? "host" : "viewer"
         let token = UUID(); generation = token
         do {
             if isHost { pairingKey = try SignalTransport.newPairingKey() }
             let signal = SignalTransport()
-            let engine = try PeerEngine(isHost: isHost, preset: activePreset)
+            let engine = try PeerEngine(isHost: isHost, preset: activePreset, route: activeRoute, endpointHost: host, mediaPort: mediaPortNumber)
             self.signal = signal; self.engine = engine
             engine.onSignal = { [weak signal] message in signal?.send(message) }
             signal.onMessage = { [weak engine] message in engine?.receive(message) }
@@ -85,18 +91,27 @@ final class LabModel: ObservableObject {
         } catch { stop(); self.error = error.localizedDescription }
     }
 
-    func startLocalDemo() {
+    func startLocalDemo(endpoint: String = "127.0.0.1", useCurrentPreset: Bool = false) {
         stop()
         let local = LabModel()
-        local.resolution = "1280×720"; local.fps = 30; local.megabits = 8
+        local.mediaRoute = mediaRoute
+        local.resolution = useCurrentPreset ? resolution : "1280×720"
+        local.fps = useCurrentPreset ? fps : 30; local.megabits = useCurrentPreset ? megabits : 8
+        local.pattern = useCurrentPreset ? pattern : .grid
         local.port = String(UInt16.random(in: 49000...59000))
+        local.mediaPort = String(UInt16.random(in: 49000...59000))
         local.startHost()
         guard local.running else { error = local.error; return }
-        host = "127.0.0.1"; port = local.port; pairingKey = local.pairingKey
-        resolution = local.resolution; fps = local.fps; megabits = local.megabits
+        host = endpoint; port = local.port; pairingKey = local.pairingKey; mediaPort = local.mediaPort
+        resolution = local.resolution; fps = local.fps; megabits = local.megabits; pattern = local.pattern
         connect()
         demoHost = local; mode = "local-loopback"
         networkLabel = "本机回环（不代表远程网络）"
+    }
+    var localHostError: String? { demoHost?.error }
+    func exportLocalHostReport(to destination: URL) {
+        demoHost?.exportReport(to: destination)
+        if let error = demoHost?.error { self.error = error }
     }
 
     func stop() {
@@ -106,20 +121,22 @@ final class LabModel: ObservableObject {
         track = nil; running = false; status = "已停止"
     }
 
-    func exportReport() {
-        let report = LabReport(schemaVersion: 1,
+    func exportReport(to destination: URL? = nil) {
+        let report = LabReport(schemaVersion: 2,
             appVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown",
             build: Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown",
             backend: "libwebrtc M157 / H.264 SDR", os: ProcessInfo.processInfo.operatingSystemVersionString,
-            mode: mode, networkLabel: networkLabel, actualOverlayPath: "unknown", preset: activePreset,
-            notes: ["Network label is operator supplied; this build does not force ICE to a VPN adapter.",
+            mode: mode, networkLabel: networkLabel, actualOverlayPath: "unknown", mediaRoute: activeRoute, preset: activePreset,
+            notes: [activeRoute == .ponteUDP ? "Fixed UDP carries ICE/DTLS/SRTP/SCTP through the configured endpoint. The outer Ponte channel is not observed." : "Direct ICE can use any reachable adapter; the network label does not constrain it.",
                     "Control RTT is an echoed DataChannel round trip, not input-to-photon latency.",
+                    "Socket scope alone cannot prove physical topology: a remote overlay proxy can present a loopback endpoint. Local-demo mode is always a single-device test.",
+                    "Queue age only covers the application adapter, not OS/overlay/encoder queues. P95 covers the latest 120 successful echoes; probe counters expose expiration.",
                     "Candidate host/UDP does not prove Tailscale direct or a Ponte channel type.",
                     "This is a synthetic H.264 SDR baseline, not HEVC/HDR or window-capture qualification.",
                     "Report excludes pairing key, SDP, endpoint addresses, user input and video content."], samples: samples)
         do {
             let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-            let path = FileManager.default.temporaryDirectory.appendingPathComponent("KKRemote-Lab-\(UUID().uuidString.prefix(8)).json")
+            let path = destination ?? FileManager.default.temporaryDirectory.appendingPathComponent("KKRemote-Lab-\(UUID().uuidString.prefix(8)).json")
             try encoder.encode(report).write(to: path, options: .atomic)
             exportedReport = path
         } catch { self.error = "导出失败：\(error.localizedDescription)" }
