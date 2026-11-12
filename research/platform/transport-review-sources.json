@@ -1,0 +1,127 @@
+{
+  "review_date": "2026-11-12",
+  "scope": "Read-only upstream source and documentation review. No builds, runtime sessions or product implementation. Source content not copied into product tree.",
+  "upstream_revision": "4cb6c02c9fc8da01de821964e67594e863d41574",
+  "files": [
+    {
+      "path": "sdk/objc/components/video_codec/RTCDefaultVideoEncoderFactory.mm",
+      "url": "https://webrtc.googlesource.com/src/+/4cb6c02c9fc8da01de821964e67594e863d41574/sdk/objc/components/video_codec/RTCDefaultVideoEncoderFactory.mm",
+      "sha256": "9d3cf6cc81ac3452b1b5a432b01edd94a0af93bab7f9028ffe4aeb4aa605e618",
+      "bytes": 4214,
+      "lines": 121,
+      "observed_terms": {
+        "H265": false,
+        "max_bitrate_bps": false,
+        "SetPortRange": false,
+        "EncoderSelectorInterface": false
+      }
+    },
+    {
+      "path": "sdk/objc/components/video_codec/RTCDefaultVideoDecoderFactory.m",
+      "url": "https://webrtc.googlesource.com/src/+/4cb6c02c9fc8da01de821964e67594e863d41574/sdk/objc/components/video_codec/RTCDefaultVideoDecoderFactory.m",
+      "sha256": "5bbff50e665d24531ff736e9f9a9c6c2eacb43db376a3da37e3790ef4b44d3fd",
+      "bytes": 2230,
+      "lines": 66,
+      "observed_terms": {
+        "H265": false,
+        "max_bitrate_bps": false,
+        "SetPortRange": false,
+        "EncoderSelectorInterface": false
+      }
+    },
+    {
+      "path": "modules/rtp_rtcp/source/rtp_packetizer_h265.cc",
+      "url": "https://webrtc.googlesource.com/src/+/4cb6c02c9fc8da01de821964e67594e863d41574/modules/rtp_rtcp/source/rtp_packetizer_h265.cc",
+      "sha256": "070932d0e71336f819ff642320e9c34e78f74a6e52441673669867ff6a70fc58",
+      "bytes": 12173,
+      "lines": 339,
+      "observed_terms": {
+        "H265": true,
+        "max_bitrate_bps": false,
+        "SetPortRange": false,
+        "EncoderSelectorInterface": false
+      }
+    },
+    {
+      "path": "modules/rtp_rtcp/source/video_rtp_depacketizer_h265.cc",
+      "url": "https://webrtc.googlesource.com/src/+/4cb6c02c9fc8da01de821964e67594e863d41574/modules/rtp_rtcp/source/video_rtp_depacketizer_h265.cc",
+      "sha256": "293932e5a390a7d7342f049c7b1d6186a02ad95792d80c980c76696d91bf925c",
+      "bytes": 11087,
+      "lines": 277,
+      "observed_terms": {
+        "H265": true,
+        "max_bitrate_bps": false,
+        "SetPortRange": false,
+        "EncoderSelectorInterface": false
+      }
+    },
+    {
+      "path": "api/video_codecs/video_encoder_factory.h",
+      "url": "https://webrtc.googlesource.com/src/+/4cb6c02c9fc8da01de821964e67594e863d41574/api/video_codecs/video_encoder_factory.h",
+      "sha256": "b8cd84183c524af3b1d4ca96f6970619cd36830833190450dc47f4f9cc340496",
+      "bytes": 5630,
+      "lines": 137,
+      "observed_terms": {
+        "H265": false,
+        "max_bitrate_bps": false,
+        "SetPortRange": false,
+        "EncoderSelectorInterface": true
+      }
+    },
+    {
+      "path": "api/rtp_parameters.h",
+      "url": "https://webrtc.googlesource.com/src/+/4cb6c02c9fc8da01de821964e67594e863d41574/api/rtp_parameters.h",
+      "sha256": "a058cd3fb48fc1223bf01a48d4e2cb82ceda6cd02d7a9146cf36e1c9a2704663",
+      "bytes": 34732,
+      "lines": 916,
+      "observed_terms": {
+        "H265": false,
+        "max_bitrate_bps": true,
+        "SetPortRange": false,
+        "EncoderSelectorInterface": false
+      }
+    },
+    {
+      "path": "p2p/base/port_allocator.h",
+      "url": "https://webrtc.googlesource.com/src/+/4cb6c02c9fc8da01de821964e67594e863d41574/p2p/base/port_allocator.h",
+      "sha256": "94c5e3f397d4be12448691ebca2c999928d30fce698c7621f9947409e6aef19e",
+      "bytes": 28884,
+      "lines": 738,
+      "observed_terms": {
+        "H265": false,
+        "max_bitrate_bps": false,
+        "SetPortRange": true,
+        "EncoderSelectorInterface": false
+      }
+    },
+    {
+      "path": "modules/pacing/g3doc/index.md",
+      "url": "https://webrtc.googlesource.com/src/+/4cb6c02c9fc8da01de821964e67594e863d41574/modules/pacing/g3doc/index.md",
+      "sha256": "e54ed419fbe874ec716b59815522aa07cfb3a08ca603d64e262d1f720cc22044",
+      "bytes": 8409,
+      "lines": 164,
+      "observed_terms": {
+        "H265": false,
+        "max_bitrate_bps": false,
+        "SetPortRange": false,
+        "EncoderSelectorInterface": false
+      }
+    }
+  ],
+  "official_documentation": [
+    "https://www.rfc-editor.org/rfc/rfc8834.html",
+    "https://www.rfc-editor.org/rfc/rfc8831.html",
+    "https://www.rfc-editor.org/rfc/rfc9221.html",
+    "https://www.rfc-editor.org/rfc/rfc8445.html",
+    "https://manual.nssurge.com/features/ponte.html",
+    "https://manual.nssurge.com/policies/parameters.html",
+    "https://tailscale.com/docs/reference/troubleshooting/poor-performance-tailnet",
+    "https://docs.jumpdesktop.com/viewer/performance/codecs/"
+  ],
+  "limits": [
+    "No runtime proof of Jump current session transport.",
+    "Default ObjC factories do not establish complete Apple HEVC/HDR support.",
+    "No Tailscale or Ponte connectivity or performance tests.",
+    "Recommendation is conditional on future M0 gates."
+  ]
+}

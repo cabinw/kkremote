@@ -1,0 +1,41 @@
+# macOS and editor-local state
+.DS_Store
+._*
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Xcode and Swift build/user state
+DerivedData/
+build/
+.build/
+.swiftpm/
+xcuserdata/
+*.xcuserstate
+*.xcarchive/
+*.ipa
+*.dSYM/
+
+# Local credentials and settings
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.mobileprovision
+
+# Raw local research and tool output; keep only the curated source index
+/research/*
+!/research/README.md
+!/research/platform/
+/research/platform/*
+!/research/platform/transport-review-sources.json
+
+# Local recordings, captures and runtime artifacts
+/artifacts/
+/recordings/
+*.pcap
+*.pcapng
+*.log
