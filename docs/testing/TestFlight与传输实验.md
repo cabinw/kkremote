@@ -89,7 +89,7 @@ scripts/upload-testflight.sh
 
 历史记录：11 月 12 日曾把另一 Apple 账号当作外部测试员，建立 `Remote iPad Transport Lab` 群组并提交构建 2 的 Beta 审核；11 月 13 日按用户要求改为上述内部测试流程。联系人和测试员的私人信息不写入仓库。
 
-构建 3 已于 2026-11-13 完成签名归档与上传，使用 internal-only 分发，包含固定 UDP v1/v2、可选 socket 传输与本轮诊断。待 App Store Connect 处理及加密配置完成后加入内部组；上传成功不等于已经可安装。
+构建 3 已于 2026-11-13 完成签名归档与上传，使用 internal-only 分发，包含固定 UDP v1/v2、可选 socket 传输与本轮诊断。Apple 已完成处理；加密问卷按标准算法、此次不在法国分发填写完毕。构建 3 已加入 `Development` 内部组，后台显示“正在测试”，可由现有内部测试员更新；异地 iPhone 媒体连通性仍待实际连接验证。
 
 ## 5. 第一轮远程连接
 
