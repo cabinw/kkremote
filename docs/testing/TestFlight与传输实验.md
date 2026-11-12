@@ -63,7 +63,7 @@ cp Config/ExportOptions.example.plist Config/ExportOptions.local.plist
 每次上传必须递增构建号，示例：
 
 ```bash
-BUILD_NUMBER=5 scripts/build-lab.sh archive
+BUILD_NUMBER=6 scripts/build-lab.sh archive
 scripts/upload-testflight.sh
 ```
 
@@ -94,6 +94,8 @@ scripts/upload-testflight.sh
 随后用户确认异地 iPhone 已连接，并能看到持续更新的动态测试图。Mac 端同时观察到已建立的信令连接、固定 UDP 媒体套接字和持续网络流量。本轮主机使用固定 UDP v2、socket 传输、1080p、60 fps 目标、25 Mbps 上限与 grid 合成源。该结果确认了异地 Ponte 视频连通性；接收端实际帧率、有效载荷码率、冻结与抖动缓冲仍需 JSON 报告量化，不能作为 80 Mbps 稳定 60 fps 的验收证据。进程级网络字节包含本机桥接流量，不能直接当作视频有效载荷码率。iPhone 测试时需保持 App 前台；当前实现切入后台即停止会话。
 
 排查期间已用相同媒体代码归档并上传构建 4，临时采用标准 App Store Connect 上传选项作为对照；用户确认构建 3 可见时，Apple 已接收构建 4。构建 4 不继续加入测试组，本轮使用构建 3，导出配置已恢复 internal-only。后续上传从构建号 5 起递增，避免重复使用已上传的编号。
+
+后续构建 5 已于 2026-11-13 完成归档、上传、Apple 处理及同范围加密问卷，并加入 `Development` 内部组。它包含六位数字配对码和移动端 High 5.1 能力探测；已通知测试员更新，设备实际安装与 1440p 手机性能待确认。下一次上传使用构建号 6 或更高。
 
 ## 5. 第一轮远程连接
 
