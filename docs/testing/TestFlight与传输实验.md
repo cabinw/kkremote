@@ -63,7 +63,7 @@ cp Config/ExportOptions.example.plist Config/ExportOptions.local.plist
 每次上传必须递增构建号，示例：
 
 ```bash
-BUILD_NUMBER=3 scripts/build-lab.sh archive
+BUILD_NUMBER=5 scripts/build-lab.sh archive
 scripts/upload-testflight.sh
 ```
 
@@ -85,11 +85,13 @@ scripts/upload-testflight.sh
 4. 将“准备测试”的构建加入内部群组，向该组测试员发出 TestFlight 邀请。无需提交外部 Beta 审核，也无需重新上传已经处理完毕的构建。
 5. 测试员在 iPad / iPhone 上安装 Apple TestFlight，接受 TestFlight 邀请并安装 KKRemote Lab。团队邀请和 TestFlight 邀请是两个步骤。
 
-截至 2026-11-13：0.1.0（2）已加入 `Development` 内部群组；指定账号已接受团队邀请并作为内部测试员加入，后台显示“已邀请”。构建显示“准备测试”，用户已确认异地 iPhone 安装成功，当前尚未核实远端 iPad 实际安装。该账号已从原外部群组移除，外部群组没有测试员；此前的外部审核不再是本轮测试的前置条件。构建 2 不含后续固定 UDP v2、socket 调度与性能观测修改，测试这些功能需上传新构建。
+截至 2026-11-13：0.1.0（2）已加入 `Development` 内部群组；指定账号已接受团队邀请并作为内部测试员加入，后台显示“已安装”，构建显示“正在测试”。用户已确认异地 iPhone 安装成功，当前尚未核实远端 iPad 实际安装。该账号已从原外部群组移除，外部群组没有测试员；此前的外部审核不再是本轮测试的前置条件。构建 2 不含后续固定 UDP v2、socket 调度与性能观测修改，测试这些功能需安装后续构建。
 
 历史记录：11 月 12 日曾把另一 Apple 账号当作外部测试员，建立 `Remote iPad Transport Lab` 群组并提交构建 2 的 Beta 审核；11 月 13 日按用户要求改为上述内部测试流程。联系人和测试员的私人信息不写入仓库。
 
-构建 3 已于 2026-11-13 完成签名归档与上传，使用 internal-only 分发，包含固定 UDP v1/v2、可选 socket 传输与本轮诊断。Apple 已完成处理；加密问卷按标准算法、此次不在法国分发填写完毕。构建 3 已加入 `Development` 内部组，后台显示“正在测试”，可由现有内部测试员更新；异地 iPhone 媒体连通性仍待实际连接验证。
+构建 3 已于 2026-11-13 完成签名归档与上传，使用 internal-only 分发，包含固定 UDP v1/v2、可选 socket 传输与本轮诊断。Apple 已完成处理；加密问卷按标准算法、此次不在法国分发填写完毕。构建 3 加入 `Development` 内部组后，后台显示“正在测试”，但账号一致的手机一度仍只能看到构建 2。重新关联构建与群组后，用户于约 00:52 确认已能看到构建 3；尚不能区分重新关联生效与 Apple 分发同步延迟，因此不能把后台状态等同于设备可安装，也不能据此断定 internal-only 上传存在缺陷。异地 iPhone 媒体连通性仍待实际连接验证。
+
+排查期间已用相同媒体代码归档并上传构建 4，临时采用标准 App Store Connect 上传选项作为对照；用户确认构建 3 可见时，Apple 已接收构建 4。构建 4 不继续加入测试组，本轮使用构建 3，导出配置已恢复 internal-only。后续上传从构建号 5 起递增，避免重复使用已上传的编号。
 
 ## 5. 第一轮远程连接
 
