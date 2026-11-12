@@ -6,6 +6,6 @@ framework_dir="$PWD/.build/SourcePackages/artifacts/webrtc/WebRTC/WebRTC.xcframe
 mkdir -p .build/tests
 xcrun swiftc -O -F "$framework_dir" -framework WebRTC -Xlinker -rpath -Xlinker "$framework_dir" \
   Apps/TransportLab/Sources/EncoderTelemetry.swift Apps/TransportLab/Sources/LabH264Factory.swift \
-  Apps/TransportLab/Sources/TestPattern.swift Apps/TransportLab/Sources/DesktopPattern.swift \
+  Apps/TransportLab/Sources/TestPattern.swift Apps/TransportLab/Sources/DesktopPattern.swift Apps/TransportLab/Sources/LabVideoSource.swift \
   Tests/EncoderRateProbe.swift -o .build/tests/EncoderRateProbe
 exec .build/tests/EncoderRateProbe "$@"

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Verify two real media sessions and a rejected key against one persistent host."""
 import hashlib
+import argparse
 import base64
 import json
 import os
@@ -9,6 +10,10 @@ import socket
 import subprocess
 import time
 import uuid
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--window-id', type=int, help='Exercise real window capture teardown/restart instead of the synthetic source')
+args = parser.parse_args()
 
 root = Path(__file__).resolve().parent.parent
 app = root / '.build/DerivedData/Build/Products/Release/KKRemoteLabMac.app/Contents/MacOS/KKRemoteLabMac'
@@ -56,8 +61,9 @@ def viewer(name, key_file, success):
 
 try:
     with log_path.open('w') as log:
+        capture_params = ['--window-id', str(args.window_id)] if args.window_id is not None else []
         host = subprocess.Popen([str(app), '--lab-role', 'host', '--persistent-host', '--duration', '90',
-            '--key-file', str(key), '--report', str(work / 'host.json')] + params,
+            '--key-file', str(key), '--report', str(work / 'host.json')] + params + capture_params,
             stdout=log, stderr=subprocess.STDOUT)
         wait_for(lambda: 'LAB_HOST_LISTENING session=1' in log_path.read_text())
         original = hashlib.sha256(key.read_bytes()).digest()
@@ -74,6 +80,11 @@ try:
         assert len(list(work.glob('host.session-*.json'))) == 3
         assert (work / 'host.json').exists(), 'Live telemetry snapshot missing'
         assert len(json.loads((work / 'host.json').read_text())['samples']) <= 5
+        if args.window_id is not None:
+            for session in [1, 3]:
+                report = json.loads((work / f'host.session-{session:03d}.json').read_text())
+                assert report['videoSource'] == 'window'
+                assert report['samples'][-1]['captureDetails']['completeFrames'] >= 60
         print('PASS: two authenticated video sessions with one six-digit code, wrong key rejected, same host PID/key, session reports retained')
 finally:
     if host is not None and host.poll() is None:

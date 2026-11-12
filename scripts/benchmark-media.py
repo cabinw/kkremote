@@ -20,6 +20,8 @@ parser.add_argument('--rates', default='20,45,80,120')
 parser.add_argument('--duration', type=int, default=40)
 parser.add_argument('--resolution', choices=['1280x720', '1920x1080', '2560x1440'], default='2560x1440')
 parser.add_argument('--pattern', choices=['grid', 'noise', 'desktop'], default='noise')
+parser.add_argument('--window-id', type=int, help='Capture this explicitly listed Mac window instead of a synthetic pattern')
+parser.add_argument('--frame-preview', action='store_true', help='Save one decoded PNG after measurement; may contain captured content')
 args = parser.parse_args()
 rates = [int(x) for x in args.rates.split(',')]
 if args.duration < 20 or any(x < 1 or x > 120 for x in rates):
@@ -39,7 +41,20 @@ def summary(path):
     samples = json.loads(path.read_text())['samples']
     steady = [s for s in samples if s['seconds'] >= 10]
     def values(key): return [s[key] for s in steady if s.get(key) is not None]
+    span = steady[-1]['seconds'] - steady[0]['seconds'] if len(steady) > 1 else 0
+    def nested(sample, dotted):
+        value = sample
+        for key in dotted.split('.'):
+            value = value.get(key) if isinstance(value, dict) else None
+        return value
+    def rate(dotted):
+        first, last = (nested(steady[0], dotted), nested(steady[-1], dotted)) if span else (None, None)
+        return (last - first) / span if first is not None and last is not None else None
     return {
+        'counterSpanSeconds': span,
+        'captureFPS': rate('captureDetails.completeFrames'), 'sourceFPS': rate('sourceFrames'),
+        'encoderSubmittedFPS': rate('encoderDetails.submittedFrames'),
+        'encodedFPS': rate('framesEncoded'), 'decodedFPS': rate('framesDecoded'),
         'steadySamples': len(steady), 'videoMbpsMean': statistics.mean(values('videoMbps')) if steady else None,
         'videoMbpsP95': percentile(values('videoMbps'), .95), 'fpsMedian': statistics.median(values('fps')) if steady else None,
         'controlRTTP95ms': percentile(values('controlRTTMilliseconds'), .95),
@@ -56,10 +71,16 @@ for rate in rates:
     command = [str(app), '--self-test', '--host', args.host, '--route', args.route, '--duration', str(args.duration),
                '--bridge-transport', args.bridge_transport, '--receive-depth', str(args.receive_depth), '--pacing', args.pacing, '--resolution', args.resolution, '--fps', '60', '--mbps', str(rate), '--pattern', args.pattern,
                '--host-report', str(host), '--report', str(viewer)]
+    if args.window_id is not None:
+        command += ['--window-id', str(args.window_id)]
+    if args.frame_preview:
+        command += ['--frame-preview', str(container / f'{rate}-decoded.png')]
     with (output / f'{rate}.log').open('w') as log:
         completed = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, timeout=args.duration + 45)
     for source in [host, viewer]:
         if source.exists(): shutil.copy2(source, output / source.name)
+    if args.frame_preview and (container / f'{rate}-decoded.png').exists():
+        shutil.copy2(container / f'{rate}-decoded.png', output / f'{rate}-decoded.png')
     if completed.returncode:
         raise SystemExit(f'Failed at {rate} Mbps; inspect {output / f"{rate}.log"}')
     result = {'ceilingMbps': rate, 'host': summary(host), 'viewer': summary(viewer)}
@@ -67,6 +88,7 @@ for rate in rates:
     print(json.dumps({'ceilingMbps': rate, 'actualMbps': result['viewer']['videoMbpsMean'],
                       'fpsMedian': result['viewer']['fpsMedian'], 'controlRTTP95ms': result['viewer']['controlRTTP95ms']}), flush=True)
 report = {'scope': 'single Mac, self-endpoint only; not cross-device Ponte', 'route': args.route,
+          'videoSource': 'window' if args.window_id is not None else 'synthetic',
           'bridgeTransport': args.bridge_transport, 'bridgeReceiveDepth': args.receive_depth, 'pacing': args.pacing, 'resolution': args.resolution, 'pattern': args.pattern, 'durationSeconds': args.duration,
           'warmupExcludedSeconds': 10, 'results': results}
 (output / 'summary.json').write_text(json.dumps(report, indent=2) + '\n')

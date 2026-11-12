@@ -1,18 +1,22 @@
 #if os(macOS)
 import Foundation
+import AppKit
 
 /// Uses the same model as the app. Keys are passed in private files, never argv or reports.
 enum LabCLI {
     static func run() -> Never {
+        // CLI capture still needs an AppKit/WindowServer connection before SCStream starts.
+        _ = NSApplication.shared
         let model = LabModel()
         var reportURL: URL?
+        var hostReportURL: URL?
         do {
             let args = Array(CommandLine.arguments.dropFirst())
-            let known: Set<String> = ["--lab-role", "--route", "--host", "--port", "--media-port", "--key-file", "--duration", "--resolution", "--fps", "--mbps", "--pattern", "--report", "--host-report", "--pacing", "--receive-depth", "--bridge-transport"]
+            let known: Set<String> = ["--lab-role", "--route", "--host", "--port", "--media-port", "--key-file", "--duration", "--resolution", "--fps", "--mbps", "--pattern", "--report", "--host-report", "--pacing", "--receive-depth", "--bridge-transport", "--window-id", "--frame-preview"]
             var flags = Set<String>()
             var options: [String: String] = [:], i = 0
             while i < args.count {
-                if ["--self-test", "--persistent-host"].contains(args[i]) {
+                if ["--self-test", "--persistent-host", "--list-windows"].contains(args[i]) {
                     guard flags.insert(args[i]).inserted else { throw LabError.message("重复参数") }
                     i += 1; continue
                 }
@@ -20,6 +24,12 @@ enum LabCLI {
                     throw LabError.message("未知、重复或缺值参数：\(args[i])")
                 }
                 options[args[i]] = args[i + 1]; i += 2
+            }
+            if flags.contains("--list-windows") {
+                guard flags.count == 1, options.keys.allSatisfy({ $0 == "--report" }) else {
+                    throw LabError.message("list-windows 只能与 --report 混用")
+                }
+                listWindows(to: options["--report"])
             }
             let persistentHost = flags.contains("--persistent-host")
             guard let route = MediaRoute(rawValue: options["--route"] ?? MediaRoute.ponteUDP.rawValue),
@@ -41,9 +51,20 @@ enum LabCLI {
             model.fps = fps; model.megabits = mbps; model.pattern = pattern
             let selfTest = args.contains("--self-test")
             reportURL = options["--report"].map { URL(fileURLWithPath: $0) }
+            hostReportURL = options["--host-report"].map { URL(fileURLWithPath: $0) }
             let role = options["--lab-role"] ?? (selfTest ? "self-test" : "")
             guard !selfTest || role == "self-test" else { throw LabError.message("self-test 不能与 lab-role 混用") }
             guard !persistentHost || role == "host" else { throw LabError.message("常驻模式仅用于独立主机") }
+            if options["--frame-preview"] != nil {
+                guard selfTest || role == "viewer" else { throw LabError.message("frame-preview 仅用于接收端") }
+                model.keepDecodedPreview = true
+            }
+            if let rawID = options["--window-id"] {
+                guard role == "host" || selfTest, let id = UInt32(rawID), id > 0 else {
+                    throw LabError.message("window-id 必须是主机捕获列表中的有效窗口 ID")
+                }
+                model.captureWindowID = id
+            }
             var hostKey: String?
             if selfTest { model.startLocalDemo(endpoint: model.host, useCurrentPreset: true) }
             else {
@@ -107,6 +128,7 @@ enum LabCLI {
             if let reportURL { model.exportReport(to: reportURL) }
             if let path = options["--host-report"] { model.exportLocalHostReport(to: URL(fileURLWithPath: path)) }
             if let error = model.error { throw LabError.message(error) }
+            if let path = options["--frame-preview"] { try model.saveDecodedPreview(to: URL(fileURLWithPath: path)) }
             if persistentHost {
                 print("LAB_HOST_STOPPED videoSessions=\(completedVideoSessions + (passed ? 1 : 0))"); fflush(stdout)
                 model.stop(); exit(0)
@@ -121,11 +143,32 @@ enum LabCLI {
             model.stop(); exit(0)
         } catch {
             // Preserve diagnostics even when the other process disconnects or UDP negotiation fails.
+            if let hostReportURL { model.exportLocalHostReport(to: hostReportURL) }
             if let reportURL { model.exportReport(to: reportURL) }
             print("LAB_FAILED: \(error.localizedDescription)")
             if let data = try? JSONEncoder().encode(model.sample), let text = String(data: data, encoding: .utf8) { print(text) }
             model.stop(); exit(1)
         }
+    }
+
+    private static func listWindows(to path: String?) -> Never {
+        var finished = false
+        var failure: Error?
+        Task { @MainActor in
+            do {
+                let windows = try await WindowCaptureSource.windows()
+                let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+                let data = try encoder.encode(windows)
+                if let path { try data.write(to: URL(fileURLWithPath: path), options: .atomic) }
+                else { print(String(decoding: data, as: UTF8.self)) }
+            } catch { failure = error }
+            finished = true
+        }
+        let deadline = Date().addingTimeInterval(60)
+        while !finished, Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.05)) }
+        if let failure { print("LAB_FAILED: \(failure.localizedDescription)"); exit(1) }
+        guard finished else { print("LAB_FAILED: 窗口列表超时，请在系统设置中允许屏幕录制后重试"); exit(1) }
+        exit(0)
     }
 }
 #endif

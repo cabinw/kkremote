@@ -17,6 +17,7 @@ struct LabReport: Codable {
     let bridgeTransport: BridgeTransportKind
     let mediaRoute: MediaRoute
     let preset: LabPreset
+    let videoSource: String
     let notes: [String]
     let samples: [LabSample]
 }
@@ -32,6 +33,16 @@ final class LabModel: ObservableObject {
     @Published var fps = 60
     @Published var megabits = 25
     @Published var pattern = PatternKind.grid
+    @Published var captureWindowID: UInt32? = nil
+    #if os(macOS)
+    @Published var captureWindows: [CaptureWindow] = []
+    func refreshCaptureWindows() {
+        Task { @MainActor in
+            do { captureWindows = try await WindowCaptureSource.windows() }
+            catch { self.error = "无法列出窗口：\(error.localizedDescription)；请检查系统屏幕录制权限" }
+        }
+    }
+    #endif
     var bridgeReceiveDepth = 16
     @Published var bridgeTransport = BridgeTransportKind.network
     @Published var running = false
@@ -49,8 +60,16 @@ final class LabModel: ObservableObject {
     private var activeRoute = MediaRoute.ponteUDP
     private var activeBridgeTransport = BridgeTransportKind.network
     private var activeReceiveDepth = 16
+    private var activeVideoSource = "synthetic"
     private var generation = UUID()
     var decodedFrames: Int { engine?.frameCounter.received ?? 0 }
+    var keepDecodedPreview = false
+    #if os(macOS)
+    func saveDecodedPreview(to url: URL) throws {
+        guard let engine else { throw LabError.message("接收会话未运行") }
+        try engine.frameCounter.savePreview(to: url)
+    }
+    #endif
 
     var preset: LabPreset {
         let size = resolution.split(separator: "×").compactMap { Int($0) }
@@ -66,13 +85,15 @@ final class LabModel: ObservableObject {
         guard let mediaPortNumber = UInt16(mediaPort), mediaPortNumber > 0 else { error = "媒体端口应为 1–65535"; return }
         activePreset = preset; activeRoute = mediaRoute
         activeBridgeTransport = bridgeTransport; activeReceiveDepth = bridgeReceiveDepth
+        activeVideoSource = isHost ? (captureWindowID == nil ? "synthetic" : "window") : "remote"
         mode = isHost ? "host" : "viewer"
         let token = UUID(); generation = token
         do {
             if isHost { pairingKey = try hostKey ?? SignalTransport.newPairingKey() }
             let signal = SignalTransport()
-            let engine = try PeerEngine(isHost: isHost, preset: activePreset, route: activeRoute, endpointHost: host, mediaPort: mediaPortNumber, receiveDepth: bridgeReceiveDepth, bridgeTransport: bridgeTransport)
+            let engine = try PeerEngine(isHost: isHost, preset: activePreset, route: activeRoute, endpointHost: host, mediaPort: mediaPortNumber, receiveDepth: bridgeReceiveDepth, bridgeTransport: bridgeTransport, captureWindowID: isHost ? captureWindowID : nil)
             self.signal = signal; self.engine = engine
+            if keepDecodedPreview { engine.frameCounter.enablePreview() }
             engine.onSignal = { [weak signal] message in signal?.send(message) }
             signal.onMessage = { [weak engine] message in engine?.receive(message) }
             signal.onReady = { [weak engine] in if isHost { engine?.startOffer() } }
@@ -109,6 +130,7 @@ final class LabModel: ObservableObject {
         local.resolution = useCurrentPreset ? resolution : "1280×720"
         local.fps = useCurrentPreset ? fps : 30; local.megabits = useCurrentPreset ? megabits : 8
         local.pattern = useCurrentPreset ? pattern : .grid
+        local.captureWindowID = captureWindowID
         local.port = String(UInt16.random(in: 49000...59000))
         local.mediaPort = String(UInt16.random(in: 49000...59000))
         local.startHost()
@@ -133,12 +155,12 @@ final class LabModel: ObservableObject {
     }
 
     func exportReport(to destination: URL? = nil, recentSamples: Int? = nil) {
-        let report = LabReport(schemaVersion: 4,
+        let report = LabReport(schemaVersion: 5,
             appVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown",
             build: Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown",
             backend: "libwebrtc M157 / H.264 SDR", os: ProcessInfo.processInfo.operatingSystemVersionString,
             mode: mode, networkLabel: networkLabel, actualOverlayPath: "unknown", pacing: WebRTCRuntime.mode,
-            pacingParameters: WebRTCRuntime.mode.screenShareSettings, bridgeReceiveDepth: activeReceiveDepth, bridgeTransport: activeBridgeTransport, mediaRoute: activeRoute, preset: activePreset,
+            pacingParameters: WebRTCRuntime.mode.screenShareSettings, bridgeReceiveDepth: activeReceiveDepth, bridgeTransport: activeBridgeTransport, mediaRoute: activeRoute, preset: activePreset, videoSource: activeVideoSource,
             notes: [activeRoute != .directICE ? "Fixed UDP carries ICE/DTLS/SRTP/SCTP through the configured endpoint. The outer Ponte channel is not observed." : "Direct ICE can use any reachable adapter; the network label does not constrain it.",
                     "Control RTT is an echoed DataChannel round trip, not input-to-photon latency.",
                     "Send/decode/jitter-buffer delays are means over each stats interval; their P95 is not a per-frame P95. Encoder callback timing includes submission-to-callback work.",
@@ -147,8 +169,9 @@ final class LabModel: ObservableObject {
                     "Socket transport is IPv4-only. Bridge sequence holes can include sender discards or reordering; they are not automatically permanent network loss. Frame gaps measure renderer callbacks, not display photons.",
                     "Queue age only covers the application adapter, not OS/overlay/encoder queues. P95 covers the latest 120 successful echoes; probe counters expose expiration.",
                     "Candidate host/UDP does not prove Tailscale direct or a Ponte channel type.",
-                    "This is a synthetic H.264 SDR baseline, not HEVC/HDR or window-capture qualification.",
-                    "Report excludes pairing key, SDP, endpoint addresses, user input and video content."]
+                    "H.264 SDR only. For window sources preset.pattern is unused. Source kind is local to this peer, not negotiated with old receivers.",
+                    "Window capture follows display cadence and damage; RTCVideoSource caps output at preset.fps. Capture callbacks may exceed output fps. Idle frames are not encoder drops. WindowServer age ends at the capture callback, not remote display; source dimensions are sampled at capture start.",
+                    "Report excludes pairing key, SDP, endpoint addresses, window identifiers/titles, user input and video content."]
                     + (recentSamples == nil ? [] : ["Live snapshot contains only the latest samples; session-end reports retain the full bounded history."]),
             samples: recentSamples.map { Array(samples.suffix(max(0, $0))) } ?? samples)
         do {

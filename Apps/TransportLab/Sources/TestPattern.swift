@@ -24,7 +24,7 @@ struct LabPreset: Codable, Equatable {
     var pattern = PatternKind.grid
 }
 
-final class TestPattern {
+final class TestPattern: LabVideoSource {
     private let source: RTCVideoSource
     private let capturer: RTCVideoCapturer
     private let preset: LabPreset

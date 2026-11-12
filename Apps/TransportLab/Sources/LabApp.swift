@@ -7,7 +7,7 @@ struct LabApp: App {
     @Environment(\.scenePhase) private var scenePhase
     init() {
         #if os(macOS)
-        if CommandLine.arguments.contains("--self-test") || CommandLine.arguments.contains("--lab-role") { LabCLI.run() }
+        if CommandLine.arguments.contains("--self-test") || CommandLine.arguments.contains("--lab-role") || CommandLine.arguments.contains("--list-windows") { LabCLI.run() }
         #endif
         WebRTCRuntime.initialize()
     }
@@ -79,6 +79,17 @@ struct LabView: View {
                     }
                     GroupBox("发送端参数 · 连接前设置") {
                         VStack {
+                            #if os(macOS)
+                            HStack {
+                                Picker("捕获来源", selection: $model.captureWindowID) {
+                                    Text("合成测试图").tag(nil as UInt32?)
+                                    ForEach(model.captureWindows) { window in
+                                        Text("\(window.application) · \(window.title)").tag(Optional(window.id))
+                                    }
+                                }
+                                Button("刷新窗口") { model.refreshCaptureWindows() }
+                            }
+                            #endif
                             Picker("像素尺寸", selection: $model.resolution) {
                                 ForEach(["1280×720", "1920×1080", "2560×1440"], id: \.self) { Text($0) }
                             }
@@ -116,7 +127,7 @@ struct LabView: View {
                                 metric("UDP 探测大小 / 分片包数", "\(bridge.pathDatagramBytes) B / \(bridge.fragmentedInnerDatagrams)")
                                 Text(bridge.endpointScope).font(.caption).foregroundStyle(.secondary)
                             }
-                            Text("往返时间不等于输入到显示延迟。此版本不采集桌面、不注入键鼠、不验证 HEVC/HDR。")
+                            Text("往返时间不等于输入到显示延迟。Mac 主机支持单窗口捕获；当前不注入键鼠、不验证 HEVC/HDR 或音频。")
                                 .font(.caption).foregroundStyle(.secondary)
                         }.padding(4)
                     }

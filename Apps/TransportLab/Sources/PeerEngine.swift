@@ -1,5 +1,8 @@
 import Foundation
 import WebRTC
+#if os(macOS)
+import CoreImage
+#endif
 
 enum MediaRoute: String, Codable, CaseIterable, Identifiable {
     case directICE = "direct-ice"
@@ -38,6 +41,7 @@ struct LabSample: Codable {
     var codec: String = "unknown"
     var codecParameters: String = "unknown"
     var encoderDetails: EncoderSample? = nil
+    var captureDetails: CaptureSample? = nil
     var encoder: String = "unknown"
     var decoder: String = "unknown"
     var bridge: BridgeSample? = nil
@@ -69,12 +73,27 @@ final class FrameCounter: NSObject, RTCVideoRenderer {
     private var firstTime: Double?
     private var lastTime: Double?
     private var gaps: [Double] = []
+    private var previewEnabled = false
+    private var previewFrame: RTCVideoFrame?
+    func enablePreview() { lock.lock(); previewEnabled = true; lock.unlock() }
+    #if os(macOS)
+    func savePreview(to url: URL) throws {
+        lock.lock(); let frame = previewFrame; lock.unlock()
+        guard let buffer = frame?.buffer as? RTCCVPixelBuffer else {
+            throw LabError.message("没有可导出的原生解码帧")
+        }
+        let image = CIImage(cvPixelBuffer: buffer.pixelBuffer)
+        try CIContext().writePNGRepresentation(of: image, to: url, format: .RGBA8,
+            colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!)
+    }
+    #endif
     var received: Int { lock.lock(); defer { lock.unlock() }; return count }
     var firstReceivedAt: Double? { lock.lock(); defer { lock.unlock() }; return firstTime }
     func setSize(_ size: CGSize) {}
     func renderFrame(_ frame: RTCVideoFrame?) {
         guard frame != nil else { return }
         lock.lock(); count += 1
+        if previewEnabled { previewFrame = frame }
         let now = ProcessInfo.processInfo.systemUptime
         if firstTime == nil { firstTime = now }
         if let lastTime {
@@ -99,7 +118,7 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
     private let encoderTelemetry = EncoderTelemetry()
     private var peer: RTCPeerConnection!
     private var channel: RTCDataChannel?
-    private var source: TestPattern?
+    private var source: LabVideoSource?
     private var timer: Timer?
     private var remoteCandidates: [RTCIceCandidate] = []
     private var remoteReady = false
@@ -132,7 +151,7 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
     var onSample: ((LabSample) -> Void)?
     var onFailure: ((String) -> Void)?
 
-    init(isHost: Bool, preset: LabPreset, route: MediaRoute = .directICE, endpointHost: String = "", mediaPort: UInt16 = 45991, receiveDepth: Int = 16, bridgeTransport: BridgeTransportKind = .network) throws {
+    init(isHost: Bool, preset: LabPreset, route: MediaRoute = .directICE, endpointHost: String = "", mediaPort: UInt16 = 45991, receiveDepth: Int = 16, bridgeTransport: BridgeTransportKind = .network, captureWindowID: UInt32? = nil) throws {
         self.isHost = isHost; self.preset = preset; self.route = route
         self.endpointHost = endpointHost; self.mediaPort = mediaPort
         self.receiveDepth = receiveDepth; self.bridgeTransport = bridgeTransport
@@ -181,7 +200,15 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
             // congestion control may reduce it immediately.
             _ = pc.setBweMinBitrateBps(nil, currentBitrateBps: NSNumber(value: min(4, preset.megabits) * 1_000_000),
                 maxBitrateBps: NSNumber(value: preset.megabits * 1_000_000))
+            #if os(macOS)
+            if let captureWindowID {
+                source = WindowCaptureSource(source: videoSource, preset: preset, windowID: captureWindowID) { [weak self] message in
+                    guard let self, !self.stopped else { return }; self.onFailure?(message)
+                }
+            } else { source = try TestPattern(source: videoSource, preset: preset) }
+            #else
             source = try TestPattern(source: videoSource, preset: preset)
+            #endif
             let settings = RTCDataChannelConfiguration()
             settings.isOrdered = true
             channel = pc.dataChannel(forLabel: "control-probe", configuration: settings)
@@ -354,7 +381,10 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
         sample.seconds = now - started
         sample.bridge = bridge?.snapshot()
         (sample.frameGapP95Milliseconds, sample.frameGapMaxMilliseconds) = frameCounter.gapSnapshot()
-        if isHost { sample.encoderDetails = encoderTelemetry.snapshot() }
+        if isHost {
+            sample.encoderDetails = encoderTelemetry.snapshot()
+            sample.captureDetails = source?.captureSnapshot()
+        }
         if let firstFrameAt, let negotiatedAt { sample.firstFrameMilliseconds = (firstFrameAt - negotiatedAt) * 1000 }
         sample.probeSent = probesSent; sample.probeReceived = probesReceived; sample.probeExpired = probesExpired
         let values = Array(report.statistics.values)

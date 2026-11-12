@@ -2,11 +2,13 @@
 
 面向 Mac、iPad 和 iPhone 的原生远程工作空间：把远端 Mac 的应用窗口独立串流到客户端，优先做好清晰度、低延迟和窗口交互，再扩展到整屏远程与多主机窗口工作区。
 
-**当前进入 M0 传输验证阶段。** 仓库包含可构建的 **KKRemote Lab**（Mac 测试源与接收端、iPad / iPhone 接收端），用于验证 H.264 SDR 视频、配对连接和控制消息往返。已打通两台 Mac 经过 Ponte LAN 通道的 1080p60 合成视频；2026-11-13 用户确认 TestFlight 构建 3 经异地 Ponte 能在 iPhone 持续显示动态测试图，实际接收性能待报告量化。已减少高码率下的媒体分片并显著缩短 WebRTC 发送排队；新增 socket 接收路径在五分钟 Ponte LAN 测试中达到零 RTP 丢包与零 NACK，但平均 57.93 fps、仍有冻结，尚未达到稳定 60 fps 的低延迟验收目标。真实窗口捕获、远程输入、HEVC/HDR 与远程 iPad 尚未验证。产品架构版本仍为 v0.3，2026-11-12。
+**当前进入 M0 传输验证阶段。** 仓库包含可构建的 **KKRemote Lab**（Mac 测试源与接收端、iPad / iPhone 接收端），用于验证 H.264 SDR 视频、配对连接和控制消息往返。已打通两台 Mac 经过 Ponte LAN 通道的 1080p60 合成视频；2026-11-13 用户确认 TestFlight 构建 3 经异地 Ponte 能在 iPhone 持续显示动态测试图，实际接收性能待报告量化。已减少高码率下的媒体分片并显著缩短 WebRTC 发送排队；新增 socket 接收路径在五分钟 Ponte LAN 测试中达到零 RTP 丢包与零 NACK，但平均 57.93 fps、仍有冻结，尚未达到稳定 60 fps 的低延迟验收目标。Mac 已接入 ScreenCaptureKit 单窗口捕获；远程输入、HEVC/HDR 与远程 iPad 尚未验证。产品架构版本仍为 v0.3，2026-11-12。
 
 最新手机结果见 [iPhone 构建 5 压力测试](docs/testing/iPhone构建5压力测试.md)：异地 Ponte 1440p 视频已通；相同噪声源的约三分钟对照中，45 / 20 Mbps 上限分别得到 18.94 / 12.65 fps 实际编码帧率。20 Mbps 减少了重传与控制延迟尖峰，但流畅度未改善，两档均未达到 60 fps。五分钟双 Mac 对照见 [Ponte 接收调度优化](docs/testing/Ponte接收调度优化.md)；上一轮实现与 LAN / Ponte 高码率复测见 [高码率排队优化](docs/testing/高码率排队优化.md)；v1 历史记录见 [Ponte 固定 UDP 实验](docs/testing/Ponte固定UDP实验.md)。TestFlight 已调整为内部测试，流程与构建记录见 [TestFlight 与传输实验](docs/testing/TestFlight与传输实验.md)；构建 2 不含 Ponte 适配器。
 
 随后完成 [编码丢帧定位与桌面滚动验证](docs/testing/编码丢帧与桌面滚动.md)：原始噪声的主要降帧发生在进入编码器前；新增明确标注的合成桌面滚动源，在 1440p、20 Mbps 上限的两分钟本机回环中达到 60 fps，实际视频约 3.73 Mbps。用户继续用构建 5 经异地 Ponte 接收，反馈“60fps 流畅”；原始噪声压力目标仍未通过。
+
+当前继续验证 [真实窗口捕获](docs/testing/真实窗口捕获.md)：Mac 捕获真实浏览器窗口，沿用 H.264 High 5.1、固定 UDP v2 与现有构建 5 接收协议。两分钟本机滚动 / 视频分别达到约 59.94 / 59.93 fps，实际约 2.94 / 5.10 Mbps，接收端均无 SDK 冻结；用户已确认构建 5 的异地真实窗口滚动与视频流畅；视频两分钟主机均值约 58.87 fps，仍有捕获源降帧。支持显式选择窗口、原生 2× 像素、隐藏系统光标和独立捕获诊断；窗口交互与移动布局仍未实现。
 
 ## 项目方向
 
@@ -74,6 +76,7 @@ M0–M4 的窗口功能版不依赖整屏模式或多主机功能。阶段范围
 
 | 文档 | 内容 |
 |---|---|
+| [真实窗口捕获](docs/testing/真实窗口捕获.md) | ScreenCaptureKit、真实浏览器滚动 / 视频、捕获节拍与构建 5 兼容性 |
 | [编码丢帧与桌面滚动](docs/testing/编码丢帧与桌面滚动.md) | 编码提交计数、直接编码器探针、1440p 桌面式滚动与构建 5 复测 |
 | [iPhone 构建 5 压力测试](docs/testing/iPhone构建5压力测试.md) | 1440p 异地 Ponte 连通性、45 Mbps 噪声源的降帧、重传与延迟基线 |
 | [Ponte 接收调度优化](docs/testing/Ponte接收调度优化.md) | UDP socket、丢包分类、五分钟 LAN/Ponte 对照与剩余降帧问题 |
