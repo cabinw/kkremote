@@ -8,7 +8,7 @@ enum LabCLI {
         var reportURL: URL?
         do {
             let args = Array(CommandLine.arguments.dropFirst())
-            let known: Set<String> = ["--lab-role", "--route", "--host", "--port", "--media-port", "--key-file", "--duration", "--resolution", "--fps", "--mbps", "--pattern", "--report", "--host-report"]
+            let known: Set<String> = ["--lab-role", "--route", "--host", "--port", "--media-port", "--key-file", "--duration", "--resolution", "--fps", "--mbps", "--pattern", "--report", "--host-report", "--pacing"]
             var options: [String: String] = [:], i = 0
             while i < args.count {
                 if args[i] == "--self-test" { i += 1; continue }
@@ -22,6 +22,8 @@ enum LabCLI {
                   let fps = Int(options["--fps"] ?? "60"), [30, 60].contains(fps),
                   let mbps = Int(options["--mbps"] ?? "25"), (1...120).contains(mbps),
                   let pattern = PatternKind(rawValue: options["--pattern"] ?? "grid") else { throw LabError.message("测试参数无效") }
+            guard let pacing = PacingMode(rawValue: options["--pacing"] ?? "interactive") else { throw LabError.message("无效 pacing 模式") }
+            WebRTCRuntime.initialize(pacing)
             let resolution = options["--resolution"] ?? "1920x1080"
             guard ["1280x720", "1920x1080", "2560x1440"].contains(resolution) else { throw LabError.message("不支持的尺寸") }
             model.mediaRoute = route; model.host = options["--host"] ?? "127.0.0.1"

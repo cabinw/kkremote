@@ -12,7 +12,8 @@ import uuid
 root = Path(__file__).resolve().parent.parent
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--host', default='127.0.0.1', help='Self address or this Mac\'s own .sgponte name; NOT a remote host')
-parser.add_argument('--route', choices=['fixed-udp-v1', 'direct-ice'], default='fixed-udp-v1')
+parser.add_argument('--route', choices=['fixed-udp-v1', 'fixed-udp-v2', 'direct-ice'], default='fixed-udp-v2')
+parser.add_argument('--pacing', choices=['upstream', 'interactive', 'smooth'], default='interactive')
 parser.add_argument('--rates', default='20,45,80,120')
 parser.add_argument('--duration', type=int, default=40)
 parser.add_argument('--resolution', choices=['1280x720', '1920x1080', '2560x1440'], default='2560x1440')
@@ -51,7 +52,7 @@ for rate in rates:
     host = container / f'{rate}-host.json'
     viewer = container / f'{rate}-viewer.json'
     command = [str(app), '--self-test', '--host', args.host, '--route', args.route, '--duration', str(args.duration),
-               '--resolution', args.resolution, '--fps', '60', '--mbps', str(rate), '--pattern', args.pattern,
+               '--pacing', args.pacing, '--resolution', args.resolution, '--fps', '60', '--mbps', str(rate), '--pattern', args.pattern,
                '--host-report', str(host), '--report', str(viewer)]
     with (output / f'{rate}.log').open('w') as log:
         completed = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, timeout=args.duration + 45)
@@ -64,7 +65,7 @@ for rate in rates:
     print(json.dumps({'ceilingMbps': rate, 'actualMbps': result['viewer']['videoMbpsMean'],
                       'fpsMedian': result['viewer']['fpsMedian'], 'controlRTTP95ms': result['viewer']['controlRTTP95ms']}), flush=True)
 report = {'scope': 'single Mac, self-endpoint only; not cross-device Ponte', 'route': args.route,
-          'resolution': args.resolution, 'pattern': args.pattern, 'durationSeconds': args.duration,
+          'pacing': args.pacing, 'resolution': args.resolution, 'pattern': args.pattern, 'durationSeconds': args.duration,
           'warmupExcludedSeconds': 10, 'results': results}
 (output / 'summary.json').write_text(json.dumps(report, indent=2) + '\n')
 print(f'Reports: {output}', flush=True)

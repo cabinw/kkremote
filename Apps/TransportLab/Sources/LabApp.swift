@@ -9,6 +9,7 @@ struct LabApp: App {
         #if os(macOS)
         if CommandLine.arguments.contains("--self-test") || CommandLine.arguments.contains("--lab-role") { LabCLI.run() }
         #endif
+        WebRTCRuntime.initialize()
     }
     var body: some Scene {
         WindowGroup {
@@ -52,7 +53,7 @@ struct LabView: View {
                             Picker("媒体路径", selection: $model.mediaRoute) {
                                 ForEach(MediaRoute.allCases) { Text($0.title).tag($0) }
                             }.disabled(model.running)
-                            if model.mediaRoute == .ponteUDP {
+                            if model.mediaRoute != .directICE {
                                 TextField("主机 UDP 媒体端口", text: $model.mediaPort).textFieldStyle(.roundedBorder).disabled(model.running)
                             }
                             if model.mode == "host" && model.running {
@@ -100,10 +101,16 @@ struct LabView: View {
                             metric("候选类型", model.sample.candidatePair)
                             metric("实际编码", model.sample.codec)
                             metric("解码 / 抖动缓冲", "\(ms(model.sample.decodeMilliseconds)) / \(ms(model.sample.jitterBufferMilliseconds))")
+                            metric("发送等待（采样均值）", ms(model.sample.sendDelayMilliseconds))
+                            if let encoder = model.sample.encoderDetails {
+                                metric("编码回调 P95 / 最大单帧", "\(ms(encoder.callbackMillisecondsP95)) / \((encoder.frameBytesMax ?? 0) / 1024) KiB")
+                                metric("编码分配码率", String(format: "%.2f Mbps", encoder.targetMbps))
+                            }
                             metric("丢帧 / 冻结", "\(model.sample.framesDropped) / \(model.sample.freezeCount)")
                             if let bridge = model.sample.bridge {
                                 metric("UDP 认证 / 探测 RTT", "\(bridge.authenticated ? "已通过" : "等待") / \(ms(bridge.probeRTTMilliseconds))")
                                 metric("UDP 队列丢弃 / 超时分片", "\(bridge.queueDrops) / \(bridge.expiredAssemblies)")
+                                metric("UDP 探测大小 / 分片包数", "\(bridge.pathDatagramBytes) B / \(bridge.fragmentedInnerDatagrams)")
                                 Text(bridge.endpointScope).font(.caption).foregroundStyle(.secondary)
                             }
                             Text("往返时间不等于输入到显示延迟。此版本不采集桌面、不注入键鼠、不验证 HEVC/HDR。")

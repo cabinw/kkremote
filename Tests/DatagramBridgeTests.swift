@@ -1,4 +1,5 @@
 import Foundation
+import Network
 
 @main
 enum DatagramBridgeTests {
@@ -24,6 +25,8 @@ enum DatagramBridgeTests {
         while !echoed, failure == nil, Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
         precondition(failure == nil && echoed, "Real UDP fragmented round trip failed: \(failure ?? "timeout")")
         precondition(host.snapshot().authenticated && viewer.snapshot().authenticated)
+        precondition(host.snapshot().pathDatagramBytes == 1280 && viewer.snapshot().pathDatagramBytes == 1280,
+                     "v2 must probe a full-sized UDP payload in both directions")
         precondition(viewer.snapshot().innerDatagramsReceived >= 1 && host.snapshot().innerDatagramsReceived >= 1)
         // A different local process/socket cannot inject into the pinned WebRTC endpoint.
         let stranger = try LoopbackDatagramPort(queue: queue)
@@ -44,6 +47,26 @@ enum DatagramBridgeTests {
         precondition(ready && !rejectedHost.snapshot().authenticated && !wrongViewer.snapshot().authenticated)
         precondition(rejectedHost.snapshot().rejectedDatagrams > 0)
         rejectedHost.stop(); wrongViewer.stop()
-        print("DATAGRAM_BRIDGE_TESTS_PASSED: real UDP fragmentation/echo, pinned local source, wrong-key rejection")
+
+        // An authenticated small packet alone must not qualify the v2 media path.
+        let sizeHost = try DatagramBridge(secret: key, session: "path-size", isHost: true)
+        var smallCodec = try MediaDatagramCodec(secret: key, session: "path-size", isHost: false)
+        let sizePort = UInt16.random(in: 49000...59000)
+        let client = NWConnection(host: "127.0.0.1", port: NWEndpoint.Port(rawValue: sizePort)!, using: .udp)
+        var probeReady = false
+        client.stateUpdateHandler = { state in if case .ready = state { probeReady = true } }
+        sizeHost.onReady = { client.start(queue: .main) }
+        try sizeHost.startHost(port: sizePort)
+        let readyDeadline = Date().addingTimeInterval(2)
+        while !probeReady, Date() < readyDeadline { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
+        precondition(probeReady)
+        client.send(content: smallCodec.seal(Data(count: 8), kind: .probe)[0], completion: .contentProcessed { _ in })
+        RunLoop.main.run(until: Date().addingTimeInterval(0.2))
+        precondition(!sizeHost.snapshot().authenticated, "8-byte probe falsely qualified the v2 path")
+        client.send(content: smallCodec.seal(Data(count: smallCodec.probeBytes), kind: .probe)[0], completion: .contentProcessed { _ in })
+        RunLoop.main.run(until: Date().addingTimeInterval(0.2))
+        precondition(sizeHost.snapshot().authenticated && sizeHost.snapshot().pathDatagramBytes == 1280)
+        client.cancel(); sizeHost.stop()
+        print("DATAGRAM_BRIDGE_TESTS_PASSED: UDP echo, full-size path admission, pinned source, wrong-key rejection")
     }
 }
