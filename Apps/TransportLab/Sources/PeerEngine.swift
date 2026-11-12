@@ -3,9 +3,17 @@ import WebRTC
 
 enum MediaRoute: String, Codable, CaseIterable, Identifiable {
     case directICE = "direct-ice"
-    case ponteUDP = "fixed-udp-v1"
+    case ponteUDPv1 = "fixed-udp-v1"
+    case ponteUDP = "fixed-udp-v2"
     var id: String { rawValue }
-    var title: String { self == .ponteUDP ? "固定 UDP（Ponte）" : "原生 ICE（兼容 0.1.0）" }
+    var wireVersion: MediaWireVersion { self == .ponteUDPv1 ? .v1 : .v2 }
+    var title: String {
+        switch self {
+        case .directICE: return "原生 ICE（局域网对照）"
+        case .ponteUDPv1: return "固定 UDP v1（旧版对照）"
+        case .ponteUDP: return "固定 UDP v2（Ponte）"
+        }
+    }
 }
 
 struct LabSample: Codable {
@@ -29,6 +37,7 @@ struct LabSample: Codable {
     var candidatePair: String = "unknown"
     var codec: String = "unknown"
     var codecParameters: String = "unknown"
+    var encoderDetails: EncoderSample? = nil
     var encoder: String = "unknown"
     var decoder: String = "unknown"
     var bridge: BridgeSample? = nil
@@ -62,20 +71,8 @@ final class FrameCounter: NSObject, RTCVideoRenderer {
 
 /// One lab peer. All mutable session state is accessed on the main queue.
 final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDelegate {
-    private static let factory: RTCPeerConnectionFactory = {
-        RTCInitializeSSL()
-        return RTCPeerConnectionFactory(encoderFactory: LabH264EncoderFactory(), decoderFactory: LabH264DecoderFactory())
-    }()
-    private static let loopbackFactory: RTCPeerConnectionFactory = {
-        RTCInitializeSSL()
-        let factory = RTCPeerConnectionFactory(encoderFactory: LabH264EncoderFactory(), decoderFactory: LabH264DecoderFactory())
-        let options = RTCPeerConnectionFactoryOptions()
-        options.ignoreLoopbackNetworkAdapter = false
-        options.ignoreVPNNetworkAdapter = true; options.ignoreWiFiNetworkAdapter = true
-        options.ignoreEthernetNetworkAdapter = true; options.ignoreCellularNetworkAdapter = true
-        factory.setOptions(options)
-        return factory
-    }()
+    private var factory: RTCPeerConnectionFactory!
+    private let encoderTelemetry = EncoderTelemetry()
     private var peer: RTCPeerConnection!
     private var channel: RTCDataChannel?
     private var source: TestPattern?
@@ -121,7 +118,16 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
         configuration.rtcpMuxPolicy = .require
         configuration.tcpCandidatePolicy = .disabled
         configuration.continualGatheringPolicy = .gatherOnce
-        let factory = route == .ponteUDP ? Self.loopbackFactory : Self.factory
+        WebRTCRuntime.initialize(WebRTCRuntime.mode)
+        let factory = RTCPeerConnectionFactory(encoderFactory: LabH264EncoderFactory(telemetry: encoderTelemetry), decoderFactory: LabH264DecoderFactory())
+        self.factory = factory
+        if route != .directICE {
+            let options = RTCPeerConnectionFactoryOptions()
+            options.ignoreLoopbackNetworkAdapter = false
+            options.ignoreVPNNetworkAdapter = true; options.ignoreWiFiNetworkAdapter = true
+            options.ignoreEthernetNetworkAdapter = true; options.ignoreCellularNetworkAdapter = true
+            factory.setOptions(options)
+        }
         guard let pc = factory.peerConnection(with: configuration,
                 constraints: RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil), delegate: self) else {
             throw LabError.message("无法创建 WebRTC 会话")
@@ -162,14 +168,14 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
     func startOffer() {
         guard isHost, !stopped else { return }
         negotiatedAt = ProcessInfo.processInfo.systemUptime
-        if route == .ponteUDP {
+        if route != .directICE {
             do {
                 let encoded = try SignalTransport.newPairingKey()
-                let bridge = try DatagramBridge(secret: Data(base64Encoded: encoded)!, session: session!, isHost: true)
+                let bridge = try DatagramBridge(secret: Data(base64Encoded: encoded)!, session: session!, isHost: true, version: route.wireVersion)
                 install(bridge)
                 bridge.onReady = { [weak self] in
                     guard let self, !self.stopped, let session = self.session else { return }
-                    self.onSignal?(SignalMessage(type: "bridge", session: session, bridgeVersion: 1, mediaPort: self.mediaPort, mediaKey: encoded))
+                    self.onSignal?(SignalMessage(type: "bridge", session: session, bridgeVersion: self.route.wireVersion.rawValue, mediaPort: self.mediaPort, mediaKey: encoded))
                     self.makeOffer()
                 }
                 try bridge.startHost(port: mediaPort)
@@ -192,7 +198,7 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
             DispatchQueue.main.async {
                 guard let self, !self.stopped, let session = self.session else { return }
                 guard error == nil else { self.onFailure?("无法设置本地 SDP"); return }
-                let text = self.route == .ponteUDP ? Self.withoutCandidates(sdp.sdp) : sdp.sdp
+                let text = self.route != .directICE ? Self.withoutCandidates(sdp.sdp) : sdp.sdp
                 self.onSignal?(SignalMessage(type: sdp.type == .offer ? "offer" : "answer", session: session, sdp: text))
             }
         }
@@ -204,13 +210,13 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
         guard session == message.session else { onFailure?("信令会话不匹配"); return }
         switch message.type {
         case "bridge":
-            guard !isHost, route == .ponteUDP, bridge == nil, message.bridgeVersion == 1,
+            guard !isHost, route != .directICE, bridge == nil, message.bridgeVersion == route.wireVersion.rawValue,
                   let port = message.mediaPort, port > 0,
                   let encoded = message.mediaKey, let key = Data(base64Encoded: encoded), key.count == 32 else {
                 onFailure?("固定 UDP 模式不匹配或配置无效；两端需要新版 Lab 并选择相同媒体模式"); return
             }
             do {
-                let bridge = try DatagramBridge(secret: key, session: message.session, isHost: false)
+                let bridge = try DatagramBridge(secret: key, session: message.session, isHost: false, version: route.wireVersion)
                 install(bridge)
                 try bridge.startViewer(host: endpointHost, port: port)
             } catch { onFailure?(error.localizedDescription) }
@@ -226,7 +232,7 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
             guard let sdp = message.sdp, (message.type == "answer") == isHost else { onFailure?("意外 SDP 类型"); return }
             guard !remoteReady else { onFailure?("测试会话不接受重复 SDP"); return }
             negotiatedAt = negotiatedAt ?? ProcessInfo.processInfo.systemUptime
-            let remoteSDP = route == .ponteUDP ? Self.withoutCandidates(sdp) : sdp
+            let remoteSDP = route != .directICE ? Self.withoutCandidates(sdp) : sdp
             peer.setRemoteDescription(RTCSessionDescription(type: isHost ? .answer : .offer, sdp: remoteSDP)) { [weak self] error in
                 DispatchQueue.main.async {
                     guard let self, !self.stopped else { return }
@@ -320,6 +326,7 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
         let now = ProcessInfo.processInfo.systemUptime
         sample.seconds = now - started
         sample.bridge = bridge?.snapshot()
+        if isHost { sample.encoderDetails = encoderTelemetry.snapshot() }
         if let firstFrameAt, let negotiatedAt { sample.firstFrameMilliseconds = (firstFrameAt - negotiatedAt) * 1000 }
         sample.probeSent = probesSent; sample.probeReceived = probesReceived; sample.probeExpired = probesExpired
         let values = Array(report.statistics.values)
@@ -393,7 +400,7 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
     func peerConnection(_ peerConnection: RTCPeerConnection, didGenerate candidate: RTCIceCandidate) {
         DispatchQueue.main.async { [weak self] in
             guard let self, !self.stopped, let session = self.session else { return }
-            if self.route == .ponteUDP {
+            if self.route != .directICE {
                 let fields = candidate.sdp.split(separator: " ")
                 guard self.localBridgeCandidate == nil, fields.count >= 8, fields[2].lowercased() == "udp",
                       fields[4] == "127.0.0.1", let port = UInt16(fields[5]), port > 0, let bridge = self.bridge else { return }

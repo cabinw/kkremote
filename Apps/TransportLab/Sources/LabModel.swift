@@ -11,6 +11,8 @@ struct LabReport: Codable {
     let mode: String
     let networkLabel: String
     let actualOverlayPath: String
+    let pacing: PacingMode
+    let pacingParameters: String
     let mediaRoute: MediaRoute
     let preset: LabPreset
     let notes: [String]
@@ -122,13 +124,16 @@ final class LabModel: ObservableObject {
     }
 
     func exportReport(to destination: URL? = nil) {
-        let report = LabReport(schemaVersion: 2,
+        let report = LabReport(schemaVersion: 3,
             appVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown",
             build: Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown",
             backend: "libwebrtc M157 / H.264 SDR", os: ProcessInfo.processInfo.operatingSystemVersionString,
-            mode: mode, networkLabel: networkLabel, actualOverlayPath: "unknown", mediaRoute: activeRoute, preset: activePreset,
-            notes: [activeRoute == .ponteUDP ? "Fixed UDP carries ICE/DTLS/SRTP/SCTP through the configured endpoint. The outer Ponte channel is not observed." : "Direct ICE can use any reachable adapter; the network label does not constrain it.",
+            mode: mode, networkLabel: networkLabel, actualOverlayPath: "unknown", pacing: WebRTCRuntime.mode,
+            pacingParameters: WebRTCRuntime.mode.screenShareSettings, mediaRoute: activeRoute, preset: activePreset,
+            notes: [activeRoute != .directICE ? "Fixed UDP carries ICE/DTLS/SRTP/SCTP through the configured endpoint. The outer Ponte channel is not observed." : "Direct ICE can use any reachable adapter; the network label does not constrain it.",
                     "Control RTT is an echoed DataChannel round trip, not input-to-photon latency.",
+                    "Send/decode/jitter-buffer delays are means over each stats interval; their P95 is not a per-frame P95. Encoder callback timing includes submission-to-callback work.",
+                    "Pacing queue time is a drain target, not a hard packet lifetime. A full-size UDP probe proves delivery at setup, not the path IP MTU or sustained capacity.",
                     "Socket scope alone cannot prove physical topology: a remote overlay proxy can present a loopback endpoint. Local-demo mode is always a single-device test.",
                     "Queue age only covers the application adapter, not OS/overlay/encoder queues. P95 covers the latest 120 successful echoes; probe counters expose expiration.",
                     "Candidate host/UDP does not prove Tailscale direct or a Ponte channel type.",

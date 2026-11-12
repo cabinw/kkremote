@@ -7,17 +7,31 @@ enum MediaDatagramTests {
         func host(_ session: String = "test") throws -> MediaDatagramCodec { try MediaDatagramCodec(secret: key, session: session, isHost: true) }
         func viewer() throws -> MediaDatagramCodec { try MediaDatagramCodec(secret: key, session: "test", isHost: false) }
         var sender = try host(), receiver = try viewer()
-        for size in [1, 8, 1168, 1169, 1200, 4096, 16384] {
+        for size in [1, 8, 1168, 1169, 1199, 1200, 1201, 1248, 1249, 4096, 16384] {
             let payload = Data((0..<size).map { UInt8($0 % 251) })
             let frames = sender.seal(payload)
-            precondition(frames.allSatisfy { $0.count <= 1232 })
+            precondition(frames.allSatisfy { $0.count <= 1280 })
             var result: Data?
             for frame in frames.reversed() { if let packet = receiver.open(frame, now: 0) { result = packet.payload } }
             precondition(result == payload, "Reordering/reassembly failed at \(size)")
             for frame in frames { precondition(receiver.open(frame, now: 0) == nil, "Replay accepted") }
         }
         precondition(sender.seal(Data()).isEmpty && sender.seal(Data(count: 16385)).isEmpty)
+        precondition(sender.seal(Data(count: 1200)).count == 1, "v2 must avoid fragmentation at WebRTC's 1200-byte packet size")
+        precondition(sender.seal(Data(count: 1248)).count == 1 && sender.seal(Data(count: 1249)).count == 2)
+        // Explicit v1 compatibility and cross-version rejection; never silently downgrade.
+        var legacyHost = try MediaDatagramCodec(secret: key, session: "test", isHost: true, version: .v1)
+        var legacyViewer = try MediaDatagramCodec(secret: key, session: "test", isHost: false, version: .v1)
+        let legacyPayload = Data(repeating: 13, count: 1200), legacyFrames = legacyHost.seal(Data(repeating: 13, count: 1200))
+        precondition(legacyFrames.count == 2)
+        precondition(legacyViewer.open(legacyFrames[1], now: 0) == nil)
+        precondition(legacyViewer.open(legacyFrames[0], now: 0)?.payload == legacyPayload)
+        precondition(receiver.open(legacyFrames[0], now: 0) == nil)
+        precondition(legacyViewer.open(sender.seal(Data(count: 1200))[0], now: 0) == nil)
         precondition(sender.seal(Data(count: 9), kind: .probe).isEmpty)
+        let fullProbe = sender.seal(Data(repeating: 27, count: sender.probeBytes), kind: .probe)
+        precondition(fullProbe.count == 1 && fullProbe[0].count == 1280)
+        precondition(receiver.open(fullProbe[0], now: 0)?.payload.count == 1248)
         let probe = sender.seal(Data(count: 8), kind: .probe)[0]
         precondition(receiver.open(probe, now: 0)?.kind == .probe)
         precondition(sender.open(probe, now: 0) == nil, "Reflected packet accepted")

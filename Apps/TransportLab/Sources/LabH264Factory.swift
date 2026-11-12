@@ -35,8 +35,13 @@ enum LabH264Capabilities {
 
 final class LabH264EncoderFactory: NSObject, RTCVideoEncoderFactory {
     private let native = RTCVideoEncoderFactoryH264()
+    let telemetry: EncoderTelemetry
+    init(telemetry: EncoderTelemetry) { self.telemetry = telemetry }
     func supportedCodecs() -> [RTCVideoCodecInfo] { LabH264Capabilities.codecs }
-    func createEncoder(_ info: RTCVideoCodecInfo) -> (any RTCVideoEncoder)? { native.createEncoder(info) }
+    func createEncoder(_ info: RTCVideoCodecInfo) -> (any RTCVideoEncoder)? {
+        guard let encoder = native.createEncoder(info) else { return nil }
+        return MeasuredH264Encoder(native: encoder, telemetry: telemetry)
+    }
 }
 
 final class LabH264DecoderFactory: NSObject, RTCVideoDecoderFactory {

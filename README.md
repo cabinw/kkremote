@@ -2,9 +2,9 @@
 
 面向 Mac、iPad 和 iPhone 的原生远程工作空间：把远端 Mac 的应用窗口独立串流到客户端，优先做好清晰度、低延迟和窗口交互，再扩展到整屏远程与多主机窗口工作区。
 
-**当前进入 M0 传输验证阶段。** 仓库包含可构建的 **KKRemote Lab**（Mac 测试源与接收端、iPad / iPhone 接收端），用于验证 H.264 SDR 视频、配对连接和控制消息往返。已打通两台 Mac 经过 Ponte LAN 通道的 1080p60 合成视频；高码率压力测试暴露了发送排队与帧率问题，尚未达到低延迟验收目标。真实窗口捕获、远程输入、HEVC/HDR 与远程 iPad 尚未验证。产品架构版本仍为 v0.3，2026-11-12。
+**当前进入 M0 传输验证阶段。** 仓库包含可构建的 **KKRemote Lab**（Mac 测试源与接收端、iPad / iPhone 接收端），用于验证 H.264 SDR 视频、配对连接和控制消息往返。已打通两台 Mac 经过 Ponte LAN 通道的 1080p60 合成视频；已减少高码率下的媒体分片并显著缩短 WebRTC 发送排队；Ponte 吞吐波动、接收缓冲和帧率仍未达到稳定低延迟验收目标。真实窗口捕获、远程输入、HEVC/HDR 与远程 iPad 尚未验证。产品架构版本仍为 v0.3，2026-11-12。
 
-固定 UDP 路径、双机实测和下一步性能关口见 [Ponte 固定 UDP 实验](docs/testing/Ponte固定UDP实验.md)。TestFlight 构建 2 的分发记录见 [TestFlight 与传输实验](docs/testing/TestFlight与传输实验.md)；它不含新适配器。
+本轮实现与 LAN / Ponte 高码率复测见 [高码率排队优化](docs/testing/高码率排队优化.md)；v1 历史记录见 [Ponte 固定 UDP 实验](docs/testing/Ponte固定UDP实验.md)。TestFlight 构建 2 的分发记录见 [TestFlight 与传输实验](docs/testing/TestFlight与传输实验.md)；它不含新适配器。
 
 ## 项目方向
 
@@ -72,7 +72,8 @@ M0–M4 的窗口功能版不依赖整屏模式或多主机功能。阶段范围
 
 | 文档 | 内容 |
 |---|---|
-| [Ponte 固定 UDP 实验](docs/testing/Ponte固定UDP实验.md) | 当前适配器、H.264 修正、双 Mac 实测、CLI 与性能瓶颈 |
+| [高码率排队优化](docs/testing/高码率排队优化.md) | v2 封装、pacing、编码突发观测、LAN / Ponte 对照与限制 |
+| [Ponte 固定 UDP 实验](docs/testing/Ponte固定UDP实验.md) | v1 历史实验、H.264 修正与初始双 Mac 媒体测试 |
 | [TestFlight 与传输实验](docs/testing/TestFlight与传输实验.md) | 当前实验工具、构建与签名、远程设备测试流程、已知限制 |
 | [窗口优先架构](docs/design/窗口优先架构.md) | 模块边界、窗口捕获、像素、HDR、输入与生命周期 |
 | [传输路线复核](docs/design/传输路线复核.md) | QUIC / WebRTC 比较、调整理由与选型门槛 |

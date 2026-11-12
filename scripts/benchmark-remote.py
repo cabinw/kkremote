@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Send to an already provisioned Mac viewer over LAN or Ponte, controlled through existing SSH."""
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import shlex
@@ -13,6 +14,8 @@ parser.add_argument('--ssh', required=True, help='Existing SSH alias; no passwor
 parser.add_argument('--remote-app', required=True, help='Absolute path to the matching .app on the viewer Mac')
 parser.add_argument('--host', required=True, help='Sender address as seen by viewer: LAN IP or name.sgponte')
 parser.add_argument('--network', choices=['LAN', 'Surge Ponte'], required=True)
+parser.add_argument('--route', choices=['direct-ice', 'fixed-udp-v1', 'fixed-udp-v2'], default='fixed-udp-v2')
+parser.add_argument('--pacing', choices=['upstream', 'interactive', 'smooth'], default='interactive')
 parser.add_argument('--duration', type=int, default=40)
 parser.add_argument('--resolution', choices=['1280x720', '1920x1080', '2560x1440'], default='1920x1080')
 parser.add_argument('--fps', type=int, choices=[30, 60], default=60)
@@ -34,12 +37,19 @@ def remote(words, **kwargs):
 remote_home = remote(['printenv', 'HOME'], capture_output=True, text=True).stdout.strip()
 if not remote_home.startswith('/') or '\n' in remote_home:
     raise SystemExit('Invalid remote home')
+binary_sha = hashlib.sha256(app.read_bytes()).hexdigest()
+remote_sha = remote(['shasum', '-a', '256', args.remote_app + '/Contents/MacOS/KKRemoteLabMac'], capture_output=True, text=True).stdout.split()[0]
+if binary_sha != remote_sha:
+    raise SystemExit('Sender/viewer executables differ; deploy the matching Release app before benchmarking')
+(output / 'manifest.json').write_text(json.dumps({'binarySHA256': binary_sha, 'sameExecutableVerified': True,
+    'durationSeconds': args.duration, 'route': args.route, 'pacing': args.pacing,
+    'resolution': args.resolution, 'fps': args.fps, 'ceilingMbps': args.mbps, 'pattern': args.pattern}, indent=2) + '\n')
 remote_dir = f'{remote_home}/Library/Containers/com.cabinw.kkremote.lab.mac/Data/RemoteBench/{run_id}'
 remote(['mkdir', '-p', '-m', '700', remote_dir])
 key = container / 'pairing.key'
 remote_key = f'{remote_dir}/pairing.key'
 host_report = container / 'host.json'
-parameters = ['--route', 'fixed-udp-v1', '--resolution', args.resolution, '--fps', str(args.fps),
+parameters = ['--route', args.route, '--pacing', args.pacing, '--resolution', args.resolution, '--fps', str(args.fps),
               '--mbps', str(args.mbps), '--pattern', args.pattern]
 host_command = [str(app), '--lab-role', 'host', '--duration', str(args.duration + 20),
                 '--key-file', str(key), '--report', str(host_report)] + parameters

@@ -2,6 +2,10 @@ import Foundation
 import Network
 
 struct BridgeSample: Codable {
+    var wireVersion = 2
+    var pathDatagramBytes = 0
+    var fragmentedInnerDatagrams = 0
+    var rtpSizeCounts: [String: Int] = [:]
     var authenticated = false
     var endpointScope = "unresolved"
     var sentWireBytes: UInt64 = 0
@@ -47,9 +51,10 @@ final class DatagramBridge {
     var onAuthenticated: (() -> Void)?
     var onFailure: ((String) -> Void)?
 
-    init(secret: Data, session: String, isHost: Bool) throws {
+    init(secret: Data, session: String, isHost: Bool, version: MediaWireVersion = .v2) throws {
         self.isHost = isHost
-        codec = try MediaDatagramCodec(secret: secret, session: session, isHost: isHost)
+        state.wireVersion = version.rawValue
+        codec = try MediaDatagramCodec(secret: secret, session: session, isHost: isHost, version: version)
         local = try LoopbackDatagramPort(queue: queue); localPort = local.port
         local.onPacket = { [weak self] data in self?.send(data, kind: .media) }
     }
@@ -146,6 +151,16 @@ final class DatagramBridge {
             if let bytes {
                 let now = ProcessInfo.processInfo.systemUptime
                 if let packet = self.codec.open(bytes, now: now) {
+                    if !self.state.authenticated {
+                        let expectedKind: MediaDatagramCodec.Kind = self.isHost ? .probe : .acknowledgement
+                        guard packet.kind == expectedKind, packet.payload.count == self.codec.probeBytes else {
+                            self.receive(connection); return
+                        }
+                        if !self.isHost, self.probes[packet.payload.integer(at: 0, as: UInt64.self)] == nil {
+                            self.receive(connection); return
+                        }
+                        self.state.pathDatagramBytes = bytes.count
+                    }
                     if self.isHost && self.active == nil {
                         guard packet.kind == .probe else { self.remove(connection); return }
                         self.active = connection
@@ -184,10 +199,17 @@ final class DatagramBridge {
     private func send(_ payload: Data, kind: MediaDatagramCodec.Kind) {
         guard !stopped, active != nil, kind != .media || state.authenticated else { return }
         let packets = codec.seal(payload, kind: kind)
+        if kind == .media, let first = payload.first, first & 0xc0 == 0x80 {
+            let bucket = payload.count <= 1168 ? "<=1168" : payload.count <= 1200 ? "1169-1200" : payload.count <= 1248 ? "1201-1248" : ">1248"
+            state.rtpSizeCounts[bucket, default: 0] += 1
+        }
         guard waiting.count + packets.count <= 256 else {
             state.queueDrops += packets.count; state.queueOverflowDrops += packets.count; return
         }
-        if kind == .media { state.innerDatagramsSent += 1 }
+        if kind == .media {
+            state.innerDatagramsSent += 1
+            if packets.count > 1 { state.fragmentedInnerDatagrams += 1 }
+        }
         let now = ProcessInfo.processInfo.systemUptime
         waiting.append(contentsOf: packets.map { ($0, now) })
         state.queueHighWater = max(state.queueHighWater, waiting.count + inFlight)
@@ -218,14 +240,16 @@ final class DatagramBridge {
         probes = probes.filter { now - $0.value < 3 }
         let nonce = DispatchTime.now().uptimeNanoseconds
         probes[nonce] = now; lastProbe = now
-        var data = Data(); data.appendInteger(nonce); send(data, kind: .probe)
+        var data = Data(); data.appendInteger(nonce)
+        if !state.authenticated { data.append(Data(repeating: 0, count: codec.probeBytes - 8)) }
+        send(data, kind: .probe)
     }
     private func tick() {
         guard !stopped else { return }
         let now = ProcessInfo.processInfo.systemUptime
         codec.prune(now: now)
         if !state.authenticated && now - started > 15 {
-            fail("TLS 已通，但固定 UDP 媒体端点未通过认证探测；检查 Ponte 接管、主机名和媒体端口")
+            fail("固定 UDP v\(state.wireVersion) 未通过双向认证探测（\(codec.wireBytes) 字节上限）；检查路径、主机名和媒体端口")
         } else if state.authenticated && now - lastReceived > 8 {
             fail("UDP 媒体路径已中断，停止并重新连接")
         } else if !isHost && now - lastProbe >= (state.authenticated ? 1 : 0.25) { probe() }

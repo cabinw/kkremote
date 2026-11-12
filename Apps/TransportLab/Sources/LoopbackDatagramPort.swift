@@ -64,7 +64,7 @@ final class LoopbackDatagramPort {
         var bytes = [UInt8](repeating: 0, count: MediaDatagramCodec.maximumInnerBytes + 1)
         // Bound work per dispatch turn so probe timers and stop are not starved at high bitrate.
         // Yield before filling the bridge's 32 in-flight datagrams. A 1200-byte RTP packet
-        // uses two outer fragments; draining 128 at once starved completion callbacks.
+        // uses two outer fragments in legacy v1; draining 128 at once starved completions.
         for _ in 0..<16 {
             guard fd >= 0 else { return }
             var sender = sockaddr_in(), length = socklen_t(MemoryLayout<sockaddr_in>.size)
