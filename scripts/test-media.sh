@@ -6,6 +6,6 @@ xcrun swiftc Apps/TransportLab/Sources/SignalTransport.swift Apps/TransportLab/S
   Tests/MediaDatagramTests.swift -o .build/tests/MediaDatagramTests
 .build/tests/MediaDatagramTests
 xcrun swiftc Apps/TransportLab/Sources/SignalTransport.swift Apps/TransportLab/Sources/MediaDatagram.swift \
-  Apps/TransportLab/Sources/LoopbackDatagramPort.swift Apps/TransportLab/Sources/DatagramBridge.swift \
+  Apps/TransportLab/Sources/LoopbackDatagramPort.swift Apps/TransportLab/Sources/UDPSocket.swift Apps/TransportLab/Sources/DatagramBridge.swift \
   Tests/DatagramBridgeTests.swift -o .build/tests/DatagramBridgeTests
 .build/tests/DatagramBridgeTests

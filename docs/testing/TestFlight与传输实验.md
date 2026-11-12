@@ -67,25 +67,29 @@ BUILD_NUMBER=3 scripts/build-lab.sh archive
 scripts/upload-testflight.sh
 ```
 
-归档在 `.build/KKRemoteLab.xcarchive`。上传使用 `app-store-connect`，保留外部测试资格，未启用 internal-only 分发。上传成功仅表示文件被接收；还需等待 Apple 处理，检查邮件及 TestFlight 中的最终构建状态。
+归档在 `.build/KKRemoteLab.xcarchive`。上传使用 `app-store-connect`。本轮起导出配置启用 `testFlightInternalTestingOnly=true`，将后续构建限制为内部测试；历史构建 2 即使未使用 internal-only，也可以直接用于内部测试而无需 Beta 审核。上传成功仅表示文件被接收；还需等待 Apple 处理，检查邮件及 TestFlight 中的最终构建状态。
 
 本次构建 1 已上传，但 Apple 后续处理以 `ITMS-90683` 拒绝：SDK 引用摄像头 API，需要用途说明。构建 2 已补充摄像头和麦克风用途说明，明确当前实验不会启用这些设备，并于 2026-11-12 通过 Apple 上传后的处理检查。不要为了通过检查虚构采集功能。
 
 已知非阻断警告：上游 XCFramework 包不含 WebRTC 的 dSYM，上传可能提示 `Upload Symbols Failed`。App 自身有调试符号；WebRTC 内部崩溃的符号化仍受影响。正式稳定性阶段应补齐与该二进制 UUID 对应的符号，或采用可复现的源码构建。
 
-## 4. TestFlight 外部测试流程
+## 4. TestFlight 内部测试流程
 
 应用：[KKRemote Lab 的 TestFlight 后台](https://appstoreconnect.apple.com/apps/6833924397/testflight)。该链接供开发者管理，并不是测试员安装邀请。
 
-1. 完成 Beta 描述、反馈邮箱和审核联系人；不要求 App 登录。
-2. 按实际实现填写加密问卷。Network.framework 信令使用系统 TLS；WebRTC 包含自身的标准 DTLS/SRTP 实现，不能笼统申报为“仅使用 Apple 系统加密”。也不要未经判断直接设置 `ITSAppUsesNonExemptEncryption=false`。
-3. 按 Apple 要求先建内部群组，再建立专用外部测试群组，仅加入指定测试邮箱；不开放公共链接，也不授予 App Store Connect 开发者权限。
-4. 为群组选择可测试构建，提交首次 Beta App Review。审核完成之前，上传成功不等于测试员已经能安装。
-5. 测试员在 iPad / iPhone 上安装 Apple TestFlight，以收到邀请的账号接受邀请，再安装 KKRemote Lab。
+本项目当前仅做团队内部测试，**不需要 Beta App Review**。使用另一个 Apple 账号或异地 iPad 并不意味着必须外部测试；关键是该账号是否为有此 App 访问权的 App Store Connect 用户。
 
-审核可直接使用“本机回环自检”：无需远程 Mac、登录或外网服务。审核说明同时指出这只是安装验证，不是远程性能结论。
+1. 在“用户和访问”中邀请指定测试账号，授予支持内部测试的职能并仅选择 KKRemote Lab。当前使用“营销”职能，不授予管理、财务、创建 App 或签名资源权限。
+2. 测试员先用自己的 Apple 账号接受团队邀请，再加入 `Development` 内部测试群组。
+3. 上传后等待 Apple 完成构建处理，并按实际加密实现填写问卷。Network.framework 信令使用系统 TLS；WebRTC 包含自身的标准 DTLS/SRTP 实现，不能笼统申报为“仅使用 Apple 系统加密”。
+4. 将“准备测试”的构建加入内部群组，向该组测试员发出 TestFlight 邀请。无需提交外部 Beta 审核，也无需重新上传已经处理完毕的构建。
+5. 测试员在 iPad / iPhone 上安装 Apple TestFlight，接受 TestFlight 邀请并安装 KKRemote Lab。团队邀请和 TestFlight 邀请是两个步骤。
 
-截至 2026-11-12：已建立空的 `Development` 内部群组和 `Remote iPad Transport Lab` 外部群组，指定测试员已加入外部群组。审核联系人已补齐，加密问卷按实际使用标准算法、此次不在法国分发完成；0.1.0（2）已关联外部群组并提交 Beta 审核，Apple 显示“正在等待审核”。已启用“自动通知测试员”，审核通过后将自动通知该群组。此状态不代表审核已通过、邀请已发出或版本已可安装。联系人和测试员的私人信息不写入仓库。
+截至 2026-11-13：0.1.0（2）已加入 `Development` 内部群组；指定账号已接受团队邀请并作为内部测试员加入，后台显示“已邀请”。构建显示“准备测试”，用户已确认异地 iPhone 安装成功，当前尚未核实远端 iPad 实际安装。该账号已从原外部群组移除，外部群组没有测试员；此前的外部审核不再是本轮测试的前置条件。构建 2 不含后续固定 UDP v2、socket 调度与性能观测修改，测试这些功能需上传新构建。
+
+历史记录：11 月 12 日曾把另一 Apple 账号当作外部测试员，建立 `Remote iPad Transport Lab` 群组并提交构建 2 的 Beta 审核；11 月 13 日按用户要求改为上述内部测试流程。联系人和测试员的私人信息不写入仓库。
+
+构建 3 已于 2026-11-13 完成签名归档与上传，使用 internal-only 分发，包含固定 UDP v1/v2、可选 socket 传输与本轮诊断。待 App Store Connect 处理及加密配置完成后加入内部组；上传成功不等于已经可安装。
 
 ## 5. 第一轮远程连接
 
@@ -136,6 +140,7 @@ iPad / iPhone / 另一台 Mac：
 
 ## 8. 官方与上游依据
 
+- [Apple：添加内部测试员](https://developer.apple.com/help/app-store-connect/test-a-beta-version/add-internal-testers)
 - [Apple：邀请外部测试员](https://developer.apple.com/help/app-store-connect/test-a-beta-version/invite-external-testers)
 - [Apple：提供测试信息](https://developer.apple.com/help/app-store-connect/test-a-beta-version/provide-test-information)
 - [Apple：加密文档要求](https://developer.apple.com/help/app-store-connect/reference/app-information/export-compliance-documentation-for-encryption/)

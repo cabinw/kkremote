@@ -24,14 +24,20 @@ for directory in args.directories:
         if not samples: continue
         last = samples[-1]
         result = {'samples': len(samples), 'route': report['mediaRoute'], 'pacing': report.get('pacing', 'upstream'),
-                  'preset': report['preset'], 'network': report['networkLabel']}
+                  'preset': report['preset'], 'network': report['networkLabel'], 'receiveDepth': report.get('bridgeReceiveDepth',1), 'bridgeTransport': report.get('bridgeTransport','network')}
         for key in ['videoMbps', 'fps', 'controlRTTMilliseconds', 'sendDelayMilliseconds', 'encodeMilliseconds',
-                    'decodeMilliseconds', 'jitterBufferMilliseconds']:
+                    'decodeMilliseconds', 'jitterBufferMilliseconds', 'jitterBufferTargetMilliseconds', 'jitterBufferMinimumMilliseconds', 'frameGapP95Milliseconds', 'frameGapMaxMilliseconds']:
             result[key] = metric([s[key] for s in samples if key in s])
         for key in ['callbackMillisecondsP95', 'frameBytesMax', 'frameBytesP95', 'targetMbps']:
             result[key] = metric([s['encoderDetails'][key] for s in samples if key in s.get('encoderDetails', {})])
         result['cumulative'] = {k: last.get(k) for k in ['framesDecoded', 'framesEncoded', 'sourceFrames', 'framesDropped',
-                                                       'freezeCount', 'packetsLost', 'nackCount', 'probeSent', 'probeReceived', 'probeExpired']}
+                                                       'freezeCount', 'packetsLost', 'packetsReceived', 'packetsSent', 'retransmittedPacketsReceived', 'retransmittedPacketsSent', 'pliCount', 'nackCount', 'probeSent', 'probeReceived', 'probeExpired']}
+        result['fpsBelow58Intervals'] = sum(s.get('fps', 0) < 58 for s in samples)
+        result['fpsMinimum'] = min(s.get('fps',0) for s in samples)
+        result['frameGapMaximumMs'] = max((s.get('frameGapMaxMilliseconds',0) for s in samples),default=0)
+        result['observedSeconds'] = samples[-1]['seconds'] - samples[0]['seconds']
+        first = samples[0]
+        result['steadyCounterDelta'] = {k: last.get(k, 0) - first.get(k, 0) for k in ['freezeCount', 'packetsLost', 'nackCount', 'pliCount']}
         result['bridge'] = last.get('bridge')
         result['encoderDetails'] = last.get('encoderDetails')
         row[role] = result

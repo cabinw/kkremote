@@ -55,6 +55,9 @@ struct LabView: View {
                             }.disabled(model.running)
                             if model.mediaRoute != .directICE {
                                 TextField("主机 UDP 媒体端口", text: $model.mediaPort).textFieldStyle(.roundedBorder).disabled(model.running)
+                                Picker("UDP 实现", selection: $model.bridgeTransport) {
+                                    ForEach(BridgeTransportKind.allCases) { Text($0.title).tag($0) }
+                                }.disabled(model.running)
                             }
                             if model.mode == "host" && model.running {
                                 Text("本次配对码（仅交给测试接收端）").font(.caption)

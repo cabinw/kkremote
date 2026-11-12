@@ -8,7 +8,7 @@ enum LabCLI {
         var reportURL: URL?
         do {
             let args = Array(CommandLine.arguments.dropFirst())
-            let known: Set<String> = ["--lab-role", "--route", "--host", "--port", "--media-port", "--key-file", "--duration", "--resolution", "--fps", "--mbps", "--pattern", "--report", "--host-report", "--pacing"]
+            let known: Set<String> = ["--lab-role", "--route", "--host", "--port", "--media-port", "--key-file", "--duration", "--resolution", "--fps", "--mbps", "--pattern", "--report", "--host-report", "--pacing", "--receive-depth", "--bridge-transport"]
             var options: [String: String] = [:], i = 0
             while i < args.count {
                 if args[i] == "--self-test" { i += 1; continue }
@@ -23,6 +23,10 @@ enum LabCLI {
                   let mbps = Int(options["--mbps"] ?? "25"), (1...120).contains(mbps),
                   let pattern = PatternKind(rawValue: options["--pattern"] ?? "grid") else { throw LabError.message("测试参数无效") }
             guard let pacing = PacingMode(rawValue: options["--pacing"] ?? "interactive") else { throw LabError.message("无效 pacing 模式") }
+            guard let depth = Int(options["--receive-depth"] ?? "16"), [1, 16].contains(depth) else { throw LabError.message("接收深度必须为 1 或 16") }
+            guard let transport = BridgeTransportKind(rawValue: options["--bridge-transport"] ?? "network") else { throw LabError.message("无效 UDP 传输实现") }
+            model.bridgeTransport = transport
+            model.bridgeReceiveDepth = depth
             WebRTCRuntime.initialize(pacing)
             let resolution = options["--resolution"] ?? "1920x1080"
             guard ["1280x720", "1920x1080", "2560x1440"].contains(resolution) else { throw LabError.message("不支持的尺寸") }

@@ -67,6 +67,78 @@ enum DatagramBridgeTests {
         RunLoop.main.run(until: Date().addingTimeInterval(0.2))
         precondition(sizeHost.snapshot().authenticated && sizeHost.snapshot().pathDatagramBytes == 1280)
         client.cancel(); sizeHost.stop()
+        for hostKind in [BridgeTransportKind.network, .socket] {
+            for viewerKind in [BridgeTransportKind.network, .socket] {
+                try socketRoundTrip(key: key, hostKind: hostKind, viewerKind: viewerKind)
+            }
+        }
+        try socketRoundTrip(key: key, hostKind: .socket, viewerKind: .network, version: .v1)
+        try socketAdmission(key: key)
         print("DATAGRAM_BRIDGE_TESTS_PASSED: UDP echo, full-size path admission, pinned source, wrong-key rejection")
     }
+    static func socketRoundTrip(key: Data, hostKind: BridgeTransportKind, viewerKind: BridgeTransportKind, version: MediaWireVersion = .v2) throws {
+        let host = try DatagramBridge(secret: key, session: "mixed", isHost: true, version: version, transport: hostKind)
+        let viewer = try DatagramBridge(secret: key, session: "mixed", isHost: false, version: version, transport: viewerKind)
+        let queue = DispatchQueue(label: "mixed-test")
+        let a = try LoopbackDatagramPort(queue: queue), b = try LoopbackDatagramPort(queue: queue)
+        a.setPeer(port: host.localPort); host.setLocalPeer(port: a.port)
+        b.setPeer(port: viewer.localPort); viewer.setLocalPeer(port: b.port)
+        let payload = Data(repeating: 39, count: 16384)
+        var passed = false, error: String?
+        a.onPacket = { data in DispatchQueue.main.async { passed = data == payload } }
+        b.onPacket = { b.send($0) }
+        a.start(); b.start()
+        let port = UInt16.random(in: 49000...59000)
+        host.onFailure = { error = $0 }; viewer.onFailure = { error = $0 }
+        host.onReady = { try! viewer.startViewer(host: "127.0.0.1", port: port) }
+        viewer.onAuthenticated = { queue.async { a.send(payload) } }
+        try host.startHost(port: port)
+        let deadline = Date().addingTimeInterval(3)
+        while !passed, error == nil, Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
+        precondition(passed && error == nil, "Mixed transport echo failed: \(hostKind)/\(viewerKind), \(error ?? "timeout")")
+        precondition(host.snapshot().authenticated && viewer.snapshot().authenticated)
+        if version == .v2 {
+            precondition(host.snapshot().pathDatagramBytes == 1280 && viewer.snapshot().pathDatagramBytes == 1280)
+        }
+        if hostKind == .socket {
+            let stranger = try LoopbackDatagramPort(queue: queue)
+            stranger.setPeer(port: port)
+            var codec = try MediaDatagramCodec(secret: key, session: "mixed", isHost: false)
+            let probe = codec.seal(Data(count: codec.probeBytes), kind: .probe)[0]
+            queue.sync { stranger.send(probe); stranger.stop() }
+            RunLoop.main.run(until: Date().addingTimeInterval(0.1))
+            precondition(host.snapshot().socketRejectedPeers > 0, "Pinned socket accepted a different source")
+        }
+        host.stop(); viewer.stop(); queue.sync { a.stop(); b.stop() }
+    }
+
+    static func socketAdmission(key: Data) throws {
+        let host = try DatagramBridge(secret: key, session: "socket-admission", isHost: true, transport: .socket)
+        let queue = DispatchQueue(label: "socket-admission-test")
+        let sender = try LoopbackDatagramPort(queue: queue)
+        let port = UInt16.random(in: 49000...59000)
+        sender.setPeer(port: port)
+        var ready = false
+        host.onReady = { ready = true }
+        try host.startHost(port: port)
+        let deadline = Date().addingTimeInterval(2)
+        while !ready, Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
+        precondition(ready)
+        var wrong = try MediaDatagramCodec(secret: Data(repeating: 99, count: 32), session: "socket-admission", isHost: false)
+        let invalid = wrong.seal(Data(count: wrong.probeBytes), kind: .probe)[0]
+        queue.sync { sender.send(invalid) }
+        RunLoop.main.run(until: Date().addingTimeInterval(0.1))
+        precondition(!host.snapshot().authenticated && host.snapshot().rejectedDatagrams > 0)
+        var valid = try MediaDatagramCodec(secret: key, session: "socket-admission", isHost: false)
+        let small = valid.seal(Data(count: 8), kind: .probe)[0]
+        queue.sync { sender.send(small) }
+        RunLoop.main.run(until: Date().addingTimeInterval(0.1))
+        precondition(!host.snapshot().authenticated, "Socket admitted a small probe")
+        let full = valid.seal(Data(count: valid.probeBytes), kind: .probe)[0]
+        queue.sync { sender.send(full) }
+        RunLoop.main.run(until: Date().addingTimeInterval(0.1))
+        precondition(host.snapshot().authenticated && host.snapshot().pathDatagramBytes == 1280)
+        host.stop(); queue.sync { sender.stop() }
+    }
+
 }

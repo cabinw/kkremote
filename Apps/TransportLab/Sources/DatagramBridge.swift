@@ -2,6 +2,15 @@ import Foundation
 import Network
 
 struct BridgeSample: Codable {
+    var transport = "network"
+    var socketReceiveBufferBytes: Int32?
+    var socketRejectedPeers = 0
+    var socketTruncatedPackets = 0
+    var receiveDepth = 1
+    var acceptedPackets: UInt64 = 0
+    var sequenceHoles: UInt64 = 0
+    var reorderedPackets = 0
+    var largestSequenceGap: UInt64 = 0
     var wireVersion = 2
     var pathDatagramBytes = 0
     var fragmentedInnerDatagrams = 0
@@ -22,6 +31,10 @@ struct BridgeSample: Codable {
     var rejectedDatagrams = 0
     var expiredAssemblies = 0
     var localSocketDrops = 0
+    var localRejectedSources = 0
+    var localSendErrors = 0
+    var localUnboundSends = 0
+    var localInvalidSizes = 0
     var pendingPackets = 0
     var maxQueueAgeMilliseconds: Double = 0
     var probeRTTMilliseconds: Double? = nil
@@ -34,6 +47,9 @@ final class DatagramBridge {
     private let queue = DispatchQueue(label: "kkremote.media-udp", qos: .userInteractive)
     private let local: LoopbackDatagramPort
     private var codec: MediaDatagramCodec
+    private var socket: UDPSocket?
+    private let transport: BridgeTransportKind
+    private var hasEndpoint: Bool { active != nil || socket?.hasPeer == true }
     private var listener: NWListener?
     private var connections: [ObjectIdentifier: NWConnection] = [:]
     private var active: NWConnection?
@@ -51,8 +67,11 @@ final class DatagramBridge {
     var onAuthenticated: (() -> Void)?
     var onFailure: ((String) -> Void)?
 
-    init(secret: Data, session: String, isHost: Bool, version: MediaWireVersion = .v2) throws {
-        self.isHost = isHost
+    init(secret: Data, session: String, isHost: Bool, version: MediaWireVersion = .v2, receiveDepth: Int = 16, transport: BridgeTransportKind = .network) throws {
+        guard [1, 16].contains(receiveDepth) else { throw LabError.message("无效 UDP 接收深度") }
+        self.isHost = isHost; self.transport = transport
+        state.transport = transport.rawValue
+        state.receiveDepth = receiveDepth
         state.wireVersion = version.rawValue
         codec = try MediaDatagramCodec(secret: secret, session: session, isHost: isHost, version: version)
         local = try LoopbackDatagramPort(queue: queue); localPort = local.port
@@ -63,6 +82,7 @@ final class DatagramBridge {
 
     func startHost(port: UInt16) throws {
         guard port > 0 else { throw LabError.message("固定媒体端口不能为 0") }
+        if transport == .socket { startSocket(host: nil, port: port); return }
         let listener = try NWListener(using: .udp, on: NWEndpoint.Port(rawValue: port)!)
         self.listener = listener
         listener.newConnectionHandler = { [weak self] connection in
@@ -80,6 +100,7 @@ final class DatagramBridge {
 
     func startViewer(host: String, port: UInt16) throws {
         guard port > 0, !host.isEmpty else { throw LabError.message("无效固定 UDP 媒体端点") }
+        if transport == .socket { startSocket(host: host, port: port); return }
         // Keep .sgponte intact. Network.framework uses the current system resolver/route.
         let connection = NWConnection(host: NWEndpoint.Host(host), port: NWEndpoint.Port(rawValue: port)!, using: .udp)
         queue.async { [weak self] in
@@ -95,6 +116,17 @@ final class DatagramBridge {
             value.rejectedDatagrams = codec.rejectedPackets
             value.expiredAssemblies = codec.expiredAssemblies
             value.localSocketDrops = local.dropped
+            value.localRejectedSources = local.rejectedSources
+            value.localSendErrors = local.sendErrors
+            value.localUnboundSends = local.unboundSends
+            value.localInvalidSizes = local.invalidSizes
+            value.socketReceiveBufferBytes = socket?.receiveBufferBytes
+            value.socketRejectedPeers = socket?.rejectedPeers ?? 0
+            value.socketTruncatedPackets = socket?.truncatedPackets ?? 0
+            value.acceptedPackets = codec.acceptedPackets
+            value.sequenceHoles = codec.sequenceHoles
+            value.reorderedPackets = codec.reorderedPackets
+            value.largestSequenceGap = codec.largestSequenceGap
             return value
         }
     }
@@ -104,7 +136,7 @@ final class DatagramBridge {
             guard !stopped else { return }; stopped = true
             timer?.cancel(); timer = nil; listener?.cancel(); listener = nil
             connections.values.forEach { $0.cancel() }; connections.removeAll(); active = nil
-            local.stop(); waiting.removeAll(); probes.removeAll()
+            local.stop(); socket?.stop(); socket = nil; waiting.removeAll(); probes.removeAll()
         }
     }
 
@@ -128,7 +160,11 @@ final class DatagramBridge {
                     DispatchQueue.main.async { self.onReady?() }
                     self.probe()
                 }
-                self.receive(connection)
+                // Keep receive requests available while earlier callbacks run. All
+                // completions still execute on the same serial bridge queue.
+                connection.batch {
+                    for _ in 0..<self.state.receiveDepth { self.receive(connection) }
+                }
             case .failed(let error):
                 if self.active === connection { self.fail("UDP 端点连接失败：\(error.localizedDescription)") }
                 self.remove(connection)
@@ -145,48 +181,41 @@ final class DatagramBridge {
         }
     }
 
+    private func startSocket(host: String?, port: UInt16) {
+        queue.async { [weak self] in
+            guard let self, !self.stopped else { return }
+            do {
+                let socket = try UDPSocket(queue: self.queue, host: host, port: port)
+                self.socket = socket
+                socket.onFailure = { [weak self] in self?.fail($0) }
+                socket.onPacket = { [weak self, weak socket] bytes, sender in
+                    guard let self, let socket, !self.stopped else { return }
+                    self.ingest(bytes, activeSource: socket.hasPeer) {
+                        guard socket.pin(sender) else { return false }
+                        self.state.endpointScope = sender.scope; return true
+                    }
+                }
+                self.begin(); socket.start()
+                DispatchQueue.main.async { self.onReady?() }
+                if !self.isHost { self.probe() }
+            } catch { self.fail(error.localizedDescription) }
+        }
+    }
+
     private func receive(_ connection: NWConnection) {
         connection.receiveMessage { [weak self, weak connection] bytes, _, _, error in
             guard let self, let connection, !self.stopped else { return }
+            guard self.active == nil || self.active === connection else { self.remove(connection); return }
             if let bytes {
-                let now = ProcessInfo.processInfo.systemUptime
-                if let packet = self.codec.open(bytes, now: now) {
-                    if !self.state.authenticated {
-                        let expectedKind: MediaDatagramCodec.Kind = self.isHost ? .probe : .acknowledgement
-                        guard packet.kind == expectedKind, packet.payload.count == self.codec.probeBytes else {
-                            self.receive(connection); return
-                        }
-                        if !self.isHost, self.probes[packet.payload.integer(at: 0, as: UInt64.self)] == nil {
-                            self.receive(connection); return
-                        }
-                        self.state.pathDatagramBytes = bytes.count
-                    }
+                let accepted = self.ingest(bytes, activeSource: self.active === connection) {
                     if self.isHost && self.active == nil {
-                        guard packet.kind == .probe else { self.remove(connection); return }
                         self.active = connection
                         self.state.endpointScope = Self.scope(connection.endpoint)
                         for other in Array(self.connections.values) where other !== connection { self.remove(other) }
                     }
-                    guard self.active === connection else { self.remove(connection); return }
-                    self.lastReceived = now
-                    self.state.receivedWireBytes += UInt64(bytes.count); self.state.receivedDatagrams += 1
-                    if !self.state.authenticated {
-                        self.state.authenticated = true
-                        DispatchQueue.main.async { self.onAuthenticated?() }
-                    }
-                    switch packet.kind {
-                    case .media:
-                        self.state.innerDatagramsReceived += 1
-                        self.local.send(packet.payload)
-                    case .probe: self.send(packet.payload, kind: .acknowledgement)
-                    case .acknowledgement:
-                        let nonce = packet.payload.integer(at: 0, as: UInt64.self)
-                        if let sent = self.probes.removeValue(forKey: nonce) { self.state.probeRTTMilliseconds = (now - sent) * 1000 }
-                    }
-                } else if self.active === connection {
-                    // Authenticated fragment arrivals also count as wire traffic, not delivered inner packets.
-                    self.state.receivedWireBytes += UInt64(bytes.count); self.state.receivedDatagrams += 1
-                } else { self.remove(connection); return }
+                    return self.active === connection
+                }
+                if !accepted && self.active !== connection { self.remove(connection); return }
             }
             if let error {
                 if self.active === connection { self.fail("UDP 接收失败：\(error.localizedDescription)") }
@@ -196,8 +225,41 @@ final class DatagramBridge {
         }
     }
 
+    @discardableResult
+    private func ingest(_ bytes: Data, activeSource: Bool, select: () -> Bool) -> Bool {
+        let now = ProcessInfo.processInfo.systemUptime
+        guard let packet = codec.open(bytes, now: now) else {
+            if activeSource { state.receivedWireBytes += UInt64(bytes.count); state.receivedDatagrams += 1 }
+            return activeSource
+        }
+        if !state.authenticated {
+            let expectedKind: MediaDatagramCodec.Kind = isHost ? .probe : .acknowledgement
+            // A small but valid probe doesn't qualify the path, and should not
+            // prevent this same peer from retrying with a full-size probe.
+            guard packet.kind == expectedKind, packet.payload.count == codec.probeBytes else { return true }
+            if !isHost, probes[packet.payload.integer(at: 0, as: UInt64.self)] == nil { return true }
+            state.pathDatagramBytes = bytes.count
+        }
+        guard select() else { return false }
+        lastReceived = now
+        state.receivedWireBytes += UInt64(bytes.count); state.receivedDatagrams += 1
+        if !state.authenticated {
+            state.authenticated = true
+            DispatchQueue.main.async { self.onAuthenticated?() }
+        }
+        switch packet.kind {
+        case .media:
+            state.innerDatagramsReceived += 1; local.send(packet.payload)
+        case .probe: send(packet.payload, kind: .acknowledgement)
+        case .acknowledgement:
+            let nonce = packet.payload.integer(at: 0, as: UInt64.self)
+            if let sent = probes.removeValue(forKey: nonce) { state.probeRTTMilliseconds = (now - sent) * 1000 }
+        }
+        return true
+    }
+
     private func send(_ payload: Data, kind: MediaDatagramCodec.Kind) {
-        guard !stopped, active != nil, kind != .media || state.authenticated else { return }
+        guard !stopped, hasEndpoint, kind != .media || state.authenticated else { return }
         let packets = codec.seal(payload, kind: kind)
         if kind == .media, let first = payload.first, first & 0xc0 == 0x80 {
             let bucket = payload.count <= 1168 ? "<=1168" : payload.count <= 1200 ? "1169-1200" : payload.count <= 1248 ? "1201-1248" : ">1248"
@@ -217,12 +279,18 @@ final class DatagramBridge {
     }
 
     private func pump() {
-        guard !stopped, let connection = active else { return }
+        guard !stopped, hasEndpoint else { return }
         while inFlight < 32, !waiting.isEmpty {
             let (data, queued) = waiting.removeFirst()
             let age = (ProcessInfo.processInfo.systemUptime - queued) * 1000
             state.maxQueueAgeMilliseconds = max(state.maxQueueAgeMilliseconds, age)
             guard age <= 25 else { state.queueDrops += 1; state.queueDeadlineDrops += 1; continue }
+            if let socket {
+                if socket.send(data) { state.sentWireBytes += UInt64(data.count); state.sentDatagrams += 1 }
+                else { state.queueDrops += 1; state.sendErrors += 1 }
+                continue
+            }
+            guard let connection = active else { return }
             inFlight += 1
             connection.send(content: data, completion: .contentProcessed { [weak self] error in
                 guard let self, !self.stopped else { return }
@@ -235,7 +303,8 @@ final class DatagramBridge {
     }
 
     private func probe() {
-        guard !isHost, let active, case .ready = active.state else { return }
+        guard !isHost, hasEndpoint else { return }
+        if let active, case .ready = active.state {} else if socket == nil { return }
         let now = ProcessInfo.processInfo.systemUptime
         probes = probes.filter { now - $0.value < 3 }
         let nonce = DispatchTime.now().uptimeNanoseconds

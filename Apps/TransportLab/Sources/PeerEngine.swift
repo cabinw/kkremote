@@ -48,6 +48,15 @@ struct LabSample: Codable {
     var sendDelayMilliseconds: Double? = nil
     var framesDropped: Int = 0
     var freezeCount: Int = 0
+    var packetsReceived: Int?
+    var packetsSent: Int?
+    var retransmittedPacketsReceived: Int?
+    var retransmittedPacketsSent: Int?
+    var pliCount: Int?
+    var jitterBufferTargetMilliseconds: Double?
+    var jitterBufferMinimumMilliseconds: Double?
+    var frameGapP95Milliseconds: Double?
+    var frameGapMaxMilliseconds: Double?
     var availableOutgoingMbps: Double? = nil
     var probeSent = 0
     var probeReceived = 0
@@ -58,14 +67,29 @@ final class FrameCounter: NSObject, RTCVideoRenderer {
     private let lock = NSLock()
     private var count = 0
     private var firstTime: Double?
+    private var lastTime: Double?
+    private var gaps: [Double] = []
     var received: Int { lock.lock(); defer { lock.unlock() }; return count }
     var firstReceivedAt: Double? { lock.lock(); defer { lock.unlock() }; return firstTime }
     func setSize(_ size: CGSize) {}
     func renderFrame(_ frame: RTCVideoFrame?) {
         guard frame != nil else { return }
         lock.lock(); count += 1
-        if firstTime == nil { firstTime = ProcessInfo.processInfo.systemUptime }
+        let now = ProcessInfo.processInfo.systemUptime
+        if firstTime == nil { firstTime = now }
+        if let lastTime {
+            gaps.append((now - lastTime) * 1000)
+            if gaps.count > 600 { gaps.removeFirst(gaps.count - 600) }
+        }
+        lastTime = now
         lock.unlock()
+    }
+    func gapSnapshot() -> (Double?, Double?) {
+        lock.lock(); defer { lock.unlock() }
+        guard !gaps.isEmpty else { return (nil, nil) }
+        let sorted = gaps.sorted()
+        gaps.removeAll(keepingCapacity: true)
+        return (sorted[Int(ceil(Double(sorted.count) * 0.95)) - 1], sorted.last)
     }
 }
 
@@ -86,6 +110,8 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
     private let route: MediaRoute
     private let endpointHost: String
     private let mediaPort: UInt16
+    private let receiveDepth: Int
+    private let bridgeTransport: BridgeTransportKind
     private var bridge: DatagramBridge?
     private var localBridgeCandidate: RTCIceCandidate?
     private var bridgeCandidateAdded = false
@@ -106,9 +132,10 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
     var onSample: ((LabSample) -> Void)?
     var onFailure: ((String) -> Void)?
 
-    init(isHost: Bool, preset: LabPreset, route: MediaRoute = .directICE, endpointHost: String = "", mediaPort: UInt16 = 45991) throws {
+    init(isHost: Bool, preset: LabPreset, route: MediaRoute = .directICE, endpointHost: String = "", mediaPort: UInt16 = 45991, receiveDepth: Int = 16, bridgeTransport: BridgeTransportKind = .network) throws {
         self.isHost = isHost; self.preset = preset; self.route = route
         self.endpointHost = endpointHost; self.mediaPort = mediaPort
+        self.receiveDepth = receiveDepth; self.bridgeTransport = bridgeTransport
         self.session = isHost ? UUID().uuidString : nil
         super.init()
         let configuration = RTCConfiguration()
@@ -171,7 +198,7 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
         if route != .directICE {
             do {
                 let encoded = try SignalTransport.newPairingKey()
-                let bridge = try DatagramBridge(secret: Data(base64Encoded: encoded)!, session: session!, isHost: true, version: route.wireVersion)
+                let bridge = try DatagramBridge(secret: Data(base64Encoded: encoded)!, session: session!, isHost: true, version: route.wireVersion, receiveDepth: receiveDepth, transport: bridgeTransport)
                 install(bridge)
                 bridge.onReady = { [weak self] in
                     guard let self, !self.stopped, let session = self.session else { return }
@@ -216,7 +243,7 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
                 onFailure?("固定 UDP 模式不匹配或配置无效；两端需要新版 Lab 并选择相同媒体模式"); return
             }
             do {
-                let bridge = try DatagramBridge(secret: key, session: message.session, isHost: false, version: route.wireVersion)
+                let bridge = try DatagramBridge(secret: key, session: message.session, isHost: false, version: route.wireVersion, receiveDepth: receiveDepth, transport: bridgeTransport)
                 install(bridge)
                 try bridge.startViewer(host: endpointHost, port: port)
             } catch { onFailure?(error.localizedDescription) }
@@ -326,6 +353,7 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
         let now = ProcessInfo.processInfo.systemUptime
         sample.seconds = now - started
         sample.bridge = bridge?.snapshot()
+        (sample.frameGapP95Milliseconds, sample.frameGapMaxMilliseconds) = frameCounter.gapSnapshot()
         if isHost { sample.encoderDetails = encoderTelemetry.snapshot() }
         if let firstFrameAt, let negotiatedAt { sample.firstFrameMilliseconds = (firstFrameAt - negotiatedAt) * 1000 }
         sample.probeSent = probesSent; sample.probeReceived = probesReceived; sample.probeExpired = probesExpired
@@ -349,6 +377,11 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
             sample.encoder = video.values["encoderImplementation"] as? String ?? "unknown"
             sample.decoder = video.values["decoderImplementation"] as? String ?? "unknown"
             sample.framesDropped = Int(number("framesDropped")); sample.freezeCount = Int(number("freezeCount"))
+            sample.packetsReceived = (video.values["packetsReceived"] as? NSNumber)?.intValue
+            sample.packetsSent = (video.values["packetsSent"] as? NSNumber)?.intValue
+            sample.retransmittedPacketsReceived = (video.values["retransmittedPacketsReceived"] as? NSNumber)?.intValue
+            sample.retransmittedPacketsSent = (video.values["retransmittedPacketsSent"] as? NSNumber)?.intValue
+            sample.pliCount = (video.values["pliCount"] as? NSNumber)?.intValue
             func averageDelta(_ total: String, _ count: String) -> Double? {
                 guard video.values[total] != nil, video.values[count] != nil else { return nil }
                 let key = video.id + total, current = (number(total), number(count))
@@ -359,6 +392,8 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
             sample.encodeMilliseconds = averageDelta("totalEncodeTime", "framesEncoded")
             sample.decodeMilliseconds = averageDelta("totalDecodeTime", "framesDecoded")
             sample.jitterBufferMilliseconds = averageDelta("jitterBufferDelay", "jitterBufferEmittedCount")
+            sample.jitterBufferTargetMilliseconds = averageDelta("jitterBufferTargetDelay", "jitterBufferEmittedCount")
+            sample.jitterBufferMinimumMilliseconds = averageDelta("jitterBufferMinimumDelay", "jitterBufferEmittedCount")
             sample.sendDelayMilliseconds = averageDelta("totalPacketSendDelay", "packetsSent")
             if let id = video.values["codecId"] as? String {
                 sample.codec = report.statistics[id]?.values["mimeType"] as? String ?? "unknown"

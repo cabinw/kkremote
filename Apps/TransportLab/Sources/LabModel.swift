@@ -13,6 +13,8 @@ struct LabReport: Codable {
     let actualOverlayPath: String
     let pacing: PacingMode
     let pacingParameters: String
+    let bridgeReceiveDepth: Int
+    let bridgeTransport: BridgeTransportKind
     let mediaRoute: MediaRoute
     let preset: LabPreset
     let notes: [String]
@@ -30,6 +32,8 @@ final class LabModel: ObservableObject {
     @Published var fps = 60
     @Published var megabits = 25
     @Published var pattern = PatternKind.grid
+    var bridgeReceiveDepth = 16
+    @Published var bridgeTransport = BridgeTransportKind.network
     @Published var running = false
     @Published var status = "准备连接"
     @Published var error: String?
@@ -43,6 +47,8 @@ final class LabModel: ObservableObject {
     private var samples: [LabSample] = []
     private var activePreset = LabPreset()
     private var activeRoute = MediaRoute.ponteUDP
+    private var activeBridgeTransport = BridgeTransportKind.network
+    private var activeReceiveDepth = 16
     private var generation = UUID()
     var decodedFrames: Int { engine?.frameCounter.received ?? 0 }
 
@@ -59,12 +65,13 @@ final class LabModel: ObservableObject {
         guard let portNumber = UInt16(port), portNumber > 0 else { error = "端口应为 1–65535"; return }
         guard let mediaPortNumber = UInt16(mediaPort), mediaPortNumber > 0 else { error = "媒体端口应为 1–65535"; return }
         activePreset = preset; activeRoute = mediaRoute
+        activeBridgeTransport = bridgeTransport; activeReceiveDepth = bridgeReceiveDepth
         mode = isHost ? "host" : "viewer"
         let token = UUID(); generation = token
         do {
             if isHost { pairingKey = try SignalTransport.newPairingKey() }
             let signal = SignalTransport()
-            let engine = try PeerEngine(isHost: isHost, preset: activePreset, route: activeRoute, endpointHost: host, mediaPort: mediaPortNumber)
+            let engine = try PeerEngine(isHost: isHost, preset: activePreset, route: activeRoute, endpointHost: host, mediaPort: mediaPortNumber, receiveDepth: bridgeReceiveDepth, bridgeTransport: bridgeTransport)
             self.signal = signal; self.engine = engine
             engine.onSignal = { [weak signal] message in signal?.send(message) }
             signal.onMessage = { [weak engine] message in engine?.receive(message) }
@@ -96,6 +103,8 @@ final class LabModel: ObservableObject {
     func startLocalDemo(endpoint: String = "127.0.0.1", useCurrentPreset: Bool = false) {
         stop()
         let local = LabModel()
+        local.bridgeTransport = bridgeTransport
+        local.bridgeReceiveDepth = bridgeReceiveDepth
         local.mediaRoute = mediaRoute
         local.resolution = useCurrentPreset ? resolution : "1280×720"
         local.fps = useCurrentPreset ? fps : 30; local.megabits = useCurrentPreset ? megabits : 8
@@ -124,17 +133,18 @@ final class LabModel: ObservableObject {
     }
 
     func exportReport(to destination: URL? = nil) {
-        let report = LabReport(schemaVersion: 3,
+        let report = LabReport(schemaVersion: 4,
             appVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown",
             build: Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown",
             backend: "libwebrtc M157 / H.264 SDR", os: ProcessInfo.processInfo.operatingSystemVersionString,
             mode: mode, networkLabel: networkLabel, actualOverlayPath: "unknown", pacing: WebRTCRuntime.mode,
-            pacingParameters: WebRTCRuntime.mode.screenShareSettings, mediaRoute: activeRoute, preset: activePreset,
+            pacingParameters: WebRTCRuntime.mode.screenShareSettings, bridgeReceiveDepth: activeReceiveDepth, bridgeTransport: activeBridgeTransport, mediaRoute: activeRoute, preset: activePreset,
             notes: [activeRoute != .directICE ? "Fixed UDP carries ICE/DTLS/SRTP/SCTP through the configured endpoint. The outer Ponte channel is not observed." : "Direct ICE can use any reachable adapter; the network label does not constrain it.",
                     "Control RTT is an echoed DataChannel round trip, not input-to-photon latency.",
                     "Send/decode/jitter-buffer delays are means over each stats interval; their P95 is not a per-frame P95. Encoder callback timing includes submission-to-callback work.",
                     "Pacing queue time is a drain target, not a hard packet lifetime. A full-size UDP probe proves delivery at setup, not the path IP MTU or sustained capacity.",
                     "Socket scope alone cannot prove physical topology: a remote overlay proxy can present a loopback endpoint. Local-demo mode is always a single-device test.",
+                    "Socket transport is IPv4-only. Bridge sequence holes can include sender discards or reordering; they are not automatically permanent network loss. Frame gaps measure renderer callbacks, not display photons.",
                     "Queue age only covers the application adapter, not OS/overlay/encoder queues. P95 covers the latest 120 successful echoes; probe counters expose expiration.",
                     "Candidate host/UDP does not prove Tailscale direct or a Ponte channel type.",
                     "This is a synthetic H.264 SDR baseline, not HEVC/HDR or window-capture qualification.",

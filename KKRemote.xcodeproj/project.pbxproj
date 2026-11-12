@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0BB119551A97BC66FAA982A9 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B803EFD91995BFC401600592 /* PrivacyInfo.xcprivacy */; };
+		24C0DB100F476E243B328208 /* UDPSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = A73AC09084EC4DCACFC2F256 /* UDPSocket.swift */; };
 		257AF460DF6AECD8A4E76D36 /* LabCLI.swift in Sources */ = {isa = PBXBuildFile; fileRef = E121061760F554354AB40CB3 /* LabCLI.swift */; };
 		258DE7A444B1795E86915D56 /* LabModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78AC53B2E4A155687286D160 /* LabModel.swift */; };
 		29F1B2AF35A98D6C86B94325 /* WebRTCRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48CAAFAAFE8C6DE9642FA41E /* WebRTCRuntime.swift */; };
@@ -17,6 +18,7 @@
 		49E7ED9DDC03729340AD423E /* LabApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36D6D3B59DA9FC7C09A7BC10 /* LabApp.swift */; };
 		599E7A20147063F36EC69E09 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1C2A62821BC3AED598E9CDDC /* Assets.xcassets */; };
 		65840EB514A8D75DC2191938 /* MediaDatagram.swift in Sources */ = {isa = PBXBuildFile; fileRef = D006CB48F875AE64D3F8C885 /* MediaDatagram.swift */; };
+		6634475ABA384F983C9AB7D8 /* UDPSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = A73AC09084EC4DCACFC2F256 /* UDPSocket.swift */; };
 		6809030F037C05F47B15C25D /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = BB1049C67A799A922ACA398C /* WebRTC */; };
 		6BED5CD0438D54D2A2057F42 /* SignalTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9294C4C27F90B30E8333335 /* SignalTransport.swift */; };
 		704737AB04D63DF4DEF6A5D6 /* SignalTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9294C4C27F90B30E8333335 /* SignalTransport.swift */; };
@@ -53,6 +55,7 @@
 		78AC53B2E4A155687286D160 /* LabModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabModel.swift; sourceTree = "<group>"; };
 		7A10C974E08842CA72688791 /* LabH264Factory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabH264Factory.swift; sourceTree = "<group>"; };
 		7BF48D0FE7946D410215DE8F /* EncoderTelemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncoderTelemetry.swift; sourceTree = "<group>"; };
+		A73AC09084EC4DCACFC2F256 /* UDPSocket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UDPSocket.swift; sourceTree = "<group>"; };
 		A9294C4C27F90B30E8333335 /* SignalTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalTransport.swift; sourceTree = "<group>"; };
 		B803EFD91995BFC401600592 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		C96F80F391E8B6D4404F9E7F /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Shared.xcconfig; sourceTree = "<group>"; };
@@ -104,6 +107,7 @@
 				41FBBE491584DE1A643FDD12 /* PeerEngine.swift */,
 				A9294C4C27F90B30E8333335 /* SignalTransport.swift */,
 				6D315A4735594B08A7C94F94 /* TestPattern.swift */,
+				A73AC09084EC4DCACFC2F256 /* UDPSocket.swift */,
 				48CAAFAAFE8C6DE9642FA41E /* WebRTCRuntime.swift */,
 			);
 			name = Sources;
@@ -262,6 +266,7 @@
 				E9E3D391311379AA13355AB1 /* PeerEngine.swift in Sources */,
 				704737AB04D63DF4DEF6A5D6 /* SignalTransport.swift in Sources */,
 				D94A691C7924525A2CFDF7F3 /* TestPattern.swift in Sources */,
+				24C0DB100F476E243B328208 /* UDPSocket.swift in Sources */,
 				FBD13332303D66068EC64CF9 /* WebRTCRuntime.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -281,6 +286,7 @@
 				C5BC78878B86590AA5D5C031 /* PeerEngine.swift in Sources */,
 				6BED5CD0438D54D2A2057F42 /* SignalTransport.swift in Sources */,
 				E29F093B5951967BB63DBB43 /* TestPattern.swift in Sources */,
+				6634475ABA384F983C9AB7D8 /* UDPSocket.swift in Sources */,
 				29F1B2AF35A98D6C86B94325 /* WebRTCRuntime.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

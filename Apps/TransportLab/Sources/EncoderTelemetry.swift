@@ -10,6 +10,9 @@ struct EncoderSample: Codable {
     var targetMbps: Double = 0
     var frameBytesP95: Int?
     var frameBytesMax: Int?
+    var qpMaximum: Int?
+    var qpLatest: Int?
+    var callbackRejected = 0
     var callbackMillisecondsP95: Double?
     var unmatchedInputs = 0
     var unmatchedExpired = 0
@@ -36,10 +39,13 @@ final class EncoderTelemetry {
         if let time = submitted.removeValue(forKey: frame.timeStamp) {
             times.append((ProcessInfo.processInfo.systemUptime - time) * 1000)
         }
+        let qp = frame.qp.intValue
+        if qp >= 0 { state.qpMaximum = max(state.qpMaximum ?? qp, qp); state.qpLatest = qp }
         sizes.append(frame.buffer.count)
         if sizes.count > 240 { sizes.removeFirst(sizes.count - 240) }
         if times.count > 240 { times.removeFirst(times.count - 240) }
     }
+    func rejectedCallback() { lock.lock(); state.callbackRejected += 1; lock.unlock() }
     func rate(_ kbps: UInt32) { lock.lock(); state.targetMbps = Double(kbps) / 1000; lock.unlock() }
     func fps(_ fps: UInt32) { lock.lock(); state.requestedFPS = fps; lock.unlock() }
     func failedSubmission(_ frame: RTCVideoFrame) {
@@ -68,7 +74,9 @@ final class MeasuredH264Encoder: NSObject, RTCVideoEncoder {
         native.setCallback { [weak self] frame, info in
             guard let self else { return false }
             self.telemetry.output(frame)
-            return callback?(frame, info) ?? false
+            let accepted = callback?(frame, info) ?? false
+            if !accepted { self.telemetry.rejectedCallback() }
+            return accepted
         }
     }
     func startEncode(with settings: RTCVideoEncoderSettings, numberOfCores: Int32) -> Int {
