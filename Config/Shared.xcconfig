@@ -1,0 +1,2 @@
+// Keep personal team settings in the ignored local file.
+#include? "Signing.local.xcconfig"

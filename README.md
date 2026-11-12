@@ -2,7 +2,9 @@
 
 面向 Mac、iPad 和 iPhone 的原生远程工作空间：把远端 Mac 的应用窗口独立串流到客户端，优先做好清晰度、低延迟和窗口交互，再扩展到整屏远程与多主机窗口工作区。
 
-**当前处于研究与架构设计阶段。仓库包含设计文档和研究报告，尚无可运行的客户端、服务端或安装包。** 当前设计版本：v0.3，2026-11-12。
+**当前进入 M0 传输验证阶段。** 仓库包含可构建的 **KKRemote Lab**（Mac 测试源与接收端、iPad / iPhone 接收端），用于验证 H.264 SDR 视频、配对连接和控制消息往返。真实窗口捕获、远程输入、HEVC/HDR 与覆盖网性能尚未通过验证。产品架构版本仍为 v0.3，2026-11-12。
+
+构建、TestFlight 分发和远程测试步骤见 [TestFlight 与传输实验](docs/testing/TestFlight与传输实验.md)。
 
 ## 项目方向
 
@@ -53,7 +55,7 @@ flowchart LR
 | 阶段 | 目标 | 状态 |
 |---|---|---|
 | 研究与设计 | Casement / Jump 机制研究、窗口架构、传输复核、验收计划 | 已形成文档，持续评审 |
-| M0：技术关口 | 窗口映射、原生像素、HEVC/HDR、WebRTC 与两种覆盖网验证 | 待开始 |
+| M0：技术关口 | 窗口映射、原生像素、HEVC/HDR、WebRTC 与两种覆盖网验证 | 传输实验工具已实现，远程设备验证待完成 |
 | M1：Mac 单窗口 | Mac → Mac 的捕获、传输、显示、输入和重连闭环 | 已规划 |
 | M2：窗口系统与性能 | 关联弹层、多窗口、高码率、资源预算、恢复与音频 | 已规划 |
 | M3：移动客户端 | iPad / iPhone 的视口、触控、IME 与生命周期 | 已规划 |
@@ -70,6 +72,7 @@ M0–M4 的窗口功能版不依赖整屏模式或多主机功能。阶段范围
 
 | 文档 | 内容 |
 |---|---|
+| [TestFlight 与传输实验](docs/testing/TestFlight与传输实验.md) | 当前实验工具、构建与签名、远程设备测试流程、已知限制 |
 | [窗口优先架构](docs/design/窗口优先架构.md) | 模块边界、窗口捕获、像素、HDR、输入与生命周期 |
 | [传输路线复核](docs/design/传输路线复核.md) | QUIC / WebRTC 比较、调整理由与选型门槛 |
 | [网络与媒体传输](docs/design/网络与媒体传输.md) | Tailscale、Ponte、信令、媒体恢复和连接诊断 |
@@ -86,16 +89,22 @@ M0–M4 的窗口功能版不依赖整屏模式或多主机功能。阶段范围
 
 当前文档中的码率、延迟和工期均为待验证预算。20–120 Mbps 是计划测试区间；同网 RTT ≤ 10 ms、约 1440p60 时输入到显示 P95 ≤ 80 ms 是起始目标，**不是已达到的性能**。
 
-研究报告来自指定版本的本地静态分析与公开文档，没有对用户实际远程会话进行性能测量。静态调用路径不证明某次会话执行了该路径；支持 10 位编码也不自动证明完整 HDR。
+研究报告来自指定版本的本地静态分析与公开文档。Lab 已通过 Mac 本机真实 WebRTC 回环测试，以及 iPad 模拟器的视频播放与报告导出检查；这些结果不能证明远程真机、Tailscale 或 Ponte 的性能。静态调用路径不证明某次会话执行了该路径；支持 10 位编码也不自动证明完整 HDR。
 
 ## 仓库结构与使用
 
 ```text
 kkremote/
 ├── README.md
+├── Apps/TransportLab/          # 共用的 Mac / iOS 实验工具源码与资源
+├── Config/                     # 签名示例；真实账号配置由 Git 忽略
+├── KKRemote.xcodeproj/          # 可直接打开的 Xcode 工程
+├── project.yml                 # XcodeGen 工程定义
+├── scripts/                    # 构建、归档、TestFlight 上传
 ├── docs/
 │   ├── design/                 # 当前架构、协议与实施计划
 │   ├── research/               # 整理后的研究报告
+│   ├── testing/                # 实验与分发流程
 │   └── 方案评审.md              # 历史方案
 └── research/
     ├── README.md               # 研究资料的版本控制范围
@@ -108,6 +117,14 @@ git clone git@github.com:cabinw/kkremote.git
 cd kkremote
 ```
 
-当前可以直接阅读 Markdown 文档；尚无构建或运行步骤。后续开始实现时，再随对应阶段加入工程、依赖锁定和可复现的开发说明。
+安装 Xcode 和 XcodeGen 后，可以构建不需要开发者账号的 Mac 本地测试版：
+
+```bash
+brew install xcodegen
+scripts/build-lab.sh mac
+open .build/DerivedData/Build/Products/Debug/KKRemoteLabMac.app
+```
+
+实验依赖固定为社区分发的 `stasel/WebRTC 157.0.0`，包含原生 H.264 VideoToolbox 路径。生产版本仍需评估自建 libwebrtc、可审计依赖与 HEVC/HDR 接入；本实验包不代表最终传输协议已定型。
 
 仓库保存整理后的报告及公开上游来源记录。原始应用交付物、反汇编、符号表、工具诊断和本机运行产物留在本地，由 `.gitignore` 排除。报告保留本地证据文件名、样本哈希和证据标识；这些本地材料不会随克隆提供，详见 [研究资料说明](research/README.md)。
