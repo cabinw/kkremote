@@ -189,4 +189,4 @@ TLS-PSK 仅用于当前实验的短期认证信令，不具备该套件层面的
 
 ## HEVC Main10 / PQ 内部构建 6
 
-2026-11-13，构建 0.1.0（6）包含原生 VT Main10 硬解、系统 HDR 显示层、可选格式协商、10 位及色彩诊断；Mac 同时加入 Main10 硬编和 canonical HDR 单窗口捕获。Mac Release、iOS Simulator、签名 archive、本机 RTP/真实窗口/丢包恢复/SDR 回退/常驻重连均已通过。08:22 上传成功并进入 Apple processing；浏览器登录过期，Development 内部组关联和设备可安装状态仍待登录后确认。固定配对文件和原 Ponte 端口保持不变；内部测试不提交外部 Beta 审核。详细数字与限制见 [HEVC Main10 HDR 验证](HEVC-Main10-HDR验证.md)。
+2026-11-13，构建 0.1.0（6）包含原生 VT Main10 硬解、系统 HDR 显示层、可选格式协商、10 位及色彩诊断；Mac 同时加入 Main10 硬编和 canonical HDR 单窗口捕获。Mac Release、iOS Simulator、签名 archive、本机 RTP/真实窗口/丢包恢复/SDR 回退/常驻重连均已通过。08:22 上传成功，08:24 Apple 邮件确认处理完成；浏览器登录过期，合规状态、Development 内部组关联和设备可安装状态仍待登录后确认。固定配对文件和原 Ponte 端口保持不变；内部测试不提交外部 Beta 审核。详细数字与限制见 [HEVC Main10 HDR 验证](HEVC-Main10-HDR验证.md)。

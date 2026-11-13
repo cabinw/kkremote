@@ -74,7 +74,7 @@ python3 scripts/test-persistent-host.py --hdr --window-id WINDOW_ID
 
 ## 交付与未完成项
 
-代码已通过 Mac Release、iOS Simulator 构建及 iOS build 6 签名归档。**0.1.0（6）于 08:22（本机时区）上传成功**；Apple 返回 processing。App Store Connect 浏览器登录过期，已交给用户重新登录，处理完成、合规状态及 Development 内部组关联尚待确认，不能宣称手机已可安装。上传有现有 WebRTC 二进制缺少 dSYM 的非阻断警告，影响 SDK 崩溃符号化，不影响本次上传成功。
+代码已通过 Mac Release、iOS Simulator 构建及 iOS build 6 签名归档。**0.1.0（6）于 08:22（本机时区）上传成功**；Apple 邮件于 08:24 确认处理完成。App Store Connect 浏览器登录过期，已交给用户重新登录，合规状态及 Development 内部组关联尚待确认，不能宣称手机已可安装。上传有现有 WebRTC 二进制缺少 dSYM 的非阻断警告，影响 SDK 崩溃符号化，不影响本次上传成功。
 
 Mac 已切换为常驻 HDR 优先主机，原 Ponte 地址、TCP/UDP 端口与配对文件保持不变。当前显式窗口播放真实浏览器中的 60 fps PQ 参考片；旧接收端选择 H.264 时采集 SDR，新接收端确认 Main10/PQ 后才启动 HDR 捕获。
 
