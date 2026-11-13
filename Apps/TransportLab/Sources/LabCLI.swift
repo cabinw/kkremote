@@ -16,7 +16,7 @@ enum LabCLI {
             var flags = Set<String>()
             var options: [String: String] = [:], i = 0
             while i < args.count {
-                if ["--self-test", "--persistent-host", "--list-windows"].contains(args[i]) {
+                if ["--self-test", "--persistent-host", "--list-windows", "--hdr", "--simulate-loss", "--sdr-receiver"].contains(args[i]) {
                     guard flags.insert(args[i]).inserted else { throw LabError.message("重复参数") }
                     i += 1; continue
                 }
@@ -32,6 +32,7 @@ enum LabCLI {
                 listWindows(to: options["--report"])
             }
             let persistentHost = flags.contains("--persistent-host")
+            model.hdr = flags.contains("--hdr")
             guard let route = MediaRoute(rawValue: options["--route"] ?? MediaRoute.ponteUDP.rawValue),
                   let duration = Double(options["--duration"] ?? "35"), duration >= 5, duration <= (persistentHost ? 86400 : 3600),
                   let fps = Int(options["--fps"] ?? "60"), [30, 60].contains(fps),
@@ -50,6 +51,9 @@ enum LabCLI {
             model.resolution = resolution.replacingOccurrences(of: "x", with: "×")
             model.fps = fps; model.megabits = mbps; model.pattern = pattern
             let selfTest = args.contains("--self-test")
+            guard !flags.contains("--simulate-loss") || selfTest else { throw LabError.message("simulate-loss 仅允许本机 self-test") }
+            DatagramBridge.simulateLossInSelfTest = flags.contains("--simulate-loss")
+            model.sdrReceiver = flags.contains("--sdr-receiver")
             reportURL = options["--report"].map { URL(fileURLWithPath: $0) }
             hostReportURL = options["--host-report"].map { URL(fileURLWithPath: $0) }
             let role = options["--lab-role"] ?? (selfTest ? "self-test" : "")

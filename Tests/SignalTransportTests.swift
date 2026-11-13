@@ -49,6 +49,14 @@ enum SignalTransportTests {
     }
 
     static func main() throws {
+        // Build 5's synthesized Codable ignores the added optional property.
+        struct LegacyMessage: Decodable { let type: String; let session: String; let sdp: String? }
+        let hdrOffer = SignalMessage(type: "offer", session: "hdr-test", sdp: "sdp", videoFormat: "hevc-main10-pq")
+        let legacy = try JSONDecoder().decode(LegacyMessage.self, from: JSONEncoder().encode(hdrOffer))
+        require(legacy.type == "offer" && legacy.sdp == "sdp", "legacy receiver ignores optional HDR field")
+        let oldAnswer = try JSONDecoder().decode(SignalMessage.self, from: Data(#"{"type":"answer","session":"old","sdp":"h264"}"#.utf8))
+        require(oldAnswer.videoFormat == nil, "old answer has no HDR capability")
+        print("PASS: optional HDR signaling is backward compatible")
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }

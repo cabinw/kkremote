@@ -8,6 +8,9 @@
 <section id="movie"><video id="video" src="clip.mp4" muted loop playsinline preload="auto"></video><span id="credit">Big Buck Bunny / Blender Foundation · CC BY 3.0 · 4K 60 fps source · silent test excerpt</span></section>
 <script>
 const doc=document.querySelector('#document'), code=document.querySelector('#code'), video=document.querySelector('video');
+const fixture=new URLSearchParams(location.search).get('fixture');
+if(fixture==='hdr60'){video.src='reference.mp4';document.querySelector('#credit').textContent='KKRemote generated PQ reference · 1440p / 60 fps · synthetic 10-bit code-value test';document.querySelector('#play').textContent='60 fps HDR 基准';document.title='KKRemote HDR 60fps Reference';}
+if(fixture==='hdr-film'){video.src='hdr.mp4';document.querySelector('#credit').textContent='Apple developer HDR test stream · 4K / 23.976 fps original · window clock updates at display rate';document.querySelector('#play').textContent='HDR 视频（23.976 fps）';document.title='KKRemote HDR Window Test';}
 const paragraph='<h2>清晰度与滚动 / Window capture</h2><p>这是浏览器实际排版的文字。检查细小汉字、标点、行间距和滚动时的可读性：窗口捕获、编码与传输都应保留内容细节。</p><p>The quick brown fox jumps over the lazy dog. 0123456789 ABC abc [] {} () +−= / |</p><small>12 px：小字号中文与 Latin text · retina detail · 1440p60</small><div class="line"></div><p>文档持续上下滚动，速度随时间变化；不通过每帧随机噪声模拟真实桌面。视频阶段播放实际 60 fps 文件。</p>';
 doc.innerHTML=paragraph.repeat(24);
 code.textContent=Array.from({length:400},(_,i)=>`${String(i+1).padStart(3)}  ${['// A bounded queue keeps recent frames','let width = 2560, height = 1440','capture.onFrame = frame => {','  encoder.submit(frame.timestamp)','  transport.send(encodedPayload)','} // 60 fps, bitrate ceiling 20 Mbps','const title = "真实窗口 / crisp text"','if (queue.age > deadline) dropOldFrame()'][i%8]}`).join('\n');

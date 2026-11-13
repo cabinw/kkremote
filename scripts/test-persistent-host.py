@@ -13,6 +13,7 @@ import uuid
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--window-id', type=int, help='Exercise real window capture teardown/restart instead of the synthetic source')
+parser.add_argument('--hdr', action='store_true', help='Negotiate Main10 and verify 10-bit decode after reconnect')
 args = parser.parse_args()
 
 root = Path(__file__).resolve().parent.parent
@@ -54,6 +55,10 @@ def viewer(name, key_file, success):
         assert result.returncode == 0, 'Valid viewer failed: ' + name
         samples = json.loads(report.read_text())['samples']
         assert samples[-1]['framesDecoded'] >= 60 and samples[-1]['bridge']['authenticated']
+        if args.hdr:
+            assert samples[-1]['codec'] == 'video/H265'
+            assert samples[-1]['decodedPixelFormat']['pixelFormat'] == '2016686640'
+            assert samples[-1]['decodedPixelFormat']['transfer'] == 'SMPTE_ST_2084_PQ'
     else:
         assert result.returncode != 0, 'Wrong key unexpectedly connected'
         samples = json.loads(report.read_text())['samples']
@@ -62,6 +67,8 @@ def viewer(name, key_file, success):
 try:
     with log_path.open('w') as log:
         capture_params = ['--window-id', str(args.window_id)] if args.window_id is not None else []
+        if args.hdr:
+            capture_params += ['--hdr']
         host = subprocess.Popen([str(app), '--lab-role', 'host', '--persistent-host', '--duration', '90',
             '--key-file', str(key), '--report', str(work / 'host.json')] + params + capture_params,
             stdout=log, stderr=subprocess.STDOUT)

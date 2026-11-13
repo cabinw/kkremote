@@ -8,6 +8,8 @@ struct CaptureSample: Codable {
     var invalidFrames = 0
     var width = 0
     var height = 0
+    var pixelFormat: [String: String]?
+    var luma10BitSamples: [String: Int]?
     var sourceWidthPoints: Double = 0
     var sourceHeightPoints: Double = 0
     var pointPixelScale: Double = 0

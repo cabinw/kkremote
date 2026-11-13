@@ -38,11 +38,14 @@ struct BridgeSample: Codable {
     var pendingPackets = 0
     var maxQueueAgeMilliseconds: Double = 0
     var probeRTTMilliseconds: Double? = nil
+    var simulatedDrops = 0
 }
 
 /// In-process endpoint adapter: WebRTC loopback UDP <-> authenticated fixed-endpoint UDP.
 /// The external direction is always initiated by the viewer, including NAT/Ponte cases.
 final class DatagramBridge {
+    // Explicit CLI self-test only; captured once per host bridge, never enabled by remote input.
+    static var simulateLossInSelfTest = false
     let localPort: UInt16
     private let queue = DispatchQueue(label: "kkremote.media-udp", qos: .userInteractive)
     private let local: LoopbackDatagramPort
@@ -63,6 +66,8 @@ final class DatagramBridge {
     private var lastProbe: TimeInterval = 0
     private var probes: [UInt64: TimeInterval] = [:]
     private let isHost: Bool
+    private let simulateLoss: Bool
+    private var impairmentPackets = 0
     var onReady: (() -> Void)?
     var onAuthenticated: (() -> Void)?
     var onFailure: ((String) -> Void)?
@@ -70,6 +75,7 @@ final class DatagramBridge {
     init(secret: Data, session: String, isHost: Bool, version: MediaWireVersion = .v2, receiveDepth: Int = 16, transport: BridgeTransportKind = .network) throws {
         guard [1, 16].contains(receiveDepth) else { throw LabError.message("无效 UDP 接收深度") }
         self.isHost = isHost; self.transport = transport
+        self.simulateLoss = isHost && Self.simulateLossInSelfTest
         state.transport = transport.rawValue
         state.receiveDepth = receiveDepth
         state.wireVersion = version.rawValue
@@ -261,6 +267,14 @@ final class DatagramBridge {
     private func send(_ payload: Data, kind: MediaDatagramCodec.Kind) {
         guard !stopped, hasEndpoint, kind != .media || state.authenticated else { return }
         let packets = codec.seal(payload, kind: kind)
+        if simulateLoss, kind == .media, payload.count >= 12, payload[0] & 0xc0 == 0x80,
+           !(192...223).contains(Int(payload[1])) {
+            impairmentPackets += 1
+            let age = ProcessInfo.processInfo.systemUptime - started
+            if (age >= 5 && age < 15 && impairmentPackets % 100 == 0) || (age >= 15 && age < 15.2) {
+                state.simulatedDrops += packets.count; return
+            }
+        }
         if kind == .media, let first = payload.first, first & 0xc0 == 0x80 {
             let bucket = payload.count <= 1168 ? "<=1168" : payload.count <= 1200 ? "1169-1200" : payload.count <= 1248 ? "1201-1248" : ">1248"
             state.rtpSizeCounts[bucket, default: 0] += 1

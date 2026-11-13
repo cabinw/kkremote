@@ -2,6 +2,9 @@ import Foundation
 import WebRTC
 #if os(macOS)
 import CoreImage
+import AppKit
+#else
+import UIKit
 #endif
 
 enum MediaRoute: String, Codable, CaseIterable, Identifiable {
@@ -42,6 +45,10 @@ struct LabSample: Codable {
     var codecParameters: String = "unknown"
     var encoderDetails: EncoderSample? = nil
     var captureDetails: CaptureSample? = nil
+    var decodedPixelFormat: [String: String]? = nil
+    var decoded10BitSamples: [String: Int]? = nil
+    var displayHeadroom: Double? = nil
+    var potentialDisplayHeadroom: Double? = nil
     var encoder: String = "unknown"
     var decoder: String = "unknown"
     var bridge: BridgeSample? = nil
@@ -75,6 +82,10 @@ final class FrameCounter: NSObject, RTCVideoRenderer {
     private var gaps: [Double] = []
     private var previewEnabled = false
     private var previewFrame: RTCVideoFrame?
+    private var pixelFormat: [String: String]?
+    private var pixelSamples: [String: Int]?
+    var decodedFormat: [String: String]? { lock.lock(); defer { lock.unlock() }; return pixelFormat }
+    var decodedSamples: [String: Int]? { lock.lock(); defer { lock.unlock() }; return pixelSamples }
     func enablePreview() { lock.lock(); previewEnabled = true; lock.unlock() }
     #if os(macOS)
     func savePreview(to url: URL) throws {
@@ -93,6 +104,8 @@ final class FrameCounter: NSObject, RTCVideoRenderer {
     func renderFrame(_ frame: RTCVideoFrame?) {
         guard frame != nil else { return }
         lock.lock(); count += 1
+        if count == 1, let buffer = frame?.buffer as? RTCCVPixelBuffer { pixelFormat = HDRFormat.description(buffer.pixelBuffer) }
+        if count % 60 == 1, let buffer = frame?.buffer as? RTCCVPixelBuffer { pixelSamples = HDRFormat.lumaSamples(buffer.pixelBuffer) }
         if previewEnabled { previewFrame = frame }
         let now = ProcessInfo.processInfo.systemUptime
         if firstTime == nil { firstTime = now }
@@ -119,6 +132,10 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
     private var peer: RTCPeerConnection!
     private var channel: RTCDataChannel?
     private var source: LabVideoSource?
+    private var makeSource: ((Bool) throws -> LabVideoSource)?
+    private var requestedHDR = false
+    private var negotiatedHDR = false
+    private var sdrReceiver = false
     private var timer: Timer?
     private var remoteCandidates: [RTCIceCandidate] = []
     private var remoteReady = false
@@ -151,10 +168,12 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
     var onSample: ((LabSample) -> Void)?
     var onFailure: ((String) -> Void)?
 
-    init(isHost: Bool, preset: LabPreset, route: MediaRoute = .directICE, endpointHost: String = "", mediaPort: UInt16 = 45991, receiveDepth: Int = 16, bridgeTransport: BridgeTransportKind = .network, captureWindowID: UInt32? = nil) throws {
+    init(isHost: Bool, preset: LabPreset, route: MediaRoute = .directICE, endpointHost: String = "", mediaPort: UInt16 = 45991, receiveDepth: Int = 16, bridgeTransport: BridgeTransportKind = .network, captureWindowID: UInt32? = nil, hdr: Bool = false, sdrReceiver: Bool = false) throws {
         self.isHost = isHost; self.preset = preset; self.route = route
         self.endpointHost = endpointHost; self.mediaPort = mediaPort
         self.receiveDepth = receiveDepth; self.bridgeTransport = bridgeTransport
+        self.requestedHDR = hdr
+        self.sdrReceiver = sdrReceiver
         self.session = isHost ? UUID().uuidString : nil
         super.init()
         let configuration = RTCConfiguration()
@@ -165,7 +184,7 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
         configuration.tcpCandidatePolicy = .disabled
         configuration.continualGatheringPolicy = .gatherOnce
         WebRTCRuntime.initialize(WebRTCRuntime.mode)
-        let factory = RTCPeerConnectionFactory(encoderFactory: LabH264EncoderFactory(telemetry: encoderTelemetry), decoderFactory: LabH264DecoderFactory())
+        let factory = RTCPeerConnectionFactory(encoderFactory: hdr ? HEVCEncoderFactory(telemetry: encoderTelemetry) : LabH264EncoderFactory(telemetry: encoderTelemetry), decoderFactory: sdrReceiver ? LabH264DecoderFactory() : HEVCDecoderFactory())
         self.factory = factory
         if route != .directICE {
             let options = RTCPeerConnectionFactoryOptions()
@@ -200,15 +219,17 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
             // congestion control may reduce it immediately.
             _ = pc.setBweMinBitrateBps(nil, currentBitrateBps: NSNumber(value: min(4, preset.megabits) * 1_000_000),
                 maxBitrateBps: NSNumber(value: preset.megabits * 1_000_000))
-            #if os(macOS)
-            if let captureWindowID {
-                source = WindowCaptureSource(source: videoSource, preset: preset, windowID: captureWindowID) { [weak self] message in
-                    guard let self, !self.stopped else { return }; self.onFailure?(message)
+            makeSource = { [weak self] hdr in
+                #if os(macOS)
+                if let captureWindowID {
+                    return WindowCaptureSource(source: videoSource, preset: preset, windowID: captureWindowID, hdr: hdr) { [weak self] message in
+                        guard let self, !self.stopped else { return }; self.onFailure?(message)
+                    }
                 }
-            } else { source = try TestPattern(source: videoSource, preset: preset) }
-            #else
-            source = try TestPattern(source: videoSource, preset: preset)
-            #endif
+                #endif
+                if hdr { return try HDRTestPattern(source: videoSource, width: preset.width, height: preset.height, fps: preset.fps) }
+                return try TestPattern(source: videoSource, preset: preset)
+            }
             let settings = RTCDataChannelConfiguration()
             settings.isOrdered = true
             channel = pc.dataChannel(forLabel: "control-probe", configuration: settings)
@@ -253,7 +274,8 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
                 guard let self, !self.stopped, let session = self.session else { return }
                 guard error == nil else { self.onFailure?("无法设置本地 SDP"); return }
                 let text = self.route != .directICE ? Self.withoutCandidates(sdp.sdp) : sdp.sdp
-                self.onSignal?(SignalMessage(type: sdp.type == .offer ? "offer" : "answer", session: session, sdp: text))
+                self.onSignal?(SignalMessage(type: sdp.type == .offer ? "offer" : "answer", session: session, sdp: text,
+                    videoFormat: self.sdrReceiver ? nil : (HDRFormat.prefersMain10(text) ? "hevc-main10-pq" : "h264-sdr")))
             }
         }
     }
@@ -292,6 +314,14 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
                     guard let self, !self.stopped else { return }
                     guard error == nil else { self.onFailure?("无法设置远端 SDP"); return }
                     self.remoteReady = true
+                    if self.isHost {
+                        if HDRFormat.prefersMain10(sdp) && message.videoFormat != "hevc-main10-pq" {
+                            self.onFailure?("接收端未确认 Main10 PQ 色彩路径，已拒绝启动 HDR"); return
+                        }
+                        self.negotiatedHDR = self.requestedHDR && message.videoFormat == "hevc-main10-pq" && HDRFormat.prefersMain10(sdp)
+                        if self.requestedHDR && !self.negotiatedHDR { self.onStatus?("接收端选择 H.264，已回退到 SDR") }
+                        self.startSourceIfReady()
+                    }
                     self.addBridgeCandidateIfReady()
                     self.remoteCandidates.forEach { self.add($0) }; self.remoteCandidates.removeAll()
                     if !self.isHost {
@@ -313,6 +343,14 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
         peer.add(candidate) { [weak self] error in
             if error != nil { DispatchQueue.main.async { self?.onStatus?("部分 ICE 候选未被接受") } }
         }
+    }
+
+    private func startSourceIfReady() {
+        guard isHost, !stopped, remoteReady, source == nil,
+              peer.iceConnectionState == .connected || peer.iceConnectionState == .completed,
+              let makeSource else { return }
+        do { source = try makeSource(negotiatedHDR); source?.start() }
+        catch { onFailure?("无法启动协商的视频源：\(error.localizedDescription)") }
     }
 
     private func install(_ bridge: DatagramBridge) {
@@ -377,6 +415,15 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
     private func consume(_ report: RTCStatisticsReport) {
         guard !stopped else { return }
         var sample = LabSample()
+        sample.decodedPixelFormat = frameCounter.decodedFormat
+        sample.decoded10BitSamples = frameCounter.decodedSamples
+        #if os(macOS)
+        sample.displayHeadroom = NSScreen.main.map { Double($0.maximumExtendedDynamicRangeColorComponentValue) }
+        sample.potentialDisplayHeadroom = NSScreen.main.map { Double($0.maximumPotentialExtendedDynamicRangeColorComponentValue) }
+        #else
+        sample.displayHeadroom = Double(UIScreen.main.currentEDRHeadroom)
+        sample.potentialDisplayHeadroom = Double(UIScreen.main.potentialEDRHeadroom)
+        #endif
         let now = ProcessInfo.processInfo.systemUptime
         sample.seconds = now - started
         sample.bridge = bridge?.snapshot()
@@ -457,7 +504,7 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
             guard let self, !self.stopped else { return }
             let states: [RTCIceConnectionState: String] = [.new: "等待 ICE", .checking: "正在检查媒体路径", .connected: "媒体 ICE 已连接", .completed: "媒体 ICE 已就绪", .disconnected: "媒体路径暂时断开", .failed: "媒体 ICE 失败", .closed: "媒体 ICE 已关闭", .count: "未知 ICE 状态"]
             self.onStatus?(states[newState] ?? "未知 ICE 状态")
-            if newState == .connected || newState == .completed { if self.source != nil { self.source?.start() } }
+            if newState == .connected || newState == .completed { self.startSourceIfReady() }
             if newState == .failed { self.onFailure?("ICE 媒体连接失败：信令已通，但 UDP 候选路径不可达") }
         }
     }

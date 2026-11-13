@@ -20,3 +20,24 @@ ffmpeg -ss 120 -i bbb_sunflower_2160p_60fps_normal.mp4 \
 ```
 
 Use the Mac Lab's `--list-windows` or “刷新窗口” to select this window explicitly. Hidden browser automation surfaces may enumerate as windows but produce no complete ScreenCaptureKit frames; use a normal visible window. Do not capture a browser window containing unrelated private tabs.
+
+## HDR fixtures
+
+Run `bash scripts/generate-hdr-fixture.sh` to generate a 20-second looping 1440p60
+Main10 BT.2020/PQ code-value test pattern. It is explicitly synthetic; it is not a
+conversion of SDR film intended to represent a mastered HDR scene. Inspect its
+VUI and container metadata using the emitted `ffprobe` result.
+
+```bash
+python3 scripts/serve-capture-fixture.py --media /absolute/path/clip.mp4 \
+  --reference-media "$PWD/.build/hdr/pq60-reference.mp4" \
+  --hdr-media /absolute/path/apple-hdr.mp4 --port 47981
+```
+
+Open `http://127.0.0.1:47981/?fixture=hdr60` for the 60 fps pattern, or
+`http://127.0.0.1:47981/?fixture=hdr-film` for real HDR film. The separate film used
+locally comes from [Apple's Advanced Stream example](https://developer.apple.com/streaming/examples/advanced-stream-dv-atmos.html),
+selecting its **hvc1 / PQ** 3840×2160 variant. The downloaded 60-second, video-only
+excerpt is **23.976 fps** and remains untracked. A 60 Hz capture of this film does
+not mean it contains 60 unique film frames per second. No Dolby Vision or dynamic
+HDR metadata is promised for the captured window.

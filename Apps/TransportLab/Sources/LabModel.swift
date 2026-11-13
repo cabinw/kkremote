@@ -33,6 +33,8 @@ final class LabModel: ObservableObject {
     @Published var fps = 60
     @Published var megabits = 25
     @Published var pattern = PatternKind.grid
+    @Published var hdr = false
+    var sdrReceiver = false
     @Published var captureWindowID: UInt32? = nil
     #if os(macOS)
     @Published var captureWindows: [CaptureWindow] = []
@@ -91,7 +93,7 @@ final class LabModel: ObservableObject {
         do {
             if isHost { pairingKey = try hostKey ?? SignalTransport.newPairingKey() }
             let signal = SignalTransport()
-            let engine = try PeerEngine(isHost: isHost, preset: activePreset, route: activeRoute, endpointHost: host, mediaPort: mediaPortNumber, receiveDepth: bridgeReceiveDepth, bridgeTransport: bridgeTransport, captureWindowID: isHost ? captureWindowID : nil)
+            let engine = try PeerEngine(isHost: isHost, preset: activePreset, route: activeRoute, endpointHost: host, mediaPort: mediaPortNumber, receiveDepth: bridgeReceiveDepth, bridgeTransport: bridgeTransport, captureWindowID: isHost ? captureWindowID : nil, hdr: hdr, sdrReceiver: sdrReceiver)
             self.signal = signal; self.engine = engine
             if keepDecodedPreview { engine.frameCounter.enablePreview() }
             engine.onSignal = { [weak signal] message in signal?.send(message) }
@@ -131,6 +133,7 @@ final class LabModel: ObservableObject {
         local.fps = useCurrentPreset ? fps : 30; local.megabits = useCurrentPreset ? megabits : 8
         local.pattern = useCurrentPreset ? pattern : .grid
         local.captureWindowID = captureWindowID
+        local.hdr = hdr
         local.port = String(UInt16.random(in: 49000...59000))
         local.mediaPort = String(UInt16.random(in: 49000...59000))
         local.startHost()
@@ -155,10 +158,10 @@ final class LabModel: ObservableObject {
     }
 
     func exportReport(to destination: URL? = nil, recentSamples: Int? = nil) {
-        let report = LabReport(schemaVersion: 5,
+        let report = LabReport(schemaVersion: 6,
             appVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown",
             build: Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown",
-            backend: "libwebrtc M157 / H.264 SDR", os: ProcessInfo.processInfo.operatingSystemVersionString,
+            backend: "libwebrtc M157 / H.264 SDR or VT HEVC Main10 PQ; see actual codec and pixel formats", os: ProcessInfo.processInfo.operatingSystemVersionString,
             mode: mode, networkLabel: networkLabel, actualOverlayPath: "unknown", pacing: WebRTCRuntime.mode,
             pacingParameters: WebRTCRuntime.mode.screenShareSettings, bridgeReceiveDepth: activeReceiveDepth, bridgeTransport: activeBridgeTransport, mediaRoute: activeRoute, preset: activePreset, videoSource: activeVideoSource,
             notes: [activeRoute != .directICE ? "Fixed UDP carries ICE/DTLS/SRTP/SCTP through the configured endpoint. The outer Ponte channel is not observed." : "Direct ICE can use any reachable adapter; the network label does not constrain it.",
@@ -169,7 +172,7 @@ final class LabModel: ObservableObject {
                     "Socket transport is IPv4-only. Bridge sequence holes can include sender discards or reordering; they are not automatically permanent network loss. Frame gaps measure renderer callbacks, not display photons.",
                     "Queue age only covers the application adapter, not OS/overlay/encoder queues. P95 covers the latest 120 successful echoes; probe counters expose expiration.",
                     "Candidate host/UDP does not prove Tailscale direct or a Ponte channel type.",
-                    "H.264 SDR only. For window sources preset.pattern is unused. Source kind is local to this peer, not negotiated with old receivers.",
+                    "HEVC Main10 PQ is selected only with a new receiver's explicit format answer; legacy receivers fall back to H.264 SDR. For window and HDR ramp sources preset.pattern is unused.",
                     "Window capture follows display cadence and damage; RTCVideoSource caps output at preset.fps. Capture callbacks may exceed output fps. Idle frames are not encoder drops. WindowServer age ends at the capture callback, not remote display; source dimensions are sampled at capture start.",
                     "Report excludes pairing key, SDP, endpoint addresses, window identifiers/titles, user input and video content."]
                     + (recentSamples == nil ? [] : ["Live snapshot contains only the latest samples; session-end reports retain the full bounded history."]),

@@ -8,22 +8,27 @@
 
 /* Begin PBXBuildFile section */
 		0BB119551A97BC66FAA982A9 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B803EFD91995BFC401600592 /* PrivacyInfo.xcprivacy */; };
+		242608263EC9AF29EA19E88A /* Main10Probe.md in Resources */ = {isa = PBXBuildFile; fileRef = 7ADB77F867006A8A7FF9151B /* Main10Probe.md */; };
 		24C0DB100F476E243B328208 /* UDPSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = A73AC09084EC4DCACFC2F256 /* UDPSocket.swift */; };
 		257AF460DF6AECD8A4E76D36 /* LabCLI.swift in Sources */ = {isa = PBXBuildFile; fileRef = E121061760F554354AB40CB3 /* LabCLI.swift */; };
 		258DE7A444B1795E86915D56 /* LabModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78AC53B2E4A155687286D160 /* LabModel.swift */; };
 		29F1B2AF35A98D6C86B94325 /* WebRTCRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48CAAFAAFE8C6DE9642FA41E /* WebRTCRuntime.swift */; };
 		2A431F9CE0FCA0277BAB2B41 /* LoopbackDatagramPort.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3906527D06061792D69CD87 /* LoopbackDatagramPort.swift */; };
+		331E69A877B874E328F56943 /* HEVCCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B0487CBCFF552EDC6775EE2 /* HEVCCodec.swift */; };
 		35984F90D97242498D1964EA /* LabVideoSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 885BD861B6356258EFDDAB1F /* LabVideoSource.swift */; };
 		370B537AED09A476052AE752 /* LabVideoSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 885BD861B6356258EFDDAB1F /* LabVideoSource.swift */; };
 		3AE10936D18826B96F4B66DA /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B803EFD91995BFC401600592 /* PrivacyInfo.xcprivacy */; };
 		43047BF2507DB56BB0705268 /* LabCLI.swift in Sources */ = {isa = PBXBuildFile; fileRef = E121061760F554354AB40CB3 /* LabCLI.swift */; };
 		49E7ED9DDC03729340AD423E /* LabApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36D6D3B59DA9FC7C09A7BC10 /* LabApp.swift */; };
+		4DCC704645F99E9DE72B8814 /* HDRVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA7F65C1CD67680D7D1597B2 /* HDRVideoView.swift */; };
 		599E7A20147063F36EC69E09 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1C2A62821BC3AED598E9CDDC /* Assets.xcassets */; };
 		65840EB514A8D75DC2191938 /* MediaDatagram.swift in Sources */ = {isa = PBXBuildFile; fileRef = D006CB48F875AE64D3F8C885 /* MediaDatagram.swift */; };
 		6634475ABA384F983C9AB7D8 /* UDPSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = A73AC09084EC4DCACFC2F256 /* UDPSocket.swift */; };
 		6809030F037C05F47B15C25D /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = BB1049C67A799A922ACA398C /* WebRTC */; };
 		6BED5CD0438D54D2A2057F42 /* SignalTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9294C4C27F90B30E8333335 /* SignalTransport.swift */; };
+		6CD393A69D5856A46EC791A1 /* Main10Probe.hevc in Resources */ = {isa = PBXBuildFile; fileRef = 89F771D78894959C8594411B /* Main10Probe.hevc */; };
 		704737AB04D63DF4DEF6A5D6 /* SignalTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9294C4C27F90B30E8333335 /* SignalTransport.swift */; };
+		74D8047E121DC9CC9B0ACDC3 /* HDRTestPattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E5E1B9B9465A540A5A60935 /* HDRTestPattern.swift */; };
 		7B7FA50F7D6A5379E4EFF624 /* DatagramBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E611FAAC103A193A4412063 /* DatagramBridge.swift */; };
 		828074CE7B133EC6E14E9124 /* LabH264Factory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A10C974E08842CA72688791 /* LabH264Factory.swift */; };
 		849B04AAFA0C8FC665FCF5D6 /* EncoderTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF48D0FE7946D410215DE8F /* EncoderTelemetry.swift */; };
@@ -39,15 +44,20 @@
 		C5BC78878B86590AA5D5C031 /* PeerEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41FBBE491584DE1A643FDD12 /* PeerEngine.swift */; };
 		CDDBD389EF90B760503E9AED /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1C2A62821BC3AED598E9CDDC /* Assets.xcassets */; };
 		CF26473C2028205C29AF3014 /* LabH264Factory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A10C974E08842CA72688791 /* LabH264Factory.swift */; };
+		D16D1374A1317B48446E105B /* HDRVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA7F65C1CD67680D7D1597B2 /* HDRVideoView.swift */; };
 		D94A691C7924525A2CFDF7F3 /* TestPattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D315A4735594B08A7C94F94 /* TestPattern.swift */; };
 		DB1F20B2B65F40161CAC10B7 /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = 4EDA93A13EA3315BB904C42D /* WebRTC */; };
 		DF5BC1E91CDACFEEA843504F /* DesktopPattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = 685AE22A1ABE008C10BB9776 /* DesktopPattern.swift */; };
+		E1ACCD636FC7FE7BABBAA469 /* HEVCCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B0487CBCFF552EDC6775EE2 /* HEVCCodec.swift */; };
+		E25E845782DDE6AAEA9EFE6F /* Main10Probe.hevc in Resources */ = {isa = PBXBuildFile; fileRef = 89F771D78894959C8594411B /* Main10Probe.hevc */; };
 		E29F093B5951967BB63DBB43 /* TestPattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D315A4735594B08A7C94F94 /* TestPattern.swift */; };
 		E9E3D391311379AA13355AB1 /* PeerEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41FBBE491584DE1A643FDD12 /* PeerEngine.swift */; };
 		EE91B696FAD67B3A7A6B0669 /* WindowCaptureSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86AFCBC1B64C3DDF9CEDD11 /* WindowCaptureSource.swift */; };
+		F10D682727CEFC0C1D81E714 /* Main10Probe.md in Resources */ = {isa = PBXBuildFile; fileRef = 7ADB77F867006A8A7FF9151B /* Main10Probe.md */; };
 		F632A9CE96534DD5CC5DD34F /* DatagramBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E611FAAC103A193A4412063 /* DatagramBridge.swift */; };
 		FBD13332303D66068EC64CF9 /* WebRTCRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48CAAFAAFE8C6DE9642FA41E /* WebRTCRuntime.swift */; };
 		FE80C38FC3A575DE6BBDF3FD /* WindowCaptureSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86AFCBC1B64C3DDF9CEDD11 /* WindowCaptureSource.swift */; };
+		FE910C59DF7176D71EF4DA32 /* HDRTestPattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E5E1B9B9465A540A5A60935 /* HDRTestPattern.swift */; };
 		FFA878629E3F70E6F51C469A /* WebRTC-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = F8AAC35B8C3A874444E7BAE4 /* WebRTC-LICENSE.txt */; };
 /* End PBXBuildFile section */
 
@@ -55,6 +65,7 @@
 		0E611FAAC103A193A4412063 /* DatagramBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatagramBridge.swift; sourceTree = "<group>"; };
 		1C2A62821BC3AED598E9CDDC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		201C970C6C92C5CE6B2798B4 /* KKRemoteLabMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KKRemoteLabMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2E5E1B9B9465A540A5A60935 /* HDRTestPattern.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HDRTestPattern.swift; sourceTree = "<group>"; };
 		36D6D3B59DA9FC7C09A7BC10 /* LabApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabApp.swift; sourceTree = "<group>"; };
 		3C547F1880EFAB4D73276855 /* KKRemoteLab.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = KKRemoteLab.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		41FBBE491584DE1A643FDD12 /* PeerEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerEngine.swift; sourceTree = "<group>"; };
@@ -63,10 +74,14 @@
 		6D315A4735594B08A7C94F94 /* TestPattern.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestPattern.swift; sourceTree = "<group>"; };
 		78AC53B2E4A155687286D160 /* LabModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabModel.swift; sourceTree = "<group>"; };
 		7A10C974E08842CA72688791 /* LabH264Factory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabH264Factory.swift; sourceTree = "<group>"; };
+		7ADB77F867006A8A7FF9151B /* Main10Probe.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Main10Probe.md; sourceTree = "<group>"; };
 		7BF48D0FE7946D410215DE8F /* EncoderTelemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncoderTelemetry.swift; sourceTree = "<group>"; };
 		885BD861B6356258EFDDAB1F /* LabVideoSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabVideoSource.swift; sourceTree = "<group>"; };
+		89F771D78894959C8594411B /* Main10Probe.hevc */ = {isa = PBXFileReference; path = Main10Probe.hevc; sourceTree = "<group>"; };
+		9B0487CBCFF552EDC6775EE2 /* HEVCCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEVCCodec.swift; sourceTree = "<group>"; };
 		A73AC09084EC4DCACFC2F256 /* UDPSocket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UDPSocket.swift; sourceTree = "<group>"; };
 		A9294C4C27F90B30E8333335 /* SignalTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalTransport.swift; sourceTree = "<group>"; };
+		AA7F65C1CD67680D7D1597B2 /* HDRVideoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HDRVideoView.swift; sourceTree = "<group>"; };
 		AC89DE1484D683E8F558EC2E /* LabHostKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabHostKey.swift; sourceTree = "<group>"; };
 		B803EFD91995BFC401600592 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		C96F80F391E8B6D4404F9E7F /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Shared.xcconfig; sourceTree = "<group>"; };
@@ -111,6 +126,9 @@
 				0E611FAAC103A193A4412063 /* DatagramBridge.swift */,
 				685AE22A1ABE008C10BB9776 /* DesktopPattern.swift */,
 				7BF48D0FE7946D410215DE8F /* EncoderTelemetry.swift */,
+				2E5E1B9B9465A540A5A60935 /* HDRTestPattern.swift */,
+				AA7F65C1CD67680D7D1597B2 /* HDRVideoView.swift */,
+				9B0487CBCFF552EDC6775EE2 /* HEVCCodec.swift */,
 				36D6D3B59DA9FC7C09A7BC10 /* LabApp.swift */,
 				E121061760F554354AB40CB3 /* LabCLI.swift */,
 				7A10C974E08842CA72688791 /* LabH264Factory.swift */,
@@ -153,6 +171,8 @@
 			isa = PBXGroup;
 			children = (
 				1C2A62821BC3AED598E9CDDC /* Assets.xcassets */,
+				89F771D78894959C8594411B /* Main10Probe.hevc */,
+				7ADB77F867006A8A7FF9151B /* Main10Probe.md */,
 				B803EFD91995BFC401600592 /* PrivacyInfo.xcprivacy */,
 				F8AAC35B8C3A874444E7BAE4 /* WebRTC-LICENSE.txt */,
 			);
@@ -249,6 +269,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				599E7A20147063F36EC69E09 /* Assets.xcassets in Resources */,
+				E25E845782DDE6AAEA9EFE6F /* Main10Probe.hevc in Resources */,
+				242608263EC9AF29EA19E88A /* Main10Probe.md in Resources */,
 				0BB119551A97BC66FAA982A9 /* PrivacyInfo.xcprivacy in Resources */,
 				FFA878629E3F70E6F51C469A /* WebRTC-LICENSE.txt in Resources */,
 			);
@@ -259,6 +281,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				CDDBD389EF90B760503E9AED /* Assets.xcassets in Resources */,
+				6CD393A69D5856A46EC791A1 /* Main10Probe.hevc in Resources */,
+				F10D682727CEFC0C1D81E714 /* Main10Probe.md in Resources */,
 				3AE10936D18826B96F4B66DA /* PrivacyInfo.xcprivacy in Resources */,
 				B8829874F7AC99761E0D114D /* WebRTC-LICENSE.txt in Resources */,
 			);
@@ -274,6 +298,9 @@
 				F632A9CE96534DD5CC5DD34F /* DatagramBridge.swift in Sources */,
 				DF5BC1E91CDACFEEA843504F /* DesktopPattern.swift in Sources */,
 				849B04AAFA0C8FC665FCF5D6 /* EncoderTelemetry.swift in Sources */,
+				FE910C59DF7176D71EF4DA32 /* HDRTestPattern.swift in Sources */,
+				D16D1374A1317B48446E105B /* HDRVideoView.swift in Sources */,
+				E1ACCD636FC7FE7BABBAA469 /* HEVCCodec.swift in Sources */,
 				49E7ED9DDC03729340AD423E /* LabApp.swift in Sources */,
 				257AF460DF6AECD8A4E76D36 /* LabCLI.swift in Sources */,
 				828074CE7B133EC6E14E9124 /* LabH264Factory.swift in Sources */,
@@ -298,6 +325,9 @@
 				7B7FA50F7D6A5379E4EFF624 /* DatagramBridge.swift in Sources */,
 				B449AD90ED4C74B58DAFB353 /* DesktopPattern.swift in Sources */,
 				8EC1114DC3C4309DCF6E8A3E /* EncoderTelemetry.swift in Sources */,
+				74D8047E121DC9CC9B0ACDC3 /* HDRTestPattern.swift in Sources */,
+				4DCC704645F99E9DE72B8814 /* HDRVideoView.swift in Sources */,
+				331E69A877B874E328F56943 /* HEVCCodec.swift in Sources */,
 				BB365B5972D060AA8FCB76C5 /* LabApp.swift in Sources */,
 				43047BF2507DB56BB0705268 /* LabCLI.swift in Sources */,
 				CF26473C2028205C29AF3014 /* LabH264Factory.swift in Sources */,

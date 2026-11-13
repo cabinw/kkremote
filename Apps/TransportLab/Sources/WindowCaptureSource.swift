@@ -20,6 +20,7 @@ final class WindowCaptureSource: NSObject, LabVideoSource, SCStreamOutput, SCStr
     private let capturer: RTCVideoCapturer
     private let preset: LabPreset
     private let windowID: UInt32
+    private let hdr: Bool
     private let onFailure: (String) -> Void
     private let queue = DispatchQueue(label: "kkremote.window-capture", qos: .userInteractive)
     // SCStreamConfiguration.backgroundColor is unowned; retain it for the stream lifetime.
@@ -35,8 +36,8 @@ final class WindowCaptureSource: NSObject, LabVideoSource, SCStreamOutput, SCStr
     private var gaps: [Double] = []
     private var ages: [Double] = []
 
-    init(source: RTCVideoSource, preset: LabPreset, windowID: UInt32, onFailure: @escaping (String) -> Void) {
-        self.source = source; self.preset = preset; self.windowID = windowID; self.onFailure = onFailure
+    init(source: RTCVideoSource, preset: LabPreset, windowID: UInt32, hdr: Bool = false, onFailure: @escaping (String) -> Void) {
+        self.source = source; self.preset = preset; self.windowID = windowID; self.hdr = hdr; self.onFailure = onFailure
         capturer = RTCVideoCapturer(delegate: source)
         super.init()
         source.adaptOutputFormat(toWidth: Int32(preset.width), height: Int32(preset.height), fps: Int32(preset.fps))
@@ -62,12 +63,12 @@ final class WindowCaptureSource: NSObject, LabVideoSource, SCStreamOutput, SCStr
                     throw LabError.message("选定窗口已关闭或不可捕获，请重新选择窗口")
                 }
                 let filter = SCContentFilter(desktopIndependentWindow: window)
-                let config = SCStreamConfiguration()
+                let config = self.hdr ? SCStreamConfiguration(preset: .captureHDRStreamCanonicalDisplay) : SCStreamConfiguration()
                 config.width = self.preset.width; config.height = self.preset.height
                 // Let WindowServer deliver at display cadence; RTCVideoSource caps output fps.
                 // Throttling twice at exactly 1/60 can discard near-boundary display updates.
                 config.minimumFrameInterval = .zero
-                config.pixelFormat = kCVPixelFormatType_32BGRA
+                config.pixelFormat = self.hdr ? HDRFormat.pixelFormat : kCVPixelFormatType_32BGRA
                 config.queueDepth = 3
                 config.showsCursor = false; config.showMouseClicks = false
                 config.capturesAudio = false; config.captureMicrophone = false
@@ -76,8 +77,9 @@ final class WindowCaptureSource: NSObject, LabVideoSource, SCStreamOutput, SCStr
                 config.preservesAspectRatio = true; config.scalesToFit = true
                 config.shouldBeOpaque = true
                 config.backgroundColor = self.backgroundColor
-                config.colorSpaceName = CGColorSpace.sRGB
-                config.captureDynamicRange = .SDR
+                config.colorSpaceName = self.hdr ? CGColorSpace.itur_2100_PQ : CGColorSpace.sRGB
+                if self.hdr { config.colorMatrix = kCVImageBufferYCbCrMatrix_ITU_R_2020 }
+                else { config.captureDynamicRange = .SDR }
                 self.configureMetrics(filter)
                 let stream = SCStream(filter: filter, configuration: config, delegate: self)
                 try stream.addStreamOutput(self, type: .screen, sampleHandlerQueue: self.queue)
@@ -149,6 +151,15 @@ final class WindowCaptureSource: NSObject, LabVideoSource, SCStreamOutput, SCStr
             if age >= 0, age < 10_000 { append(age, to: &ages) }
         }
         counters.width = CVPixelBufferGetWidth(buffer); counters.height = CVPixelBufferGetHeight(buffer)
+        counters.pixelFormat = HDRFormat.description(buffer)
+        if hdr && counters.completeFrames % 60 == 0 { counters.luma10BitSamples = HDRFormat.lumaSamples(buffer) }
+        if hdr && (CVPixelBufferGetPixelFormatType(buffer) != HDRFormat.pixelFormat ||
+            counters.pixelFormat?["primaries"] != "ITU_R_2020" || counters.pixelFormat?["transfer"] != "SMPTE_ST_2084_PQ" ||
+            counters.pixelFormat?["matrix"] != "ITU_R_2020") {
+            accepting = false
+            DispatchQueue.main.async { [weak self] in self?.onFailure("系统没有输出要求的 10 位 BT.2020/PQ 窗口帧；未发送错误色彩的视频") }
+            return
+        }
         counters.completeFrames += 1
         source.capturer(capturer, didCapture: RTCVideoFrame(buffer: RTCCVPixelBuffer(pixelBuffer: buffer), rotation: ._0, timeStampNs: timestamp))
     }

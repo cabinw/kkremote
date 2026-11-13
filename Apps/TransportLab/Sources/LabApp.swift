@@ -31,11 +31,11 @@ struct LabView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     Text("传输实验室").font(.largeTitle.bold())
-                    Text("先验证连接和视频，再验证窗口体验。H.264 SDR 基线 · WebRTC M157")
+                    Text("真实窗口串流 · H.264 SDR / HEVC Main10 PQ · WebRTC M157")
                         .foregroundStyle(.secondary)
                     ZStack {
                         Color.black
-                        if let track = model.track { RemoteVideo(track: track) }
+                        if let track = model.track { ColorManagedVideo(track: track) }
                         else {
                             VStack(spacing: 12) {
                                 Image(systemName: "rectangle.connected.to.line.below").font(.largeTitle)
@@ -80,6 +80,7 @@ struct LabView: View {
                     GroupBox("发送端参数 · 连接前设置") {
                         VStack {
                             #if os(macOS)
+                            Toggle("HDR 优先（HEVC Main10 / PQ）", isOn: $model.hdr)
                             HStack {
                                 Picker("捕获来源", selection: $model.captureWindowID) {
                                     Text("合成测试图").tag(nil as UInt32?)
@@ -114,6 +115,13 @@ struct LabView: View {
                             metric("解码帧数", "\(model.sample.framesDecoded)")
                             metric("候选类型", model.sample.candidatePair)
                             metric("实际编码", model.sample.codec)
+                            if let format = model.sample.decodedPixelFormat {
+                                metric("解码色彩", format["transfer"] == "SMPTE_ST_2084_PQ" ? "10 位 PQ" : "SDR")
+                                metric("色域 / 矩阵", "\(format["primaries"] ?? "unknown") / \(format["matrix"] ?? "unknown")")
+                                if let headroom = model.sample.displayHeadroom {
+                                    metric("当前屏幕 HDR 余量", String(format: "%.2f×%@", headroom, headroom > 1 ? "" : " · SDR 亮度范围"))
+                                }
+                            }
                             metric("解码 / 抖动缓冲", "\(ms(model.sample.decodeMilliseconds)) / \(ms(model.sample.jitterBufferMilliseconds))")
                             metric("发送等待（采样均值）", ms(model.sample.sendDelayMilliseconds))
                             if let encoder = model.sample.encoderDetails {
@@ -127,7 +135,7 @@ struct LabView: View {
                                 metric("UDP 探测大小 / 分片包数", "\(bridge.pathDatagramBytes) B / \(bridge.fragmentedInnerDatagrams)")
                                 Text(bridge.endpointScope).font(.caption).foregroundStyle(.secondary)
                             }
-                            Text("往返时间不等于输入到显示延迟。Mac 主机支持单窗口捕获；当前不注入键鼠、不验证 HEVC/HDR 或音频。")
+                            Text("往返时间不等于输入到显示延迟。帧率统计来自解码回调；HDR 亮度取决于屏幕当前能力。当前不注入键鼠，没有音频。")
                                 .font(.caption).foregroundStyle(.secondary)
                         }.padding(4)
                     }
