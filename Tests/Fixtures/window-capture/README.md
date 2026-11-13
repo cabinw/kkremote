@@ -41,3 +41,31 @@ selecting its **hvc1 / PQ** 3840×2160 variant. The downloaded 60-second, video-
 excerpt is **23.976 fps** and remains untracked. A 60 Hz capture of this film does
 not mean it contains 60 unique film frames per second. No Dolby Vision or dynamic
 HDR metadata is promised for the captured window.
+
+## Real HDR film and grayscale
+
+`python3 scripts/generate-hdr-gray.py` generates a neutral 2560×1440, 10-bit
+BT.2020/PQ chart directly as limited-range YUV. It uses the
+[BT.2100 inverse PQ EOTF](https://registry.khronos.org/DataFormat/specs/1.4/dataformat.1.4.html)
+to author the near-black and highlight levels. The first row is
+0 / 0.01 / 0.03 / 0.1 / 0.3 / 1 / 3 / 10 nits; the second is
+10 / 25 / 50 / 100 / 203 / 400 / 700 / 1000 nits. The third row is a
+continuous 10-bit PQ code-value ramp from black to the 1000-nit code.
+These labels describe the **input signal**, not measured phone luminance.
+
+The fixture is encoded losslessly using ffmpeg/libx265, with a bit-exact decoded
+first-frame comparison and Main10/PQ/range/frame-count checks. This offline
+fixture encoder does not replace the live VideoToolbox encoder. A trial lossy VT
+fixture introduced up to two code values of ramp error; the lossless fixture
+removes that ambiguity. The 10-second, 60 fps file contains a static chart;
+only the browser clock necessarily changes at display cadence.
+
+Add `--gray-media "$PWD/.build/hdr/pq-gray-reference.mp4"` to the local server
+command. Open `/hdr-quality.html?phase=film` or `?phase=gray` for an individual
+phase. `?phase=cycle` or the “自动轮换” button runs 60 seconds of real HDR film,
+then 45 seconds of grayscale, repeatedly. Manual phase buttons or pause stop
+automatic cycling. The clock/countdown exposes the active phase; brief media
+loads at a phase transition must be separated from within-phase network freezes.
+
+The browser window remains the captured source. Changing these fixtures requires
+neither a new TestFlight build nor new pairing credentials or media endpoints.

@@ -9,6 +9,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--media', type=Path, required=True)
 parser.add_argument('--hdr-media', type=Path)
 parser.add_argument('--reference-media', type=Path)
+parser.add_argument('--gray-media', type=Path)
 parser.add_argument('--port', type=int, default=47980)
 args = parser.parse_args()
 media = args.media.resolve(strict=True)
@@ -17,6 +18,8 @@ if args.hdr_media:
     media_paths['/hdr.mp4'] = args.hdr_media.resolve(strict=True)
 if args.reference_media:
     media_paths['/reference.mp4'] = args.reference_media.resolve(strict=True)
+if args.gray_media:
+    media_paths['/gray.mp4'] = args.gray_media.resolve(strict=True)
 fixture = Path(__file__).resolve().parents[1] / 'Tests/Fixtures/window-capture'
 
 
