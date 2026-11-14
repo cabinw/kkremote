@@ -34,8 +34,10 @@ final class TestPattern: LabVideoSource {
     private var frameNumber = 0
     private var noiseImages: [CGImage] = []
     private var desktop: DesktopPattern?
+    private let trace: FrameTrace?
 
-    init(source: RTCVideoSource, preset: LabPreset) throws {
+    init(source: RTCVideoSource, preset: LabPreset, trace: FrameTrace? = nil) throws {
+        self.trace = trace
         self.source = source
         self.preset = preset
         capturer = RTCVideoCapturer(delegate: source)
@@ -90,13 +92,13 @@ final class TestPattern: LabVideoSource {
         let aux = [kCVPixelBufferPoolAllocationThresholdKey as String: 4] as CFDictionary
         // Drop new work instead of accumulating buffers when the encoder cannot keep up.
         guard CVPixelBufferPoolCreatePixelBufferWithAuxAttributes(nil, pool, aux, &pixelBuffer) == kCVReturnSuccess,
-              let pixelBuffer else { return }
+              let pixelBuffer else { trace?.record(.sourceSkip, reason: "pattern_pool_pressure"); return }
         CVPixelBufferLockBaseAddress(pixelBuffer, [])
         guard let context = CGContext(data: CVPixelBufferGetBaseAddress(pixelBuffer), width: preset.width, height: preset.height,
                                       bitsPerComponent: 8, bytesPerRow: CVPixelBufferGetBytesPerRow(pixelBuffer),
                                       space: CGColorSpaceCreateDeviceRGB(),
                                       bitmapInfo: CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue) else {
-            CVPixelBufferUnlockBaseAddress(pixelBuffer, []); return
+            CVPixelBufferUnlockBaseAddress(pixelBuffer, []); trace?.record(.sourceSkip, reason: "pattern_context_failure"); return
         }
         let width = CGFloat(preset.width), height = CGFloat(preset.height)
         if let desktop {
@@ -134,7 +136,9 @@ final class TestPattern: LabVideoSource {
         }
         CVPixelBufferUnlockBaseAddress(pixelBuffer, [])
         let timestamp = Int64(DispatchTime.now().uptimeNanoseconds)
-        source.capturer(capturer, didCapture: RTCVideoFrame(buffer: RTCCVPixelBuffer(pixelBuffer: pixelBuffer), rotation: ._0, timeStampNs: timestamp))
+        let frame = RTCVideoFrame(buffer: RTCCVPixelBuffer(pixelBuffer: pixelBuffer), rotation: ._0, timeStampNs: timestamp)
+        trace?.sourceSubmitted(buffer: frame.buffer, frameID: UInt64(frameNumber + 1), ptsNs: timestamp)
+        source.capturer(capturer, didCapture: frame)
         frameNumber += 1
     }
 }

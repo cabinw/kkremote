@@ -6,6 +6,9 @@ struct BridgeSample: Codable {
     var socketReceiveBufferBytes: Int32?
     var socketRejectedPeers = 0
     var socketTruncatedPackets = 0
+    var socketKernelTimestampEnabled: Bool?
+    var socketKernelTimestampPackets: Int?
+    var socketKernelTimestampMissing: Int?
     var receiveDepth = 1
     var acceptedPackets: UInt64 = 0
     var sequenceHoles: UInt64 = 0
@@ -39,6 +42,8 @@ struct BridgeSample: Codable {
     var maxQueueAgeMilliseconds: Double = 0
     var probeRTTMilliseconds: Double? = nil
     var simulatedDrops = 0
+    var oldestWaitingMilliseconds: Double = 0
+    var impairment: ImpairmentSample? = nil
 }
 
 /// In-process endpoint adapter: WebRTC loopback UDP <-> authenticated fixed-endpoint UDP.
@@ -46,6 +51,8 @@ struct BridgeSample: Codable {
 final class DatagramBridge {
     // Explicit CLI self-test only; captured once per host bridge, never enabled by remote input.
     static var simulateLossInSelfTest = false
+    static var simulatedOutageMilliseconds = 200
+    static var diagnosticImpairment = TransportImpairmentProfile.none
     let localPort: UInt16
     private let queue = DispatchQueue(label: "kkremote.media-udp", qos: .userInteractive)
     private let local: LoopbackDatagramPort
@@ -59,7 +66,13 @@ final class DatagramBridge {
     private var timer: DispatchSourceTimer?
     private var stopped = false
     private var state = BridgeSample()
-    private var waiting: [(Data, TimeInterval)] = []
+    private struct WaitingPacket {
+        let data: Data
+        let queuedNs: UInt64
+        let tracePacket: RTPTrace.Packet?
+    }
+    private var waiting: [WaitingPacket] = []
+    private let trace: RTPTrace?
     private var inFlight = 0
     private var started = ProcessInfo.processInfo.systemUptime
     private var lastReceived: TimeInterval = 0
@@ -67,15 +80,31 @@ final class DatagramBridge {
     private var probes: [UInt64: TimeInterval] = [:]
     private let isHost: Bool
     private let simulateLoss: Bool
+    private let outageSeconds: Double
     private var impairmentPackets = 0
+    private var impairment: TransportImpairment
+    private var impairmentState: ImpairmentSample
+    private struct DelayedPacket {
+        let at: UInt64
+        let data: Data
+        let tracePacket: RTPTrace.Packet?
+    }
+    private var delayed: [DelayedPacket] = []
+    private var delayTimer: DispatchSourceTimer?
     var onReady: (() -> Void)?
     var onAuthenticated: (() -> Void)?
     var onFailure: ((String) -> Void)?
 
-    init(secret: Data, session: String, isHost: Bool, version: MediaWireVersion = .v2, receiveDepth: Int = 16, transport: BridgeTransportKind = .network) throws {
+    init(secret: Data, session: String, isHost: Bool, version: MediaWireVersion = .v2, receiveDepth: Int = 16, transport: BridgeTransportKind = .network, trace: RTPTrace? = nil) throws {
+        self.trace = trace
         guard [1, 16].contains(receiveDepth) else { throw LabError.message("无效 UDP 接收深度") }
         self.isHost = isHost; self.transport = transport
         self.simulateLoss = isHost && Self.simulateLossInSelfTest
+        self.outageSeconds = Double(Self.simulatedOutageMilliseconds) / 1000
+        let profile = isHost ? Self.diagnosticImpairment : .none
+        impairment = TransportImpairment(profile)
+        impairmentState = ImpairmentSample(profile: profile, startSeconds: profile.interval?.lowerBound,
+            endSeconds: profile.interval?.upperBound)
         state.transport = transport.rawValue
         state.receiveDepth = receiveDepth
         state.wireVersion = version.rawValue
@@ -119,6 +148,7 @@ final class DatagramBridge {
         queue.sync {
             var value = state
             value.pendingPackets = waiting.count + inFlight
+            value.oldestWaitingMilliseconds = waiting.first.map { Double(DispatchTime.now().uptimeNanoseconds - $0.queuedNs) / 1e6 } ?? 0
             value.rejectedDatagrams = codec.rejectedPackets
             value.expiredAssemblies = codec.expiredAssemblies
             value.localSocketDrops = local.dropped
@@ -129,20 +159,46 @@ final class DatagramBridge {
             value.socketReceiveBufferBytes = socket?.receiveBufferBytes
             value.socketRejectedPeers = socket?.rejectedPeers ?? 0
             value.socketTruncatedPackets = socket?.truncatedPackets ?? 0
+            value.socketKernelTimestampEnabled = socket?.kernelTimestampEnabled
+            value.socketKernelTimestampPackets = socket?.kernelTimestampPackets
+            value.socketKernelTimestampMissing = socket?.kernelTimestampMissing
             value.acceptedPackets = codec.acceptedPackets
             value.sequenceHoles = codec.sequenceHoles
             value.reorderedPackets = codec.reorderedPackets
             value.largestSequenceGap = codec.largestSequenceGap
+            if impairment.profile != .none {
+                var diagnostic = impairmentState; diagnostic.pending = delayed.count
+                value.impairment = diagnostic
+            }
             return value
         }
     }
 
-    func stop() {
+    func stop(completion: @escaping () -> Void = {}) {
         queue.async { [self] in
-            guard !stopped else { return }; stopped = true
-            timer?.cancel(); timer = nil; listener?.cancel(); listener = nil
-            connections.values.forEach { $0.cancel() }; connections.removeAll(); active = nil
-            local.stop(); socket?.stop(); socket = nil; waiting.removeAll(); probes.removeAll()
+            guard !stopped else { DispatchQueue.main.async(execute: completion); return }; stopped = true
+            let group = DispatchGroup()
+            timer?.cancel(); timer = nil
+            delayTimer?.cancel(); delayTimer = nil
+            impairmentState.cancelled += delayed.count
+            for entry in delayed { trace?.completed(entry.tracePacket, reason: "impairment_stop") }
+            delayed.removeAll()
+            if let listener {
+                group.enter()
+                listener.stateUpdateHandler = { if case .cancelled = $0 { group.leave() } }
+                listener.cancel(); self.listener = nil
+            }
+            for connection in connections.values {
+                group.enter()
+                connection.stateUpdateHandler = { if case .cancelled = $0 { group.leave() } }
+                connection.cancel()
+            }
+            connections.removeAll(); active = nil
+            group.enter(); local.stop { group.leave() }
+            if let socket { group.enter(); socket.stop { group.leave() }; self.socket = nil }
+            for entry in waiting { trace?.completed(entry.tracePacket, reason: "stop_waiting") }
+            waiting.removeAll(); probes.removeAll()
+            group.notify(queue: .main, execute: completion)
         }
     }
 
@@ -191,12 +247,12 @@ final class DatagramBridge {
         queue.async { [weak self] in
             guard let self, !self.stopped else { return }
             do {
-                let socket = try UDPSocket(queue: self.queue, host: host, port: port)
+                let socket = try UDPSocket(queue: self.queue, host: host, port: port, traceKernelArrival: self.trace != nil)
                 self.socket = socket
                 socket.onFailure = { [weak self] in self?.fail($0) }
-                socket.onPacket = { [weak self, weak socket] bytes, sender in
+                socket.onPacket = { [weak self, weak socket] bytes, sender, kernelArrivalNs in
                     guard let self, let socket, !self.stopped else { return }
-                    self.ingest(bytes, activeSource: socket.hasPeer) {
+                    self.ingest(bytes, activeSource: socket.hasPeer, kernelArrivalNs: kernelArrivalNs) {
                         guard socket.pin(sender) else { return false }
                         self.state.endpointScope = sender.scope; return true
                     }
@@ -232,7 +288,7 @@ final class DatagramBridge {
     }
 
     @discardableResult
-    private func ingest(_ bytes: Data, activeSource: Bool, select: () -> Bool) -> Bool {
+    private func ingest(_ bytes: Data, activeSource: Bool, kernelArrivalNs: UInt64? = nil, select: () -> Bool) -> Bool {
         let now = ProcessInfo.processInfo.systemUptime
         guard let packet = codec.open(bytes, now: now) else {
             if activeSource { state.receivedWireBytes += UInt64(bytes.count); state.receivedDatagrams += 1 }
@@ -255,7 +311,10 @@ final class DatagramBridge {
         }
         switch packet.kind {
         case .media:
-            state.innerDatagramsReceived += 1; local.send(packet.payload)
+            state.innerDatagramsReceived += 1
+            let observation = trace?.observe(packet.payload, direction: "inbound", kernelArrivalNs: kernelArrivalNs)
+            let accepted = local.send(packet.payload)
+            trace?.completed(observation, reason: accepted ? nil : "loopback_send_failure")
         case .probe: send(packet.payload, kind: .acknowledgement)
         case .acknowledgement:
             let nonce = packet.payload.integer(at: 0, as: UInt64.self)
@@ -266,28 +325,84 @@ final class DatagramBridge {
 
     private func send(_ payload: Data, kind: MediaDatagramCodec.Kind) {
         guard !stopped, hasEndpoint, kind != .media || state.authenticated else { return }
+        let observation = kind == .media ? trace?.observe(payload, direction: "outbound") : nil
         let packets = codec.seal(payload, kind: kind)
+        trace?.prepare(observation, fragments: max(1, packets.count))
+        if packets.isEmpty { trace?.completed(observation, reason: "envelope_rejected"); return }
         if simulateLoss, kind == .media, payload.count >= 12, payload[0] & 0xc0 == 0x80,
            !(192...223).contains(Int(payload[1])) {
             impairmentPackets += 1
             let age = ProcessInfo.processInfo.systemUptime - started
-            if (age >= 5 && age < 15 && impairmentPackets % 100 == 0) || (age >= 15 && age < 15.2) {
-                state.simulatedDrops += packets.count; return
+            if (age >= 5 && age < 15 && impairmentPackets % 100 == 0) || (age >= 15 && age < 15 + outageSeconds) {
+                state.simulatedDrops += packets.count
+                for _ in packets { trace?.completed(observation, reason: "simulated_loss") }
+                return
             }
         }
         if kind == .media, let first = payload.first, first & 0xc0 == 0x80 {
             let bucket = payload.count <= 1168 ? "<=1168" : payload.count <= 1200 ? "1169-1200" : payload.count <= 1248 ? "1201-1248" : ">1248"
             state.rtpSizeCounts[bucket, default: 0] += 1
         }
-        guard waiting.count + packets.count <= 256 else {
-            state.queueDrops += packets.count; state.queueOverflowDrops += packets.count; return
+        if impairment.profile != .none, kind == .media, payload.count >= 12,
+           payload[0] & 0xc0 == 0x80, !(192...223).contains(Int(payload[1])) {
+            state.innerDatagramsSent += 1
+            if packets.count > 1 { state.fragmentedInnerDatagrams += 1 }
+            let now = DispatchTime.now().uptimeNanoseconds
+            let age = ProcessInfo.processInfo.systemUptime - started
+            for data in packets {
+                impairmentState.considered += 1
+                switch impairment.decide(age: age, nowNs: now, bytes: data.count) {
+                case .pass: enqueue([data], observation: observation)
+                case .drop:
+                    impairmentState.dropped += 1; state.simulatedDrops += 1
+                    trace?.completed(observation, reason: "impairment_\(impairment.profile.rawValue)")
+                case .delay(let at):
+                    guard delayed.count < 256 else {
+                        impairmentState.capacityDrops += 1; state.simulatedDrops += 1
+                        trace?.completed(observation, reason: "impairment_capacity"); continue
+                    }
+                    impairmentState.delayed += 1
+                    impairmentState.maximumDelayMilliseconds = max(impairmentState.maximumDelayMilliseconds, Double(at - now) / 1e6)
+                    // Equal-time datagrams preserve insertion order. Variable delays can reorder.
+                    let position = delayed.firstIndex { $0.at > at } ?? delayed.endIndex
+                    delayed.insert(DelayedPacket(at: at, data: data, tracePacket: observation), at: position)
+                    impairmentState.highWater = max(impairmentState.highWater, delayed.count)
+                }
+            }
+            armDelayed(); return
         }
         if kind == .media {
             state.innerDatagramsSent += 1
             if packets.count > 1 { state.fragmentedInnerDatagrams += 1 }
         }
-        let now = ProcessInfo.processInfo.systemUptime
-        waiting.append(contentsOf: packets.map { ($0, now) })
+        enqueue(packets, observation: observation)
+    }
+
+    private func armDelayed() {
+        guard let first = delayed.first else { delayTimer?.cancel(); delayTimer = nil; return }
+        if delayTimer == nil {
+            let timer = DispatchSource.makeTimerSource(queue: queue)
+            timer.setEventHandler { [weak self] in
+                guard let self, !self.stopped else { return }
+                let now = DispatchTime.now().uptimeNanoseconds
+                while let packet = self.delayed.first, packet.at <= now {
+                    self.delayed.removeFirst(); self.enqueue([packet.data], observation: packet.tracePacket)
+                }
+                self.armDelayed()
+            }
+            delayTimer = timer; timer.resume()
+        }
+        delayTimer?.schedule(deadline: DispatchTime(uptimeNanoseconds: first.at), leeway: .microseconds(100))
+    }
+
+    private func enqueue(_ packets: [Data], observation: RTPTrace.Packet?) {
+        guard waiting.count + packets.count <= 256 else {
+            state.queueDrops += packets.count; state.queueOverflowDrops += packets.count
+            for _ in packets { trace?.completed(observation, reason: "queue_overflow") }
+            return
+        }
+        let now = DispatchTime.now().uptimeNanoseconds
+        waiting.append(contentsOf: packets.map { WaitingPacket(data: $0, queuedNs: now, tracePacket: observation) })
         state.queueHighWater = max(state.queueHighWater, waiting.count + inFlight)
         pump()
     }
@@ -295,19 +410,30 @@ final class DatagramBridge {
     private func pump() {
         guard !stopped, hasEndpoint else { return }
         while inFlight < 32, !waiting.isEmpty {
-            let (data, queued) = waiting.removeFirst()
-            let age = (ProcessInfo.processInfo.systemUptime - queued) * 1000
+            let depth = waiting.count + inFlight
+            let entry = waiting.removeFirst(), data = entry.data
+            let now = DispatchTime.now().uptimeNanoseconds
+            let age = Double(now - entry.queuedNs) / 1e6
+            trace?.dequeued(entry.tracePacket, queuedNs: entry.queuedNs, depth: depth, at: now)
             state.maxQueueAgeMilliseconds = max(state.maxQueueAgeMilliseconds, age)
-            guard age <= 25 else { state.queueDrops += 1; state.queueDeadlineDrops += 1; continue }
+            guard age <= 25 else {
+                state.queueDrops += 1; state.queueDeadlineDrops += 1
+                trace?.completed(entry.tracePacket, reason: "queue_deadline"); continue
+            }
             if let socket {
-                if socket.send(data) { state.sentWireBytes += UInt64(data.count); state.sentDatagrams += 1 }
-                else { state.queueDrops += 1; state.sendErrors += 1 }
+                if socket.send(data) {
+                    state.sentWireBytes += UInt64(data.count); state.sentDatagrams += 1
+                    trace?.completed(entry.tracePacket)
+                }
+                else { state.queueDrops += 1; state.sendErrors += 1; trace?.completed(entry.tracePacket, reason: "socket_send_failure") }
                 continue
             }
             guard let connection = active else { return }
             inFlight += 1
             connection.send(content: data, completion: .contentProcessed { [weak self] error in
-                guard let self, !self.stopped else { return }
+                guard let self else { return }
+                self.trace?.completed(entry.tracePacket, reason: error == nil ? nil : "network_send_failure")
+                guard !self.stopped else { return }
                 self.inFlight -= 1
                 if error != nil { self.state.queueDrops += 1; self.state.sendErrors += 1 }
                 else { self.state.sentWireBytes += UInt64(data.count); self.state.sentDatagrams += 1 }
