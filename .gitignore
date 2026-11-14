@@ -19,6 +19,16 @@ xcuserdata/
 *.xcarchive/
 *.ipa
 *.dSYM/
+*.app/
+*.xcresult/
+*.xcactivitylog
+*.xcdistributionlogs/
+*.trace/
+*.o
+*.swiftmodule
+node_modules/
+dist/
+.venv/
 
 # Local credentials and settings
 .env
@@ -27,6 +37,13 @@ xcuserdata/
 *.pem
 *.p12
 *.mobileprovision
+*.key
+*.cer
+*.der
+*.keystore
+*.jks
+*.local.json
+*.local.yaml
 
 # Raw local research and tool output; keep only the curated source index
 /research/*
