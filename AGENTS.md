@@ -5,7 +5,7 @@
 - The user has authorized committing and pushing each completed, verified stage to the current task branch. Do this as part of completion rather than leaving changes accumulated in the working tree.
 - Group commits by module or purpose. Name the change and relevant validation in the commit message; distinguish completed verification from deferred hardware or long-run checks.
 - Inspect the index before committing. In this shared workspace, coordinate with other active development chats and stage explicit paths or reviewed hunks; do not use `git add .` or `git add -A`.
-- `overlay-test/` is maintained and committed by other active agents; exclude it from communication/client checkpoints unless the user explicitly reassigns it. Use an isolated worktree when other agents are also committing.
+- `overlay-test/` and `ui-gemini/` are maintained and committed by other active agents; exclude both from communication/client checkpoints unless the user explicitly reassigns it. Use an isolated worktree when other agents are also committing.
 - Preserve other contributors' work. Do not reset, discard, rewrite published history, force-push, or merge into `main` as part of routine stage completion.
 - After pushing, verify the remote branch SHA matches local HEAD. Include the branch and commit summary in the handoff.
 
