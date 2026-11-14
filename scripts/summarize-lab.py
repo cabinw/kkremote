@@ -9,6 +9,8 @@ import statistics
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('directories', nargs='+', type=Path)
 parser.add_argument('--warmup', type=float, default=10)
+parser.add_argument('--relative-warmup', action='store_true',
+                    help='Measure warmup from the first media sample (for persistent hosts)')
 args = parser.parse_args()
 def metric(values):
     return {'mean': statistics.mean(values), 'p95': sorted(values)[math.ceil(len(values) * .95) - 1]} if values else None
@@ -20,10 +22,13 @@ for directory in args.directories:
             path = directory / (role.replace('viewer', 'receiver') + '.json')
         if not path.exists(): continue
         report = json.loads(path.read_text())
-        samples = [s for s in report['samples'] if s['seconds'] >= args.warmup]
+        frame_key = 'framesEncoded' if role == 'host' else 'framesDecoded'
+        origin = next((s['seconds'] for s in report['samples'] if s.get(frame_key, 0) > 0), 0) if args.relative_warmup else 0
+        samples = [s for s in report['samples'] if s['seconds'] >= origin + args.warmup]
         if not samples: continue
         last = samples[-1]
-        result = {'samples': len(samples), 'route': report['mediaRoute'], 'pacing': report.get('pacing', 'upstream'),
+        result = {'samples': len(samples), 'warmupOriginSeconds': origin, 'route': report['mediaRoute'], 'pacing': report.get('pacing', 'upstream'),
+                  'playout': report.get('playout'),
                   'preset': report['preset'], 'network': report['networkLabel'], 'receiveDepth': report.get('bridgeReceiveDepth',1), 'bridgeTransport': report.get('bridgeTransport','network')}
         for key in ['videoMbps', 'fps', 'controlRTTMilliseconds', 'sendDelayMilliseconds', 'encodeMilliseconds',
                     'decodeMilliseconds', 'jitterBufferMilliseconds', 'jitterBufferTargetMilliseconds', 'jitterBufferMinimumMilliseconds', 'frameGapP95Milliseconds', 'frameGapMaxMilliseconds']:
@@ -37,6 +42,19 @@ for directory in args.directories:
         result['frameGapMaximumMs'] = max((s.get('frameGapMaxMilliseconds',0) for s in samples),default=0)
         result['observedSeconds'] = samples[-1]['seconds'] - samples[0]['seconds']
         first = samples[0]
+        span = result['observedSeconds']
+        def counter_rate(key, parent=None):
+            before, after = (first.get(parent, {}), last.get(parent, {})) if parent else (first, last)
+            a, b = before.get(key), after.get(key)
+            return (b - a) / span if span > 0 and a is not None and b is not None and b >= a else None
+        result['counterFPS'] = counter_rate('framesEncoded' if role == 'host' else 'framesDecoded')
+        result['actualFormat'] = {k: last.get(k) for k in ['width', 'height', 'codec', 'decodedPixelFormat', 'playoutDelayExtensionNegotiated']}
+        result['byteRatesMbps'] = {}
+        for key, parent in [('rtpPayloadBytes', None), ('rtpHeaderBytes', None), ('retransmittedPayloadBytes', None),
+                            ('transportBytesSent', None), ('transportBytesReceived', None),
+                            ('sentWireBytes', 'bridge'), ('receivedWireBytes', 'bridge'), ('encodedBytes', 'encoderDetails')]:
+            rate = counter_rate(key, parent)
+            result['byteRatesMbps'][key] = rate * 8 / 1_000_000 if rate is not None else None
         result['steadyCounterDelta'] = {k: last.get(k, 0) - first.get(k, 0) for k in ['freezeCount', 'packetsLost', 'nackCount', 'pliCount']}
         result['bridge'] = last.get('bridge')
         result['encoderDetails'] = last.get('encoderDetails')
