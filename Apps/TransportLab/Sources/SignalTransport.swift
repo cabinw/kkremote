@@ -1,6 +1,7 @@
 import Foundation
 import Network
 import Security
+import CryptoKit
 
 struct SignalMessage: Codable {
     var type: String
@@ -12,6 +13,13 @@ struct SignalMessage: Codable {
     var bridgeVersion: Int? = nil
     var mediaPort: UInt16? = nil
     var mediaKey: String? = nil
+    var videoFormat: String? = nil
+    var windowProtocol: Int? = nil
+    var windowSession: String? = nil
+    var windowLayout: Bool? = nil
+    var windowControl: Bool? = nil
+    var windowKeyboard: Bool? = nil
+    var window: WindowMessage? = nil
 }
 
 /// TLS-PSK is only the lab's authenticated signaling transport.
@@ -37,10 +45,20 @@ final class SignalTransport {
         return Data(bytes).base64EncodedString()
     }
 
-    private static func parameters(key: String) throws -> NWParameters {
-        guard let secret = Data(base64Encoded: key.trimmingCharacters(in: .whitespacesAndNewlines)), secret.count == 32 else {
-            throw LabError.message("配对码应为主机生成的完整 32 字节密钥")
+    static func pairingSecret(_ text: String) throws -> Data {
+        let key = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if key.utf8.count == 6, key.utf8.allSatisfy({ (48...57).contains($0) }) {
+            // Explicit lab convenience; hashing does not add entropy to a short code.
+            return Data(SHA256.hash(data: Data(("kkremote-lab-pairing-code-v1:" + key).utf8)))
         }
+        guard let secret = Data(base64Encoded: key), secret.count == 32 else {
+            throw LabError.message("配对码应为 6 位数字或完整配对密钥")
+        }
+        return secret
+    }
+
+    private static func parameters(key: String) throws -> NWParameters {
+        let secret = try Self.pairingSecret(key)
         let tls = NWProtocolTLS.Options()
         // Apple Network.framework's external PSK support currently requires TLS 1.2.
         // This pins an authenticated AES-GCM suite, with no plaintext fallback or trust bypass.

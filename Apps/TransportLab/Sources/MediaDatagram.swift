@@ -33,6 +33,11 @@ struct MediaDatagramCodec {
     private var assemblies: [UInt64: Assembly] = [:]
     private(set) var rejectedPackets = 0
     private(set) var expiredAssemblies = 0
+    private(set) var acceptedPackets: UInt64 = 0
+    private(set) var highestSequence: UInt64 = 0
+    private(set) var reorderedPackets = 0
+    private(set) var largestSequenceGap: UInt64 = 0
+    var sequenceHoles: UInt64 { highestSequence - acceptedPackets }
     var pendingAssemblies: Int { assemblies.count }
     var probeBytes: Int { version == .v2 ? fragmentBytes : 8 }
 
@@ -110,6 +115,12 @@ struct MediaDatagramCodec {
               count == (total + fragmentBytes - 1) / fragmentBytes,
               index < count, kind == .media || ((total == 8 || (version == .v2 && total == fragmentBytes)) && count == 1),
               payload.count == min(fragmentBytes, total - index * fragmentBytes), replay.accept(sequence) else { reject(); return nil }
+        acceptedPackets += 1
+        if sequence < highestSequence { reorderedPackets += 1 }
+        if sequence > highestSequence {
+            largestSequenceGap = max(largestSequenceGap, sequence - highestSequence - 1)
+            highestSequence = sequence
+        }
         if count == 1 { return Packet(kind: kind, payload: payload) }
         if assemblies[id] == nil {
             guard assemblies.count < Self.maximumAssemblies else { reject(); return nil }

@@ -1,0 +1,1171 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-14",
+  "configuration": {
+    "output": "2560x1440",
+    "targetFPS": 60,
+    "videoBudgetMbps": 20,
+    "network": "Surge Ponte",
+    "transport": "fixed-udp-v2 / socket",
+    "fixture": "four live SVG diagram panels, speed 3, immersive",
+    "codec": "H264 SDR (15mac capability fallback)",
+    "sourceDisplayStable": true,
+    "sourceDisplayChangedDuringExcludedRuns": true
+  },
+  "runs": [
+    {
+      "label": "kernel-trace900",
+      "runID": "85734080b5b2",
+      "processExit": 0,
+      "sourceValid": true,
+      "manifest": {
+        "binarySHA256": "0e54cde5af74785c1bcb212055853b9d00b4f90809e76e7323386777f75c0cee",
+        "sameExecutableVerified": true,
+        "durationSeconds": 900,
+        "bridgeReceiveDepth": 16,
+        "bridgeTransport": "socket",
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "resolution": "2560x1440",
+        "fps": 60,
+        "ceilingMbps": 20,
+        "liveHostReport": false,
+        "sourceKind": "window",
+        "pattern": null,
+        "hdrRequested": true,
+        "frameTraceEnabled": true,
+        "playout": "realtime",
+        "sdkDropDiagnostics": false,
+        "requestedHEVCKeyframeSeconds": 10,
+        "sampleJournal": true,
+        "reportHistoryLimit": 300,
+        "networkLabel": "Surge Ponte",
+        "outerOverlayPathVerified": false
+      },
+      "gatePassed": true,
+      "failedChecks": [],
+      "source": {
+        "dimensionsPoints": [
+          1546,
+          1058
+        ],
+        "displayModes": [
+          {
+            "id": 1,
+            "modePixels": [
+              3456,
+              2234
+            ],
+            "modePoints": [
+              1728,
+              1117
+            ],
+            "nominalRefreshHz": 60
+          }
+        ],
+        "samples": 92,
+        "valid": true,
+        "monitorCompleted": true
+      },
+      "host": {
+        "seconds": 901.1766714166733,
+        "steadySeconds": 891.9991979583283,
+        "fps": 59.93503146905026,
+        "actualVideoMbps": 17.74337932615428,
+        "oneSecondMbps": {
+          "p50": 17.854015532357714,
+          "p95": 18.25660644119141,
+          "max": 20.886182523713728,
+          "min": 14.489871142864464
+        },
+        "fractionSamplesAtLeast15Mbps": 0.9820828667413214,
+        "frameGapMs": null,
+        "frameGapStatistic": "Quantiles of per-sample maximum renderer callback gaps, not quantiles of all frames.",
+        "controlRTTMs": {
+          "p50": 10.771584,
+          "p95": 18.653042,
+          "max": 114.730541,
+          "min": 5.472375
+        },
+        "jitterBufferMs": null,
+        "resources": {
+          "cpuPercent": {
+            "p50": 18.756897802112533,
+            "p95": 20.383415213868965,
+            "max": 21.874986195700828,
+            "min": 10.095961932306983
+          },
+          "residentBytes": {
+            "p50": 89473024,
+            "p95": 89636864,
+            "max": 90193920,
+            "min": 79282176
+          },
+          "physicalFootprintBytes": {
+            "p50": 46908544,
+            "p95": 48628864,
+            "max": 49316992,
+            "min": 42583168
+          }
+        },
+        "thermalStates": [
+          "nominal"
+        ],
+        "tailFPS": 60.6,
+        "queuePendingMax": 0,
+        "queueAgeMaxMs": 0.050125,
+        "outerApplicationMbps": 18.866004102378326,
+        "sourceFPS": 59.933910391809064,
+        "memoryWindows": {
+          "after30Seconds": {
+            "samples": 872,
+            "startSeconds": 30.177014499990037,
+            "endSeconds": 901.1766714166733,
+            "medianMiB": 44.7354736328125,
+            "minMiB": 41.8917236328125,
+            "maxMiB": 47.0323486328125,
+            "slopeMiBPerMinute": -0.1421723436776789
+          },
+          "after5Minutes": {
+            "samples": 602,
+            "startSeconds": 300.1783586250094,
+            "endSeconds": 901.1766714166733,
+            "medianMiB": 44.3448486328125,
+            "minMiB": 43.4385986328125,
+            "maxMiB": 45.5635986328125,
+            "slopeMiBPerMinute": -0.19771697292263948
+          },
+          "last5Minutes": {
+            "samples": 301,
+            "startSeconds": 601.1772922500095,
+            "endSeconds": 901.1766714166733,
+            "medianMiB": 43.7979736328125,
+            "minMiB": 43.4385986328125,
+            "maxMiB": 44.8917236328125,
+            "slopeMiBPerMinute": -0.18186072221103247
+          },
+          "minutes": [
+            {
+              "minute": 0,
+              "samples": 57,
+              "startSeconds": 3.176507041673176,
+              "endSeconds": 59.177452916657785,
+              "medianMiB": 41.9385986328125,
+              "minMiB": 26.4542236328125,
+              "maxMiB": 45.9542236328125,
+              "slopeMiBPerMinute": 8.59453856942395
+            },
+            {
+              "minute": 1,
+              "samples": 60,
+              "startSeconds": 60.17712075001327,
+              "endSeconds": 119.17713791667484,
+              "medianMiB": 46.3292236328125,
+              "minMiB": 45.9542236328125,
+              "maxMiB": 46.4542236328125,
+              "slopeMiBPerMinute": 0.4280634745346454
+            },
+            {
+              "minute": 2,
+              "samples": 60,
+              "startSeconds": 120.17714879167033,
+              "endSeconds": 179.17674716666806,
+              "medianMiB": 45.7979736328125,
+              "minMiB": 44.6729736328125,
+              "maxMiB": 47.0323486328125,
+              "slopeMiBPerMinute": -3.007672186413877
+            },
+            {
+              "minute": 3,
+              "samples": 60,
+              "startSeconds": 180.17710608334164,
+              "endSeconds": 239.176566500013,
+              "medianMiB": 44.8057861328125,
+              "minMiB": 44.7198486328125,
+              "maxMiB": 44.8917236328125,
+              "slopeMiBPerMinute": 0.1040386122154634
+            },
+            {
+              "minute": 4,
+              "samples": 60,
+              "startSeconds": 240.17728900001384,
+              "endSeconds": 299.1782969166816,
+              "medianMiB": 44.9542236328125,
+              "minMiB": 44.8604736328125,
+              "maxMiB": 45.3448486328125,
+              "slopeMiBPerMinute": 0.08265067018399692
+            },
+            {
+              "minute": 5,
+              "samples": 60,
+              "startSeconds": 300.1783586250094,
+              "endSeconds": 359.17792208332685,
+              "medianMiB": 45.4542236328125,
+              "minMiB": 45.3448486328125,
+              "maxMiB": 45.5635986328125,
+              "slopeMiBPerMinute": 0.07470866977982892
+            },
+            {
+              "minute": 6,
+              "samples": 60,
+              "startSeconds": 360.177805458341,
+              "endSeconds": 419.178102750011,
+              "medianMiB": 44.7667236328125,
+              "minMiB": 44.6260986328125,
+              "maxMiB": 45.1573486328125,
+              "slopeMiBPerMinute": 0.15051150413113903
+            },
+            {
+              "minute": 7,
+              "samples": 60,
+              "startSeconds": 420.1775193333451,
+              "endSeconds": 479.1769258750137,
+              "medianMiB": 44.7979736328125,
+              "minMiB": 44.7198486328125,
+              "maxMiB": 44.9073486328125,
+              "slopeMiBPerMinute": -0.07650665658233002
+            },
+            {
+              "minute": 8,
+              "samples": 60,
+              "startSeconds": 480.1770350416773,
+              "endSeconds": 539.1768525416846,
+              "medianMiB": 44.8292236328125,
+              "minMiB": 44.7823486328125,
+              "maxMiB": 45.3448486328125,
+              "slopeMiBPerMinute": -0.06048518693024175
+            },
+            {
+              "minute": 9,
+              "samples": 60,
+              "startSeconds": 540.1772197500104,
+              "endSeconds": 599.177607541671,
+              "medianMiB": 44.3760986328125,
+              "minMiB": 44.3292236328125,
+              "maxMiB": 44.8448486328125,
+              "slopeMiBPerMinute": -0.10258120701183863
+            },
+            {
+              "minute": 10,
+              "samples": 60,
+              "startSeconds": 600.1778418750037,
+              "endSeconds": 659.1783835833485,
+              "medianMiB": 44.3135986328125,
+              "minMiB": 44.2354736328125,
+              "maxMiB": 44.8917236328125,
+              "slopeMiBPerMinute": -0.08056840058653474
+            },
+            {
+              "minute": 11,
+              "samples": 60,
+              "startSeconds": 660.1783442500164,
+              "endSeconds": 719.178545416682,
+              "medianMiB": 43.8135986328125,
+              "minMiB": 43.7510986328125,
+              "maxMiB": 44.2667236328125,
+              "slopeMiBPerMinute": -0.35392947476809405
+            },
+            {
+              "minute": 12,
+              "samples": 60,
+              "startSeconds": 720.1779947916802,
+              "endSeconds": 779.1773998750141,
+              "medianMiB": 43.7979736328125,
+              "minMiB": 43.7667236328125,
+              "maxMiB": 44.2667236328125,
+              "slopeMiBPerMinute": -0.06194441211801772
+            },
+            {
+              "minute": 13,
+              "samples": 60,
+              "startSeconds": 780.1771840833244,
+              "endSeconds": 839.1769619999977,
+              "medianMiB": 43.7823486328125,
+              "minMiB": 43.4854736328125,
+              "maxMiB": 43.8448486328125,
+              "slopeMiBPerMinute": -0.33879611578700963
+            },
+            {
+              "minute": 14,
+              "samples": 60,
+              "startSeconds": 840.178260500019,
+              "endSeconds": 899.1770740416832,
+              "medianMiB": 43.5010986328125,
+              "minMiB": 43.4385986328125,
+              "maxMiB": 43.5635986328125,
+              "slopeMiBPerMinute": 0.016567198430237465
+            },
+            {
+              "minute": 15,
+              "samples": 2,
+              "startSeconds": 900.1771699166857,
+              "endSeconds": 901.1766714166733,
+              "medianMiB": 43.4932861328125,
+              "minMiB": 43.4854736328125,
+              "maxMiB": 43.5010986328125,
+              "slopeMiBPerMinute": 0.9379675768486214
+            }
+          ]
+        },
+        "historyLimit": 300,
+        "sampleJournalReconstruction": {
+          "schemaVersion": 1,
+          "sha256": "a894a2f27a957010393218ed0beaa25ff211f3ff59fbcbc634a87f07057daa83",
+          "records": 901,
+          "originalRetainedRecords": 300,
+          "sequenceContinuous": true,
+          "tailMatchesFinalReport": true
+        },
+        "footprintMedianChangeBytes": -1212416,
+        "lastCounters": {
+          "framesEncoded": 53874,
+          "framesDecoded": 0,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "sampleJournal": {
+          "capacity": 8,
+          "closed": true,
+          "dropped": 0,
+          "highWater": 1,
+          "pending": 0,
+          "submitted": 901,
+          "writeFailures": 0,
+          "written": 901
+        }
+      },
+      "viewer": {
+        "seconds": 900.438198526972,
+        "steadySeconds": 893.9994105959777,
+        "fps": 59.93292541913569,
+        "actualVideoMbps": 17.74293390800516,
+        "oneSecondMbps": {
+          "p50": 17.85652939270464,
+          "p95": 18.268027361733182,
+          "max": 20.78565088705094,
+          "min": 13.90070419841676
+        },
+        "fractionSamplesAtLeast15Mbps": 0.982122905027933,
+        "frameGapMs": {
+          "p50": 23.63339497242123,
+          "p95": 102.86048898706213,
+          "max": 165.85742199094966,
+          "min": 19.52790596988052
+        },
+        "frameGapStatistic": "Quantiles of per-sample maximum renderer callback gaps, not quantiles of all frames.",
+        "controlRTTMs": {
+          "p50": 11.478068,
+          "p95": 28.907512,
+          "max": 157.292144,
+          "min": 6.180782
+        },
+        "jitterBufferMs": {
+          "p50": 4.495350000000069,
+          "p95": 8.972224137930448,
+          "max": 14.906622950819665,
+          "min": 3.3846333333329426
+        },
+        "resources": {
+          "cpuPercent": {
+            "p50": 33.218537035689145,
+            "p95": 34.34698245591516,
+            "max": 36.13167991966532,
+            "min": 25.31947296498514
+          },
+          "residentBytes": {
+            "p50": 68841472,
+            "p95": 69320704,
+            "max": 69799936,
+            "min": 57434112
+          },
+          "physicalFootprintBytes": {
+            "p50": 43954176,
+            "p95": 44449792,
+            "max": 45420544,
+            "min": 34271232
+          }
+        },
+        "thermalStates": [
+          "nominal"
+        ],
+        "tailFPS": 60.0,
+        "queuePendingMax": 0,
+        "queueAgeMaxMs": 0.050867,
+        "outerApplicationMbps": 18.86581321653937,
+        "sourceFPS": null,
+        "memoryWindows": {
+          "after30Seconds": {
+            "samples": 871,
+            "startSeconds": 30.435160933993757,
+            "endSeconds": 900.438198526972,
+            "medianMiB": 41.92578125,
+            "minMiB": 37.49609375,
+            "maxMiB": 43.31640625,
+            "slopeMiBPerMinute": 0.055036950540266354
+          },
+          "after5Minutes": {
+            "samples": 601,
+            "startSeconds": 300.4360502869822,
+            "endSeconds": 900.438198526972,
+            "medianMiB": 41.97265625,
+            "minMiB": 41.59375,
+            "maxMiB": 42.99609375,
+            "slopeMiBPerMinute": -0.04252013067347277
+          },
+          "last5Minutes": {
+            "samples": 300,
+            "startSeconds": 601.4403649460291,
+            "endSeconds": 900.438198526972,
+            "medianMiB": 41.828125,
+            "minMiB": 41.59375,
+            "maxMiB": 42.5234375,
+            "slopeMiBPerMinute": -0.05941335724215895
+          },
+          "minutes": [
+            {
+              "minute": 0,
+              "samples": 59,
+              "startSeconds": 1.4321520900120959,
+              "endSeconds": 59.43781122000655,
+              "medianMiB": 37.59765625,
+              "minMiB": 14.01953125,
+              "maxMiB": 41.5546875,
+              "slopeMiBPerMinute": 13.551210570141794
+            },
+            {
+              "minute": 1,
+              "samples": 60,
+              "startSeconds": 60.43459361902205,
+              "endSeconds": 119.43158137699356,
+              "medianMiB": 41.427734375,
+              "minMiB": 41.25,
+              "maxMiB": 41.88671875,
+              "slopeMiBPerMinute": 0.058073524264925604
+            },
+            {
+              "minute": 2,
+              "samples": 60,
+              "startSeconds": 120.43337150901789,
+              "endSeconds": 179.43258464202518,
+              "medianMiB": 41.5859375,
+              "minMiB": 41.42578125,
+              "maxMiB": 42.79296875,
+              "slopeMiBPerMinute": -0.25740941668393186
+            },
+            {
+              "minute": 3,
+              "samples": 60,
+              "startSeconds": 180.43434328498552,
+              "endSeconds": 239.43364773399662,
+              "medianMiB": 41.57421875,
+              "minMiB": 41.40625,
+              "maxMiB": 42.0703125,
+              "slopeMiBPerMinute": -0.205469723333746
+            },
+            {
+              "minute": 4,
+              "samples": 60,
+              "startSeconds": 240.43428514397237,
+              "endSeconds": 299.43986242997926,
+              "medianMiB": 42.046875,
+              "minMiB": 41.8984375,
+              "maxMiB": 43.31640625,
+              "slopeMiBPerMinute": -0.03425729630960704
+            },
+            {
+              "minute": 5,
+              "samples": 60,
+              "startSeconds": 300.4360502869822,
+              "endSeconds": 359.43498792801984,
+              "medianMiB": 42.04296875,
+              "minMiB": 41.91796875,
+              "maxMiB": 42.5,
+              "slopeMiBPerMinute": 0.29725550279665813
+            },
+            {
+              "minute": 6,
+              "samples": 60,
+              "startSeconds": 360.4334817379713,
+              "endSeconds": 419.4338957479922,
+              "medianMiB": 42.041015625,
+              "minMiB": 41.8984375,
+              "maxMiB": 42.99609375,
+              "slopeMiBPerMinute": -0.07845888109745355
+            },
+            {
+              "minute": 7,
+              "samples": 60,
+              "startSeconds": 420.44002517999616,
+              "endSeconds": 479.43102558597457,
+              "medianMiB": 41.98046875,
+              "minMiB": 41.859375,
+              "maxMiB": 42.515625,
+              "slopeMiBPerMinute": -0.06912722676438789
+            },
+            {
+              "minute": 8,
+              "samples": 60,
+              "startSeconds": 480.43677056900924,
+              "endSeconds": 539.4358731529792,
+              "medianMiB": 42.056640625,
+              "minMiB": 41.8828125,
+              "maxMiB": 42.51953125,
+              "slopeMiBPerMinute": -0.05935031652606215
+            },
+            {
+              "minute": 9,
+              "samples": 60,
+              "startSeconds": 540.4335506790085,
+              "endSeconds": 599.439381573,
+              "medianMiB": 41.994140625,
+              "minMiB": 41.86328125,
+              "maxMiB": 42.4140625,
+              "slopeMiBPerMinute": 0.025966648736935275
+            },
+            {
+              "minute": 10,
+              "samples": 60,
+              "startSeconds": 600.4344671689905,
+              "endSeconds": 659.4354839500156,
+              "medianMiB": 41.986328125,
+              "minMiB": 41.77734375,
+              "maxMiB": 42.5234375,
+              "slopeMiBPerMinute": -0.1235010641920231
+            },
+            {
+              "minute": 11,
+              "samples": 60,
+              "startSeconds": 660.4332659150241,
+              "endSeconds": 719.4395461790264,
+              "medianMiB": 41.828125,
+              "minMiB": 41.72265625,
+              "maxMiB": 42.29296875,
+              "slopeMiBPerMinute": -0.08217299498009888
+            },
+            {
+              "minute": 12,
+              "samples": 60,
+              "startSeconds": 720.4336760930018,
+              "endSeconds": 779.4402063299785,
+              "medianMiB": 41.85546875,
+              "minMiB": 41.69921875,
+              "maxMiB": 42.21875,
+              "slopeMiBPerMinute": -0.048583081586395516
+            },
+            {
+              "minute": 13,
+              "samples": 60,
+              "startSeconds": 780.4379660409759,
+              "endSeconds": 839.4326201549848,
+              "medianMiB": 41.708984375,
+              "minMiB": 41.59375,
+              "maxMiB": 42.36328125,
+              "slopeMiBPerMinute": -0.006884304338148213
+            },
+            {
+              "minute": 14,
+              "samples": 60,
+              "startSeconds": 840.4310986929922,
+              "endSeconds": 899.4351843419718,
+              "medianMiB": 41.73046875,
+              "minMiB": 41.6015625,
+              "maxMiB": 42.2265625,
+              "slopeMiBPerMinute": -0.11379969275925922
+            }
+          ]
+        },
+        "historyLimit": 300,
+        "sampleJournalReconstruction": {
+          "schemaVersion": 1,
+          "sha256": "c661aa01422059c4881b8011335fc5be12896385a523f5f1609894d7be70eeb4",
+          "records": 900,
+          "originalRetainedRecords": 300,
+          "sequenceContinuous": true,
+          "tailMatchesFinalReport": true
+        },
+        "footprintMedianChangeBytes": 303104,
+        "lastCounters": {
+          "framesEncoded": 0,
+          "framesDecoded": 53913,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "sampleJournal": {
+          "capacity": 8,
+          "closed": true,
+          "dropped": 0,
+          "highWater": 1,
+          "pending": 0,
+          "submitted": 900,
+          "writeFailures": 0,
+          "written": 900
+        }
+      }
+    }
+  ],
+  "early200msIncident": {
+    "runID": "f69fa269dcf8",
+    "largestGaps": [
+      {
+        "previousRTP": 182360543,
+        "rtpTimestamp": 182362073,
+        "gapMs": 213.463807,
+        "frameType": "delta",
+        "firstIngressGapMs": 202.92537,
+        "lastIngressGapMs": 213.273451,
+        "decodeSubmitGapMs": 213.420245,
+        "decodeOutputGapMs": 213.451044,
+        "firstKernelToBridgeMs": null,
+        "lastKernelToBridgeMs": null,
+        "firstIngressToDecodeSubmitMs": 14.613869,
+        "lastPrimaryIngressToDecodeSubmitMs": 0.341195,
+        "decodeCallbackMs": 5.211386,
+        "videoToolboxCallbackMs": null,
+        "decodeOutputToSDKRendererMs": 0.077858,
+        "exactPrimaryPairMatched": true,
+        "primarySSRC": 1686684407,
+        "senderFirstPacketGapMs": 17.362333,
+        "senderLastPacketGapMs": 17.856333,
+        "senderFirstAcceptedGapMs": 17.403166,
+        "senderLastAcceptedGapMs": 17.872166,
+        "senderQueueWaitMaxMs": 0.003458,
+        "senderAdapterResidenceMaxMs": 0.1085,
+        "matchingCompleteSequenceSets": true
+      },
+      {
+        "previousRTP": 181858073,
+        "rtpTimestamp": 181860143,
+        "gapMs": 110.428884,
+        "frameType": "delta",
+        "firstIngressGapMs": 108.812814,
+        "lastIngressGapMs": 110.244066,
+        "decodeSubmitGapMs": 110.240493,
+        "decodeOutputGapMs": 110.436846,
+        "firstKernelToBridgeMs": null,
+        "lastKernelToBridgeMs": null,
+        "firstIngressToDecodeSubmitMs": 4.408632,
+        "lastPrimaryIngressToDecodeSubmitMs": 0.161968,
+        "decodeCallbackMs": 5.243923,
+        "videoToolboxCallbackMs": null,
+        "decodeOutputToSDKRendererMs": 0.069495,
+        "exactPrimaryPairMatched": true,
+        "primarySSRC": 1686684407,
+        "senderFirstPacketGapMs": 23.743458,
+        "senderLastPacketGapMs": 24.405083,
+        "senderFirstAcceptedGapMs": 23.762417,
+        "senderLastAcceptedGapMs": 24.418875,
+        "senderQueueWaitMaxMs": 0.001834,
+        "senderAdapterResidenceMaxMs": 0.073375,
+        "matchingCompleteSequenceSets": true
+      },
+      {
+        "previousRTP": 181669163,
+        "rtpTimestamp": 181671143,
+        "gapMs": 107.265726,
+        "frameType": "delta",
+        "firstIngressGapMs": 104.015616,
+        "lastIngressGapMs": 106.78727,
+        "decodeSubmitGapMs": 106.891083,
+        "decodeOutputGapMs": 107.273198,
+        "firstKernelToBridgeMs": null,
+        "lastKernelToBridgeMs": null,
+        "firstIngressToDecodeSubmitMs": 4.998093,
+        "lastPrimaryIngressToDecodeSubmitMs": 0.281061,
+        "decodeCallbackMs": 5.326331,
+        "videoToolboxCallbackMs": null,
+        "decodeOutputToSDKRendererMs": 0.063601,
+        "exactPrimaryPairMatched": true,
+        "primarySSRC": 1686684407,
+        "senderFirstPacketGapMs": 22.529084,
+        "senderLastPacketGapMs": 22.75725,
+        "senderFirstAcceptedGapMs": 22.501667,
+        "senderLastAcceptedGapMs": 22.76375,
+        "senderQueueWaitMaxMs": 0.001916,
+        "senderAdapterResidenceMaxMs": 0.0655,
+        "matchingCompleteSequenceSets": true
+      },
+      {
+        "previousRTP": 182424983,
+        "rtpTimestamp": 182426243,
+        "gapMs": 100.773378,
+        "frameType": "delta",
+        "firstIngressGapMs": 98.898565,
+        "lastIngressGapMs": 101.279135,
+        "decodeSubmitGapMs": 101.294213,
+        "decodeOutputGapMs": 100.797212,
+        "firstKernelToBridgeMs": null,
+        "lastKernelToBridgeMs": null,
+        "firstIngressToDecodeSubmitMs": 3.827716,
+        "lastPrimaryIngressToDecodeSubmitMs": 0.219826,
+        "decodeCallbackMs": 5.238681,
+        "videoToolboxCallbackMs": null,
+        "decodeOutputToSDKRendererMs": 0.07423,
+        "exactPrimaryPairMatched": true,
+        "primarySSRC": 1686684407,
+        "senderFirstPacketGapMs": 15.37425,
+        "senderLastPacketGapMs": 15.568291,
+        "senderFirstAcceptedGapMs": 15.389416,
+        "senderLastAcceptedGapMs": 15.56975,
+        "senderQueueWaitMaxMs": 0.001959,
+        "senderAdapterResidenceMaxMs": 0.061416,
+        "matchingCompleteSequenceSets": true
+      }
+    ]
+  },
+  "displayChangeIncident": {
+    "runID": "02078f74409c",
+    "largestGaps": [
+      {
+        "previousRTP": 1317870079,
+        "rtpTimestamp": 1317931189,
+        "gapMs": 747.544358,
+        "frameType": "delta",
+        "firstKernelArrivalGapMs": 682.177518,
+        "lastKernelArrivalGapMs": 741.730746,
+        "firstIngressGapMs": 682.126366,
+        "lastIngressGapMs": 741.471662,
+        "decodeSubmitGapMs": 741.999033,
+        "decodeOutputGapMs": 747.51621,
+        "firstKernelToBridgeMs": 0.080685,
+        "lastKernelToBridgeMs": 0.609617,
+        "firstIngressToDecodeSubmitMs": 62.350471,
+        "lastPrimaryIngressToDecodeSubmitMs": 0.64995,
+        "decodeCallbackMs": 10.724632,
+        "videoToolboxCallbackMs": null,
+        "decodeOutputToSDKRendererMs": 0.117636,
+        "exactPrimaryPairMatched": true,
+        "primarySSRC": 3588488994,
+        "senderFirstPacketGapMs": 683.06325,
+        "senderLastPacketGapMs": 742.964583,
+        "senderFirstAcceptedGapMs": 683.113791,
+        "senderLastAcceptedGapMs": 742.958,
+        "senderQueueWaitMaxMs": 0.002375,
+        "senderAdapterResidenceMaxMs": 0.153542,
+        "matchingCompleteSequenceSets": true
+      },
+      {
+        "previousRTP": 1316416489,
+        "rtpTimestamp": 1316418019,
+        "gapMs": 107.1041,
+        "frameType": "delta",
+        "firstKernelArrivalGapMs": 107.012811,
+        "lastKernelArrivalGapMs": 107.190304,
+        "firstIngressGapMs": 106.930341,
+        "lastIngressGapMs": 107.586468,
+        "decodeSubmitGapMs": 107.609696,
+        "decodeOutputGapMs": 107.134778,
+        "firstKernelToBridgeMs": 0.153929,
+        "lastKernelToBridgeMs": 0.757103,
+        "firstIngressToDecodeSubmitMs": 5.585687,
+        "lastPrimaryIngressToDecodeSubmitMs": 0.177292,
+        "decodeCallbackMs": 5.155596,
+        "videoToolboxCallbackMs": null,
+        "decodeOutputToSDKRendererMs": 0.079439,
+        "exactPrimaryPairMatched": true,
+        "primarySSRC": 3588488994,
+        "senderFirstPacketGapMs": 18.77125,
+        "senderLastPacketGapMs": 20.142166,
+        "senderFirstAcceptedGapMs": 18.813458,
+        "senderLastAcceptedGapMs": 20.14825,
+        "senderQueueWaitMaxMs": 0.003417,
+        "senderAdapterResidenceMaxMs": 0.107083,
+        "matchingCompleteSequenceSets": true
+      },
+      {
+        "previousRTP": 1315750489,
+        "rtpTimestamp": 1315752019,
+        "gapMs": 106.335312,
+        "frameType": "delta",
+        "firstKernelArrivalGapMs": 99.888259,
+        "lastKernelArrivalGapMs": 105.78752,
+        "firstIngressGapMs": 99.469675,
+        "lastIngressGapMs": 106.278421,
+        "decodeSubmitGapMs": 106.284458,
+        "decodeOutputGapMs": 106.347874,
+        "firstKernelToBridgeMs": 0.162652,
+        "lastKernelToBridgeMs": 0.55742,
+        "firstIngressToDecodeSubmitMs": 10.697944,
+        "lastPrimaryIngressToDecodeSubmitMs": 0.239835,
+        "decodeCallbackMs": 5.442075,
+        "videoToolboxCallbackMs": null,
+        "decodeOutputToSDKRendererMs": 0.084936,
+        "exactPrimaryPairMatched": true,
+        "primarySSRC": 3588488994,
+        "senderFirstPacketGapMs": 15.523417,
+        "senderLastPacketGapMs": 16.215375,
+        "senderFirstAcceptedGapMs": 15.554417,
+        "senderLastAcceptedGapMs": 16.212042,
+        "senderQueueWaitMaxMs": 0.001875,
+        "senderAdapterResidenceMaxMs": 0.080667,
+        "matchingCompleteSequenceSets": true
+      },
+      {
+        "previousRTP": 1316794489,
+        "rtpTimestamp": 1316796019,
+        "gapMs": 105.904093,
+        "frameType": "delta",
+        "firstKernelArrivalGapMs": 107.662353,
+        "lastKernelArrivalGapMs": 105.68362,
+        "firstIngressGapMs": 107.768212,
+        "lastIngressGapMs": 105.828672,
+        "decodeSubmitGapMs": 105.86343,
+        "decodeOutputGapMs": 105.900615,
+        "firstKernelToBridgeMs": 0.283361,
+        "lastKernelToBridgeMs": 1.066629,
+        "firstIngressToDecodeSubmitMs": 3.3431,
+        "lastPrimaryIngressToDecodeSubmitMs": 0.191624,
+        "decodeCallbackMs": 5.104118,
+        "videoToolboxCallbackMs": null,
+        "decodeOutputToSDKRendererMs": 0.081526,
+        "exactPrimaryPairMatched": true,
+        "primarySSRC": 3588488994,
+        "senderFirstPacketGapMs": 22.128333,
+        "senderLastPacketGapMs": 22.245042,
+        "senderFirstAcceptedGapMs": 22.11725,
+        "senderLastAcceptedGapMs": 22.261959,
+        "senderQueueWaitMaxMs": 0.000792,
+        "senderAdapterResidenceMaxMs": 0.047459,
+        "matchingCompleteSequenceSets": true
+      }
+    ]
+  },
+  "fixed60KernelTail": {
+    "schemaVersion": 1,
+    "senderEpoch": "BBB45455-9DEB-48CC-B213-54D2949B3C5C",
+    "receiverEpoch": "CE061126-B5A1-460C-8219-6AE8B2E6544C",
+    "senderReason": null,
+    "receiverReason": null,
+    "gaps": [
+      {
+        "previousRTP": 1751014184,
+        "rtpTimestamp": 1751015714,
+        "gapMs": 105.905158,
+        "frameType": "delta",
+        "decodeSubmitGapMs": 106.464882,
+        "decodeOutputGapMs": 105.965166,
+        "firstKernelToBridgeMs": null,
+        "lastKernelToBridgeMs": null,
+        "firstIngressToDecodeSubmitMs": null,
+        "lastPrimaryIngressToDecodeSubmitMs": null,
+        "decodeCallbackMs": 5.304644,
+        "videoToolboxCallbackMs": null,
+        "decodeOutputToSDKRendererMs": 0.062281,
+        "exactPrimaryPairMatched": false
+      },
+      {
+        "previousRTP": 1757714414,
+        "rtpTimestamp": 1757715854,
+        "gapMs": 104.543163,
+        "frameType": "delta",
+        "decodeSubmitGapMs": 105.100652,
+        "decodeOutputGapMs": 104.56943,
+        "firstKernelToBridgeMs": null,
+        "lastKernelToBridgeMs": null,
+        "firstIngressToDecodeSubmitMs": null,
+        "lastPrimaryIngressToDecodeSubmitMs": null,
+        "decodeCallbackMs": 5.154728,
+        "videoToolboxCallbackMs": null,
+        "decodeOutputToSDKRendererMs": 0.074836,
+        "exactPrimaryPairMatched": false
+      },
+      {
+        "previousRTP": 1763855384,
+        "rtpTimestamp": 1763856914,
+        "gapMs": 104.235846,
+        "frameType": "delta",
+        "firstKernelArrivalGapMs": 104.469087,
+        "lastKernelArrivalGapMs": 104.281101,
+        "firstIngressGapMs": 104.087195,
+        "lastIngressGapMs": 104.399309,
+        "decodeSubmitGapMs": 104.365184,
+        "decodeOutputGapMs": 104.268177,
+        "firstKernelToBridgeMs": 0.214138,
+        "lastKernelToBridgeMs": 1.11639,
+        "firstIngressToDecodeSubmitMs": 3.539379,
+        "lastPrimaryIngressToDecodeSubmitMs": 0.150904,
+        "decodeCallbackMs": 5.269356,
+        "videoToolboxCallbackMs": null,
+        "decodeOutputToSDKRendererMs": 0.059275,
+        "exactPrimaryPairMatched": true,
+        "primarySSRC": 2969720948,
+        "senderFirstPacketGapMs": 19.13875,
+        "senderLastPacketGapMs": 19.183833,
+        "senderFirstAcceptedGapMs": 19.1545,
+        "senderLastAcceptedGapMs": 19.185125,
+        "senderQueueWaitMaxMs": 0.00125,
+        "senderAdapterResidenceMaxMs": 0.066958,
+        "matchingCompleteSequenceSets": true
+      },
+      {
+        "previousRTP": 1762628324,
+        "rtpTimestamp": 1762629764,
+        "gapMs": 103.936364,
+        "frameType": "delta",
+        "firstKernelArrivalGapMs": 15.496981,
+        "lastKernelArrivalGapMs": 105.04861,
+        "firstIngressGapMs": 15.219684,
+        "lastIngressGapMs": 104.086245,
+        "decodeSubmitGapMs": 104.098804,
+        "decodeOutputGapMs": 103.967494,
+        "firstKernelToBridgeMs": 0.183165,
+        "lastKernelToBridgeMs": 0.260259,
+        "firstIngressToDecodeSubmitMs": 93.716964,
+        "lastPrimaryIngressToDecodeSubmitMs": 0.205851,
+        "decodeCallbackMs": 5.370697,
+        "videoToolboxCallbackMs": null,
+        "decodeOutputToSDKRendererMs": 0.069689,
+        "exactPrimaryPairMatched": true,
+        "primarySSRC": 2969720948,
+        "senderFirstPacketGapMs": 16.161125,
+        "senderLastPacketGapMs": 15.719792,
+        "senderFirstAcceptedGapMs": 16.147666,
+        "senderLastAcceptedGapMs": 15.711125,
+        "senderQueueWaitMaxMs": 0.001417,
+        "senderAdapterResidenceMaxMs": 0.056375,
+        "matchingCompleteSequenceSets": true
+      },
+      {
+        "previousRTP": 1757903324,
+        "rtpTimestamp": 1757904944,
+        "gapMs": 103.870933,
+        "frameType": "delta",
+        "decodeSubmitGapMs": 104.528538,
+        "decodeOutputGapMs": 103.922824,
+        "firstKernelToBridgeMs": null,
+        "lastKernelToBridgeMs": null,
+        "firstIngressToDecodeSubmitMs": null,
+        "lastPrimaryIngressToDecodeSubmitMs": null,
+        "decodeCallbackMs": 5.270564,
+        "videoToolboxCallbackMs": null,
+        "decodeOutputToSDKRendererMs": 0.058008,
+        "exactPrimaryPairMatched": false
+      },
+      {
+        "previousRTP": 1762534004,
+        "rtpTimestamp": 1762535624,
+        "gapMs": 103.146578,
+        "frameType": "delta",
+        "firstKernelArrivalGapMs": 103.02606,
+        "lastKernelArrivalGapMs": 102.835821,
+        "firstIngressGapMs": 103.153495,
+        "lastIngressGapMs": 103.504472,
+        "decodeSubmitGapMs": 103.560302,
+        "decodeOutputGapMs": 103.199051,
+        "firstKernelToBridgeMs": 0.33615,
+        "lastKernelToBridgeMs": 1.030964,
+        "firstIngressToDecodeSubmitMs": 3.561772,
+        "lastPrimaryIngressToDecodeSubmitMs": 0.179288,
+        "decodeCallbackMs": 5.204502,
+        "videoToolboxCallbackMs": null,
+        "decodeOutputToSDKRendererMs": 0.065771,
+        "exactPrimaryPairMatched": true,
+        "primarySSRC": 2969720948,
+        "senderFirstPacketGapMs": 19.421583,
+        "senderLastPacketGapMs": 19.67425,
+        "senderFirstAcceptedGapMs": 19.429417,
+        "senderLastAcceptedGapMs": 19.672834,
+        "senderQueueWaitMaxMs": 0.001375,
+        "senderAdapterResidenceMaxMs": 0.062042,
+        "matchingCompleteSequenceSets": true
+      },
+      {
+        "previousRTP": 1755921884,
+        "rtpTimestamp": 1755923414,
+        "gapMs": 102.983971,
+        "frameType": "delta",
+        "decodeSubmitGapMs": 103.192246,
+        "decodeOutputGapMs": 102.999083,
+        "firstKernelToBridgeMs": null,
+        "lastKernelToBridgeMs": null,
+        "firstIngressToDecodeSubmitMs": null,
+        "lastPrimaryIngressToDecodeSubmitMs": null,
+        "decodeCallbackMs": 5.267221,
+        "videoToolboxCallbackMs": null,
+        "decodeOutputToSDKRendererMs": 0.073541,
+        "exactPrimaryPairMatched": false
+      },
+      {
+        "previousRTP": 1764616064,
+        "rtpTimestamp": 1764617594,
+        "gapMs": 102.900604,
+        "frameType": "delta",
+        "firstKernelArrivalGapMs": 102.081012,
+        "lastKernelArrivalGapMs": 103.634649,
+        "firstIngressGapMs": 102.064085,
+        "lastIngressGapMs": 102.593219,
+        "decodeSubmitGapMs": 102.659508,
+        "decodeOutputGapMs": 102.916546,
+        "firstKernelToBridgeMs": 0.255984,
+        "lastKernelToBridgeMs": 0.140356,
+        "firstIngressToDecodeSubmitMs": 3.934966,
+        "lastPrimaryIngressToDecodeSubmitMs": 0.211543,
+        "decodeCallbackMs": 5.354502,
+        "videoToolboxCallbackMs": null,
+        "decodeOutputToSDKRendererMs": 0.078385,
+        "exactPrimaryPairMatched": true,
+        "primarySSRC": 2969720948,
+        "senderFirstPacketGapMs": 16.188459,
+        "senderLastPacketGapMs": 16.324667,
+        "senderFirstAcceptedGapMs": 16.180208,
+        "senderLastAcceptedGapMs": 16.343584,
+        "senderQueueWaitMaxMs": 0.002041,
+        "senderAdapterResidenceMaxMs": 0.119375,
+        "matchingCompleteSequenceSets": true
+      },
+      {
+        "previousRTP": 1762250504,
+        "rtpTimestamp": 1762252034,
+        "gapMs": 102.828903,
+        "frameType": "delta",
+        "firstKernelArrivalGapMs": 18.944751,
+        "lastKernelArrivalGapMs": 104.197151,
+        "firstIngressGapMs": 19.187675,
+        "lastIngressGapMs": 103.448201,
+        "decodeSubmitGapMs": 103.430765,
+        "decodeOutputGapMs": 102.874324,
+        "firstKernelToBridgeMs": 0.416605,
+        "lastKernelToBridgeMs": 0.525469,
+        "firstIngressToDecodeSubmitMs": 90.62326,
+        "lastPrimaryIngressToDecodeSubmitMs": 0.201846,
+        "decodeCallbackMs": 5.171146,
+        "videoToolboxCallbackMs": null,
+        "decodeOutputToSDKRendererMs": 0.074776,
+        "exactPrimaryPairMatched": true,
+        "primarySSRC": 2969720948,
+        "senderFirstPacketGapMs": 17.225125,
+        "senderLastPacketGapMs": 17.324875,
+        "senderFirstAcceptedGapMs": 17.269834,
+        "senderLastAcceptedGapMs": 17.316916,
+        "senderQueueWaitMaxMs": 0.008334,
+        "senderAdapterResidenceMaxMs": 0.094917,
+        "matchingCompleteSequenceSets": true
+      },
+      {
+        "previousRTP": 1756016564,
+        "rtpTimestamp": 1756018094,
+        "gapMs": 102.7783,
+        "frameType": "delta",
+        "decodeSubmitGapMs": 103.070105,
+        "decodeOutputGapMs": 102.823102,
+        "firstKernelToBridgeMs": null,
+        "lastKernelToBridgeMs": null,
+        "firstIngressToDecodeSubmitMs": null,
+        "lastPrimaryIngressToDecodeSubmitMs": null,
+        "decodeCallbackMs": 5.165079,
+        "videoToolboxCallbackMs": null,
+        "decodeOutputToSDKRendererMs": 0.06037,
+        "exactPrimaryPairMatched": false
+      }
+    ],
+    "limits": [
+      "Each delta uses one local clock. Cross-peer absolute clocks are never subtracted.",
+      "Accepted means local socket/API accepted data, not physical transmission.",
+      "Kernel timestamp means Darwin IP-stack delivery; does not reveal outer Ponte/NIC arrival.",
+      "Incident snapshots are bounded and captured at different times; missing identities remain unmatched.",
+      "SDK renderer callbacks are not physical presentation. Source guard validity must be checked separately."
+    ]
+  },
+  "invalidatedRuns": [
+    {
+      "runID": "5888b74f7449",
+      "observedSeconds": 570,
+      "reason": "Jump virtual display 120 Hz changed to built-in display 60 Hz. Guard stopped the trial. Host final report missing in build 11.",
+      "partialViewerSDKFreezes": 3
+    },
+    {
+      "runID": "02078f74409c",
+      "observedSeconds": 49,
+      "reason": "Built-in display changed from 60 Hz to 47.95 Hz and another resolution. Graceful stop preserved both reports and traces.",
+      "partialViewerSDKFreezes": 1
+    },
+    {
+      "runID": "df8ca2d19c55",
+      "observedSeconds": 730,
+      "reason": "Trace-off / history 3600 interrupted by 3456x2234 @ 60 Hz to 4112x2658 @ 59.94 Hz mode change. Excluded from full memory A/B.",
+      "partialViewerSDKFreezes": 1
+    },
+    {
+      "runID": "3eb197cc107e",
+      "observedSeconds": 237,
+      "reason": "Stopped because source SCStream supplied about 31 fps for most of the trial; not a comparable 60 fps load.",
+      "partialViewerSDKFreezes": 0
+    }
+  ],
+  "limits": [
+    "One complete valid 15-minute session; planned trace-off history-capacity A/B was not completed.",
+    "Physical latency and visual quality were not measured.",
+    "No iPhone / iPad validation; 15mac uses H264 SDR, not Main10 HDR.",
+    "Zero SDK freezes does not mean uniformly spaced output; about 100 ms arrival spikes remain.",
+    "Kernel timestamp isolates application queue delay, not Surge internals vs underlying network.",
+    "Resource data covers app processes only; trace-on snapshot/rings are excluded from the memory A/B.",
+    "Sequential history-capacity comparison is evidence of a contributor, not proof that all possible leaks are absent."
+  ],
+  "memoryAttribution": "Unconfirmed: complete same-condition history 3600 vs 300 comparison not available. Bounded-history trace-on run plateaued, which does not prove absence of all leaks.",
+  "captureFollowup": {
+    "raw60Interval": {
+      "complete": 680,
+      "durationSeconds": 12,
+      "fps": 53.056064476099685,
+      "hdrRequested": false,
+      "intervalFPS": 60,
+      "maxGapMs": 35.82529164850712,
+      "observedSeconds": 12.797783000016352,
+      "p95GapMs": 31.292166677303612,
+      "queueDepth": 3,
+      "scope": "Raw capture delivery only; no encoder, network, frame retention or display.",
+      "statuses": [
+        {
+          "count": 7,
+          "status": 1
+        },
+        {
+          "count": 680,
+          "status": 0
+        }
+      ]
+    },
+    "rawUnlimitedInterval": {
+      "complete": 742,
+      "durationSeconds": 12,
+      "fps": 59.225578208421055,
+      "hdrRequested": false,
+      "intervalFPS": 0,
+      "maxGapMs": 29.788500018185005,
+      "observedSeconds": 12.511486125004012,
+      "p95GapMs": 18.15720830927603,
+      "queueDepth": 3,
+      "scope": "Raw capture delivery only; no encoder, network, frame retention or display.",
+      "statuses": [
+        {
+          "count": 742,
+          "status": 0
+        }
+      ]
+    },
+    "localLoopback40s": {
+      "seconds": 40.00289320835145,
+      "fps": 57.75679458232148,
+      "actualVideoMbps": 17.54734545559352,
+      "thermalStates": [
+        "nominal"
+      ],
+      "queuePendingMax": 0
+    },
+    "limits": "Separate sequential diagnostic observations after the display changes; not a controlled single-variable causality proof."
+  },
+  "displayModeAttribution": {
+    "evidence": "2026-11-14-display-mode-origin.json",
+    "confirmedCallers": {
+      "5888b74f7449": "JumpConnect virtual-display cleanup on owner disconnect",
+      "02078f74409c": "UURemoteServer requested mode 77 (47.95 Hz)",
+      "df8ca2d19c55": "UURemoteServer requested mode 74 (59.94 Hz)"
+    },
+    "scope": "Display changes attributed. Transport spikes and memory attribution remain unresolved."
+  }
+}

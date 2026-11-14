@@ -2,9 +2,17 @@
 
 面向 Mac、iPad 和 iPhone 的原生远程工作空间：把远端 Mac 的应用窗口独立串流到客户端，优先做好清晰度、低延迟和窗口交互，再扩展到整屏远程与多主机窗口工作区。
 
-**当前进入 M0 传输验证阶段。** 仓库包含可构建的 **KKRemote Lab**（Mac 测试源与接收端、iPad / iPhone 接收端），用于验证 H.264 SDR 视频、配对连接和控制消息往返。已打通两台 Mac 经过 Ponte LAN 通道的 1080p60 合成视频；已减少高码率下的媒体分片并显著缩短 WebRTC 发送排队；Ponte 吞吐波动、接收缓冲和帧率仍未达到稳定低延迟验收目标。真实窗口捕获、远程输入、HEVC/HDR 与远程 iPad 尚未验证。产品架构版本仍为 v0.3，2026-11-12。
+**执行入口：[HTML 任务看板](docs/board/index.html)** · 8 个阶段、42 项任务，包含依赖、实施步骤、验收标准与证据。[通信方案 v1](docs/design/通信方案-v1.md)、[运行手册](docs/design/通信方案v1运行手册.md)和[连续验收记录](docs/testing/通信方案v1验收.md)是当前通信工作的入口。通信研发负责媒体、信令、编解码、队列和性能；iOS 研发负责窗口适配、触控、键盘和客户端交互，详见[分工与接口边界](docs/design/研发分工与接口边界.md)。
 
-本轮实现与 LAN / Ponte 高码率复测见 [高码率排队优化](docs/testing/高码率排队优化.md)；v1 历史记录见 [Ponte 固定 UDP 实验](docs/testing/Ponte固定UDP实验.md)。TestFlight 构建 2 的分发记录见 [TestFlight 与传输实验](docs/testing/TestFlight与传输实验.md)；它不含新适配器。
+当前工程包含可构建的 **KKRemote Lab**：Mac 窗口捕获 / 发送 / 接收，iPhone / iPad 接收，以及已接通的远端窗口目录、选择和切换。现行媒体路线为原生 libwebrtc + VideoToolbox，自研会话、Main10 适配、固定 UDP v2 / Ponte 桥接和有界队列；不把依赖库称作自研协议栈。客户端产品原型与通信验收独立推进。
+
+**通信阶段状态：v1 作为 iOS 真实体验接入基线；USB 构建 42 已完成精确像素与恢复回归。** 真实 Chrome / Excel 的源、编码和手机显示均为 1290×2618，底部余一像素不拉伸；横屏 2442×1290。HDR / HiDPI 工作区固定在内屏右侧，原屏模式及左侧 Dock 保持不变。两组短测接收中位 60 fps，保持 1440p 面积 / 20 Mbps 预算与原 Ponte 端点；切窗、旋转、重连及窗口尺寸恢复通过，见 [精确像素与窗口恢复报告](docs/testing/精确像素与窗口恢复验证.md)。当前真机为普通启动、无主动测试。应用内容缩放的通用适配及私有显示 API 发布兼容仍待完善，偶发冻结继续留档；客户端交互由 iOS 研发推进，详见 [交接文档](docs/design/iOS真实体验接入交接.md)。历史蜂窝与长测结果独立记录，不与本轮短测合并验收。
+
+[HEVC Main10 HDR](docs/testing/HEVC-Main10-HDR验证.md)已通过 10 位编解码、RTP 回环、真实窗口和异地 iPhone 首测；用户确认真实 HDR 影片的明暗细节、灰阶高光层次及渐变正常。20 Mbps 是预算，不是每种内容必须达到的实际负载，完整 HDR 定量画质仍需专项测量。早期[目录与选窗](docs/testing/远端窗口选择与切换.md)以只读、一次一个窗口起步；后续真实控制与布局状态以接入交接为准。原配对和 Ponte 参数保持不变。
+
+历史定位记录保留在测试文档：早期[噪声压力降帧](docs/testing/iPhone构建5压力测试.md)、[编码前筛帧](docs/testing/编码丢帧与桌面滚动.md)、[桥接调度](docs/testing/Ponte接收调度优化.md)、[低延迟播放](docs/testing/蜂窝Ponte低延迟播放优化.md)、[RTP / 桥接逐帧](docs/testing/RTP与桥接逐帧诊断.md)、[接收解码与显示](docs/testing/接收解码与显示逐帧诊断.md)。这些分别对应不同版本、负载和观测范围，不能混为当前档位的验收结果。内部分发流程见 [TestFlight 与传输实验](docs/testing/TestFlight与传输实验.md)。
+
+阶段验证完成后，按模块提交并推送任务分支；密钥、机器配置和构建产物保留在本地。共享工作区的提交边界见 [协作与提交约定](AGENTS.md)。
 
 ## 项目方向
 
@@ -19,12 +27,12 @@
 
 ## 当前架构选择
 
-保留 Apple 原生采集、编解码与呈现；**优先验证原生 libwebrtc，自定义 QUIC 媒体协议作为有条件备选**。最终选型取决于 HEVC/HDR 接入、Ponte 实际媒体连通性及高码率下的延迟表现。
+通信 v1 采用 Apple 原生采集、编解码与呈现，**原生 libwebrtc + 自研固定 UDP v2 / Ponte 适配**。HEVC Main10、Ponte 连通性和逐帧观测已经接通，性能支持范围由验收报告限定。自定义 QUIC 媒体协议保留为有条件对照；目前没有足以支持重写拥塞控制与丢包恢复的证据。
 
 | 层次 | 设计方向 |
 |---|---|
 | 窗口与捕获 | ScreenCaptureKit、窗口身份与关联弹层管理、公开辅助功能接口 |
-| 编解码 | VideoToolbox 硬件编码/解码；HEVC 主选，H.264 兼容路径；Main10/HDR 待验证 |
+| 编解码 | VideoToolbox 硬件编码/解码；HEVC 主选，H.264 兼容路径；Main10/PQ 本机及异地 iPhone 首测已通 |
 | 实时媒体 | 原生 libwebrtc，通过自定义工厂接入 VideoToolbox；QUIC 留作必要时对照 |
 | 会话与输入 | 主机配对、窗口订阅、几何版本、控制租约、独立光标、键鼠与文字输入 |
 | 客户端呈现 | AppKit / UIKit / SwiftUI 外壳，Metal 内容层，能力允许时使用 EDR |
@@ -56,7 +64,7 @@ flowchart LR
 |---|---|---|
 | 研究与设计 | Casement / Jump 机制研究、窗口架构、传输复核、验收计划 | 已形成文档，持续评审 |
 | M0：技术关口 | 窗口映射、原生像素、HEVC/HDR、WebRTC 与两种覆盖网验证 | Ponte 双 Mac LAN 媒体已通；高负载延迟、iPad 真机与 Tailscale 待验收 |
-| M1：Mac 单窗口 | Mac → Mac 的捕获、传输、显示、输入和重连闭环 | 已规划 |
+| M1：Mac 单窗口 | Mac → Mac 的捕获、传输、显示、输入和重连闭环 | 当前开发主线；只读选窗已实现，输入待实施 |
 | M2：窗口系统与性能 | 关联弹层、多窗口、高码率、资源预算、恢复与音频 | 已规划 |
 | M3：移动客户端 | iPad / iPhone 的视口、触控、IME 与生命周期 | 已规划 |
 | M4：能力与稳定性 | HDR、设备/网络矩阵、画质、延迟和热状态验证 | 已规划 |
@@ -72,10 +80,20 @@ M0–M4 的窗口功能版不依赖整屏模式或多主机功能。阶段范围
 
 | 文档 | 内容 |
 |---|---|
+| [iOS 真实体验接入交接](docs/design/iOS真实体验接入交接.md) | 当前可用 API、真机移交、控制协议边界与源码快照 |
+| [通信方案 v1](docs/design/通信方案-v1.md) | 实现边界、封装、队列、恢复与跨端接入契约 |
+| [通信运行手册](docs/design/通信方案v1运行手册.md) | 构建基线、复测入口、源身份检查与回退 |
+| [通信连续验收](docs/testing/通信方案v1验收.md) | 真实负载、受控弱网、长测和未验收边界 |
+| [HEVC Main10 HDR 验证](docs/testing/HEVC-Main10-HDR验证.md) | 10 位硬件编解码、RTP、真实 HDR 捕获、恢复与兼容性 |
+| [真实窗口捕获](docs/testing/真实窗口捕获.md) | ScreenCaptureKit、真实浏览器滚动 / 视频、捕获节拍与构建 5 兼容性 |
+| [编码丢帧与桌面滚动](docs/testing/编码丢帧与桌面滚动.md) | 编码提交计数、直接编码器探针、1440p 桌面式滚动与构建 5 复测 |
+| [iPhone 构建 5 压力测试](docs/testing/iPhone构建5压力测试.md) | 1440p 异地 Ponte 连通性、45 Mbps 噪声源的降帧、重传与延迟基线 |
+| [Ponte 接收调度优化](docs/testing/Ponte接收调度优化.md) | UDP socket、丢包分类、五分钟 LAN/Ponte 对照与剩余降帧问题 |
 | [高码率排队优化](docs/testing/高码率排队优化.md) | v2 封装、pacing、编码突发观测、LAN / Ponte 对照与限制 |
 | [Ponte 固定 UDP 实验](docs/testing/Ponte固定UDP实验.md) | v1 历史实验、H.264 修正与初始双 Mac 媒体测试 |
 | [TestFlight 与传输实验](docs/testing/TestFlight与传输实验.md) | 当前实验工具、构建与签名、远程设备测试流程、已知限制 |
 | [窗口优先架构](docs/design/窗口优先架构.md) | 模块边界、窗口捕获、像素、HDR、输入与生命周期 |
+| [HDR 真实窗口串流接入计划](docs/design/HDR真实窗口串流接入计划.md) | 现有 SDK 障碍、Main10/PQ 路径、客户端更新与分阶段验收 |
 | [传输路线复核](docs/design/传输路线复核.md) | QUIC / WebRTC 比较、调整理由与选型门槛 |
 | [网络与媒体传输](docs/design/网络与媒体传输.md) | Tailscale、Ponte、信令、媒体恢复和连接诊断 |
 | [分阶段实施计划](docs/design/分阶段实施计划.md) | M0–M7 的范围、依赖、投入假设和阶段出口 |
@@ -127,6 +145,6 @@ scripts/build-lab.sh mac
 open .build/DerivedData/Build/Products/Debug/KKRemoteLabMac.app
 ```
 
-实验依赖固定为社区分发的 `stasel/WebRTC 157.0.0`，包含原生 H.264 VideoToolbox 路径。生产版本仍需评估自建 libwebrtc、可审计依赖与 HEVC/HDR 接入；本实验包不代表最终传输协议已定型。
+实验依赖固定为社区分发的 `stasel/WebRTC 157.0.0`，包含原生 H.264 VideoToolbox 路径；Lab 另用公开工厂接入 VT HEVC Main10，并已验证该二进制的 H.265 RTP / 原生 10 位帧路径。生产版本仍需评估自建 libwebrtc 与可审计依赖；本实验包不代表最终传输协议已定型。
 
 仓库保存整理后的报告及公开上游来源记录。原始应用交付物、反汇编、符号表、工具诊断和本机运行产物留在本地，由 `.gitignore` 排除。报告保留本地证据文件名、样本哈希和证据标识；这些本地材料不会随克隆提供，详见 [研究资料说明](research/README.md)。

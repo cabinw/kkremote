@@ -7,18 +7,22 @@ struct LabApp: App {
     @Environment(\.scenePhase) private var scenePhase
     init() {
         #if os(macOS)
-        if CommandLine.arguments.contains("--self-test") || CommandLine.arguments.contains("--lab-role") { LabCLI.run() }
+        if CommandLine.arguments.contains("--self-test") || CommandLine.arguments.contains("--lab-role") || CommandLine.arguments.contains("--list-windows") { LabCLI.run() }
         #endif
         WebRTCRuntime.initialize()
     }
     var body: some Scene {
         WindowGroup {
+            #if os(iOS)
+            IOSLabView(model: model)
+            #else
             LabView(model: model)
                 .onChange(of: scenePhase) { _, phase in
                     #if os(iOS)
                     if phase == .background { model.stop() }
                     #endif
                 }
+            #endif
         }
     }
 }
@@ -31,11 +35,13 @@ struct LabView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     Text("传输实验室").font(.largeTitle.bold())
-                    Text("先验证连接和视频，再验证窗口体验。H.264 SDR 基线 · WebRTC M157")
+                    Text("真实窗口串流 · H.264 SDR / HEVC Main10 PQ · WebRTC M157")
                         .foregroundStyle(.secondary)
+                    if model.mode != "host" { RemoteWindowControls(model: model) }
                     ZStack {
                         Color.black
-                        if let track = model.track { RemoteVideo(track: track) }
+                        if model.windowBusy { ProgressView("正在切换窗口…").tint(.white).foregroundStyle(.white) }
+                        else if let track = model.track { ColorManagedVideo(track: track) }
                         else {
                             VStack(spacing: 12) {
                                 Image(systemName: "rectangle.connected.to.line.below").font(.largeTitle)
@@ -55,11 +61,14 @@ struct LabView: View {
                             }.disabled(model.running)
                             if model.mediaRoute != .directICE {
                                 TextField("主机 UDP 媒体端口", text: $model.mediaPort).textFieldStyle(.roundedBorder).disabled(model.running)
+                                Picker("UDP 实现", selection: $model.bridgeTransport) {
+                                    ForEach(BridgeTransportKind.allCases) { Text($0.title).tag($0) }
+                                }.disabled(model.running)
                             }
                             if model.mode == "host" && model.running {
                                 Text("本次配对码（仅交给测试接收端）").font(.caption)
                                 Text(model.pairingKey).font(.system(.caption, design: .monospaced)).textSelection(.enabled)
-                            } else { SecureField("粘贴主机显示的完整配对码", text: $model.pairingKey).textFieldStyle(.roundedBorder) }
+                            } else { SecureField("配对码（6 位数字或完整密钥）", text: $model.pairingKey).textFieldStyle(.roundedBorder) }
                             Picker("测试网络标签", selection: $model.networkLabel) {
                                 ForEach(["LAN", "Tailscale", "Surge Ponte", "本机回环（不代表远程网络）"], id: \.self) { Text($0) }
                             }
@@ -76,6 +85,18 @@ struct LabView: View {
                     }
                     GroupBox("发送端参数 · 连接前设置") {
                         VStack {
+                            #if os(macOS)
+                            Toggle("HDR 优先（HEVC Main10 / PQ）", isOn: $model.hdr)
+                            HStack {
+                                Picker("捕获来源", selection: $model.captureWindowID) {
+                                    Text("合成测试图").tag(nil as UInt32?)
+                                    ForEach(model.captureWindows) { window in
+                                        Text("\(window.application) · \(window.title)").tag(Optional(window.id))
+                                    }
+                                }
+                                Button("刷新窗口") { model.refreshCaptureWindows() }
+                            }
+                            #endif
                             Picker("像素尺寸", selection: $model.resolution) {
                                 ForEach(["1280×720", "1920×1080", "2560×1440"], id: \.self) { Text($0) }
                             }
@@ -100,6 +121,13 @@ struct LabView: View {
                             metric("解码帧数", "\(model.sample.framesDecoded)")
                             metric("候选类型", model.sample.candidatePair)
                             metric("实际编码", model.sample.codec)
+                            if let format = model.sample.decodedPixelFormat {
+                                metric("解码色彩", format["transfer"] == "SMPTE_ST_2084_PQ" ? "10 位 PQ" : "SDR")
+                                metric("色域 / 矩阵", "\(format["primaries"] ?? "unknown") / \(format["matrix"] ?? "unknown")")
+                                if let headroom = model.sample.displayHeadroom {
+                                    metric("当前屏幕 HDR 余量", String(format: "%.2f×%@", headroom, headroom > 1 ? "" : " · SDR 亮度范围"))
+                                }
+                            }
                             metric("解码 / 抖动缓冲", "\(ms(model.sample.decodeMilliseconds)) / \(ms(model.sample.jitterBufferMilliseconds))")
                             metric("发送等待（采样均值）", ms(model.sample.sendDelayMilliseconds))
                             if let encoder = model.sample.encoderDetails {
@@ -113,7 +141,7 @@ struct LabView: View {
                                 metric("UDP 探测大小 / 分片包数", "\(bridge.pathDatagramBytes) B / \(bridge.fragmentedInnerDatagrams)")
                                 Text(bridge.endpointScope).font(.caption).foregroundStyle(.secondary)
                             }
-                            Text("往返时间不等于输入到显示延迟。此版本不采集桌面、不注入键鼠、不验证 HEVC/HDR。")
+                            Text("往返时间不等于输入到显示延迟。帧率统计来自解码回调；HDR 亮度取决于屏幕当前能力。当前不注入键鼠，没有音频。")
                                 .font(.caption).foregroundStyle(.secondary)
                         }.padding(4)
                     }

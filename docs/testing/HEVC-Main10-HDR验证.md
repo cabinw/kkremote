@@ -1,0 +1,121 @@
+# HEVC Main10 / HDR 真实窗口验证
+
+2026-11-13。目标为 **2560×1440、60 fps、20 Mbps 视频预算上限**。本轮实现保留 WebRTC M157、固定 UDP v2、socket 桥接和原有配对方式。异地 iPhone 已使用内部 TestFlight 构建 6 接收 H.265 / 10 位 PQ；构建 5 仍可接收 H.264 SDR 回退。
+
+## 实现
+
+```mermaid
+flowchart LR
+  W[真实浏览器 HDR 窗口] --> C[ScreenCaptureKit canonical HDR]
+  C --> P[x420 · 10 位 4:2:0 · BT.2020/PQ]
+  P --> E[VT HEVC Main10 硬编]
+  E --> R[现有 WebRTC H.265 RTP/SRTP]
+  R --> B[固定 UDP v2 / socket / Ponte]
+  B --> D[VT 硬解 → 原生 x420]
+  D --> V[AVSampleBufferDisplayLayer]
+```
+
+- `HEVCCodec.swift` 通过公开 RTC 编解码工厂接入 VideoToolbox，要求硬件会话、Main10、10 位输出、实时模式及关闭帧重排。码率随 WebRTC 分配变化；一秒 DataRateLimits 限制累计输出，不增加填充数据。
+- VT 长度前缀 NAL 转为 Annex B，关键帧带 VPS/SPS/PPS；接收端重建格式和硬解会话。保留 WebRTC 的分包、重组、NACK/RTX、PLI 和拥塞控制。只支持本次固定尺寸单层路径，不声称 I420 转换、动态缩放或多层编码已经兼容。
+- **没有替换 SDK 或使用私有 ABI。** 已固定的 stasel/WebRTC 157.0.0 底层包含 H.265 RTP；公开默认工厂未列出 HEVC，并不等于底层不可用。真实 RTP 回环确认自定义工厂能贯通这份二进制，原生 CVPixelBuffer 未经过 8 位 I420 转换。
+- ScreenCaptureKit 使用 canonical HDR 预设并明确要求 x420、BT.2020/PQ、2020 矩阵。每帧核验实际附件；本机能直接输出，因而没有添加 GPU 转换。最低系统/其他硬件若输出不符会报错，不会改标签伪装 HDR。
+- 接收端用系统色彩管理的 `AVSampleBufferDisplayLayer`，保留解码色彩附件。应用只保留一个最新待提交帧，使用立即显示，避免另加时间戳播放队列；显示层忙时丢弃待显示帧。显示层内部及物理屏幕延迟仍须真机测量。
+- 接收能力通过随包附带的自生成 1440p Main10 关键帧实际硬解检测。协商只增加可选 `videoFormat` 字段；旧客户端选择 H.264 时先确定 SDR，再启动 SDR 捕获。HDR/SDR 改变需重连。
+- JSON schema 6 增加捕获/解码实际像素格式、色彩标签、10 位亮度样本和屏幕当前/潜在 headroom。回调帧率不等于物理显示帧率；headroom 也不是实测峰值亮度。
+
+## 本地结果
+
+主机为 Apple Silicon、macOS 27.2.1，显示器继续使用已确认的 60 Hz。窗口 1280×720 点、2×，传输 2560×1440；视频处于窗口内容区，不能把整个传输帧都算作全屏影片。以下均为同机两端，不代表 15mac LAN 或异地 Ponte。
+
+| 测试 | 结果 | 解释 |
+|---|---|---|
+| 原生 Main10 直接编解码，12 秒 | 718 提交 / 编码 / 解码，错误 0；首行 1,928 个样本低两位非零 | 实际 10 位梯度；简单图案码率很低，不是 20 Mbps 压测 |
+| HEVC 位流核验 | ffprobe：Main10、yuv420p10le、BT.2020、PQ、2020 non-constant matrix、video range | 不只检查设置参数成功 |
+| 合成梯度经 RTP，35 秒 | 预热后编码 60.00 / 解码 60.04 fps，0.272 Mbps，SDK 冻结 0 | 验证 packetizer/depacketizer 与原生帧链路 |
+| 真实 Chrome 窗口 + PQ 60 fps 参考片，120 秒 | 预热后编码 **59.919** / 解码 **59.928 fps**，接收 **13.399 Mbps**；秒级最低 59 fps | 上限 20 Mbps；内容未填满码率是正常现象 |
+| 上述 120 秒无损回环 | SDK 丢帧 / 冻结 / NACK / PLI / RTP 丢包均为 0 | SDK RTX 统计包含探测/填充，不能把非零 RTX 接收数直接当作实际丢包重传 |
+| 显示层实际窗口探针 | 180 帧接收 / 入队，readyForDisplay=true，替换/背压丢弃/显示错误均为 0，主屏 headroom=16 | 验证系统层能呈现，不是光学亮度/色准认证 |
+| 1% 周期丢包 + 200 ms 连续中断，45 秒 | 人为丢弃 427 外层包，154 NACK，427 RTX 发送；一次 SDK 冻结，随后恢复 | 25 秒后平均解码 **59.901 fps**，最大回调间隔 **26.44 ms**，无继续累积冻结 |
+| H.264-only 接收端 / 无 HDR 字段，25 秒 | 回退 H.264 SDR，解码 **59.926 fps**、17.949 Mbps，SDK 冻结 0 | 兼容行为模拟；不冒充旧构建 5 的新一轮真机实测 |
+| 真实 Apple HDR 影片窗口，45 秒 | 捕获/解码均为 10 位 BT.2020/PQ；窗口回调 59.943 fps、3.718 Mbps、SDK 冻结 0 | 影片本身 23.976 fps；浏览器时钟让窗口按 60 Hz 更新 |
+| HDR 常驻主机重连 | 两次有效视频会话、错码拒绝、同一主机 PID/密钥、10 位 PQ 解码通过 | 使用隔离测试端口与测试码，未修改用户原配对文件 |
+
+稳态统计通常排除前 10 秒；恢复测试排除前 25 秒。平均 fps 由累计帧数差除以相对时间差得到，Mbps 为秒级样本均值。恢复测试末段与 SDR 回退测试曾短时重叠约 10 秒，故其性能数值仅用于恢复和兼容验证，正式无损基线使用独立 120 秒运行。
+
+丢包恢复测试捕获 / 解码的 2,048 个抽样中，分别有 589 / 816 个样本低两位非零，最大 PQ code value 744 / 746；附件均为 x420 / BT.2020 / PQ / 2020 matrix。该证据确认数字链路没有截成 8 位，但不单凭码值估算屏幕实际 nits。
+
+120 秒基线末次窗口的平均编码约 9.83 ms、解码约 1.45 ms、抖动缓冲约 16.29 ms。它们来自不同统计区间，**不能简单相加作为端到端延迟，也不是每帧 P95**；控制 RTT 单独记录。
+
+脱敏汇总与原始报告 SHA-256 见 [本地统计 JSON](data/hdr-main10-local-20261113.json)。原始报告留在本机私有测试目录。
+
+## 素材与复现
+
+60 fps 参考片由 `scripts/generate-hdr-fixture.sh` 生成，明确标注为 10 位 PQ code-value 测试图，不冒充真实摄影 HDR 素材。另用 [Apple Advanced Stream](https://developer.apple.com/streaming/examples/advanced-stream-dv-atmos.html) 的 hvc1/PQ 4K 影片验证真实 HDR 内容；该片原生 **23.976 fps**，浏览器 60 Hz 更新不代表影片有 60 个不同帧。下载的影片与捕获内容均留在忽略的本地目录，未提交到仓库。
+
+```bash
+bash scripts/build-lab.sh mac-release
+bash scripts/test-main10.sh
+bash scripts/test-hdr-renderer.sh
+bash scripts/test-signaling.sh
+bash scripts/test-media.sh
+python3 scripts/test-persistent-host.py --hdr --window-id WINDOW_ID
+```
+
+真实窗口回环使用 Release 可执行文件，参数：
+
+```text
+--self-test --hdr --window-id WINDOW_ID
+--resolution 2560x1440 --fps 60 --mbps 20
+--route fixed-udp-v2 --bridge-transport socket --pacing interactive
+--duration 120 --report PRIVATE_VIEWER_JSON --host-report PRIVATE_HOST_JSON
+```
+
+`--simulate-loss` 仅允许与 `--self-test` 一起使用：第 5–15 秒每 100 个 RTP 包丢 1 个，第 15–15.2 秒丢全部 RTP；正常主机不会启用。`--sdr-receiver` 在测试接收端只注册 H.264 并省略 HDR 能力字段。
+
+## 异地 iPhone 构建 6 首测
+
+用户确认已更新至 0.1.0（6），通过此前的异地 Surge Ponte 环境连接，客户端显示 **H.265 / 10 位 PQ**，随后反馈 **“约 60 fps，流畅，亮度正常”**。当前内容是实际 Chrome 窗口中的 60 fps PQ 参考片；不是直接发送绕过窗口捕获的合成缓冲。用户提供的手机截图包含参考片预期的彩条、斜线、网点和小方块，以及被一起捕获的浏览器工具栏与侧栏；这些测试元素本身不是传输损坏证据。截图不用于判定屏幕实际 HDR 亮度或色准。
+
+最新完整会话保留 41 个有效秒级样本，累计帧数差覆盖 **40.00 秒**；不能把要求用户保持两分钟的提示当作已测满两分钟。另有两次约 8 秒、17 秒的成功短连接。同码常驻主机在手机断开后再次监听；切后台停止会话符合当前实现。
+
+| 项目 | 本次证据 |
+|---|---|
+| 主机实际编码 | **59.951 fps**，秒级最低 59 fps |
+| 视频码率 | 平均 **13.225 Mbps**，20 Mbps 是配置上限 |
+| 控制 RTT | 平均 19.10 ms，秒级样本 P95 25.19 ms |
+| WebRTC 发送等待 | 秒级均值再取平均 0.099 ms，最大区间均值 0.357 ms |
+| 编码耗时 | 秒级均值再取平均 12.78 ms |
+| 末次累计计数 | 2,459 编码 / 发送帧；NACK、PLI、RTX 发送均为 0 |
+| 桥接队列 | 丢弃、发送错误、待发送包均为 0 |
+| 捕获格式 | 2560×1440、x420、BT.2020 / PQ / 2020 matrix；10 位低两位有效 |
+| 手机观感 | 用户报告约 60 fps、流畅、亮度正常；接收端 JSON 未取得 |
+
+这是 **异地 Main10/PQ 连通性与短时体验通过**。没有用主机的 `freezeCount=0` 代替手机冻结统计，没有把控制 RTT 当作端到端延迟，也没有把主观亮度正常当作 HDR 峰值、白点和色准认证。应用无法判定 Ponte 内部直连/中继拓扑；本次网络环境来自用户说明。脱敏数据见 [iPhone 构建 6 首测汇总](data/hdr-main10-iphone-build6-20261113.json)。
+
+## 真实 HDR 影片与灰阶补测（构建 6）
+
+按用户要求保持原 1440p / 60 fps / 20 Mbps 上限、固定 UDP v2/socket、配对文件和 Ponte 端点，仅更换被捕获浏览器中的内容。用户分别反馈：真实影片 **“影片流畅，明暗细节正常”**；灰阶 **“高光有层次，渐变平滑无偏色”**。没有更新 TestFlight 或重启媒体主机。
+
+| 内容 | 主机有效观察窗口 | 编码 fps | 平均视频 Mbps | 手机反馈 |
+|---|---:|---:|---:|---|
+| Apple 真实 PQ HDR 影片 | 43.00 秒 | 59.930 | 3.610 | 流畅，明暗细节正常 |
+| PQ 灰阶/高光图 | 15.00 秒 | 59.933 | 0.490 | 高光有层次，渐变平滑无偏色 |
+| 同一灰阶短重连 | 8.00 秒 | 59.874 | 0.471 | 独立连接，不合并成持续长测 |
+
+三段主机记录均为 H.265、2560×1440、x420 / BT.2020 / PQ / 2020 matrix；NACK、PLI、RTX 发送与桥接队列丢弃均为 0。另一组独立 25 秒灰阶本机回环排除前 10 秒后为 59.945 解码 fps / 0.547 Mbps、SDK 冻结 0，解码仍为 10 位 PQ；此项不能替代远端接收数据。
+
+影片源是 4K / 23.976 fps，串流 60 fps 由窗口时钟等 60 Hz 更新维持；没有生成 60 个不同的原片帧。灰阶本身静止，低码率不意味着目标设置被修改，两者都不构成 20 Mbps 持续吞吐压力测试。
+
+灰阶直接生成 10 位视频范围 YUV，中性色度为 512。上排输入 PQ 目标亮度为 0 / 0.01 / 0.03 / 0.1 / 0.3 / 1 / 3 / 10 nits，中排为 10 / 25 / 50 / 100 / 203 / 400 / 700 / 1000 nits，下排是连续 PQ 码值渐变。映射采用 [BT.2100 inverse PQ EOTF](https://registry.khronos.org/DataFormat/specs/1.4/dataformat.1.4.html)。初次 VT 有损素材的渐变出现最大 2 个码值误差，最终改用离线 libx265 无损素材；第一帧解码与原始 YUV 逐字节一致，ffprobe 确认 Main10 / 10 位 / BT.2020-PQ / video range / 600 帧 / 60 fps。实时串流编码器仍为 VideoToolbox，未改成软件编码。
+
+数字是**源信号的目标值**，不是手机实测 nits；素材无损不代表浏览器合成、捕获、实时有损编码和显示全链路逐像素无损。本轮属于主观画质检查，未取得手机当前 headroom 数值或接收 JSON，不据此认证峰值、白点、色准或端到端延迟。手机反馈正常与屏幕截图的 SDR 预览应分开解读。
+
+素材、生成脚本与轮换方式见 [测试页面说明](../../Tests/Fixtures/window-capture/README.md)。脱敏数字见 [真实 HDR / 灰阶测试汇总](data/hdr-film-gray-iphone-build6-20261113.json)。
+
+## 交付与未完成项
+
+代码已通过 Mac Release、iOS Simulator 构建及 iOS build 6 签名归档。**0.1.0（6）于 08:22（本机时区）上传成功**；Apple 邮件于 08:24 确认处理完成。用户完成重新登录后，已按此前确认的标准加密、非法国测试范围完成问卷，并将构建关联到 **Development 内部组（1 位测试员）**；列表状态为“正在测试”，构建详情显示群组关联，中文测试说明已保存。用户随后确认手机已更新并连接，显示 H.265 / 10 位 PQ，并反馈“约 60 fps，流畅，亮度正常”。上传有现有 WebRTC 二进制缺少 dSYM 的非阻断警告，影响 SDK 崩溃符号化，不影响本次上传成功。
+
+Mac 已切换为常驻 HDR 优先主机，原 Ponte 地址、TCP/UDP 端口与配对文件保持不变。当前显式窗口可播放真实 HDR 影片与 PQ 灰阶图，并支持 60 秒影片 / 45 秒灰阶的自动轮换；旧接收端选择 H.264 时采集 SDR，新接收端确认 Main10/PQ 后才启动 HDR 捕获。
+
+尚未完成真实屏幕 HDR 亮度/白点/色偏的定量对照、10–30 分钟热稳定性与网络退化测试。系统版本矩阵、15mac HDR 能力、iPad、Tailscale、输入、移动布局、音频均不在本轮已通过范围。当前称为 **Main10 PQ HDR 路径**，未实现 Dolby Vision、HLG、HDR10+ 动态元数据，也不伪造整个合成窗口的 mastering/MaxCLL 元数据。

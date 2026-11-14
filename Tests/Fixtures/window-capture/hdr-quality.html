@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><title>KKRemote HDR Video and Grayscale</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#080b10;color:#e5e9ef;font:15px system-ui}
+header{height:56px;display:flex;align-items:center;gap:14px;padding:8px 18px;border-bottom:1px solid #334055}
+button{border:1px solid #4d6384;background:#22334d;color:#fff;border-radius:6px;padding:7px 12px;cursor:pointer}
+button[aria-pressed=true]{background:#365c87}#clock{margin-left:auto;font:13px monospace}
+#stage{height:calc(100vh - 112px);display:flex;align-items:center;justify-content:center;background:#000}
+#surface{position:relative;width:min(100%,calc((100vh - 112px)*16/9));aspect-ratio:16/9}
+video{display:block;width:100%;height:100%;object-fit:contain}
+#labels{position:absolute;inset:0;display:none;pointer-events:none;font-size:14px}
+.label-row{position:absolute;left:0;right:0;display:grid;grid-template-columns:repeat(8,1fr);text-align:center}
+.label-row span{padding:4px 2px}.label-row b,.ramp b{background:#10151ddd;color:white;padding:2px 5px;border-radius:3px;font-weight:500}
+#near{top:1%}#white{top:34.3%}.ramp{position:absolute;top:68%;left:12px}
+footer{height:56px;padding:8px 18px;font-size:13px;color:#c0cddd;line-height:1.5}
+</style>
+<header><b>KKRemote · HDR 画质测试</b><button id="film">真实 HDR 视频</button><button id="gray">灰阶与高光</button><button id="cycle">自动轮换</button><button id="pause">暂停</button><span id="clock"></span></header>
+<section id="stage"><div id="surface"><video muted loop playsinline preload="auto"></video><div id="labels"><div id="near" class="label-row"></div><div id="white" class="label-row"></div><div class="ramp"><b>10 位 PQ 渐变 · 0 → 1000 · 观察断阶与偏色</b></div></div></div></section>
+<footer id="description"></footer>
+<script>
+const video=document.querySelector('video'), labels=document.querySelector('#labels'),description=document.querySelector('#description');
+const near=[0,.01,.03,.1,.3,1,3,10],white=[10,25,50,100,203,400,700,1000];
+for(const [id,values] of [['near',near],['white',white]])document.getElementById(id).innerHTML=values.map(v=>`<span><b>${v}</b></span>`).join('');
+let phase='',rafFrames=0,videoFrames=0,start=performance.now(),automatic=false;
+function setPhase(next){phase=next;start=performance.now();rafFrames=0;videoFrames=0;video.src=next==='film'?'hdr.mp4':'gray.mp4';labels.style.display=next==='gray'?'block':'none';document.querySelector('#film').setAttribute('aria-pressed',String(next==='film'));document.querySelector('#gray').setAttribute('aria-pressed',String(next==='gray'));description.innerHTML=next==='film'?'Apple developer HDR stream · 4K / 23.976 fps 原片 · 无音频<br>串流目标：2560×1440 / 60 fps / 20 Mbps；片源帧率与串流帧率分别统计。':'上排：近黑阶梯；中排：灰白与高光；下排：连续灰阶。<br>数字为源文件 PQ 目标亮度（nits），不是手机实测亮度；暗环境更容易观察近黑层次。';video.play().catch(e=>{description.textContent='点击上方内容按钮开始播放 · '+e.message;});}
+function select(next){automatic=false;document.querySelector('#cycle').setAttribute('aria-pressed','false');setPhase(next)}
+function cycle(){automatic=true;document.querySelector('#cycle').setAttribute('aria-pressed','true');setPhase('film')}
+document.querySelector('#film').onclick=()=>select('film');document.querySelector('#gray').onclick=()=>select('gray');document.querySelector('#cycle').onclick=cycle;document.querySelector('#pause').onclick=()=>{automatic=false;document.querySelector('#cycle').setAttribute('aria-pressed','false');video.paused?video.play():video.pause()};
+function tick(){rafFrames++;const remaining=(phase==='film'?60:45)-(performance.now()-start)/1000;if(automatic&&remaining<=0)setPhase(phase==='film'?'gray':'film');document.querySelector('#clock').textContent=new Date().toISOString().slice(11,23)+' · '+phase+(automatic?' · '+Math.max(0,Math.ceil(remaining))+'s':'');requestAnimationFrame(tick)}requestAnimationFrame(tick);
+function vf(){videoFrames++;video.requestVideoFrameCallback(vf)}video.requestVideoFrameCallback(vf);
+window.hdrTest={setPhase:select,cycle,stats:()=>({phase,automatic,elapsedSeconds:(performance.now()-start)/1000,rafFrames,videoFrames,paused:video.paused,width:video.videoWidth,height:video.videoHeight,videoTime:video.currentTime,readyState:video.readyState,playback:video.getVideoPlaybackQuality().toJSON?.()??{total:video.getVideoPlaybackQuality().totalVideoFrames,dropped:video.getVideoPlaybackQuality().droppedVideoFrames}})};
+const initial=new URLSearchParams(location.search).get('phase');if(initial==='cycle')cycle();else select(initial==='gray'?'gray':'film');
+</script></html>

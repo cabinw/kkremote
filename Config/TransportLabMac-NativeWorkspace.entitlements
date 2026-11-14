@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Local experimental control Host only. Cross-app AX window management cannot
+     run inside App Sandbox. TCC screen-recording/accessibility checks still apply.
+     Do not use this override for the default capture-only/Mac App Store build. -->
+<plist version="1.0"><dict/></plist>

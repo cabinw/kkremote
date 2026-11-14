@@ -1,0 +1,4 @@
+# Reproducible native binaries and local verification output
+build/
+# Local copy of the user-provided 32 MB reference recording
+/reference/ego-reference.mov

@@ -1,0 +1,112 @@
+{
+  "date": "2026-11-13",
+  "scope": "host-side statistics for the user-reported remote iPhone/Ponte session; receiver JSON unavailable",
+  "clientBuild": "0.1.0 (6)",
+  "clientFeedback": {
+    "format": "已更新并连接，显示 H265 / 10 位 PQ",
+    "experience": "约 60 fps，流畅，亮度正常",
+    "measurement": "user observation; not instrumented display luminance or receiver timing"
+  },
+  "rawReportSHA256": "d4cdf1ae6b4dcaa38d5d45756786a64aeadc966cf8249397602373fe65f3c4b2",
+  "preset": {
+    "width": 2560,
+    "height": 1440,
+    "fps": 60,
+    "videoBudgetMbps": 20
+  },
+  "source": "real Chrome window playing generated 60fps PQ reference",
+  "path": "fixed UDP v2 / socket; Ponte outer topology not measured",
+  "activeSampleCount": 41,
+  "counterWindowSeconds": 39.99941895835218,
+  "hostEncodedFPS": 59.950870848819655,
+  "hostFPSMinimum": 59,
+  "videoMbps": {
+    "mean": 13.225040979392421,
+    "p95OfIntervalSamples": 13.705762201753371,
+    "maximum": 13.915432268186494
+  },
+  "controlRTTMilliseconds": {
+    "mean": 19.099139341463413,
+    "p95OfIntervalSamples": 25.191917,
+    "maximum": 26.551584
+  },
+  "sendDelayMilliseconds": {
+    "mean": 0.09930068829945622,
+    "p95OfIntervalSamples": 0.27682702702702694,
+    "maximum": 0.356820945945946
+  },
+  "encodeMilliseconds": {
+    "mean": 12.778189628103561,
+    "p95OfIntervalSamples": 14.250000000000007,
+    "maximum": 14.333333333333323
+  },
+  "cumulativeAtEnd": {
+    "framesEncoded": 2459,
+    "framesSent": 2459,
+    "nackCount": 0,
+    "pliCount": 0,
+    "retransmittedPacketsSent": 0
+  },
+  "codec": "video/H265",
+  "codecParameters": "level-id=150;profile-id=2;tier-flag=0;tx-mode=SRST",
+  "captureAtEnd": {
+    "callbackGapMillisecondsMax": 20.531166665023193,
+    "callbackGapMillisecondsP95": 18.76791668473743,
+    "completeFrames": 2459,
+    "height": 1440,
+    "idleFrames": 0,
+    "invalidFrames": 0,
+    "luma10BitSamples": {
+      "maximum": 749,
+      "minimum": 64,
+      "non8BitSamples": 713,
+      "sampleCount": 2048
+    },
+    "otherFrames": 0,
+    "pixelFormat": {
+      "height": "1440",
+      "matrix": "ITU_R_2020",
+      "pixelFormat": "2016686640",
+      "primaries": "ITU_R_2020",
+      "transfer": "SMPTE_ST_2084_PQ",
+      "width": "2560"
+    },
+    "pointPixelScale": 2,
+    "sourceHeightPoints": 720,
+    "sourceWidthPoints": 1280,
+    "width": 2560,
+    "windowServerAgeMillisecondsMax": 1.798208337277174,
+    "windowServerAgeMillisecondsP95": 0.9514166740700603
+  },
+  "encoderAtEnd": {
+    "callbackMillisecondsP95": 15.160624985583127,
+    "callbackRejected": 0,
+    "encodedBytes": 67470616,
+    "encodedFrames": 2459,
+    "frameBytesMax": 83010,
+    "frameBytesP95": 33606,
+    "keyframes": 21,
+    "requestedFPS": 60,
+    "submissionErrors": 0,
+    "submittedFrames": 2459,
+    "targetMbps": 18.081,
+    "unmatchedExpired": 0,
+    "unmatchedInputs": 0
+  },
+  "bridgeAtEnd": {
+    "authenticated": true,
+    "queueDrops": 0,
+    "queueDeadlineDrops": 0,
+    "queueOverflowDrops": 0,
+    "sendErrors": 0,
+    "pendingPackets": 0,
+    "maxQueueAgeMilliseconds": 0.03716663923114538,
+    "simulatedDrops": 0
+  },
+  "limitations": [
+    "Quantitative active window is about 40 seconds; not a completed two-minute or 10-30 minute stability run.",
+    "Host freezeCount is not used to claim receiver freeze absence.",
+    "Control RTT and stage statistics are not input-to-photon latency.",
+    "Main10 PQ format and normal subjective brightness do not certify HDR luminance, white point or color accuracy."
+  ]
+}
