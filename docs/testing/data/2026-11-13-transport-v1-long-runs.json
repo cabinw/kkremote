@@ -1,0 +1,4982 @@
+{
+  "schemaVersion": 1,
+  "status": "completed available runs; unresolved gates and phone/optical tests retained",
+  "display": "Per-case: fixed60 for initial LAN/Ponte, then Jump virtual display nominal120 for later adaptive case",
+  "usbMirror": "closed during media benchmark",
+  "scope": "1440p60, 20 Mbps budget; sequential real-window benchmarks",
+  "cases": [
+    {
+      "name": "15mac-lan-fixed60",
+      "runID": "f5bf1ec21ac8",
+      "requestedSeconds": 900,
+      "source": "live SVG diagram 4 panels, speed 3",
+      "status": "passed transport trial gates",
+      "manifest": {
+        "binarySHA256": "5152557d543fb69da3bdf7e58ecdcbbac385634e623cf2a35d42baea964750f9",
+        "sameExecutableVerified": true,
+        "durationSeconds": 900,
+        "bridgeReceiveDepth": 16,
+        "bridgeTransport": "socket",
+        "route": "direct-ice",
+        "pacing": "interactive",
+        "resolution": "2560x1440",
+        "fps": 60,
+        "ceilingMbps": 20,
+        "liveHostReport": true,
+        "sourceKind": "window",
+        "pattern": null,
+        "hdrRequested": true,
+        "frameTraceEnabled": false,
+        "playout": "realtime",
+        "sdkDropDiagnostics": false,
+        "requestedHEVCKeyframeSeconds": 10,
+        "networkLabel": "LAN",
+        "outerOverlayPathVerified": false,
+        "fixture": {
+          "fileSHA256": "f269d44256c847cd244b9010048514883da1c9a68f5f86dfde2e2a4edb4789ea",
+          "mode": "diagram",
+          "panels": 4,
+          "motionSpeed": 3,
+          "raster": false,
+          "immersive": true,
+          "dimensionsPoints": [
+            1681,
+            1084
+          ]
+        },
+        "displayMode": "fixed 60 Hz",
+        "macUSBMirrorWindowVisible": false,
+        "identityMonitor": "persistent CoreGraphics metadata"
+      },
+      "sourceGuard": {
+        "schema": 1,
+        "intervalSeconds": 10,
+        "valid": true,
+        "limitation": "Identity sampled every 10 seconds; not continuous content attestation.",
+        "samples": [
+          {
+            "elapsedSeconds": 0.181,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 10.194,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 20.196,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 30.208,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 40.222,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 50.239,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 60.26,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 70.261,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 80.271,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 90.278,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 100.288,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 110.306,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 120.311,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 130.323,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 140.327,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 150.337,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 160.345,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 170.357,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 180.373,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 190.387,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 200.406,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 210.421,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 220.426,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 230.441,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 240.456,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 250.473,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 260.489,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 270.493,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 280.505,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 290.521,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 300.539,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 310.553,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 320.554,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 330.569,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 340.585,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 350.59,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 360.605,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 370.621,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 380.626,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 390.636,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 400.655,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 410.668,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 420.67,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 430.673,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 440.685,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 450.705,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 460.717,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 470.734,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 480.736,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 490.738,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 500.751,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 510.771,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 520.785,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 530.8,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 540.805,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 550.807,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 560.82,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 570.834,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 580.836,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 590.849,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 600.867,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 610.873,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 620.886,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 630.903,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 640.92,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 650.933,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 660.952,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 670.967,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 680.97,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 690.973,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 700.984,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 710.987,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 720.999,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 731.019,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 741.035,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 751.052,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 761.052,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 771.065,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 781.081,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 791.085,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 801.099,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 811.103,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 821.117,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 831.131,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 841.132,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 851.137,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 861.151,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 871.164,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 881.171,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 891.185,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 901.2,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 911.213,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 921.217,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          }
+        ],
+        "method": "persistent-coregraphics-metadata",
+        "monitorCompleted": true
+      },
+      "host": {
+        "usable": true,
+        "seconds": 901.1785208750225,
+        "steadySeconds": 893.9992342500191,
+        "fps": 59.988865700752534,
+        "actualVideoMbps": 17.727676097279232,
+        "oneSecondMbps": {
+          "p50": 17.81124950113736,
+          "p95": 18.186895893461724,
+          "max": 18.745025835154152,
+          "min": 16.25213652111211
+        },
+        "fractionSamplesAtLeast15Mbps": 1.0,
+        "frameGapMs": null,
+        "frameGapStatistic": "Quantiles of per-sample maximum renderer callback gaps, not quantiles of all frames.",
+        "controlRTTMs": {
+          "p50": 6.818167,
+          "p95": 11.770542,
+          "max": 94.219291,
+          "min": 4.558167
+        },
+        "jitterBufferMs": null,
+        "resources": {
+          "cpuPercent": {
+            "p50": 13.880737853336775,
+            "p95": 14.888849319714407,
+            "max": 15.727417689258743,
+            "min": 8.950870536926892
+          },
+          "residentBytes": {
+            "p50": 78397440,
+            "p95": 80003072,
+            "max": 80232448,
+            "min": 72630272
+          },
+          "physicalFootprintBytes": {
+            "p50": 37455000,
+            "p95": 38503576,
+            "max": 39814296,
+            "min": 35931288
+          }
+        },
+        "thermalStates": [
+          "nominal"
+        ],
+        "tailFPS": 60.0,
+        "last": {
+          "codec": "video/H264",
+          "width": 2560,
+          "height": 1440,
+          "framesDecoded": 0,
+          "framesEncoded": 53935,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0,
+          "encoderDetails": {
+            "asyncFailures": {},
+            "callbackMillisecondsP95": 8.49454166018404,
+            "callbackRejected": 0,
+            "encodedBytes": 1987891025,
+            "encodedFrames": 53935,
+            "frameBytesMax": 52769,
+            "frameBytesP95": 48544,
+            "keyframes": 8,
+            "outputWithoutInput": 0,
+            "qpLatest": 32,
+            "qpMaximum": 51,
+            "requestedFPS": 60,
+            "resetPendingUnknown": 0,
+            "submissionErrors": 0,
+            "submittedFrames": 53935,
+            "targetMbps": 18.635,
+            "timestampCollisions": 0,
+            "trackingOverflow": 0,
+            "unmatchedExpired": 0,
+            "unmatchedInputs": 0
+          },
+          "captureDetails": {
+            "callbackGapMillisecondsMax": 19.430708343861625,
+            "callbackGapMillisecondsP95": 18.71633334667422,
+            "completeFrames": 53935,
+            "height": 1440,
+            "idleFrames": 0,
+            "invalidFrames": 0,
+            "otherFrames": 0,
+            "pixelFormat": {
+              "height": "1440",
+              "matrix": "missing",
+              "pixelFormat": "1111970369",
+              "primaries": "missing",
+              "transfer": "missing",
+              "width": "2560"
+            },
+            "pointPixelScale": 2,
+            "skippedReasons": {},
+            "sourceHeightPoints": 1084,
+            "sourceWidthPoints": 1681,
+            "width": 2560,
+            "windowServerAgeMillisecondsMax": 0.4882916691713035,
+            "windowServerAgeMillisecondsP95": 0.4603333363775164
+          },
+          "receiverDetails": null,
+          "bridge": null
+        },
+        "reportSchemaVersion": 10,
+        "build": "10",
+        "route": "direct-ice",
+        "playout": "realtime",
+        "mode": "host",
+        "source": "window",
+        "outerPath": "unknown",
+        "first5Minutes": {
+          "usable": true,
+          "seconds": 301.1788931666815,
+          "steadySeconds": 293.9996065416781,
+          "fps": 59.979672107146726,
+          "actualVideoMbps": 17.44354756227535,
+          "oneSecondMbps": {
+            "p50": 17.457903491317573,
+            "p95": 17.85569693261439,
+            "max": 18.745025835154152,
+            "min": 16.75793995662392
+          },
+          "fractionSamplesAtLeast15Mbps": 1.0,
+          "frameGapMs": null,
+          "frameGapStatistic": "Quantiles of per-sample maximum renderer callback gaps, not quantiles of all frames.",
+          "controlRTTMs": {
+            "p50": 7.57175,
+            "p95": 12.934208,
+            "max": 89.882458,
+            "min": 4.558167
+          },
+          "jitterBufferMs": null,
+          "resources": {
+            "cpuPercent": {
+              "p50": 13.712075713757576,
+              "p95": 14.723940489426818,
+              "max": 15.256119942442911,
+              "min": 10.172047993904771
+            },
+            "residentBytes": {
+              "p50": 76677120,
+              "p95": 77578240,
+              "max": 77676544,
+              "min": 72630272
+            },
+            "physicalFootprintBytes": {
+              "p50": 37815448,
+              "p95": 39355544,
+              "max": 39814296,
+              "min": 35931288
+            }
+          },
+          "thermalStates": [
+            "nominal"
+          ],
+          "tailFPS": 60.0,
+          "last": {
+            "codec": "video/H264",
+            "width": 2560,
+            "height": 1440,
+            "framesDecoded": 0,
+            "framesEncoded": 17939,
+            "framesDropped": 0,
+            "freezeCount": 0,
+            "packetsLost": 0,
+            "nackCount": 0,
+            "pliCount": 0,
+            "encoderDetails": {
+              "asyncFailures": {},
+              "callbackMillisecondsP95": 8.5639166936744,
+              "callbackRejected": 0,
+              "encodedBytes": 650021151,
+              "encodedFrames": 17939,
+              "frameBytesMax": 44996,
+              "frameBytesP95": 39520,
+              "keyframes": 3,
+              "outputWithoutInput": 0,
+              "qpLatest": 33,
+              "qpMaximum": 51,
+              "requestedFPS": 60,
+              "resetPendingUnknown": 0,
+              "submissionErrors": 0,
+              "submittedFrames": 17939,
+              "targetMbps": 18.959,
+              "timestampCollisions": 0,
+              "trackingOverflow": 0,
+              "unmatchedExpired": 0,
+              "unmatchedInputs": 0
+            },
+            "captureDetails": {
+              "callbackGapMillisecondsMax": 18.549666681792587,
+              "callbackGapMillisecondsP95": 18.43624998582527,
+              "completeFrames": 17939,
+              "height": 1440,
+              "idleFrames": 0,
+              "invalidFrames": 0,
+              "otherFrames": 0,
+              "pixelFormat": {
+                "height": "1440",
+                "matrix": "missing",
+                "pixelFormat": "1111970369",
+                "primaries": "missing",
+                "transfer": "missing",
+                "width": "2560"
+              },
+              "pointPixelScale": 2,
+              "skippedReasons": {},
+              "sourceHeightPoints": 1084,
+              "sourceWidthPoints": 1681,
+              "width": 2560,
+              "windowServerAgeMillisecondsMax": 0.5492083437275141,
+              "windowServerAgeMillisecondsP95": 0.42166668572463095
+            },
+            "receiverDetails": null,
+            "bridge": null
+          }
+        },
+        "last5Minutes": {
+          "usable": true,
+          "seconds": 901.1785208750225,
+          "steadySeconds": 294.9993630000099,
+          "fps": 59.98657020828688,
+          "actualVideoMbps": 17.937458773427327,
+          "oneSecondMbps": {
+            "p50": 17.96441452360651,
+            "p95": 18.231388905628712,
+            "max": 18.303195408748373,
+            "min": 16.289463119702425
+          },
+          "fractionSamplesAtLeast15Mbps": 1.0,
+          "frameGapMs": null,
+          "frameGapStatistic": "Quantiles of per-sample maximum renderer callback gaps, not quantiles of all frames.",
+          "controlRTTMs": {
+            "p50": 6.333541,
+            "p95": 10.297042,
+            "max": 64.112917,
+            "min": 4.628375
+          },
+          "jitterBufferMs": null,
+          "resources": {
+            "cpuPercent": {
+              "p50": 13.957334419379762,
+              "p95": 14.91577025033245,
+              "max": 15.727417689258743,
+              "min": 8.950870536926892
+            },
+            "residentBytes": {
+              "p50": 79675392,
+              "p95": 80101376,
+              "max": 80232448,
+              "min": 78692352
+            },
+            "physicalFootprintBytes": {
+              "p50": 37340312,
+              "p95": 37586072,
+              "max": 37667992,
+              "min": 36963480
+            }
+          },
+          "thermalStates": [
+            "nominal"
+          ],
+          "tailFPS": 60.0,
+          "last": {
+            "codec": "video/H264",
+            "width": 2560,
+            "height": 1440,
+            "framesDecoded": 0,
+            "framesEncoded": 53935,
+            "framesDropped": 0,
+            "freezeCount": 0,
+            "packetsLost": 0,
+            "nackCount": 0,
+            "pliCount": 0,
+            "encoderDetails": {
+              "asyncFailures": {},
+              "callbackMillisecondsP95": 8.49454166018404,
+              "callbackRejected": 0,
+              "encodedBytes": 1987891025,
+              "encodedFrames": 53935,
+              "frameBytesMax": 52769,
+              "frameBytesP95": 48544,
+              "keyframes": 8,
+              "outputWithoutInput": 0,
+              "qpLatest": 32,
+              "qpMaximum": 51,
+              "requestedFPS": 60,
+              "resetPendingUnknown": 0,
+              "submissionErrors": 0,
+              "submittedFrames": 53935,
+              "targetMbps": 18.635,
+              "timestampCollisions": 0,
+              "trackingOverflow": 0,
+              "unmatchedExpired": 0,
+              "unmatchedInputs": 0
+            },
+            "captureDetails": {
+              "callbackGapMillisecondsMax": 19.430708343861625,
+              "callbackGapMillisecondsP95": 18.71633334667422,
+              "completeFrames": 53935,
+              "height": 1440,
+              "idleFrames": 0,
+              "invalidFrames": 0,
+              "otherFrames": 0,
+              "pixelFormat": {
+                "height": "1440",
+                "matrix": "missing",
+                "pixelFormat": "1111970369",
+                "primaries": "missing",
+                "transfer": "missing",
+                "width": "2560"
+              },
+              "pointPixelScale": 2,
+              "skippedReasons": {},
+              "sourceHeightPoints": 1084,
+              "sourceWidthPoints": 1681,
+              "width": 2560,
+              "windowServerAgeMillisecondsMax": 0.4882916691713035,
+              "windowServerAgeMillisecondsP95": 0.4603333363775164
+            },
+            "receiverDetails": null,
+            "bridge": null
+          }
+        },
+        "footprintMedianChangeBytes": -475136,
+        "footprintSlopeBytesPerMinute": -68720.48382610088,
+        "queuePendingMax": null,
+        "queueAgeMaxMs": null,
+        "mediaObservedSeconds": 898.9999185000197,
+        "steadyCounterDeltas": {
+          "rtpPayloadBytes": 1981066107,
+          "rtpHeaderBytes": 48231828,
+          "retransmittedPayloadBytes": 0,
+          "retransmittedPacketsReceived": null,
+          "retransmittedPacketsSent": 0,
+          "sourceFrames": 53629,
+          "freezeCount": 0,
+          "framesDropped": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "outerApplicationMbps": null,
+        "sourceFPS": 59.98774713156177,
+        "qualityLimitationReasons": [
+          "none"
+        ],
+        "lowPowerModeObserved": false,
+        "limits": [
+          "RTP/codec/decode/renderer counters are not physical screen presentation.",
+          "First/last segment summaries each exclude their first 5 seconds.",
+          "Resource metrics describe this process only; slope alone is not proof of a leak.",
+          "Frozen/framesDropped are cumulative SDK counters; latest replacements are separate.",
+          "Network labels do not verify the outer overlay topology.",
+          "Outer application Mbps counts encapsulated UDP payload only; IP/UDP headers and Surge overhead are excluded.",
+          "playout is this process sender policy, not the remote sender policy; inspect host report for phone comparisons."
+        ],
+        "reportSHA256": "5f336de8ebfc9ae48d05b51df23f744e6302d3c6794803579bd8c8c13484ca0e"
+      },
+      "viewer": {
+        "usable": true,
+        "seconds": 900.4173429670045,
+        "steadySeconds": 892.9980843840167,
+        "fps": 59.985571007075684,
+        "actualVideoMbps": 17.725737840657025,
+        "oneSecondMbps": {
+          "p50": 17.77571853657684,
+          "p95": 18.26886736545594,
+          "max": 19.455289359438925,
+          "min": 15.626424918542579
+        },
+        "fractionSamplesAtLeast15Mbps": 1.0,
+        "frameGapMs": {
+          "p50": 25.060500018298626,
+          "p95": 101.90657101338729,
+          "max": 169.21429598005489,
+          "min": 18.316526024136692
+        },
+        "frameGapStatistic": "Quantiles of per-sample maximum renderer callback gaps, not quantiles of all frames.",
+        "controlRTTMs": {
+          "p50": 7.228357,
+          "p95": 19.098962,
+          "max": 96.196567,
+          "min": 5.525709
+        },
+        "jitterBufferMs": {
+          "p50": 2.1938852459015834,
+          "p95": 7.287186440678069,
+          "max": 20.997599999999988,
+          "min": 1.5638833333331565
+        },
+        "resources": {
+          "cpuPercent": {
+            "p50": 15.586491878263061,
+            "p95": 16.14680744139153,
+            "max": 16.58716771249464,
+            "min": 10.576951309865786
+          },
+          "residentBytes": {
+            "p50": 75972608,
+            "p95": 78237696,
+            "max": 79179776,
+            "min": 54272000
+          },
+          "physicalFootprintBytes": {
+            "p50": 35622912,
+            "p95": 37879808,
+            "max": 38723584,
+            "min": 29913088
+          }
+        },
+        "thermalStates": [
+          "nominal"
+        ],
+        "tailFPS": 59.9,
+        "last": {
+          "codec": "video/H264",
+          "width": 2560,
+          "height": 1440,
+          "framesDecoded": 53970,
+          "framesEncoded": 0,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0,
+          "encoderDetails": null,
+          "captureDetails": null,
+          "receiverDetails": {
+            "decoded": 53971,
+            "decoderCallbackMillisecondsP95": 6.002881,
+            "failures": {},
+            "pending": 0,
+            "presentations": [],
+            "submitted": 53971,
+            "timestampCollisions": 0,
+            "trackingOverflow": 0,
+            "unknownExpired": 0,
+            "unmatchedOutputs": 0
+          },
+          "bridge": null
+        },
+        "reportSchemaVersion": 10,
+        "build": "10",
+        "route": "direct-ice",
+        "playout": "realtime",
+        "mode": "viewer",
+        "source": "remote",
+        "outerPath": "unknown",
+        "first5Minutes": {
+          "usable": true,
+          "seconds": 301.41800342302304,
+          "steadySeconds": 293.9987448400352,
+          "fps": 59.9730451556641,
+          "actualVideoMbps": 17.435971826305387,
+          "oneSecondMbps": {
+            "p50": 17.44245698692741,
+            "p95": 17.870481019801556,
+            "max": 18.68137184970482,
+            "min": 15.626424918542579
+          },
+          "fractionSamplesAtLeast15Mbps": 1.0,
+          "frameGapMs": {
+            "p50": 25.69886000128463,
+            "p95": 102.0095759886317,
+            "max": 169.21429598005489,
+            "min": 18.316526024136692
+          },
+          "frameGapStatistic": "Quantiles of per-sample maximum renderer callback gaps, not quantiles of all frames.",
+          "controlRTTMs": {
+            "p50": 7.202669,
+            "p95": 18.801854,
+            "max": 96.196567,
+            "min": 5.614132
+          },
+          "jitterBufferMs": {
+            "p50": 2.175083333333324,
+            "p95": 6.817573770491808,
+            "max": 20.997599999999988,
+            "min": 1.5926779661017598
+          },
+          "resources": {
+            "cpuPercent": {
+              "p50": 15.514968892663092,
+              "p95": 16.063598671351407,
+              "max": 16.44580161994677,
+              "min": 10.576951309865786
+            },
+            "residentBytes": {
+              "p50": 72613888,
+              "p95": 75255808,
+              "max": 75788288,
+              "min": 54272000
+            },
+            "physicalFootprintBytes": {
+              "p50": 32829440,
+              "p95": 37724160,
+              "max": 38658048,
+              "min": 29913088
+            }
+          },
+          "thermalStates": [
+            "nominal"
+          ],
+          "tailFPS": 59.7,
+          "last": {
+            "codec": "video/H264",
+            "width": 2560,
+            "height": 1440,
+            "framesDecoded": 18035,
+            "framesEncoded": 0,
+            "framesDropped": 0,
+            "freezeCount": 0,
+            "packetsLost": 0,
+            "nackCount": 0,
+            "pliCount": 0,
+            "encoderDetails": null,
+            "captureDetails": null,
+            "receiverDetails": {
+              "decoded": 18035,
+              "decoderCallbackMillisecondsP95": 5.981258,
+              "failures": {},
+              "pending": 1,
+              "presentations": [],
+              "submitted": 18036,
+              "timestampCollisions": 0,
+              "trackingOverflow": 0,
+              "unknownExpired": 0,
+              "unmatchedOutputs": 0
+            },
+            "bridge": null
+          }
+        },
+        "last5Minutes": {
+          "usable": true,
+          "seconds": 900.4173429670045,
+          "steadySeconds": 292.9919164250023,
+          "fps": 59.984590068029085,
+          "actualVideoMbps": 17.937619686327697,
+          "oneSecondMbps": {
+            "p50": 17.968455075746313,
+            "p95": 18.29063062848593,
+            "max": 19.071407765973852,
+            "min": 16.286455356722534
+          },
+          "fractionSamplesAtLeast15Mbps": 1.0,
+          "frameGapMs": {
+            "p50": 25.501248019281775,
+            "p95": 101.8669240293093,
+            "max": 105.342335999012,
+            "min": 18.561758974101394
+          },
+          "frameGapStatistic": "Quantiles of per-sample maximum renderer callback gaps, not quantiles of all frames.",
+          "controlRTTMs": {
+            "p50": 7.332471,
+            "p95": 19.359239,
+            "max": 92.148113,
+            "min": 5.525709
+          },
+          "jitterBufferMs": {
+            "p50": 2.2470333333335666,
+            "p95": 7.5790500000001275,
+            "max": 10.39589999999985,
+            "min": 1.5638833333331565
+          },
+          "resources": {
+            "cpuPercent": {
+              "p50": 15.635117078552883,
+              "p95": 16.167586352465445,
+              "max": 16.35473348951086,
+              "min": 11.561818958026763
+            },
+            "residentBytes": {
+              "p50": 77946880,
+              "p95": 78454784,
+              "max": 79179776,
+              "min": 77152256
+            },
+            "physicalFootprintBytes": {
+              "p50": 37490688,
+              "p95": 37998592,
+              "max": 38723584,
+              "min": 36700160
+            }
+          },
+          "thermalStates": [
+            "nominal"
+          ],
+          "tailFPS": 59.9,
+          "last": {
+            "codec": "video/H264",
+            "width": 2560,
+            "height": 1440,
+            "framesDecoded": 53970,
+            "framesEncoded": 0,
+            "framesDropped": 0,
+            "freezeCount": 0,
+            "packetsLost": 0,
+            "nackCount": 0,
+            "pliCount": 0,
+            "encoderDetails": null,
+            "captureDetails": null,
+            "receiverDetails": {
+              "decoded": 53971,
+              "decoderCallbackMillisecondsP95": 6.002881,
+              "failures": {},
+              "pending": 0,
+              "presentations": [],
+              "submitted": 53971,
+              "timestampCollisions": 0,
+              "trackingOverflow": 0,
+              "unknownExpired": 0,
+              "unmatchedOutputs": 0
+            },
+            "bridge": null
+          }
+        },
+        "footprintMedianChangeBytes": 4661248,
+        "footprintSlopeBytesPerMinute": 383430.0636113472,
+        "queuePendingMax": null,
+        "queueAgeMaxMs": null,
+        "mediaObservedSeconds": 898.9971221900196,
+        "steadyCounterDeltas": {
+          "rtpPayloadBytes": 1978631242,
+          "rtpHeaderBytes": 48172696,
+          "retransmittedPayloadBytes": 0,
+          "retransmittedPacketsReceived": 0,
+          "retransmittedPacketsSent": null,
+          "sourceFrames": 0,
+          "freezeCount": 0,
+          "framesDropped": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "outerApplicationMbps": null,
+        "sourceFPS": null,
+        "qualityLimitationReasons": [
+          "unknown"
+        ],
+        "lowPowerModeObserved": false,
+        "limits": [
+          "RTP/codec/decode/renderer counters are not physical screen presentation.",
+          "First/last segment summaries each exclude their first 5 seconds.",
+          "Resource metrics describe this process only; slope alone is not proof of a leak.",
+          "Frozen/framesDropped are cumulative SDK counters; latest replacements are separate.",
+          "Network labels do not verify the outer overlay topology.",
+          "Outer application Mbps counts encapsulated UDP payload only; IP/UDP headers and Surge overhead are excluded.",
+          "playout is this process sender policy, not the remote sender policy; inspect host report for phone comparisons."
+        ],
+        "reportSHA256": "9b6d0743e99bcd61635419af6c385d4b910c451a31e277d1fd7a87fc5af6c94f"
+      },
+      "trial": {
+        "schemaVersion": 1,
+        "transportTrialPassed": true,
+        "checks": {
+          "host_usable": true,
+          "host_duration": true,
+          "host_fps": true,
+          "host_dimensions": true,
+          "host_role": true,
+          "host_continuous_epoch": true,
+          "host_single_codec": true,
+          "viewer_usable": true,
+          "viewer_duration": true,
+          "viewer_fps": true,
+          "viewer_dimensions": true,
+          "viewer_role": true,
+          "viewer_continuous_epoch": true,
+          "viewer_single_codec": true,
+          "viewer_zero_freezes": true,
+          "viewer_zero_sdk_drops": true,
+          "matching_codec": true,
+          "source_guard_complete": true,
+          "source_identity": true,
+          "source_guard_coverage": true,
+          "source_guard_continuity": true
+        },
+        "failedChecks": [],
+        "requestedSeconds": 900,
+        "limits": [
+          "Nominal session duration allows up to five seconds before active media.",
+          "Guard coverage compares first-session elapsed clocks with a ten-second sampling allowance; only use a guard started with this host.",
+          "Guard samples must increase monotonically with gaps no larger than 20.5 seconds; identity between samples remains unobserved.",
+          "Bridge bounds do not prove flat queue age or memory; inspect full curves and resource summaries.",
+          "No gate here certifies physical presentation, optical latency, HDR mastering, visual quality, or sustained full-budget bitrate."
+        ]
+      }
+    },
+    {
+      "name": "15mac-ponte-realtime-fixed60",
+      "runID": "a0f20a293e50",
+      "requestedSeconds": 900,
+      "source": "live SVG diagram 4 panels, speed 3",
+      "status": "failed zero-freeze trial gate; sustained throughput and recovery retained",
+      "manifest": {
+        "binarySHA256": "5152557d543fb69da3bdf7e58ecdcbbac385634e623cf2a35d42baea964750f9",
+        "sameExecutableVerified": true,
+        "durationSeconds": 900,
+        "bridgeReceiveDepth": 16,
+        "bridgeTransport": "socket",
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "resolution": "2560x1440",
+        "fps": 60,
+        "ceilingMbps": 20,
+        "liveHostReport": true,
+        "sourceKind": "window",
+        "pattern": null,
+        "hdrRequested": true,
+        "frameTraceEnabled": false,
+        "playout": "realtime",
+        "sdkDropDiagnostics": false,
+        "requestedHEVCKeyframeSeconds": 10,
+        "networkLabel": "Surge Ponte",
+        "outerOverlayPathVerified": false,
+        "fixtureSHA256": "f269d44256c847cd244b9010048514883da1c9a68f5f86dfde2e2a4edb4789ea",
+        "fixtureQuery": "mode=diagram&speed=3&panels=4&immersive=1",
+        "display": "fixed 60 Hz",
+        "usbMirror": "closed",
+        "sourceGuard": "persistent CoreGraphics metadata"
+      },
+      "sourceGuard": {
+        "schema": 1,
+        "intervalSeconds": 10,
+        "valid": true,
+        "limitation": "Identity sampled every 10 seconds; not continuous content attestation.",
+        "samples": [
+          {
+            "elapsedSeconds": 0.176,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 10.178,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 20.196,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 30.199,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 40.208,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 50.215,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 60.224,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 70.245,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 80.248,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 90.26,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 100.263,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 110.274,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 120.281,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 130.29,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 140.306,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 150.311,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 160.323,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 170.341,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 180.343,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 190.347,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 200.358,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 210.364,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 220.374,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 230.393,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 240.396,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 250.406,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 260.425,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 270.439,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 280.446,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 290.459,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 300.462,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 310.472,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 320.493,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 330.509,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 340.521,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 350.539,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 360.559,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 370.576,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 380.579,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 390.593,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 400.606,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 410.609,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 420.612,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 430.623,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 440.643,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 450.657,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 460.675,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 470.691,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 480.693,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 490.706,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 500.72,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 510.727,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 520.741,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 530.754,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 540.771,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 550.775,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 560.787,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 570.81,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 580.82,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 590.827,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 600.836,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 610.855,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 620.87,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 630.875,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 640.886,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 650.903,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 660.908,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 670.919,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 680.922,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 690.936,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 700.941,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 710.952,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 720.959,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 730.968,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 740.977,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 750.986,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 761.005,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 771.024,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 781.037,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 791.057,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 801.068,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 811.084,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 821.089,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 831.105,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 841.108,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 851.12,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 861.134,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 871.137,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 881.14,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 891.15,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 901.156,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 911.168,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          },
+          {
+            "elapsedSeconds": 921.187,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1681,
+              1084
+            ]
+          }
+        ],
+        "method": "persistent-coregraphics-metadata",
+        "monitorCompleted": true
+      },
+      "host": {
+        "usable": true,
+        "seconds": 902.1857195833581,
+        "steadySeconds": 893.9994762083516,
+        "fps": 59.98325662050208,
+        "actualVideoMbps": 16.592705256286845,
+        "oneSecondMbps": {
+          "p50": 17.820964916694166,
+          "p95": 18.172748525287776,
+          "max": 20.540729049658957,
+          "min": 2.409666279634646
+        },
+        "fractionSamplesAtLeast15Mbps": 0.8402234636871508,
+        "frameGapMs": null,
+        "frameGapStatistic": "Quantiles of per-sample maximum renderer callback gaps, not quantiles of all frames.",
+        "controlRTTMs": {
+          "p50": 10.3885,
+          "p95": 28.794958,
+          "max": 144.190625,
+          "min": 5.634375
+        },
+        "jitterBufferMs": null,
+        "resources": {
+          "cpuPercent": {
+            "p50": 19.516510102030853,
+            "p95": 21.373812057723466,
+            "max": 22.29546479043078,
+            "min": 9.730502551703832
+          },
+          "residentBytes": {
+            "p50": 78626816,
+            "p95": 80347136,
+            "max": 80576512,
+            "min": 59604992
+          },
+          "physicalFootprintBytes": {
+            "p50": 37651560,
+            "p95": 38437992,
+            "max": 39797864,
+            "min": 23069800
+          }
+        },
+        "thermalStates": [
+          "nominal"
+        ],
+        "tailFPS": 59.2,
+        "last": {
+          "codec": "video/H264",
+          "width": 2560,
+          "height": 1440,
+          "framesDecoded": 0,
+          "framesEncoded": 53978,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0,
+          "encoderDetails": {
+            "asyncFailures": {},
+            "callbackMillisecondsP95": 8.599041670095176,
+            "callbackRejected": 0,
+            "encodedBytes": 1852680702,
+            "encodedFrames": 53978,
+            "frameBytesMax": 44348,
+            "frameBytesP95": 43858,
+            "keyframes": 8,
+            "outputWithoutInput": 0,
+            "qpLatest": 32,
+            "qpMaximum": 51,
+            "requestedFPS": 60,
+            "resetPendingUnknown": 0,
+            "submissionErrors": 0,
+            "submittedFrames": 53979,
+            "targetMbps": 18.933,
+            "timestampCollisions": 0,
+            "trackingOverflow": 0,
+            "unmatchedExpired": 0,
+            "unmatchedInputs": 1
+          },
+          "captureDetails": {
+            "callbackGapMillisecondsMax": 19.204874988645315,
+            "callbackGapMillisecondsP95": 18.41908332426101,
+            "completeFrames": 53979,
+            "height": 1440,
+            "idleFrames": 0,
+            "invalidFrames": 0,
+            "otherFrames": 0,
+            "pixelFormat": {
+              "height": "1440",
+              "matrix": "missing",
+              "pixelFormat": "1111970369",
+              "primaries": "missing",
+              "transfer": "missing",
+              "width": "2560"
+            },
+            "pointPixelScale": 2,
+            "skippedReasons": {},
+            "sourceHeightPoints": 1084,
+            "sourceWidthPoints": 1681,
+            "width": 2560,
+            "windowServerAgeMillisecondsMax": 0.5907499871682376,
+            "windowServerAgeMillisecondsP95": 0.502458366099745
+          },
+          "receiverDetails": null,
+          "bridge": {
+            "acceptedPackets": 22530,
+            "authenticated": true,
+            "endpointScope": "loopback socket endpoint (remote topology unknown)",
+            "expiredAssemblies": 0,
+            "fragmentedInnerDatagrams": 0,
+            "innerDatagramsReceived": 21742,
+            "innerDatagramsSent": 1656973,
+            "largestSequenceGap": 0,
+            "localInvalidSizes": 0,
+            "localRejectedSources": 31,
+            "localSendErrors": 0,
+            "localSocketDrops": 31,
+            "localUnboundSends": 0,
+            "maxQueueAgeMilliseconds": 0.047417,
+            "oldestWaitingMilliseconds": 0,
+            "pathDatagramBytes": 1280,
+            "pendingPackets": 0,
+            "queueDeadlineDrops": 0,
+            "queueDrops": 0,
+            "queueHighWater": 1,
+            "queueOverflowDrops": 0,
+            "receiveDepth": 16,
+            "receivedDatagrams": 22530,
+            "receivedWireBytes": 3341278,
+            "rejectedDatagrams": 0,
+            "reorderedPackets": 0,
+            "rtpSizeCounts": {
+              "1169-1200": 1229042,
+              "1201-1248": 315863,
+              "<=1168": 108632
+            },
+            "sendErrors": 0,
+            "sentDatagrams": 1657761,
+            "sentWireBytes": 1973057858,
+            "sequenceHoles": 0,
+            "simulatedDrops": 0,
+            "socketReceiveBufferBytes": 262144,
+            "socketRejectedPeers": 0,
+            "socketTruncatedPackets": 0,
+            "transport": "socket",
+            "wireVersion": 2
+          }
+        },
+        "reportSchemaVersion": 10,
+        "build": "10",
+        "route": "fixed-udp-v2",
+        "playout": "realtime",
+        "mode": "host",
+        "source": "window",
+        "outerPath": "unknown",
+        "first5Minutes": {
+          "usable": true,
+          "seconds": 303.18583062500693,
+          "steadySeconds": 294.99958725000033,
+          "fps": 59.98313477301308,
+          "actualVideoMbps": 16.078646143936236,
+          "oneSecondMbps": {
+            "p50": 17.810870109828322,
+            "p95": 18.172748525287776,
+            "max": 20.540729049658957,
+            "min": 2.409666279634646
+          },
+          "fractionSamplesAtLeast15Mbps": 0.722972972972973,
+          "frameGapMs": null,
+          "frameGapStatistic": "Quantiles of per-sample maximum renderer callback gaps, not quantiles of all frames.",
+          "controlRTTMs": {
+            "p50": 11.251333,
+            "p95": 25.819708,
+            "max": 96.194916,
+            "min": 6.826834
+          },
+          "jitterBufferMs": null,
+          "resources": {
+            "cpuPercent": {
+              "p50": 19.09647987757826,
+              "p95": 20.952584109371642,
+              "max": 21.73349223888092,
+              "min": 9.730502551703832
+            },
+            "residentBytes": {
+              "p50": 76955648,
+              "p95": 77807616,
+              "max": 77889536,
+              "min": 59604992
+            },
+            "physicalFootprintBytes": {
+              "p50": 38061160,
+              "p95": 39748712,
+              "max": 39797864,
+              "min": 23069800
+            }
+          },
+          "thermalStates": [
+            "nominal"
+          ],
+          "tailFPS": 59.9,
+          "last": {
+            "codec": "video/H264",
+            "width": 2560,
+            "height": 1440,
+            "framesDecoded": 0,
+            "framesEncoded": 18048,
+            "framesDropped": 0,
+            "freezeCount": 0,
+            "packetsLost": 0,
+            "nackCount": 0,
+            "pliCount": 0,
+            "encoderDetails": {
+              "asyncFailures": {},
+              "callbackMillisecondsP95": 8.5792500176467,
+              "callbackRejected": 0,
+              "encodedBytes": 593358731,
+              "encodedFrames": 18048,
+              "frameBytesMax": 55111,
+              "frameBytesP95": 38902,
+              "keyframes": 3,
+              "outputWithoutInput": 0,
+              "qpLatest": 32,
+              "qpMaximum": 51,
+              "requestedFPS": 60,
+              "resetPendingUnknown": 0,
+              "submissionErrors": 0,
+              "submittedFrames": 18048,
+              "targetMbps": 18.722,
+              "timestampCollisions": 0,
+              "trackingOverflow": 0,
+              "unmatchedExpired": 0,
+              "unmatchedInputs": 0
+            },
+            "captureDetails": {
+              "callbackGapMillisecondsMax": 20.478749996982515,
+              "callbackGapMillisecondsP95": 19.90937499795109,
+              "completeFrames": 18048,
+              "height": 1440,
+              "idleFrames": 0,
+              "invalidFrames": 0,
+              "otherFrames": 0,
+              "pixelFormat": {
+                "height": "1440",
+                "matrix": "missing",
+                "pixelFormat": "1111970369",
+                "primaries": "missing",
+                "transfer": "missing",
+                "width": "2560"
+              },
+              "pointPixelScale": 2,
+              "skippedReasons": {},
+              "sourceHeightPoints": 1084,
+              "sourceWidthPoints": 1681,
+              "width": 2560,
+              "windowServerAgeMillisecondsMax": 0.6449166685342789,
+              "windowServerAgeMillisecondsP95": 0.4550833546090871
+            },
+            "receiverDetails": null,
+            "bridge": {
+              "acceptedPackets": 7537,
+              "authenticated": true,
+              "endpointScope": "loopback socket endpoint (remote topology unknown)",
+              "expiredAssemblies": 0,
+              "fragmentedInnerDatagrams": 0,
+              "innerDatagramsReceived": 7275,
+              "innerDatagramsSent": 531138,
+              "largestSequenceGap": 0,
+              "localInvalidSizes": 0,
+              "localRejectedSources": 31,
+              "localSendErrors": 0,
+              "localSocketDrops": 31,
+              "localUnboundSends": 0,
+              "maxQueueAgeMilliseconds": 0.038458,
+              "oldestWaitingMilliseconds": 0,
+              "pathDatagramBytes": 1280,
+              "pendingPackets": 0,
+              "queueDeadlineDrops": 0,
+              "queueDrops": 0,
+              "queueHighWater": 1,
+              "queueOverflowDrops": 0,
+              "receiveDepth": 16,
+              "receivedDatagrams": 7537,
+              "receivedWireBytes": 1096742,
+              "rejectedDatagrams": 0,
+              "reorderedPackets": 0,
+              "rtpSizeCounts": {
+                "1169-1200": 389259,
+                "1201-1248": 98989,
+                "<=1168": 41731
+              },
+              "sendErrors": 0,
+              "sentDatagrams": 531400,
+              "sentWireBytes": 631994494,
+              "sequenceHoles": 0,
+              "simulatedDrops": 0,
+              "socketReceiveBufferBytes": 262144,
+              "socketRejectedPeers": 0,
+              "socketTruncatedPackets": 0,
+              "transport": "socket",
+              "wireVersion": 2
+            }
+          }
+        },
+        "last5Minutes": {
+          "usable": true,
+          "seconds": 902.1857195833581,
+          "steadySeconds": 293.999725541682,
+          "fps": 59.97964782963693,
+          "actualVideoMbps": 16.82976580635788,
+          "oneSecondMbps": {
+            "p50": 17.92675964455342,
+            "p95": 18.199290012154233,
+            "max": 19.1314693944764,
+            "min": 8.370018025588072
+          },
+          "fractionSamplesAtLeast15Mbps": 0.8779661016949153,
+          "frameGapMs": null,
+          "frameGapStatistic": "Quantiles of per-sample maximum renderer callback gaps, not quantiles of all frames.",
+          "controlRTTMs": {
+            "p50": 9.707875,
+            "p95": 40.06525,
+            "max": 144.190625,
+            "min": 5.634375
+          },
+          "jitterBufferMs": null,
+          "resources": {
+            "cpuPercent": {
+              "p50": 19.89917748076458,
+              "p95": 21.505207192158984,
+              "max": 22.270316978619658,
+              "min": 12.495788695517444
+            },
+            "residentBytes": {
+              "p50": 79986688,
+              "p95": 80461824,
+              "max": 80576512,
+              "min": 78905344
+            },
+            "physicalFootprintBytes": {
+              "p50": 37569640,
+              "p95": 37782632,
+              "max": 37880936,
+              "min": 37045352
+            }
+          },
+          "thermalStates": [
+            "nominal"
+          ],
+          "tailFPS": 59.2,
+          "last": {
+            "codec": "video/H264",
+            "width": 2560,
+            "height": 1440,
+            "framesDecoded": 0,
+            "framesEncoded": 53978,
+            "framesDropped": 0,
+            "freezeCount": 0,
+            "packetsLost": 0,
+            "nackCount": 0,
+            "pliCount": 0,
+            "encoderDetails": {
+              "asyncFailures": {},
+              "callbackMillisecondsP95": 8.599041670095176,
+              "callbackRejected": 0,
+              "encodedBytes": 1852680702,
+              "encodedFrames": 53978,
+              "frameBytesMax": 44348,
+              "frameBytesP95": 43858,
+              "keyframes": 8,
+              "outputWithoutInput": 0,
+              "qpLatest": 32,
+              "qpMaximum": 51,
+              "requestedFPS": 60,
+              "resetPendingUnknown": 0,
+              "submissionErrors": 0,
+              "submittedFrames": 53979,
+              "targetMbps": 18.933,
+              "timestampCollisions": 0,
+              "trackingOverflow": 0,
+              "unmatchedExpired": 0,
+              "unmatchedInputs": 1
+            },
+            "captureDetails": {
+              "callbackGapMillisecondsMax": 19.204874988645315,
+              "callbackGapMillisecondsP95": 18.41908332426101,
+              "completeFrames": 53979,
+              "height": 1440,
+              "idleFrames": 0,
+              "invalidFrames": 0,
+              "otherFrames": 0,
+              "pixelFormat": {
+                "height": "1440",
+                "matrix": "missing",
+                "pixelFormat": "1111970369",
+                "primaries": "missing",
+                "transfer": "missing",
+                "width": "2560"
+              },
+              "pointPixelScale": 2,
+              "skippedReasons": {},
+              "sourceHeightPoints": 1084,
+              "sourceWidthPoints": 1681,
+              "width": 2560,
+              "windowServerAgeMillisecondsMax": 0.5907499871682376,
+              "windowServerAgeMillisecondsP95": 0.502458366099745
+            },
+            "receiverDetails": null,
+            "bridge": {
+              "acceptedPackets": 22530,
+              "authenticated": true,
+              "endpointScope": "loopback socket endpoint (remote topology unknown)",
+              "expiredAssemblies": 0,
+              "fragmentedInnerDatagrams": 0,
+              "innerDatagramsReceived": 21742,
+              "innerDatagramsSent": 1656973,
+              "largestSequenceGap": 0,
+              "localInvalidSizes": 0,
+              "localRejectedSources": 31,
+              "localSendErrors": 0,
+              "localSocketDrops": 31,
+              "localUnboundSends": 0,
+              "maxQueueAgeMilliseconds": 0.047417,
+              "oldestWaitingMilliseconds": 0,
+              "pathDatagramBytes": 1280,
+              "pendingPackets": 0,
+              "queueDeadlineDrops": 0,
+              "queueDrops": 0,
+              "queueHighWater": 1,
+              "queueOverflowDrops": 0,
+              "receiveDepth": 16,
+              "receivedDatagrams": 22530,
+              "receivedWireBytes": 3341278,
+              "rejectedDatagrams": 0,
+              "reorderedPackets": 0,
+              "rtpSizeCounts": {
+                "1169-1200": 1229042,
+                "1201-1248": 315863,
+                "<=1168": 108632
+              },
+              "sendErrors": 0,
+              "sentDatagrams": 1657761,
+              "sentWireBytes": 1973057858,
+              "sequenceHoles": 0,
+              "simulatedDrops": 0,
+              "socketReceiveBufferBytes": 262144,
+              "socketRejectedPeers": 0,
+              "socketTruncatedPackets": 0,
+              "transport": "socket",
+              "wireVersion": 2
+            }
+          }
+        },
+        "footprintMedianChangeBytes": -491520,
+        "footprintSlopeBytesPerMinute": -67551.63718732607,
+        "queuePendingMax": 0,
+        "queueAgeMaxMs": 0.047417,
+        "mediaObservedSeconds": 898.9998248750053,
+        "steadyCounterDeltas": {
+          "rtpPayloadBytes": 1854233726,
+          "rtpHeaderBytes": 45197440,
+          "retransmittedPayloadBytes": 0,
+          "retransmittedPacketsReceived": null,
+          "retransmittedPacketsSent": 0,
+          "sourceFrames": 53626,
+          "freezeCount": 0,
+          "framesDropped": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "outerApplicationMbps": 17.642495965315486,
+        "sourceFPS": 59.984375189390114,
+        "qualityLimitationReasons": [
+          "none"
+        ],
+        "lowPowerModeObserved": false,
+        "limits": [
+          "RTP/codec/decode/renderer counters are not physical screen presentation.",
+          "First/last segment summaries each exclude their first 5 seconds.",
+          "Resource metrics describe this process only; slope alone is not proof of a leak.",
+          "Frozen/framesDropped are cumulative SDK counters; latest replacements are separate.",
+          "Network labels do not verify the outer overlay topology.",
+          "Outer application Mbps counts encapsulated UDP payload only; IP/UDP headers and Surge overhead are excluded.",
+          "playout is this process sender policy, not the remote sender policy; inspect host report for phone comparisons."
+        ],
+        "reportSHA256": "697d2d07a047df729df3e994f59c3508b758995b868311d9570a99647c29a954"
+      },
+      "viewer": {
+        "usable": true,
+        "seconds": 900.4240760219982,
+        "steadySeconds": 892.9990410979954,
+        "fps": 59.98102745344621,
+        "actualVideoMbps": 16.604172320015813,
+        "oneSecondMbps": {
+          "p50": 17.78362240470123,
+          "p95": 18.283127490363018,
+          "max": 20.551515145052775,
+          "min": 2.5976921108816837
+        },
+        "fractionSamplesAtLeast15Mbps": 0.8389261744966443,
+        "frameGapMs": {
+          "p50": 26.018993987236172,
+          "p95": 103.96571800811216,
+          "max": 171.42476397566497,
+          "min": 19.267541996669024
+        },
+        "frameGapStatistic": "Quantiles of per-sample maximum renderer callback gaps, not quantiles of all frames.",
+        "controlRTTMs": {
+          "p50": 11.74112,
+          "p95": 28.815602,
+          "max": 116.766665,
+          "min": 6.53143
+        },
+        "jitterBufferMs": {
+          "p50": 4.404245614035804,
+          "p95": 9.099999999999872,
+          "max": 17.217967213114743,
+          "min": 1.316000000000006
+        },
+        "resources": {
+          "cpuPercent": {
+            "p50": 27.918175984754445,
+            "p95": 29.685230532403946,
+            "max": 30.990198799590285,
+            "min": 13.245650513306067
+          },
+          "residentBytes": {
+            "p50": 61001728,
+            "p95": 63156224,
+            "max": 63721472,
+            "min": 34369536
+          },
+          "physicalFootprintBytes": {
+            "p50": 36564992,
+            "p95": 38686720,
+            "max": 39239680,
+            "min": 11374592
+          }
+        },
+        "thermalStates": [
+          "nominal"
+        ],
+        "tailFPS": 60.0,
+        "last": {
+          "codec": "video/H264",
+          "width": 2560,
+          "height": 1440,
+          "framesDecoded": 53962,
+          "framesEncoded": 0,
+          "framesDropped": 0,
+          "freezeCount": 1,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0,
+          "encoderDetails": null,
+          "captureDetails": null,
+          "receiverDetails": {
+            "decoded": 53963,
+            "decoderCallbackMillisecondsP95": 5.774413,
+            "failures": {},
+            "pending": 0,
+            "presentations": [],
+            "submitted": 53963,
+            "timestampCollisions": 0,
+            "trackingOverflow": 0,
+            "unknownExpired": 0,
+            "unmatchedOutputs": 0
+          },
+          "bridge": {
+            "acceptedPackets": 1657404,
+            "authenticated": true,
+            "endpointScope": "overlay virtual address (outer path unknown)",
+            "expiredAssemblies": 0,
+            "fragmentedInnerDatagrams": 0,
+            "innerDatagramsReceived": 1656616,
+            "innerDatagramsSent": 21735,
+            "largestSequenceGap": 0,
+            "localInvalidSizes": 0,
+            "localRejectedSources": 25,
+            "localSendErrors": 0,
+            "localSocketDrops": 25,
+            "localUnboundSends": 0,
+            "maxQueueAgeMilliseconds": 0.054174,
+            "oldestWaitingMilliseconds": 0,
+            "pathDatagramBytes": 1280,
+            "pendingPackets": 0,
+            "probeRTTMilliseconds": 12.379219988361001,
+            "queueDeadlineDrops": 0,
+            "queueDrops": 0,
+            "queueHighWater": 1,
+            "queueOverflowDrops": 0,
+            "receiveDepth": 16,
+            "receivedDatagrams": 1657404,
+            "receivedWireBytes": 1972637393,
+            "rejectedDatagrams": 0,
+            "reorderedPackets": 0,
+            "rtpSizeCounts": {
+              "<=1168": 18304
+            },
+            "sendErrors": 0,
+            "sentDatagrams": 22523,
+            "sentWireBytes": 3340464,
+            "sequenceHoles": 0,
+            "simulatedDrops": 0,
+            "socketReceiveBufferBytes": 262144,
+            "socketRejectedPeers": 0,
+            "socketTruncatedPackets": 0,
+            "transport": "socket",
+            "wireVersion": 2
+          }
+        },
+        "reportSchemaVersion": 10,
+        "build": "10",
+        "route": "fixed-udp-v2",
+        "playout": "realtime",
+        "mode": "viewer",
+        "source": "remote",
+        "outerPath": "unknown",
+        "first5Minutes": {
+          "usable": true,
+          "seconds": 301.4182599540218,
+          "steadySeconds": 293.99322503001895,
+          "fps": 59.974171167378564,
+          "actualVideoMbps": 16.109253944598272,
+          "oneSecondMbps": {
+            "p50": 17.76507070159544,
+            "p95": 18.299144317927787,
+            "max": 20.551515145052775,
+            "min": 2.5976921108816837
+          },
+          "fractionSamplesAtLeast15Mbps": 0.7288135593220338,
+          "frameGapMs": {
+            "p50": 25.807253026869148,
+            "p95": 103.71531202690676,
+            "max": 171.42476397566497,
+            "min": 19.267541996669024
+          },
+          "frameGapStatistic": "Quantiles of per-sample maximum renderer callback gaps, not quantiles of all frames.",
+          "controlRTTMs": {
+            "p50": 11.780724,
+            "p95": 42.704761,
+            "max": 116.766665,
+            "min": 6.699494
+          },
+          "jitterBufferMs": {
+            "p50": 4.331300000000009,
+            "p95": 8.965355932203403,
+            "max": 17.217967213114743,
+            "min": 1.316000000000006
+          },
+          "resources": {
+            "cpuPercent": {
+              "p50": 27.77092137175348,
+              "p95": 29.737245993505567,
+              "max": 30.990198799590285,
+              "min": 13.245650513306067
+            },
+            "residentBytes": {
+              "p50": 58683392,
+              "p95": 59936768,
+              "max": 61227008,
+              "min": 34369536
+            },
+            "physicalFootprintBytes": {
+              "p50": 34435072,
+              "p95": 35581952,
+              "max": 36872192,
+              "min": 11374592
+            }
+          },
+          "thermalStates": [
+            "nominal"
+          ],
+          "tailFPS": 59.7,
+          "last": {
+            "codec": "video/H264",
+            "width": 2560,
+            "height": 1440,
+            "framesDecoded": 18031,
+            "framesEncoded": 0,
+            "framesDropped": 0,
+            "freezeCount": 1,
+            "packetsLost": 0,
+            "nackCount": 0,
+            "pliCount": 0,
+            "encoderDetails": null,
+            "captureDetails": null,
+            "receiverDetails": {
+              "decoded": 18031,
+              "decoderCallbackMillisecondsP95": 5.801829,
+              "failures": {},
+              "pending": 0,
+              "presentations": [],
+              "submitted": 18031,
+              "timestampCollisions": 0,
+              "trackingOverflow": 0,
+              "unknownExpired": 0,
+              "unmatchedOutputs": 0
+            },
+            "bridge": {
+              "acceptedPackets": 530827,
+              "authenticated": true,
+              "endpointScope": "overlay virtual address (outer path unknown)",
+              "expiredAssemblies": 0,
+              "fragmentedInnerDatagrams": 0,
+              "innerDatagramsReceived": 530565,
+              "innerDatagramsSent": 7269,
+              "largestSequenceGap": 0,
+              "localInvalidSizes": 0,
+              "localRejectedSources": 25,
+              "localSendErrors": 0,
+              "localSocketDrops": 25,
+              "localUnboundSends": 0,
+              "maxQueueAgeMilliseconds": 0.053891,
+              "oldestWaitingMilliseconds": 0,
+              "pathDatagramBytes": 1280,
+              "pendingPackets": 0,
+              "probeRTTMilliseconds": 12.947341951075941,
+              "queueDeadlineDrops": 0,
+              "queueDrops": 0,
+              "queueHighWater": 1,
+              "queueOverflowDrops": 0,
+              "receiveDepth": 16,
+              "receivedDatagrams": 530827,
+              "receivedWireBytes": 631306828,
+              "rejectedDatagrams": 0,
+              "reorderedPackets": 0,
+              "rtpSizeCounts": {
+                "<=1168": 6112
+              },
+              "sendErrors": 0,
+              "sentDatagrams": 7531,
+              "sentWireBytes": 1095786,
+              "sequenceHoles": 0,
+              "simulatedDrops": 0,
+              "socketReceiveBufferBytes": 262144,
+              "socketRejectedPeers": 0,
+              "socketTruncatedPackets": 0,
+              "transport": "socket",
+              "wireVersion": 2
+            }
+          }
+        },
+        "last5Minutes": {
+          "usable": true,
+          "seconds": 900.4240760219982,
+          "steadySeconds": 293.0078964949935,
+          "fps": 59.97790575005981,
+          "actualVideoMbps": 16.826713747232553,
+          "oneSecondMbps": {
+            "p50": 17.899486009537526,
+            "p95": 18.292612866412995,
+            "max": 19.38578990146315,
+            "min": 8.003096340898658
+          },
+          "fractionSamplesAtLeast15Mbps": 0.8775510204081632,
+          "frameGapMs": {
+            "p50": 26.081193005666137,
+            "p95": 104.44145899964496,
+            "max": 108.7305480032228,
+            "min": 19.29590804502368
+          },
+          "frameGapStatistic": "Quantiles of per-sample maximum renderer callback gaps, not quantiles of all frames.",
+          "controlRTTMs": {
+            "p50": 11.794153,
+            "p95": 26.865799,
+            "max": 95.311134,
+            "min": 6.872149
+          },
+          "jitterBufferMs": {
+            "p50": 4.424050847457704,
+            "p95": 9.124918032786574,
+            "max": 12.75521666666748,
+            "min": 1.7075999999993503
+          },
+          "resources": {
+            "cpuPercent": {
+              "p50": 28.367076459476397,
+              "p95": 29.685230532403946,
+              "max": 30.068797163223937,
+              "min": 18.007384817641405
+            },
+            "residentBytes": {
+              "p50": 62820352,
+              "p95": 63426560,
+              "max": 63721472,
+              "min": 61452288
+            },
+            "physicalFootprintBytes": {
+              "p50": 38342656,
+              "p95": 38952960,
+              "max": 39239680,
+              "min": 36970496
+            }
+          },
+          "thermalStates": [
+            "nominal"
+          ],
+          "tailFPS": 60.0,
+          "last": {
+            "codec": "video/H264",
+            "width": 2560,
+            "height": 1440,
+            "framesDecoded": 53962,
+            "framesEncoded": 0,
+            "framesDropped": 0,
+            "freezeCount": 1,
+            "packetsLost": 0,
+            "nackCount": 0,
+            "pliCount": 0,
+            "encoderDetails": null,
+            "captureDetails": null,
+            "receiverDetails": {
+              "decoded": 53963,
+              "decoderCallbackMillisecondsP95": 5.774413,
+              "failures": {},
+              "pending": 0,
+              "presentations": [],
+              "submitted": 53963,
+              "timestampCollisions": 0,
+              "trackingOverflow": 0,
+              "unknownExpired": 0,
+              "unmatchedOutputs": 0
+            },
+            "bridge": {
+              "acceptedPackets": 1657404,
+              "authenticated": true,
+              "endpointScope": "overlay virtual address (outer path unknown)",
+              "expiredAssemblies": 0,
+              "fragmentedInnerDatagrams": 0,
+              "innerDatagramsReceived": 1656616,
+              "innerDatagramsSent": 21735,
+              "largestSequenceGap": 0,
+              "localInvalidSizes": 0,
+              "localRejectedSources": 25,
+              "localSendErrors": 0,
+              "localSocketDrops": 25,
+              "localUnboundSends": 0,
+              "maxQueueAgeMilliseconds": 0.054174,
+              "oldestWaitingMilliseconds": 0,
+              "pathDatagramBytes": 1280,
+              "pendingPackets": 0,
+              "probeRTTMilliseconds": 12.379219988361001,
+              "queueDeadlineDrops": 0,
+              "queueDrops": 0,
+              "queueHighWater": 1,
+              "queueOverflowDrops": 0,
+              "receiveDepth": 16,
+              "receivedDatagrams": 1657404,
+              "receivedWireBytes": 1972637393,
+              "rejectedDatagrams": 0,
+              "reorderedPackets": 0,
+              "rtpSizeCounts": {
+                "<=1168": 18304
+              },
+              "sendErrors": 0,
+              "sentDatagrams": 22523,
+              "sentWireBytes": 3340464,
+              "sequenceHoles": 0,
+              "simulatedDrops": 0,
+              "socketReceiveBufferBytes": 262144,
+              "socketRejectedPeers": 0,
+              "socketTruncatedPackets": 0,
+              "transport": "socket",
+              "wireVersion": 2
+            }
+          }
+        },
+        "footprintMedianChangeBytes": 3907584,
+        "footprintSlopeBytesPerMinute": 370819.72901993495,
+        "queuePendingMax": 0,
+        "queueAgeMaxMs": 0.054174,
+        "mediaObservedSeconds": 899.000870125019,
+        "steadyCounterDeltas": {
+          "rtpPayloadBytes": 1853438745,
+          "rtpHeaderBytes": 45177492,
+          "retransmittedPayloadBytes": 0,
+          "retransmittedPacketsReceived": 0,
+          "retransmittedPacketsSent": null,
+          "sourceFrames": 0,
+          "freezeCount": 1,
+          "framesDropped": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "outerApplicationMbps": 17.656090493236917,
+        "sourceFPS": null,
+        "qualityLimitationReasons": [
+          "unknown"
+        ],
+        "lowPowerModeObserved": false,
+        "limits": [
+          "RTP/codec/decode/renderer counters are not physical screen presentation.",
+          "First/last segment summaries each exclude their first 5 seconds.",
+          "Resource metrics describe this process only; slope alone is not proof of a leak.",
+          "Frozen/framesDropped are cumulative SDK counters; latest replacements are separate.",
+          "Network labels do not verify the outer overlay topology.",
+          "Outer application Mbps counts encapsulated UDP payload only; IP/UDP headers and Surge overhead are excluded.",
+          "playout is this process sender policy, not the remote sender policy; inspect host report for phone comparisons."
+        ],
+        "reportSHA256": "98892866d4c1aa4692cc5f44cef269e9e1719a44c366223d879f23f12926a193"
+      },
+      "freezeEvents": [
+        {
+          "viewerSeconds": 40.422940512013156,
+          "freezeCount": 1,
+          "rendererGapMaxMs": 171.42476397566497,
+          "probeRTTMs": 145.7151800277643,
+          "decodeMeanMs": 5.544459016393449,
+          "decoderCallbackP95Ms": 5.823362,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pendingBridge": 0
+        }
+      ],
+      "trial": {
+        "schemaVersion": 1,
+        "transportTrialPassed": false,
+        "checks": {
+          "host_usable": true,
+          "host_duration": true,
+          "host_fps": true,
+          "host_dimensions": true,
+          "host_role": true,
+          "host_continuous_epoch": true,
+          "host_single_codec": true,
+          "host_bounded_bridge": true,
+          "viewer_usable": true,
+          "viewer_duration": true,
+          "viewer_fps": true,
+          "viewer_dimensions": true,
+          "viewer_role": true,
+          "viewer_continuous_epoch": true,
+          "viewer_single_codec": true,
+          "viewer_bounded_bridge": true,
+          "viewer_zero_freezes": false,
+          "viewer_zero_sdk_drops": true,
+          "matching_codec": true,
+          "source_guard_complete": true,
+          "source_identity": true,
+          "source_guard_coverage": true,
+          "source_guard_continuity": true
+        },
+        "failedChecks": [
+          "viewer_zero_freezes"
+        ],
+        "requestedSeconds": 900,
+        "limits": [
+          "Nominal session duration allows up to five seconds before active media.",
+          "Guard coverage compares first-session elapsed clocks with a ten-second sampling allowance; only use a guard started with this host.",
+          "Guard samples must increase monotonically with gaps no larger than 20.5 seconds; identity between samples remains unobserved.",
+          "Bridge bounds do not prove flat queue age or memory; inspect full curves and resource summaries.",
+          "No gate here certifies physical presentation, optical latency, HDR mastering, visual quality, or sustained full-budget bitrate."
+        ]
+      }
+    },
+    {
+      "name": "15mac-ponte-adaptive-jump120",
+      "runID": "7b71349d9734",
+      "requestedSeconds": 900,
+      "status": "failed fps gate; capture-limited in changed display environment",
+      "manifest": {
+        "binarySHA256": "5152557d543fb69da3bdf7e58ecdcbbac385634e623cf2a35d42baea964750f9",
+        "sameExecutableVerified": true,
+        "durationSeconds": 900,
+        "bridgeReceiveDepth": 16,
+        "bridgeTransport": "socket",
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "resolution": "2560x1440",
+        "fps": 60,
+        "ceilingMbps": 20,
+        "liveHostReport": true,
+        "sourceKind": "window",
+        "pattern": null,
+        "hdrRequested": true,
+        "frameTraceEnabled": false,
+        "playout": "adaptive",
+        "sdkDropDiagnostics": false,
+        "requestedHEVCKeyframeSeconds": 10,
+        "networkLabel": "Surge Ponte",
+        "outerOverlayPathVerified": false,
+        "fixtureSHA256": "f269d44256c847cd244b9010048514883da1c9a68f5f86dfde2e2a4edb4789ea",
+        "fixtureQuery": "mode=diagram&speed=3&panels=4&immersive=1",
+        "display": "Jump Desktop Display 1, 3184x2176 pixels, 1592x1088 logical,120Hz",
+        "sourcePoints": [
+          1550,
+          1058
+        ],
+        "usbMirror": "closed",
+        "sourceGuard": "persistent CoreGraphics metadata",
+        "comparisonLimit": "Different display/source size from prior fixed60 runs; not a single-variable causal comparison."
+      },
+      "host": {
+        "usable": true,
+        "seconds": 901.2673861250223,
+        "steadySeconds": 892.0002939166734,
+        "fps": 47.5638856728486,
+        "actualVideoMbps": 17.497075445423533,
+        "oneSecondMbps": {
+          "p50": 17.552245511117114,
+          "p95": 19.45814193866698,
+          "max": 21.68694188067541,
+          "min": 13.61669097264439
+        },
+        "fractionSamplesAtLeast15Mbps": 0.9843225083986562,
+        "frameGapMs": null,
+        "frameGapStatistic": "Quantiles of per-sample maximum renderer callback gaps, not quantiles of all frames.",
+        "controlRTTMs": {
+          "p50": 11.692708,
+          "p95": 28.763458,
+          "max": 111.478834,
+          "min": 6.776041
+        },
+        "jitterBufferMs": null,
+        "resources": {
+          "cpuPercent": {
+            "p50": 16.425810337139605,
+            "p95": 19.594821014806364,
+            "max": 20.88338516158578,
+            "min": 10.30982177886672
+          },
+          "residentBytes": {
+            "p50": 75808768,
+            "p95": 79052800,
+            "max": 79724544,
+            "min": 73547776
+          },
+          "physicalFootprintBytes": {
+            "p50": 45466776,
+            "p95": 48678040,
+            "max": 48940184,
+            "min": 38044800
+          }
+        },
+        "thermalStates": [
+          "nominal"
+        ],
+        "tailFPS": 46.2,
+        "last": {
+          "codec": "video/H264",
+          "width": 2560,
+          "height": 1440,
+          "framesDecoded": 0,
+          "framesEncoded": 42747,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0,
+          "encoderDetails": {
+            "asyncFailures": {},
+            "callbackMillisecondsP95": 8.125124993966892,
+            "callbackRejected": 0,
+            "encodedBytes": 1961767580,
+            "encodedFrames": 42747,
+            "frameBytesMax": 62540,
+            "frameBytesP95": 58287,
+            "keyframes": 6,
+            "outputWithoutInput": 0,
+            "qpLatest": 31,
+            "qpMaximum": 49,
+            "requestedFPS": 45,
+            "resetPendingUnknown": 0,
+            "submissionErrors": 0,
+            "submittedFrames": 42747,
+            "targetMbps": 18.762,
+            "timestampCollisions": 0,
+            "trackingOverflow": 0,
+            "unmatchedExpired": 0,
+            "unmatchedInputs": 0
+          },
+          "captureDetails": {
+            "callbackGapMillisecondsMax": 26.579166675219312,
+            "callbackGapMillisecondsP95": 25.85516666295007,
+            "completeFrames": 42765,
+            "height": 1440,
+            "idleFrames": 0,
+            "invalidFrames": 0,
+            "otherFrames": 0,
+            "pixelFormat": {
+              "height": "1440",
+              "matrix": "missing",
+              "pixelFormat": "1111970369",
+              "primaries": "missing",
+              "transfer": "missing",
+              "width": "2560"
+            },
+            "pointPixelScale": 2,
+            "skippedReasons": {},
+            "sourceHeightPoints": 1058,
+            "sourceWidthPoints": 1550,
+            "width": 2560,
+            "windowServerAgeMillisecondsMax": 2.3870000150054693,
+            "windowServerAgeMillisecondsP95": 1.5798333624843508
+          },
+          "receiverDetails": null,
+          "bridge": {
+            "acceptedPackets": 22482,
+            "authenticated": true,
+            "endpointScope": "loopback socket endpoint (remote topology unknown)",
+            "expiredAssemblies": 0,
+            "fragmentedInnerDatagrams": 0,
+            "innerDatagramsReceived": 21694,
+            "innerDatagramsSent": 1741681,
+            "largestSequenceGap": 0,
+            "localInvalidSizes": 0,
+            "localRejectedSources": 31,
+            "localSendErrors": 0,
+            "localSocketDrops": 31,
+            "localUnboundSends": 0,
+            "maxQueueAgeMilliseconds": 0.269209,
+            "oldestWaitingMilliseconds": 0,
+            "pathDatagramBytes": 1280,
+            "pendingPackets": 0,
+            "queueDeadlineDrops": 0,
+            "queueDrops": 0,
+            "queueHighWater": 1,
+            "queueOverflowDrops": 0,
+            "receiveDepth": 16,
+            "receivedDatagrams": 22482,
+            "receivedWireBytes": 3420507,
+            "rejectedDatagrams": 0,
+            "reorderedPackets": 0,
+            "rtpSizeCounts": {
+              "1169-1200": 1236702,
+              "1201-1248": 444433,
+              "<=1168": 57116
+            },
+            "sendErrors": 0,
+            "sentDatagrams": 1742469,
+            "sentWireBytes": 2081754827,
+            "sequenceHoles": 0,
+            "simulatedDrops": 0,
+            "socketReceiveBufferBytes": 262144,
+            "socketRejectedPeers": 0,
+            "socketTruncatedPackets": 0,
+            "transport": "socket",
+            "wireVersion": 2
+          }
+        },
+        "reportSchemaVersion": 10,
+        "build": "10",
+        "route": "fixed-udp-v2",
+        "playout": "adaptive",
+        "mode": "host",
+        "source": "window",
+        "outerPath": "unknown",
+        "first5Minutes": {
+          "usable": true,
+          "seconds": 303.2675316249952,
+          "steadySeconds": 294.00043941664626,
+          "fps": 49.397885352880564,
+          "actualVideoMbps": 17.37395389658315,
+          "oneSecondMbps": {
+            "p50": 17.31772416606666,
+            "p95": 19.9078871711187,
+            "max": 21.68694188067541,
+            "min": 14.602893123089752
+          },
+          "fractionSamplesAtLeast15Mbps": 0.9830508474576272,
+          "frameGapMs": null,
+          "frameGapStatistic": "Quantiles of per-sample maximum renderer callback gaps, not quantiles of all frames.",
+          "controlRTTMs": {
+            "p50": 11.718459,
+            "p95": 31.078584,
+            "max": 111.478834,
+            "min": 7.401667
+          },
+          "jitterBufferMs": null,
+          "resources": {
+            "cpuPercent": {
+              "p50": 16.949981203389292,
+              "p95": 19.59743171173335,
+              "max": 20.796099296982863,
+              "min": 10.93828022287312
+            },
+            "residentBytes": {
+              "p50": 77152256,
+              "p95": 77512704,
+              "max": 78725120,
+              "min": 74514432
+            },
+            "physicalFootprintBytes": {
+              "p50": 38798464,
+              "p95": 44500120,
+              "max": 45761688,
+              "min": 38044800
+            }
+          },
+          "thermalStates": [
+            "nominal"
+          ],
+          "tailFPS": 52.0,
+          "last": {
+            "codec": "video/H264",
+            "width": 2560,
+            "height": 1440,
+            "framesDecoded": 0,
+            "framesEncoded": 14843,
+            "framesDropped": 0,
+            "freezeCount": 0,
+            "packetsLost": 0,
+            "nackCount": 0,
+            "pliCount": 0,
+            "encoderDetails": {
+              "asyncFailures": {},
+              "callbackMillisecondsP95": 9.405708318809047,
+              "callbackRejected": 0,
+              "encodedBytes": 651460981,
+              "encodedFrames": 14843,
+              "frameBytesMax": 58544,
+              "frameBytesP95": 52009,
+              "keyframes": 3,
+              "outputWithoutInput": 0,
+              "qpLatest": 32,
+              "qpMaximum": 49,
+              "requestedFPS": 54,
+              "resetPendingUnknown": 0,
+              "submissionErrors": 0,
+              "submittedFrames": 14844,
+              "targetMbps": 18.108,
+              "timestampCollisions": 0,
+              "trackingOverflow": 0,
+              "unmatchedExpired": 0,
+              "unmatchedInputs": 1
+            },
+            "captureDetails": {
+              "callbackGapMillisecondsMax": 26.948958344291896,
+              "callbackGapMillisecondsP95": 25.74170831940137,
+              "completeFrames": 14847,
+              "height": 1440,
+              "idleFrames": 0,
+              "invalidFrames": 0,
+              "otherFrames": 0,
+              "pixelFormat": {
+                "height": "1440",
+                "matrix": "missing",
+                "pixelFormat": "1111970369",
+                "primaries": "missing",
+                "transfer": "missing",
+                "width": "2560"
+              },
+              "pointPixelScale": 2,
+              "skippedReasons": {},
+              "sourceHeightPoints": 1058,
+              "sourceWidthPoints": 1550,
+              "width": 2560,
+              "windowServerAgeMillisecondsMax": 4.607541690347716,
+              "windowServerAgeMillisecondsP95": 3.4879166923929006
+            },
+            "receiverDetails": null,
+            "bridge": {
+              "acceptedPackets": 7529,
+              "authenticated": true,
+              "endpointScope": "loopback socket endpoint (remote topology unknown)",
+              "expiredAssemblies": 0,
+              "fragmentedInnerDatagrams": 0,
+              "innerDatagramsReceived": 7264,
+              "innerDatagramsSent": 578787,
+              "largestSequenceGap": 0,
+              "localInvalidSizes": 0,
+              "localRejectedSources": 31,
+              "localSendErrors": 0,
+              "localSocketDrops": 31,
+              "localUnboundSends": 0,
+              "maxQueueAgeMilliseconds": 0.082916,
+              "oldestWaitingMilliseconds": 0,
+              "pathDatagramBytes": 1280,
+              "pendingPackets": 0,
+              "queueDeadlineDrops": 0,
+              "queueDrops": 0,
+              "queueHighWater": 1,
+              "queueOverflowDrops": 0,
+              "receiveDepth": 16,
+              "receivedDatagrams": 7529,
+              "receivedWireBytes": 1142661,
+              "rejectedDatagrams": 0,
+              "reorderedPackets": 0,
+              "rtpSizeCounts": {
+                "1169-1200": 418894,
+                "1201-1248": 139361,
+                "<=1168": 19373
+              },
+              "sendErrors": 0,
+              "sentDatagrams": 579052,
+              "sentWireBytes": 691343802,
+              "sequenceHoles": 0,
+              "simulatedDrops": 0,
+              "socketReceiveBufferBytes": 262144,
+              "socketRejectedPeers": 0,
+              "socketTruncatedPackets": 0,
+              "transport": "socket",
+              "wireVersion": 2
+            }
+          }
+        },
+        "last5Minutes": {
+          "usable": true,
+          "seconds": 901.2673861250223,
+          "steadySeconds": 293.00016758334823,
+          "fps": 48.406115658501925,
+          "actualVideoMbps": 17.451615301706063,
+          "oneSecondMbps": {
+            "p50": 17.411776281914722,
+            "p95": 19.77190696694532,
+            "max": 20.9986179380951,
+            "min": 13.61669097264439
+          },
+          "fractionSamplesAtLeast15Mbps": 0.9863945578231292,
+          "frameGapMs": null,
+          "frameGapStatistic": "Quantiles of per-sample maximum renderer callback gaps, not quantiles of all frames.",
+          "controlRTTMs": {
+            "p50": 11.629458,
+            "p95": 28.121041,
+            "max": 107.529083,
+            "min": 6.776041
+          },
+          "jitterBufferMs": null,
+          "resources": {
+            "cpuPercent": {
+              "p50": 17.135581276854502,
+              "p95": 20.125909853979685,
+              "max": 20.88338516158578,
+              "min": 10.30982177886672
+            },
+            "residentBytes": {
+              "p50": 75448320,
+              "p95": 76120064,
+              "max": 76267520,
+              "min": 73859072
+            },
+            "physicalFootprintBytes": {
+              "p50": 48120984,
+              "p95": 48792728,
+              "max": 48940184,
+              "min": 46580888
+            }
+          },
+          "thermalStates": [
+            "nominal"
+          ],
+          "tailFPS": 46.2,
+          "last": {
+            "codec": "video/H264",
+            "width": 2560,
+            "height": 1440,
+            "framesDecoded": 0,
+            "framesEncoded": 42747,
+            "framesDropped": 0,
+            "freezeCount": 0,
+            "packetsLost": 0,
+            "nackCount": 0,
+            "pliCount": 0,
+            "encoderDetails": {
+              "asyncFailures": {},
+              "callbackMillisecondsP95": 8.125124993966892,
+              "callbackRejected": 0,
+              "encodedBytes": 1961767580,
+              "encodedFrames": 42747,
+              "frameBytesMax": 62540,
+              "frameBytesP95": 58287,
+              "keyframes": 6,
+              "outputWithoutInput": 0,
+              "qpLatest": 31,
+              "qpMaximum": 49,
+              "requestedFPS": 45,
+              "resetPendingUnknown": 0,
+              "submissionErrors": 0,
+              "submittedFrames": 42747,
+              "targetMbps": 18.762,
+              "timestampCollisions": 0,
+              "trackingOverflow": 0,
+              "unmatchedExpired": 0,
+              "unmatchedInputs": 0
+            },
+            "captureDetails": {
+              "callbackGapMillisecondsMax": 26.579166675219312,
+              "callbackGapMillisecondsP95": 25.85516666295007,
+              "completeFrames": 42765,
+              "height": 1440,
+              "idleFrames": 0,
+              "invalidFrames": 0,
+              "otherFrames": 0,
+              "pixelFormat": {
+                "height": "1440",
+                "matrix": "missing",
+                "pixelFormat": "1111970369",
+                "primaries": "missing",
+                "transfer": "missing",
+                "width": "2560"
+              },
+              "pointPixelScale": 2,
+              "skippedReasons": {},
+              "sourceHeightPoints": 1058,
+              "sourceWidthPoints": 1550,
+              "width": 2560,
+              "windowServerAgeMillisecondsMax": 2.3870000150054693,
+              "windowServerAgeMillisecondsP95": 1.5798333624843508
+            },
+            "receiverDetails": null,
+            "bridge": {
+              "acceptedPackets": 22482,
+              "authenticated": true,
+              "endpointScope": "loopback socket endpoint (remote topology unknown)",
+              "expiredAssemblies": 0,
+              "fragmentedInnerDatagrams": 0,
+              "innerDatagramsReceived": 21694,
+              "innerDatagramsSent": 1741681,
+              "largestSequenceGap": 0,
+              "localInvalidSizes": 0,
+              "localRejectedSources": 31,
+              "localSendErrors": 0,
+              "localSocketDrops": 31,
+              "localUnboundSends": 0,
+              "maxQueueAgeMilliseconds": 0.269209,
+              "oldestWaitingMilliseconds": 0,
+              "pathDatagramBytes": 1280,
+              "pendingPackets": 0,
+              "queueDeadlineDrops": 0,
+              "queueDrops": 0,
+              "queueHighWater": 1,
+              "queueOverflowDrops": 0,
+              "receiveDepth": 16,
+              "receivedDatagrams": 22482,
+              "receivedWireBytes": 3420507,
+              "rejectedDatagrams": 0,
+              "reorderedPackets": 0,
+              "rtpSizeCounts": {
+                "1169-1200": 1236702,
+                "1201-1248": 444433,
+                "<=1168": 57116
+              },
+              "sendErrors": 0,
+              "sentDatagrams": 1742469,
+              "sentWireBytes": 2081754827,
+              "sequenceHoles": 0,
+              "simulatedDrops": 0,
+              "socketReceiveBufferBytes": 262144,
+              "socketRejectedPeers": 0,
+              "socketTruncatedPackets": 0,
+              "transport": "socket",
+              "wireVersion": 2
+            }
+          }
+        },
+        "footprintMedianChangeBytes": 9322520,
+        "footprintSlopeBytesPerMinute": 859338.6042473213,
+        "queuePendingMax": 0,
+        "queueAgeMaxMs": 0.269209,
+        "mediaObservedSeconds": 897.9977212500235,
+        "steadyCounterDeltas": {
+          "rtpPayloadBytes": 1950924555,
+          "rtpHeaderBytes": 40461180,
+          "retransmittedPayloadBytes": 0,
+          "retransmittedPacketsReceived": null,
+          "retransmittedPacketsSent": 0,
+          "sourceFrames": 42426,
+          "freezeCount": 0,
+          "framesDropped": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "outerApplicationMbps": 18.536829551251934,
+        "sourceFPS": 47.56276459698481,
+        "qualityLimitationReasons": [
+          "none"
+        ],
+        "lowPowerModeObserved": false,
+        "limits": [
+          "RTP/codec/decode/renderer counters are not physical screen presentation.",
+          "First/last segment summaries each exclude their first 5 seconds.",
+          "Resource metrics describe this process only; slope alone is not proof of a leak.",
+          "Frozen/framesDropped are cumulative SDK counters; latest replacements are separate.",
+          "Network labels do not verify the outer overlay topology.",
+          "Outer application Mbps counts encapsulated UDP payload only; IP/UDP headers and Surge overhead are excluded.",
+          "playout is this process sender policy, not the remote sender policy; inspect host report for phone comparisons."
+        ],
+        "reportSHA256": "d3ca2be6882e7d2ea8914e38503c3e3a8367704638e1478860eb1c5d3955ec2c"
+      },
+      "viewer": {
+        "usable": true,
+        "seconds": 900.4140324179898,
+        "steadySeconds": 893.0013847950031,
+        "fps": 47.562076300419264,
+        "actualVideoMbps": 17.497210842049114,
+        "oneSecondMbps": {
+          "p50": 17.55800762454841,
+          "p95": 19.529305832376497,
+          "max": 21.433174845317918,
+          "min": 13.355080612411026
+        },
+        "fractionSamplesAtLeast15Mbps": 0.9697986577181208,
+        "frameGapMs": {
+          "p50": 28.160054003819823,
+          "p95": 82.8141329693608,
+          "max": 176.4799919910729,
+          "min": 19.120544020552188
+        },
+        "frameGapStatistic": "Quantiles of per-sample maximum renderer callback gaps, not quantiles of all frames.",
+        "controlRTTMs": {
+          "p50": 12.515736,
+          "p95": 30.477315,
+          "max": 104.77731,
+          "min": 6.154249
+        },
+        "jitterBufferMs": {
+          "p50": 69.20564583333366,
+          "p95": 183.1410749999975,
+          "max": 234.86963414634596,
+          "min": 14.861782608695476
+        },
+        "resources": {
+          "cpuPercent": {
+            "p50": 28.414521060609445,
+            "p95": 31.390998814113015,
+            "max": 33.96101637261524,
+            "min": 23.010351341967237
+          },
+          "residentBytes": {
+            "p50": 58187776,
+            "p95": 59293696,
+            "max": 59777024,
+            "min": 53100544
+          },
+          "physicalFootprintBytes": {
+            "p50": 33832960,
+            "p95": 34889728,
+            "max": 35368960,
+            "min": 30097408
+          }
+        },
+        "thermalStates": [
+          "nominal"
+        ],
+        "tailFPS": 46.1,
+        "last": {
+          "codec": "video/H264",
+          "width": 2560,
+          "height": 1440,
+          "framesDecoded": 42770,
+          "framesEncoded": 0,
+          "framesDropped": 0,
+          "freezeCount": 1,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0,
+          "encoderDetails": null,
+          "captureDetails": null,
+          "receiverDetails": {
+            "decoded": 42770,
+            "decoderCallbackMillisecondsP95": 6.03001,
+            "failures": {},
+            "pending": 0,
+            "presentations": [],
+            "submitted": 42770,
+            "timestampCollisions": 0,
+            "trackingOverflow": 0,
+            "unknownExpired": 0,
+            "unmatchedOutputs": 0
+          },
+          "bridge": {
+            "acceptedPackets": 1743531,
+            "authenticated": true,
+            "endpointScope": "overlay virtual address (outer path unknown)",
+            "expiredAssemblies": 0,
+            "fragmentedInnerDatagrams": 0,
+            "innerDatagramsReceived": 1742743,
+            "innerDatagramsSent": 21708,
+            "largestSequenceGap": 0,
+            "localInvalidSizes": 0,
+            "localRejectedSources": 25,
+            "localSendErrors": 0,
+            "localSocketDrops": 25,
+            "localUnboundSends": 0,
+            "maxQueueAgeMilliseconds": 0.078251,
+            "oldestWaitingMilliseconds": 0,
+            "pathDatagramBytes": 1280,
+            "pendingPackets": 0,
+            "probeRTTMilliseconds": 13.316373981069773,
+            "queueDeadlineDrops": 0,
+            "queueDrops": 0,
+            "queueHighWater": 1,
+            "queueOverflowDrops": 0,
+            "receiveDepth": 16,
+            "receivedDatagrams": 1743531,
+            "receivedWireBytes": 2083030197,
+            "rejectedDatagrams": 0,
+            "reorderedPackets": 0,
+            "rtpSizeCounts": {
+              "<=1168": 18277
+            },
+            "sendErrors": 0,
+            "sentDatagrams": 22496,
+            "sentWireBytes": 3422703,
+            "sequenceHoles": 0,
+            "simulatedDrops": 0,
+            "socketReceiveBufferBytes": 262144,
+            "socketRejectedPeers": 0,
+            "socketTruncatedPackets": 0,
+            "transport": "socket",
+            "wireVersion": 2
+          }
+        },
+        "reportSchemaVersion": 10,
+        "build": "10",
+        "route": "fixed-udp-v2",
+        "playout": "adaptive",
+        "mode": "viewer",
+        "source": "remote",
+        "outerPath": "unknown",
+        "first5Minutes": {
+          "usable": true,
+          "seconds": 301.4147759960033,
+          "steadySeconds": 294.0021283730166,
+          "fps": 49.40100291237554,
+          "actualVideoMbps": 17.380102587274244,
+          "oneSecondMbps": {
+            "p50": 17.344241559850534,
+            "p95": 20.019444512957225,
+            "max": 21.433174845317918,
+            "min": 13.411390742681867
+          },
+          "fractionSamplesAtLeast15Mbps": 0.9525423728813559,
+          "frameGapMs": {
+            "p50": 28.17664504982531,
+            "p95": 89.0526800067164,
+            "max": 176.4799919910729,
+            "min": 19.120544020552188
+          },
+          "frameGapStatistic": "Quantiles of per-sample maximum renderer callback gaps, not quantiles of all frames.",
+          "controlRTTMs": {
+            "p50": 12.507588,
+            "p95": 40.651549,
+            "max": 99.672952,
+            "min": 6.154249
+          },
+          "jitterBufferMs": {
+            "p50": 40.75304545454566,
+            "p95": 141.3963333333328,
+            "max": 171.30566666666678,
+            "min": 14.861782608695476
+          },
+          "resources": {
+            "cpuPercent": {
+              "p50": 28.506585800966405,
+              "p95": 31.891500512629108,
+              "max": 33.96101637261524,
+              "min": 23.010351341967237
+            },
+            "residentBytes": {
+              "p50": 56279040,
+              "p95": 57475072,
+              "max": 57892864,
+              "min": 53100544
+            },
+            "physicalFootprintBytes": {
+              "p50": 32161792,
+              "p95": 33185792,
+              "max": 33579008,
+              "min": 30097408
+            }
+          },
+          "thermalStates": [
+            "nominal"
+          ],
+          "tailFPS": 51.9,
+          "last": {
+            "codec": "video/H264",
+            "width": 2560,
+            "height": 1440,
+            "framesDecoded": 14821,
+            "framesEncoded": 0,
+            "framesDropped": 0,
+            "freezeCount": 1,
+            "packetsLost": 0,
+            "nackCount": 0,
+            "pliCount": 0,
+            "encoderDetails": null,
+            "captureDetails": null,
+            "receiverDetails": {
+              "decoded": 14821,
+              "decoderCallbackMillisecondsP95": 5.9802,
+              "failures": {},
+              "pending": 0,
+              "presentations": [],
+              "submitted": 14821,
+              "timestampCollisions": 0,
+              "trackingOverflow": 0,
+              "unknownExpired": 0,
+              "unmatchedOutputs": 0
+            },
+            "bridge": {
+              "acceptedPackets": 578360,
+              "authenticated": true,
+              "endpointScope": "overlay virtual address (outer path unknown)",
+              "expiredAssemblies": 0,
+              "fragmentedInnerDatagrams": 0,
+              "innerDatagramsReceived": 578096,
+              "innerDatagramsSent": 7255,
+              "largestSequenceGap": 0,
+              "localInvalidSizes": 0,
+              "localRejectedSources": 25,
+              "localSendErrors": 0,
+              "localSocketDrops": 25,
+              "localUnboundSends": 0,
+              "maxQueueAgeMilliseconds": 0.078251,
+              "oldestWaitingMilliseconds": 0,
+              "pathDatagramBytes": 1280,
+              "pendingPackets": 0,
+              "probeRTTMilliseconds": 11.78578898543492,
+              "queueDeadlineDrops": 0,
+              "queueDrops": 0,
+              "queueHighWater": 1,
+              "queueOverflowDrops": 0,
+              "receiveDepth": 16,
+              "receivedDatagrams": 578360,
+              "receivedWireBytes": 690523076,
+              "rejectedDatagrams": 0,
+              "reorderedPackets": 0,
+              "rtpSizeCounts": {
+                "<=1168": 6098
+              },
+              "sendErrors": 0,
+              "sentDatagrams": 7519,
+              "sentWireBytes": 1141351,
+              "sequenceHoles": 0,
+              "simulatedDrops": 0,
+              "socketReceiveBufferBytes": 262144,
+              "socketRejectedPeers": 0,
+              "socketTruncatedPackets": 0,
+              "transport": "socket",
+              "wireVersion": 2
+            }
+          }
+        },
+        "last5Minutes": {
+          "usable": true,
+          "seconds": 900.4140324179898,
+          "steadySeconds": 292.9978041250142,
+          "fps": 48.42015810448461,
+          "actualVideoMbps": 17.451234596346488,
+          "oneSecondMbps": {
+            "p50": 17.372217818235164,
+            "p95": 19.83142658499927,
+            "max": 20.87390716886273,
+            "min": 14.524084694219994
+          },
+          "fractionSamplesAtLeast15Mbps": 0.9727891156462585,
+          "frameGapMs": {
+            "p50": 27.83978497609496,
+            "p95": 66.69935397803783,
+            "max": 80.58476797305048,
+            "min": 19.5793790044263
+          },
+          "frameGapStatistic": "Quantiles of per-sample maximum renderer callback gaps, not quantiles of all frames.",
+          "controlRTTMs": {
+            "p50": 12.542516,
+            "p95": 24.3016,
+            "max": 104.77731,
+            "min": 7.038227
+          },
+          "jitterBufferMs": {
+            "p50": 52.00927777777738,
+            "p95": 142.31199999999262,
+            "max": 165.97560000000158,
+            "min": 27.32513953488642
+          },
+          "resources": {
+            "cpuPercent": {
+              "p50": 28.30363660886832,
+              "p95": 31.88882207343573,
+              "max": 33.42429214191229,
+              "min": 23.2137307015062
+            },
+            "residentBytes": {
+              "p50": 58912768,
+              "p95": 59486208,
+              "max": 59777024,
+              "min": 57741312
+            },
+            "physicalFootprintBytes": {
+              "p50": 34504704,
+              "p95": 35119104,
+              "max": 35368960,
+              "min": 33333248
+            }
+          },
+          "thermalStates": [
+            "nominal"
+          ],
+          "tailFPS": 46.1,
+          "last": {
+            "codec": "video/H264",
+            "width": 2560,
+            "height": 1440,
+            "framesDecoded": 42770,
+            "framesEncoded": 0,
+            "framesDropped": 0,
+            "freezeCount": 1,
+            "packetsLost": 0,
+            "nackCount": 0,
+            "pliCount": 0,
+            "encoderDetails": null,
+            "captureDetails": null,
+            "receiverDetails": {
+              "decoded": 42770,
+              "decoderCallbackMillisecondsP95": 6.03001,
+              "failures": {},
+              "pending": 0,
+              "presentations": [],
+              "submitted": 42770,
+              "timestampCollisions": 0,
+              "trackingOverflow": 0,
+              "unknownExpired": 0,
+              "unmatchedOutputs": 0
+            },
+            "bridge": {
+              "acceptedPackets": 1743531,
+              "authenticated": true,
+              "endpointScope": "overlay virtual address (outer path unknown)",
+              "expiredAssemblies": 0,
+              "fragmentedInnerDatagrams": 0,
+              "innerDatagramsReceived": 1742743,
+              "innerDatagramsSent": 21708,
+              "largestSequenceGap": 0,
+              "localInvalidSizes": 0,
+              "localRejectedSources": 25,
+              "localSendErrors": 0,
+              "localSocketDrops": 25,
+              "localUnboundSends": 0,
+              "maxQueueAgeMilliseconds": 0.078251,
+              "oldestWaitingMilliseconds": 0,
+              "pathDatagramBytes": 1280,
+              "pendingPackets": 0,
+              "probeRTTMilliseconds": 13.316373981069773,
+              "queueDeadlineDrops": 0,
+              "queueDrops": 0,
+              "queueHighWater": 1,
+              "queueOverflowDrops": 0,
+              "receiveDepth": 16,
+              "receivedDatagrams": 1743531,
+              "receivedWireBytes": 2083030197,
+              "rejectedDatagrams": 0,
+              "reorderedPackets": 0,
+              "rtpSizeCounts": {
+                "<=1168": 18277
+              },
+              "sendErrors": 0,
+              "sentDatagrams": 22496,
+              "sentWireBytes": 3422703,
+              "sequenceHoles": 0,
+              "simulatedDrops": 0,
+              "socketReceiveBufferBytes": 262144,
+              "socketRejectedPeers": 0,
+              "socketTruncatedPackets": 0,
+              "transport": "socket",
+              "wireVersion": 2
+            }
+          }
+        },
+        "footprintMedianChangeBytes": 2342912,
+        "footprintSlopeBytesPerMinute": 211673.5900937383,
+        "queuePendingMax": 0,
+        "queueAgeMaxMs": 0.078251,
+        "mediaObservedSeconds": 898.9955665909802,
+        "steadyCounterDeltas": {
+          "rtpPayloadBytes": 1953129189,
+          "rtpHeaderBytes": 40506868,
+          "retransmittedPayloadBytes": 0,
+          "retransmittedPacketsReceived": 0,
+          "retransmittedPacketsSent": null,
+          "sourceFrames": 0,
+          "freezeCount": 1,
+          "framesDropped": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "outerApplicationMbps": 18.53727530758542,
+        "sourceFPS": null,
+        "qualityLimitationReasons": [
+          "unknown"
+        ],
+        "lowPowerModeObserved": false,
+        "limits": [
+          "RTP/codec/decode/renderer counters are not physical screen presentation.",
+          "First/last segment summaries each exclude their first 5 seconds.",
+          "Resource metrics describe this process only; slope alone is not proof of a leak.",
+          "Frozen/framesDropped are cumulative SDK counters; latest replacements are separate.",
+          "Network labels do not verify the outer overlay topology.",
+          "Outer application Mbps counts encapsulated UDP payload only; IP/UDP headers and Surge overhead are excluded.",
+          "playout is this process sender policy, not the remote sender policy; inspect host report for phone comparisons."
+        ],
+        "reportSHA256": "140c0e66b88d9ce2f25bbecb0d59cfc5ec240e9b1b3064c1bf84f858bb36b5d7"
+      },
+      "trial": {
+        "schemaVersion": 1,
+        "transportTrialPassed": false,
+        "checks": {
+          "host_usable": true,
+          "host_duration": true,
+          "host_fps": false,
+          "host_dimensions": true,
+          "host_role": true,
+          "host_continuous_epoch": true,
+          "host_single_codec": true,
+          "host_bounded_bridge": true,
+          "viewer_usable": true,
+          "viewer_duration": true,
+          "viewer_fps": false,
+          "viewer_dimensions": true,
+          "viewer_role": true,
+          "viewer_continuous_epoch": true,
+          "viewer_single_codec": true,
+          "viewer_bounded_bridge": true,
+          "viewer_zero_freezes": false,
+          "viewer_zero_sdk_drops": true,
+          "matching_codec": true,
+          "source_guard_complete": true,
+          "source_identity": true,
+          "source_guard_coverage": true,
+          "source_guard_continuity": true
+        },
+        "failedChecks": [
+          "host_fps",
+          "viewer_fps",
+          "viewer_zero_freezes"
+        ],
+        "requestedSeconds": 900,
+        "limits": [
+          "Nominal session duration allows up to five seconds before active media.",
+          "Guard coverage compares first-session elapsed clocks with a ten-second sampling allowance; only use a guard started with this host.",
+          "Guard samples must increase monotonically with gaps no larger than 20.5 seconds; identity between samples remains unobserved.",
+          "Bridge bounds do not prove flat queue age or memory; inspect full curves and resource summaries.",
+          "No gate here certifies physical presentation, optical latency, HDR mastering, visual quality, or sustained full-budget bitrate."
+        ]
+      },
+      "sourceGuard": {
+        "schema": 1,
+        "intervalSeconds": 10,
+        "valid": true,
+        "limitation": "Identity sampled every 10 seconds; not continuous content attestation.",
+        "samples": [
+          {
+            "elapsedSeconds": 0.253,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 10.261,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 20.262,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 30.275,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 40.291,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 50.3,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 60.316,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 70.336,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 80.34,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 90.348,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 100.367,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 110.374,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 120.384,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 130.43,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 140.447,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 150.459,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 160.473,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 170.489,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 180.494,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 190.5,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 200.505,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 210.514,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 220.53,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 230.561,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 240.58,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 250.587,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 260.599,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 270.618,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 280.63,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 290.638,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 300.653,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 310.669,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 320.684,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 330.692,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 340.706,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 350.713,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 360.725,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 370.736,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 380.752,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 390.761,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 400.777,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 410.782,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 420.787,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 430.789,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 440.809,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 450.826,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 460.836,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 470.845,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 480.846,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 490.86,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 500.863,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 510.877,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 520.89,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 530.891,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 540.905,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 550.913,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 560.925,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 570.942,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 580.953,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 590.974,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 600.982,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 610.997,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 621.016,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 631.018,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 641.033,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 651.039,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 661.045,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 671.054,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 681.07,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 691.079,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 701.088,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 711.096,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 721.105,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 731.106,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 741.108,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 751.119,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 761.127,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 771.142,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 781.153,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 791.169,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 801.178,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 811.182,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 821.19,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 831.201,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 841.216,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 851.221,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 861.235,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 871.242,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 881.25,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 891.258,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 901.275,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 911.28,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          },
+          {
+            "elapsedSeconds": 921.287,
+            "identityMatched": true,
+            "dimensionsPoints": [
+              1550,
+              1058
+            ]
+          }
+        ],
+        "method": "persistent-coregraphics-metadata",
+        "monitorCompleted": true
+      }
+    }
+  ],
+  "limits": [
+    "No optical end-to-end latency measurement.",
+    "Ponte outer topology not independently verified.",
+    "CPU and memory describe the app process, not total system cost.",
+    "Receiver callback intervals are not physical presentation intervals.",
+    "Display environment changed between realtime fixed60 and adaptive Jump120; not a single-variable playout A/B."
+  ]
+}

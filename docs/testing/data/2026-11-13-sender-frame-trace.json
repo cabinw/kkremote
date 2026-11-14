@@ -1,0 +1,2845 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-13",
+  "scope": "single-Mac loopback; no new iPhone/Ponte acceptance",
+  "build": {
+    "binarySHA256": "5eeb418fc36ec82e304e97a8adea6b680d9569ac89622587d38c1545f8ee892e",
+    "durationSeconds": 30,
+    "warmupExcludedSecondsForAggregateReports": 5,
+    "preset": "2560x1440/60fps/20Mbps ceiling",
+    "route": "fixed-udp-v2/socket/local-loopback",
+    "traceCapacity": 32768,
+    "notes": "Matrix binary preceded shutdown marker, collision tombstone, and report schema 8 bookkeeping; final binary receives separate checks."
+  },
+  "runs": [
+    {
+      "case": "hdr-1-off",
+      "traceEnabled": false,
+      "source": "hdr",
+      "scope": "single-Mac loopback; not Ponte",
+      "wallSeconds": 30.550638207991142,
+      "processCPUSeconds": 2.509117,
+      "host": {
+        "samples": 26,
+        "fpsMean": 60,
+        "fpsMin": 60,
+        "videoMbpsMean": 0.2842382767650086,
+        "encodeMsMean": 4.992307692307692,
+        "decodeMsMean": null,
+        "receiveBufferMsMean": null,
+        "sendDelayMsMean": 0.00016061426555733955,
+        "frameGapMaxMs": 0,
+        "last": {
+          "framesEncoded": 1794,
+          "framesDecoded": 0,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "encoderDetails": {
+            "asyncFailures": {},
+            "callbackMillisecondsP95": 4.892916651442647,
+            "callbackRejected": 0,
+            "encodedBytes": 846574,
+            "encodedFrames": 1794,
+            "frameBytesMax": 486,
+            "frameBytesP95": 480,
+            "keyframes": 15,
+            "outputWithoutInput": 0,
+            "requestedFPS": 60,
+            "resetPendingUnknown": 0,
+            "submissionErrors": 0,
+            "submittedFrames": 1794,
+            "targetMbps": 19.12,
+            "timestampCollisions": 0,
+            "trackingOverflow": 0,
+            "unmatchedExpired": 0,
+            "unmatchedInputs": 0
+          },
+          "captureDetails": null
+        }
+      },
+      "viewer": {
+        "samples": 26,
+        "fpsMean": 60,
+        "fpsMin": 60,
+        "videoMbpsMean": 0.2841352141561087,
+        "encodeMsMean": null,
+        "decodeMsMean": 1.2961916666666664,
+        "receiveBufferMsMean": 0.09804743589743588,
+        "sendDelayMsMean": null,
+        "frameGapMaxMs": 43.58633334049955,
+        "last": {
+          "framesEncoded": 0,
+          "framesDecoded": 1794,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "encoderDetails": null,
+          "captureDetails": null
+        }
+      }
+    },
+    {
+      "case": "hdr-2-on",
+      "traceEnabled": true,
+      "source": "hdr",
+      "scope": "single-Mac loopback; not Ponte",
+      "wallSeconds": 30.318021834013052,
+      "processCPUSeconds": 2.37782,
+      "host": {
+        "samples": 26,
+        "fpsMean": 60.5,
+        "fpsMin": 60,
+        "videoMbpsMean": 0.279817172145588,
+        "encodeMsMean": 4.49551282051282,
+        "decodeMsMean": null,
+        "receiveBufferMsMean": null,
+        "sendDelayMsMean": 4.466265623127682e-05,
+        "frameGapMaxMs": 0,
+        "last": {
+          "framesEncoded": 1797,
+          "framesDecoded": 0,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "encoderDetails": {
+            "asyncFailures": {},
+            "callbackMillisecondsP95": 4.348583344835788,
+            "callbackRejected": 0,
+            "encodedBytes": 849175,
+            "encodedFrames": 1797,
+            "frameBytesMax": 486,
+            "frameBytesP95": 480,
+            "keyframes": 15,
+            "outputWithoutInput": 0,
+            "requestedFPS": 60,
+            "resetPendingUnknown": 0,
+            "submissionErrors": 0,
+            "submittedFrames": 1798,
+            "targetMbps": 19.12,
+            "timestampCollisions": 0,
+            "trace": {
+              "capacity": 32768,
+              "epoch": "B1D1B3A8-AE0E-4EDE-85FD-A857E05E0431",
+              "overwritten": 0,
+              "recorded": 5393,
+              "retained": 5393
+            },
+            "trackingOverflow": 0,
+            "unmatchedExpired": 0,
+            "unmatchedInputs": 1
+          },
+          "captureDetails": null
+        }
+      },
+      "viewer": {
+        "samples": 26,
+        "fpsMean": 60,
+        "fpsMin": 60,
+        "videoMbpsMean": 0.27988158416618897,
+        "encodeMsMean": null,
+        "decodeMsMean": 1.2744435897435897,
+        "receiveBufferMsMean": 0.032751923076923074,
+        "sendDelayMsMean": null,
+        "frameGapMaxMs": 19.725208316231146,
+        "last": {
+          "framesEncoded": 0,
+          "framesDecoded": 1797,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "encoderDetails": null,
+          "captureDetails": null
+        }
+      },
+      "traceAnalysis": {
+        "schemaVersion": 1,
+        "trace": {
+          "capacity": 32768,
+          "epoch": "B1D1B3A8-AE0E-4EDE-85FD-A857E05E0431",
+          "overwritten": 0,
+          "recorded": 5398,
+          "retained": 5398
+        },
+        "stageCounts": {
+          "sourceSubmit": 1799,
+          "encodeSubmit": 1799,
+          "encodeOutput": 1799,
+          "encoderReset": 1
+        },
+        "reasonCounts": {
+          "encodeSubmit:exact_wrapper_identity": 1799,
+          "encodeOutput:key": 15,
+          "encodeOutput:delta": 1784
+        },
+        "ambiguousFrameIdentities": 0,
+        "encoderInputsWithoutSourceIdentity": 0,
+        "sourceWithoutEncoderAfterTwoSecondsUnknown": 0,
+        "intervals": {
+          "captureCallbackToSourceMs": {
+            "count": 0
+          },
+          "sourceToEncoderMs": {
+            "count": 1799,
+            "p50": 0.034583,
+            "p95": 0.056083,
+            "max": 9.53775
+          },
+          "encoderCallbackMs": {
+            "count": 1799,
+            "p50": 4.410875,
+            "p95": 5.229041,
+            "max": 12.903166
+          },
+          "sourceToEncodedMs": {
+            "count": 1799,
+            "p50": 4.449625,
+            "p95": 5.269334,
+            "max": 22.440916
+          }
+        },
+        "encodedCallbackGapsMs": {
+          "count": 1798,
+          "p50": 16.664916,
+          "p95": 17.443959,
+          "max": 18.758667
+        },
+        "largestEncodedCallbackGaps": [
+          {
+            "previousFrameID": 571,
+            "frameID": 572,
+            "sourceSubmitGapMs": 17.126,
+            "encodeSubmitGapMs": 17.13725,
+            "encodeOutputGapMs": 18.758667,
+            "sourceToEncoderMs": 0.047375,
+            "encoderCallbackMs": 5.9405
+          },
+          {
+            "previousFrameID": 841,
+            "frameID": 842,
+            "sourceSubmitGapMs": 17.109541,
+            "encodeSubmitGapMs": 17.114375,
+            "encodeOutputGapMs": 18.399792,
+            "sourceToEncoderMs": 0.030334,
+            "encoderCallbackMs": 5.358708
+          },
+          {
+            "previousFrameID": 779,
+            "frameID": 780,
+            "sourceSubmitGapMs": 17.069125,
+            "encodeSubmitGapMs": 17.066375,
+            "encodeOutputGapMs": 18.317459,
+            "sourceToEncoderMs": 0.023583,
+            "encoderCallbackMs": 5.386167
+          },
+          {
+            "previousFrameID": 1357,
+            "frameID": 1358,
+            "sourceSubmitGapMs": 17.096291,
+            "encodeSubmitGapMs": 17.099,
+            "encodeOutputGapMs": 18.308708,
+            "sourceToEncoderMs": 0.029209,
+            "encoderCallbackMs": 5.540791
+          },
+          {
+            "previousFrameID": 771,
+            "frameID": 772,
+            "sourceSubmitGapMs": 16.917334,
+            "encodeSubmitGapMs": 16.993875,
+            "encodeOutputGapMs": 18.264042,
+            "sourceToEncoderMs": 0.104666,
+            "encoderCallbackMs": 5.506459
+          },
+          {
+            "previousFrameID": 541,
+            "frameID": 542,
+            "sourceSubmitGapMs": 17.115792,
+            "encodeSubmitGapMs": 17.092958,
+            "encodeOutputGapMs": 18.244625,
+            "sourceToEncoderMs": 0.03425,
+            "encoderCallbackMs": 5.55875
+          },
+          {
+            "previousFrameID": 219,
+            "frameID": 220,
+            "sourceSubmitGapMs": 17.131667,
+            "encodeSubmitGapMs": 17.130125,
+            "encodeOutputGapMs": 18.212208,
+            "sourceToEncoderMs": 0.022125,
+            "encoderCallbackMs": 5.241125
+          },
+          {
+            "previousFrameID": 563,
+            "frameID": 564,
+            "sourceSubmitGapMs": 17.118625,
+            "encodeSubmitGapMs": 17.110833,
+            "encodeOutputGapMs": 18.163208,
+            "sourceToEncoderMs": 0.043083,
+            "encoderCallbackMs": 5.576583
+          },
+          {
+            "previousFrameID": 907,
+            "frameID": 908,
+            "sourceSubmitGapMs": 17.096,
+            "encodeSubmitGapMs": 17.077708,
+            "encodeOutputGapMs": 18.161875,
+            "sourceToEncoderMs": 0.024708,
+            "encoderCallbackMs": 5.442625
+          },
+          {
+            "previousFrameID": 231,
+            "frameID": 232,
+            "sourceSubmitGapMs": 17.310625,
+            "encodeSubmitGapMs": 17.344333,
+            "encodeOutputGapMs": 18.131125,
+            "sourceToEncoderMs": 0.07525,
+            "encoderCallbackMs": 5.345542
+          }
+        ],
+        "limits": [
+          "Only retained events; overwritten history and unmatched tail are not classified as drops.",
+          "Exact RTC wrapper identity only; changed wrappers and missing observations remain unknown.",
+          "Source without encoder can reflect adaptation or another unobserved path; not proof of VT or network loss.",
+          "Sender-local only. No packet/receiver/display timestamps or physical end-to-end measurement.",
+          "Gap rows show observations, not a unique causal attribution; RTP timestamps here are pre-packetization."
+        ]
+      }
+    },
+    {
+      "case": "hdr-3-on",
+      "traceEnabled": true,
+      "source": "hdr",
+      "scope": "single-Mac loopback; not Ponte",
+      "wallSeconds": 30.314145292009925,
+      "processCPUSeconds": 2.1054300000000006,
+      "host": {
+        "samples": 26,
+        "fpsMean": 60,
+        "fpsMin": 60,
+        "videoMbpsMean": 0.2799830349225874,
+        "encodeMsMean": 4.3403846153846155,
+        "decodeMsMean": null,
+        "receiveBufferMsMean": null,
+        "sendDelayMsMean": 4.9701371563517785e-05,
+        "frameGapMaxMs": 0,
+        "last": {
+          "framesEncoded": 1797,
+          "framesDecoded": 0,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "encoderDetails": {
+            "asyncFailures": {},
+            "callbackMillisecondsP95": 4.580625012749806,
+            "callbackRejected": 0,
+            "encodedBytes": 849175,
+            "encodedFrames": 1797,
+            "frameBytesMax": 486,
+            "frameBytesP95": 480,
+            "keyframes": 15,
+            "outputWithoutInput": 0,
+            "requestedFPS": 60,
+            "resetPendingUnknown": 0,
+            "submissionErrors": 0,
+            "submittedFrames": 1797,
+            "targetMbps": 19.12,
+            "timestampCollisions": 0,
+            "trace": {
+              "capacity": 32768,
+              "epoch": "408AAF13-4CFC-4E08-85BB-5A5A7FF3BC3E",
+              "overwritten": 0,
+              "recorded": 5391,
+              "retained": 5391
+            },
+            "trackingOverflow": 0,
+            "unmatchedExpired": 0,
+            "unmatchedInputs": 0
+          },
+          "captureDetails": null
+        }
+      },
+      "viewer": {
+        "samples": 26,
+        "fpsMean": 60,
+        "fpsMin": 60,
+        "videoMbpsMean": 0.2799230670378383,
+        "encodeMsMean": null,
+        "decodeMsMean": 1.1803070355951055,
+        "receiveBufferMsMean": 0.030151357560568085,
+        "sendDelayMsMean": null,
+        "frameGapMaxMs": 19.30112502304837,
+        "last": {
+          "framesEncoded": 0,
+          "framesDecoded": 1797,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "encoderDetails": null,
+          "captureDetails": null
+        }
+      },
+      "traceAnalysis": {
+        "schemaVersion": 1,
+        "trace": {
+          "capacity": 32768,
+          "epoch": "408AAF13-4CFC-4E08-85BB-5A5A7FF3BC3E",
+          "overwritten": 0,
+          "recorded": 5395,
+          "retained": 5395
+        },
+        "stageCounts": {
+          "sourceSubmit": 1798,
+          "encodeSubmit": 1798,
+          "encodeOutput": 1798,
+          "encoderReset": 1
+        },
+        "reasonCounts": {
+          "encodeSubmit:exact_wrapper_identity": 1798,
+          "encodeOutput:key": 15,
+          "encodeOutput:delta": 1783
+        },
+        "ambiguousFrameIdentities": 0,
+        "encoderInputsWithoutSourceIdentity": 0,
+        "sourceWithoutEncoderAfterTwoSecondsUnknown": 0,
+        "intervals": {
+          "captureCallbackToSourceMs": {
+            "count": 0
+          },
+          "sourceToEncoderMs": {
+            "count": 1798,
+            "p50": 0.032083,
+            "p95": 0.063375,
+            "max": 9.710417
+          },
+          "encoderCallbackMs": {
+            "count": 1798,
+            "p50": 4.270958,
+            "p95": 4.670833,
+            "max": 12.92
+          },
+          "sourceToEncodedMs": {
+            "count": 1798,
+            "p50": 4.3075,
+            "p95": 4.724375,
+            "max": 22.630417
+          }
+        },
+        "encodedCallbackGapsMs": {
+          "count": 1797,
+          "p50": 16.660084,
+          "p95": 17.295958,
+          "max": 18.672292
+        },
+        "largestEncodedCallbackGaps": [
+          {
+            "previousFrameID": 1141,
+            "frameID": 1142,
+            "sourceSubmitGapMs": 17.439333,
+            "encodeSubmitGapMs": 17.440625,
+            "encodeOutputGapMs": 18.672292,
+            "sourceToEncoderMs": 0.048584,
+            "encoderCallbackMs": 5.538333
+          },
+          {
+            "previousFrameID": 1146,
+            "frameID": 1147,
+            "sourceSubmitGapMs": 17.445208,
+            "encodeSubmitGapMs": 17.445208,
+            "encodeOutputGapMs": 18.576541,
+            "sourceToEncoderMs": 0.049125,
+            "encoderCallbackMs": 5.582375
+          },
+          {
+            "previousFrameID": 1162,
+            "frameID": 1163,
+            "sourceSubmitGapMs": 17.45425,
+            "encodeSubmitGapMs": 17.460459,
+            "encodeOutputGapMs": 18.380042,
+            "sourceToEncoderMs": 0.033125,
+            "encoderCallbackMs": 5.174125
+          },
+          {
+            "previousFrameID": 301,
+            "frameID": 302,
+            "sourceSubmitGapMs": 16.661541,
+            "encodeSubmitGapMs": 16.667,
+            "encodeOutputGapMs": 17.973667,
+            "sourceToEncoderMs": 0.028,
+            "encoderCallbackMs": 5.447542
+          },
+          {
+            "previousFrameID": 1144,
+            "frameID": 1145,
+            "sourceSubmitGapMs": 17.174125,
+            "encodeSubmitGapMs": 17.142916,
+            "encodeOutputGapMs": 17.897375,
+            "sourceToEncoderMs": 0.05525,
+            "encoderCallbackMs": 5.375042
+          },
+          {
+            "previousFrameID": 1001,
+            "frameID": 1002,
+            "sourceSubmitGapMs": 17.056667,
+            "encodeSubmitGapMs": 17.052333,
+            "encodeOutputGapMs": 17.827917,
+            "sourceToEncoderMs": 0.039375,
+            "encoderCallbackMs": 5.024667
+          },
+          {
+            "previousFrameID": 438,
+            "frameID": 439,
+            "sourceSubmitGapMs": 16.936292,
+            "encodeSubmitGapMs": 16.936125,
+            "encodeOutputGapMs": 17.785083,
+            "sourceToEncoderMs": 0.025125,
+            "encoderCallbackMs": 4.986541
+          },
+          {
+            "previousFrameID": 901,
+            "frameID": 902,
+            "sourceSubmitGapMs": 16.982375,
+            "encodeSubmitGapMs": 16.986875,
+            "encodeOutputGapMs": 17.739125,
+            "sourceToEncoderMs": 0.060709,
+            "encoderCallbackMs": 5.048291
+          },
+          {
+            "previousFrameID": 1201,
+            "frameID": 1202,
+            "sourceSubmitGapMs": 17.651625,
+            "encodeSubmitGapMs": 17.656292,
+            "encodeOutputGapMs": 17.738625,
+            "sourceToEncoderMs": 0.026833,
+            "encoderCallbackMs": 4.14025
+          },
+          {
+            "previousFrameID": 649,
+            "frameID": 650,
+            "sourceSubmitGapMs": 17.66375,
+            "encodeSubmitGapMs": 17.665,
+            "encodeOutputGapMs": 17.728708,
+            "sourceToEncoderMs": 0.026167,
+            "encoderCallbackMs": 4.179333
+          }
+        ],
+        "limits": [
+          "Only retained events; overwritten history and unmatched tail are not classified as drops.",
+          "Exact RTC wrapper identity only; changed wrappers and missing observations remain unknown.",
+          "Source without encoder can reflect adaptation or another unobserved path; not proof of VT or network loss.",
+          "Sender-local only. No packet/receiver/display timestamps or physical end-to-end measurement.",
+          "Gap rows show observations, not a unique causal attribution; RTP timestamps here are pre-packetization."
+        ]
+      }
+    },
+    {
+      "case": "hdr-4-off",
+      "traceEnabled": false,
+      "source": "hdr",
+      "scope": "single-Mac loopback; not Ponte",
+      "wallSeconds": 30.316105000005336,
+      "processCPUSeconds": 2.4073070000000016,
+      "host": {
+        "samples": 26,
+        "fpsMean": 60.30769230769231,
+        "fpsMin": 60,
+        "videoMbpsMean": 0.27986514218864705,
+        "encodeMsMean": 4.889743589743589,
+        "decodeMsMean": null,
+        "receiveBufferMsMean": null,
+        "sendDelayMsMean": 6.327873288911569e-05,
+        "frameGapMaxMs": 0,
+        "last": {
+          "framesEncoded": 1797,
+          "framesDecoded": 0,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "encoderDetails": {
+            "asyncFailures": {},
+            "callbackMillisecondsP95": 6.012333324179053,
+            "callbackRejected": 0,
+            "encodedBytes": 849175,
+            "encodedFrames": 1797,
+            "frameBytesMax": 486,
+            "frameBytesP95": 480,
+            "keyframes": 15,
+            "outputWithoutInput": 0,
+            "requestedFPS": 60,
+            "resetPendingUnknown": 0,
+            "submissionErrors": 0,
+            "submittedFrames": 1797,
+            "targetMbps": 19.12,
+            "timestampCollisions": 0,
+            "trackingOverflow": 0,
+            "unmatchedExpired": 0,
+            "unmatchedInputs": 0
+          },
+          "captureDetails": null
+        }
+      },
+      "viewer": {
+        "samples": 26,
+        "fpsMean": 60,
+        "fpsMin": 60,
+        "videoMbpsMean": 0.2798570067677529,
+        "encodeMsMean": null,
+        "decodeMsMean": 1.2740929487179486,
+        "receiveBufferMsMean": 0.03160769230769231,
+        "sendDelayMsMean": null,
+        "frameGapMaxMs": 19.251083314884454,
+        "last": {
+          "framesEncoded": 0,
+          "framesDecoded": 1797,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "encoderDetails": null,
+          "captureDetails": null
+        }
+      }
+    },
+    {
+      "case": "desktop-1-off",
+      "traceEnabled": false,
+      "source": "desktop",
+      "scope": "single-Mac loopback; not Ponte",
+      "wallSeconds": 30.297949791973224,
+      "processCPUSeconds": 13.235387000000001,
+      "host": {
+        "samples": 26,
+        "fpsMean": 59,
+        "fpsMin": 59,
+        "videoMbpsMean": 3.713566327311852,
+        "encodeMsMean": 7.709615384615385,
+        "decodeMsMean": null,
+        "receiveBufferMsMean": null,
+        "sendDelayMsMean": 0.0006422996599484236,
+        "frameGapMaxMs": 0,
+        "last": {
+          "framesEncoded": 1798,
+          "framesDecoded": 0,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "encoderDetails": {
+            "asyncFailures": {},
+            "callbackMillisecondsP95": 8.202041673939675,
+            "callbackRejected": 0,
+            "encodedBytes": 14070750,
+            "encodedFrames": 1798,
+            "frameBytesMax": 8238,
+            "frameBytesP95": 8014,
+            "keyframes": 1,
+            "outputWithoutInput": 0,
+            "qpLatest": 24,
+            "qpMaximum": 49,
+            "requestedFPS": 60,
+            "resetPendingUnknown": 0,
+            "submissionErrors": 0,
+            "submittedFrames": 1799,
+            "targetMbps": 19.115,
+            "timestampCollisions": 0,
+            "trackingOverflow": 0,
+            "unmatchedExpired": 0,
+            "unmatchedInputs": 1
+          },
+          "captureDetails": null
+        }
+      },
+      "viewer": {
+        "samples": 26,
+        "fpsMean": 60,
+        "fpsMin": 60,
+        "videoMbpsMean": 3.7126101676121697,
+        "encodeMsMean": null,
+        "decodeMsMean": 1.7791322917334587,
+        "receiveBufferMsMean": 0.07926652203959787,
+        "sendDelayMsMean": null,
+        "frameGapMaxMs": 19.15537501918152,
+        "last": {
+          "framesEncoded": 0,
+          "framesDecoded": 1798,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "encoderDetails": null,
+          "captureDetails": null
+        }
+      }
+    },
+    {
+      "case": "desktop-2-on",
+      "traceEnabled": true,
+      "source": "desktop",
+      "scope": "single-Mac loopback; not Ponte",
+      "wallSeconds": 30.325437041989062,
+      "processCPUSeconds": 13.251696000000004,
+      "host": {
+        "samples": 26,
+        "fpsMean": 59,
+        "fpsMin": 59,
+        "videoMbpsMean": 3.738621837714963,
+        "encodeMsMean": 7.8032051282051285,
+        "decodeMsMean": null,
+        "receiveBufferMsMean": null,
+        "sendDelayMsMean": 0.0006082379320733345,
+        "frameGapMaxMs": 0,
+        "last": {
+          "framesEncoded": 1798,
+          "framesDecoded": 0,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "encoderDetails": {
+            "asyncFailures": {},
+            "callbackMillisecondsP95": 7.938333321362734,
+            "callbackRejected": 0,
+            "encodedBytes": 14171408,
+            "encodedFrames": 1798,
+            "frameBytesMax": 8260,
+            "frameBytesP95": 8183,
+            "keyframes": 1,
+            "outputWithoutInput": 0,
+            "qpLatest": 24,
+            "qpMaximum": 50,
+            "requestedFPS": 60,
+            "resetPendingUnknown": 0,
+            "submissionErrors": 0,
+            "submittedFrames": 1799,
+            "targetMbps": 19.115,
+            "timestampCollisions": 0,
+            "trace": {
+              "capacity": 32768,
+              "epoch": "A6CC63C2-5126-4953-9A2F-683D52932449",
+              "overwritten": 0,
+              "recorded": 5396,
+              "retained": 5396
+            },
+            "trackingOverflow": 0,
+            "unmatchedExpired": 0,
+            "unmatchedInputs": 1
+          },
+          "captureDetails": null
+        }
+      },
+      "viewer": {
+        "samples": 26,
+        "fpsMean": 60,
+        "fpsMin": 60,
+        "videoMbpsMean": 3.738212295282289,
+        "encodeMsMean": null,
+        "decodeMsMean": 1.8036892945690042,
+        "receiveBufferMsMean": 0.07940243782104715,
+        "sendDelayMsMean": null,
+        "frameGapMaxMs": 19.427291670581326,
+        "last": {
+          "framesEncoded": 0,
+          "framesDecoded": 1798,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "encoderDetails": null,
+          "captureDetails": null
+        }
+      },
+      "traceAnalysis": {
+        "schemaVersion": 1,
+        "trace": {
+          "capacity": 32768,
+          "epoch": "A6CC63C2-5126-4953-9A2F-683D52932449",
+          "overwritten": 0,
+          "recorded": 5404,
+          "retained": 5404
+        },
+        "stageCounts": {
+          "sourceSubmit": 1801,
+          "encodeSubmit": 1801,
+          "encodeOutput": 1801,
+          "encoderReset": 1
+        },
+        "reasonCounts": {
+          "encodeSubmit:exact_wrapper_identity": 1801,
+          "encodeOutput:key": 1,
+          "encodeOutput:delta": 1800
+        },
+        "ambiguousFrameIdentities": 0,
+        "encoderInputsWithoutSourceIdentity": 0,
+        "sourceWithoutEncoderAfterTwoSecondsUnknown": 0,
+        "intervals": {
+          "captureCallbackToSourceMs": {
+            "count": 0
+          },
+          "sourceToEncoderMs": {
+            "count": 1801,
+            "p50": 0.026917,
+            "p95": 0.032959,
+            "max": 4.248541
+          },
+          "encoderCallbackMs": {
+            "count": 1801,
+            "p50": 7.682375,
+            "p95": 8.484458,
+            "max": 23.544417
+          },
+          "sourceToEncodedMs": {
+            "count": 1801,
+            "p50": 7.7125,
+            "p95": 8.505125,
+            "max": 27.792958
+          }
+        },
+        "encodedCallbackGapsMs": {
+          "count": 1800,
+          "p50": 16.6705,
+          "p95": 17.560791,
+          "max": 18.556375
+        },
+        "largestEncodedCallbackGaps": [
+          {
+            "previousFrameID": 1384,
+            "frameID": 1385,
+            "sourceSubmitGapMs": 16.846041,
+            "encodeSubmitGapMs": 16.845958,
+            "encodeOutputGapMs": 18.556375,
+            "sourceToEncoderMs": 0.026667,
+            "encoderCallbackMs": 9.171542
+          },
+          {
+            "previousFrameID": 869,
+            "frameID": 870,
+            "sourceSubmitGapMs": 17.806084,
+            "encodeSubmitGapMs": 17.814125,
+            "encodeOutputGapMs": 18.410042,
+            "sourceToEncoderMs": 0.034083,
+            "encoderCallbackMs": 8.027167
+          },
+          {
+            "previousFrameID": 705,
+            "frameID": 706,
+            "sourceSubmitGapMs": 17.124208,
+            "encodeSubmitGapMs": 17.13075,
+            "encodeOutputGapMs": 18.192542,
+            "sourceToEncoderMs": 0.029917,
+            "encoderCallbackMs": 8.520375
+          },
+          {
+            "previousFrameID": 900,
+            "frameID": 901,
+            "sourceSubmitGapMs": 17.08725,
+            "encodeSubmitGapMs": 17.084042,
+            "encodeOutputGapMs": 18.131458,
+            "sourceToEncoderMs": 0.023792,
+            "encoderCallbackMs": 8.436875
+          },
+          {
+            "previousFrameID": 1258,
+            "frameID": 1259,
+            "sourceSubmitGapMs": 17.736667,
+            "encodeSubmitGapMs": 17.747041,
+            "encodeOutputGapMs": 18.114125,
+            "sourceToEncoderMs": 0.036166,
+            "encoderCallbackMs": 7.724209
+          },
+          {
+            "previousFrameID": 586,
+            "frameID": 587,
+            "sourceSubmitGapMs": 17.327791,
+            "encodeSubmitGapMs": 17.326625,
+            "encodeOutputGapMs": 18.100792,
+            "sourceToEncoderMs": 0.026084,
+            "encoderCallbackMs": 8.551
+          },
+          {
+            "previousFrameID": 206,
+            "frameID": 207,
+            "sourceSubmitGapMs": 17.560875,
+            "encodeSubmitGapMs": 17.568209,
+            "encodeOutputGapMs": 18.092792,
+            "sourceToEncoderMs": 0.03425,
+            "encoderCallbackMs": 8.046208
+          },
+          {
+            "previousFrameID": 1128,
+            "frameID": 1129,
+            "sourceSubmitGapMs": 17.669125,
+            "encodeSubmitGapMs": 17.669375,
+            "encodeOutputGapMs": 18.091666,
+            "sourceToEncoderMs": 0.028333,
+            "encoderCallbackMs": 7.89125
+          },
+          {
+            "previousFrameID": 514,
+            "frameID": 515,
+            "sourceSubmitGapMs": 17.659208,
+            "encodeSubmitGapMs": 17.661083,
+            "encodeOutputGapMs": 18.054666,
+            "sourceToEncoderMs": 0.027,
+            "encoderCallbackMs": 7.834708
+          },
+          {
+            "previousFrameID": 431,
+            "frameID": 432,
+            "sourceSubmitGapMs": 17.220208,
+            "encodeSubmitGapMs": 17.223833,
+            "encodeOutputGapMs": 18.049042,
+            "sourceToEncoderMs": 0.029542,
+            "encoderCallbackMs": 8.423167
+          }
+        ],
+        "limits": [
+          "Only retained events; overwritten history and unmatched tail are not classified as drops.",
+          "Exact RTC wrapper identity only; changed wrappers and missing observations remain unknown.",
+          "Source without encoder can reflect adaptation or another unobserved path; not proof of VT or network loss.",
+          "Sender-local only. No packet/receiver/display timestamps or physical end-to-end measurement.",
+          "Gap rows show observations, not a unique causal attribution; RTP timestamps here are pre-packetization."
+        ]
+      }
+    },
+    {
+      "case": "desktop-3-on",
+      "traceEnabled": true,
+      "source": "desktop",
+      "scope": "single-Mac loopback; not Ponte",
+      "wallSeconds": 30.312094207998598,
+      "processCPUSeconds": 13.201460999999998,
+      "host": {
+        "samples": 26,
+        "fpsMean": 59.15384615384615,
+        "fpsMin": 59,
+        "videoMbpsMean": 3.7110413025641042,
+        "encodeMsMean": 7.819871794871795,
+        "decodeMsMean": null,
+        "receiveBufferMsMean": null,
+        "sendDelayMsMean": 0.0005704396015531148,
+        "frameGapMaxMs": 0,
+        "last": {
+          "framesEncoded": 1798,
+          "framesDecoded": 0,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "encoderDetails": {
+            "asyncFailures": {},
+            "callbackMillisecondsP95": 8.46654167980887,
+            "callbackRejected": 0,
+            "encodedBytes": 14060236,
+            "encodedFrames": 1798,
+            "frameBytesMax": 8195,
+            "frameBytesP95": 7935,
+            "keyframes": 1,
+            "outputWithoutInput": 0,
+            "qpLatest": 24,
+            "qpMaximum": 49,
+            "requestedFPS": 60,
+            "resetPendingUnknown": 0,
+            "submissionErrors": 0,
+            "submittedFrames": 1799,
+            "targetMbps": 19.115,
+            "timestampCollisions": 0,
+            "trace": {
+              "capacity": 32768,
+              "epoch": "FA465B77-3BDC-40E3-B9E7-913507843E08",
+              "overwritten": 0,
+              "recorded": 5396,
+              "retained": 5396
+            },
+            "trackingOverflow": 0,
+            "unmatchedExpired": 0,
+            "unmatchedInputs": 1
+          },
+          "captureDetails": null
+        }
+      },
+      "viewer": {
+        "samples": 26,
+        "fpsMean": 60,
+        "fpsMin": 60,
+        "videoMbpsMean": 3.7082432454904954,
+        "encodeMsMean": null,
+        "decodeMsMean": 1.784092559364781,
+        "receiveBufferMsMean": 0.0763492259245802,
+        "sendDelayMsMean": null,
+        "frameGapMaxMs": 19.88812501076609,
+        "last": {
+          "framesEncoded": 0,
+          "framesDecoded": 1798,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "encoderDetails": null,
+          "captureDetails": null
+        }
+      },
+      "traceAnalysis": {
+        "schemaVersion": 1,
+        "trace": {
+          "capacity": 32768,
+          "epoch": "FA465B77-3BDC-40E3-B9E7-913507843E08",
+          "overwritten": 0,
+          "recorded": 5402,
+          "retained": 5402
+        },
+        "stageCounts": {
+          "sourceSubmit": 1800,
+          "encodeSubmit": 1800,
+          "encodeOutput": 1800,
+          "encodeCallbackRejected": 1,
+          "encoderReset": 1
+        },
+        "reasonCounts": {
+          "encodeSubmit:exact_wrapper_identity": 1800,
+          "encodeOutput:key": 1,
+          "encodeOutput:delta": 1799
+        },
+        "ambiguousFrameIdentities": 0,
+        "encoderInputsWithoutSourceIdentity": 0,
+        "sourceWithoutEncoderAfterTwoSecondsUnknown": 0,
+        "intervals": {
+          "captureCallbackToSourceMs": {
+            "count": 0
+          },
+          "sourceToEncoderMs": {
+            "count": 1800,
+            "p50": 0.026916,
+            "p95": 0.033083,
+            "max": 3.583167
+          },
+          "encoderCallbackMs": {
+            "count": 1800,
+            "p50": 7.662208,
+            "p95": 8.356333,
+            "max": 20.6855
+          },
+          "sourceToEncodedMs": {
+            "count": 1800,
+            "p50": 7.691125,
+            "p95": 8.383625,
+            "max": 24.268667
+          }
+        },
+        "encodedCallbackGapsMs": {
+          "count": 1799,
+          "p50": 16.664541,
+          "p95": 17.320208,
+          "max": 18.190042
+        },
+        "largestEncodedCallbackGaps": [
+          {
+            "previousFrameID": 561,
+            "frameID": 562,
+            "sourceSubmitGapMs": 16.719791,
+            "encodeSubmitGapMs": 16.714208,
+            "encodeOutputGapMs": 18.190042,
+            "sourceToEncoderMs": 0.022625,
+            "encoderCallbackMs": 9.618334
+          },
+          {
+            "previousFrameID": 829,
+            "frameID": 830,
+            "sourceSubmitGapMs": 16.875209,
+            "encodeSubmitGapMs": 16.8765,
+            "encodeOutputGapMs": 17.92625,
+            "sourceToEncoderMs": 0.023625,
+            "encoderCallbackMs": 8.868166
+          },
+          {
+            "previousFrameID": 1704,
+            "frameID": 1705,
+            "sourceSubmitGapMs": 16.59975,
+            "encodeSubmitGapMs": 16.597875,
+            "encodeOutputGapMs": 17.916125,
+            "sourceToEncoderMs": 0.024542,
+            "encoderCallbackMs": 8.742458
+          },
+          {
+            "previousFrameID": 1551,
+            "frameID": 1552,
+            "sourceSubmitGapMs": 16.741833,
+            "encodeSubmitGapMs": 16.740916,
+            "encodeOutputGapMs": 17.857792,
+            "sourceToEncoderMs": 0.023458,
+            "encoderCallbackMs": 8.666667
+          },
+          {
+            "previousFrameID": 773,
+            "frameID": 774,
+            "sourceSubmitGapMs": 17.12125,
+            "encodeSubmitGapMs": 17.127333,
+            "encodeOutputGapMs": 17.814791,
+            "sourceToEncoderMs": 0.028833,
+            "encoderCallbackMs": 8.062583
+          },
+          {
+            "previousFrameID": 1649,
+            "frameID": 1650,
+            "sourceSubmitGapMs": 16.7635,
+            "encodeSubmitGapMs": 16.760458,
+            "encodeOutputGapMs": 17.732,
+            "sourceToEncoderMs": 0.022708,
+            "encoderCallbackMs": 8.718208
+          },
+          {
+            "previousFrameID": 1039,
+            "frameID": 1040,
+            "sourceSubmitGapMs": 16.823458,
+            "encodeSubmitGapMs": 16.820833,
+            "encodeOutputGapMs": 17.73075,
+            "sourceToEncoderMs": 0.02475,
+            "encoderCallbackMs": 8.234917
+          },
+          {
+            "previousFrameID": 1506,
+            "frameID": 1507,
+            "sourceSubmitGapMs": 16.777416,
+            "encodeSubmitGapMs": 16.777916,
+            "encodeOutputGapMs": 17.723708,
+            "sourceToEncoderMs": 0.025375,
+            "encoderCallbackMs": 8.428667
+          },
+          {
+            "previousFrameID": 702,
+            "frameID": 703,
+            "sourceSubmitGapMs": 17.366916,
+            "encodeSubmitGapMs": 17.3665,
+            "encodeOutputGapMs": 17.721875,
+            "sourceToEncoderMs": 0.027459,
+            "encoderCallbackMs": 8.042166
+          },
+          {
+            "previousFrameID": 1106,
+            "frameID": 1107,
+            "sourceSubmitGapMs": 16.854333,
+            "encodeSubmitGapMs": 16.849292,
+            "encodeOutputGapMs": 17.719333,
+            "sourceToEncoderMs": 0.024084,
+            "encoderCallbackMs": 8.403666
+          }
+        ],
+        "limits": [
+          "Only retained events; overwritten history and unmatched tail are not classified as drops.",
+          "Exact RTC wrapper identity only; changed wrappers and missing observations remain unknown.",
+          "Source without encoder can reflect adaptation or another unobserved path; not proof of VT or network loss.",
+          "Sender-local only. No packet/receiver/display timestamps or physical end-to-end measurement.",
+          "Gap rows show observations, not a unique causal attribution; RTP timestamps here are pre-packetization."
+        ]
+      }
+    },
+    {
+      "case": "desktop-4-off",
+      "traceEnabled": false,
+      "source": "desktop",
+      "scope": "single-Mac loopback; not Ponte",
+      "wallSeconds": 30.30790133299888,
+      "processCPUSeconds": 13.240611999999999,
+      "host": {
+        "samples": 26,
+        "fpsMean": 59,
+        "fpsMin": 59,
+        "videoMbpsMean": 3.741074336201696,
+        "encodeMsMean": 7.773076923076924,
+        "decodeMsMean": null,
+        "receiveBufferMsMean": null,
+        "sendDelayMsMean": 0.0005613002698169705,
+        "frameGapMaxMs": 0,
+        "last": {
+          "framesEncoded": 1798,
+          "framesDecoded": 0,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "encoderDetails": {
+            "asyncFailures": {},
+            "callbackMillisecondsP95": 8.210833329940215,
+            "callbackRejected": 0,
+            "encodedBytes": 14158926,
+            "encodedFrames": 1799,
+            "frameBytesMax": 8272,
+            "frameBytesP95": 8047,
+            "keyframes": 1,
+            "outputWithoutInput": 0,
+            "qpLatest": 24,
+            "qpMaximum": 50,
+            "requestedFPS": 60,
+            "resetPendingUnknown": 0,
+            "submissionErrors": 0,
+            "submittedFrames": 1799,
+            "targetMbps": 19.113,
+            "timestampCollisions": 0,
+            "trackingOverflow": 0,
+            "unmatchedExpired": 0,
+            "unmatchedInputs": 0
+          },
+          "captureDetails": null
+        }
+      },
+      "viewer": {
+        "samples": 26,
+        "fpsMean": 59.92307692307692,
+        "fpsMin": 59,
+        "videoMbpsMean": 3.7416998785116204,
+        "encodeMsMean": null,
+        "decodeMsMean": 1.8108916796688537,
+        "receiveBufferMsMean": 0.07601670478266755,
+        "sendDelayMsMean": null,
+        "frameGapMaxMs": 19.615666678873822,
+        "last": {
+          "framesEncoded": 0,
+          "framesDecoded": 1798,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "encoderDetails": null,
+          "captureDetails": null
+        }
+      }
+    },
+    {
+      "case": "hdr-window-on",
+      "traceEnabled": true,
+      "source": "window",
+      "scope": "single-Mac loopback; not Ponte",
+      "wallSeconds": 30.309410250018118,
+      "processCPUSeconds": 3.461330000000002,
+      "host": {
+        "samples": 26,
+        "fpsMean": 60.26923076923077,
+        "fpsMin": 60,
+        "videoMbpsMean": 0.42341170866261246,
+        "encodeMsMean": 4.66333026980429,
+        "decodeMsMean": null,
+        "receiveBufferMsMean": null,
+        "sendDelayMsMean": 0.00046860620161142774,
+        "frameGapMaxMs": 0,
+        "last": {
+          "framesEncoded": 1786,
+          "framesDecoded": 0,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "encoderDetails": {
+            "asyncFailures": {},
+            "callbackMillisecondsP95": 5.144791677594185,
+            "callbackRejected": 0,
+            "encodedBytes": 1400834,
+            "encodedFrames": 1787,
+            "frameBytesMax": 459,
+            "frameBytesP95": 459,
+            "keyframes": 15,
+            "outputWithoutInput": 0,
+            "requestedFPS": 60,
+            "resetPendingUnknown": 0,
+            "submissionErrors": 0,
+            "submittedFrames": 1787,
+            "targetMbps": 19.12,
+            "timestampCollisions": 0,
+            "trace": {
+              "capacity": 32768,
+              "epoch": "CEDDD7DC-71E1-4D11-B2B4-D56EDEFC5B87",
+              "overwritten": 0,
+              "recorded": 17759,
+              "retained": 17759
+            },
+            "trackingOverflow": 0,
+            "unmatchedExpired": 0,
+            "unmatchedInputs": 0
+          },
+          "captureDetails": {
+            "callbackGapMillisecondsMax": 8.061583328526467,
+            "callbackGapMillisecondsP95": 7.0957916614133865,
+            "completeFrames": 5324,
+            "height": 1440,
+            "idleFrames": 0,
+            "invalidFrames": 0,
+            "luma10BitSamples": {
+              "maximum": 572,
+              "minimum": 64,
+              "non8BitSamples": 460,
+              "sampleCount": 2048
+            },
+            "otherFrames": 0,
+            "pixelFormat": {
+              "height": "1440",
+              "matrix": "ITU_R_2020",
+              "pixelFormat": "2016686640",
+              "primaries": "ITU_R_2020",
+              "transfer": "SMPTE_ST_2084_PQ",
+              "width": "2560"
+            },
+            "pointPixelScale": 2,
+            "skippedReasons": {},
+            "sourceHeightPoints": 720,
+            "sourceWidthPoints": 1280,
+            "width": 2560,
+            "windowServerAgeMillisecondsMax": 0.5691250262316316,
+            "windowServerAgeMillisecondsP95": 0.44091668678447604
+          }
+        }
+      },
+      "viewer": {
+        "samples": 25,
+        "fpsMean": 60.2,
+        "fpsMin": 59,
+        "videoMbpsMean": 0.4318377103521163,
+        "encodeMsMean": null,
+        "decodeMsMean": 1.2303450556636102,
+        "receiveBufferMsMean": 0.03844724090025007,
+        "sendDelayMsMean": null,
+        "frameGapMaxMs": 24.30570832802914,
+        "last": {
+          "framesEncoded": 0,
+          "framesDecoded": 1727,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "encoderDetails": null,
+          "captureDetails": null
+        }
+      },
+      "traceAnalysis": {
+        "schemaVersion": 1,
+        "trace": {
+          "capacity": 32768,
+          "epoch": "CEDDD7DC-71E1-4D11-B2B4-D56EDEFC5B87",
+          "overwritten": 0,
+          "recorded": 17762,
+          "retained": 17762
+        },
+        "stageCounts": {
+          "capture": 5325,
+          "sourceSubmit": 5325,
+          "encodeSubmit": 1787,
+          "sourceUnmatched": 3537,
+          "encodeOutput": 1787,
+          "encoderReset": 1
+        },
+        "reasonCounts": {
+          "encodeSubmit:exact_wrapper_identity": 1787,
+          "sourceUnmatched:released_before_encoder_unknown": 3537,
+          "encodeOutput:key": 15,
+          "encodeOutput:delta": 1772
+        },
+        "ambiguousFrameIdentities": 0,
+        "encoderInputsWithoutSourceIdentity": 0,
+        "sourceWithoutEncoderAfterTwoSecondsUnknown": 3293,
+        "intervals": {
+          "captureCallbackToSourceMs": {
+            "count": 5325,
+            "p50": 0.035084,
+            "p95": 0.0645,
+            "max": 0.140708
+          },
+          "sourceToEncoderMs": {
+            "count": 1787,
+            "p50": 0.029667,
+            "p95": 0.0535,
+            "max": 12.779375
+          },
+          "encoderCallbackMs": {
+            "count": 1787,
+            "p50": 4.559125,
+            "p95": 5.2075,
+            "max": 13.364125
+          },
+          "sourceToEncodedMs": {
+            "count": 1787,
+            "p50": 4.594875,
+            "p95": 5.259333,
+            "max": 23.614083
+          }
+        },
+        "encodedCallbackGapsMs": {
+          "count": 1786,
+          "p50": 16.688333,
+          "p95": 20.819875,
+          "max": 23.629458
+        },
+        "largestEncodedCallbackGaps": [
+          {
+            "previousFrameID": 2594,
+            "frameID": 2597,
+            "sourceSubmitGapMs": 23.951917,
+            "encodeSubmitGapMs": 23.983542,
+            "encodeOutputGapMs": 23.629458,
+            "sourceToEncoderMs": 0.059125,
+            "encoderCallbackMs": 4.522208
+          },
+          {
+            "previousFrameID": 2676,
+            "frameID": 2680,
+            "sourceSubmitGapMs": 23.212042,
+            "encodeSubmitGapMs": 23.212042,
+            "encodeOutputGapMs": 23.619791,
+            "sourceToEncoderMs": 0.033375,
+            "encoderCallbackMs": 5.084333
+          },
+          {
+            "previousFrameID": 1576,
+            "frameID": 1579,
+            "sourceSubmitGapMs": 23.474208,
+            "encodeSubmitGapMs": 23.487166,
+            "encodeOutputGapMs": 23.466792,
+            "sourceToEncoderMs": 0.048833,
+            "encoderCallbackMs": 4.402709
+          },
+          {
+            "previousFrameID": 3143,
+            "frameID": 3147,
+            "sourceSubmitGapMs": 22.413834,
+            "encodeSubmitGapMs": 22.435958,
+            "encodeOutputGapMs": 23.197459,
+            "sourceToEncoderMs": 0.054041,
+            "encoderCallbackMs": 5.056209
+          },
+          {
+            "previousFrameID": 427,
+            "frameID": 431,
+            "sourceSubmitGapMs": 22.848958,
+            "encodeSubmitGapMs": 22.873667,
+            "encodeOutputGapMs": 23.074792,
+            "sourceToEncoderMs": 0.054375,
+            "encoderCallbackMs": 4.506167
+          },
+          {
+            "previousFrameID": 3580,
+            "frameID": 3584,
+            "sourceSubmitGapMs": 22.171625,
+            "encodeSubmitGapMs": 22.204584,
+            "encodeOutputGapMs": 22.869166,
+            "sourceToEncoderMs": 0.070625,
+            "encoderCallbackMs": 5.330541
+          },
+          {
+            "previousFrameID": 2118,
+            "frameID": 2122,
+            "sourceSubmitGapMs": 22.451875,
+            "encodeSubmitGapMs": 22.44375,
+            "encodeOutputGapMs": 22.719917,
+            "sourceToEncoderMs": 0.039333,
+            "encoderCallbackMs": 4.590792
+          },
+          {
+            "previousFrameID": 3155,
+            "frameID": 3160,
+            "sourceSubmitGapMs": 22.112916,
+            "encodeSubmitGapMs": 22.114917,
+            "encodeOutputGapMs": 22.698042,
+            "sourceToEncoderMs": 0.027459,
+            "encoderCallbackMs": 4.806625
+          },
+          {
+            "previousFrameID": 4851,
+            "frameID": 4854,
+            "sourceSubmitGapMs": 22.680334,
+            "encodeSubmitGapMs": 22.695958,
+            "encodeOutputGapMs": 22.691625,
+            "sourceToEncoderMs": 0.041083,
+            "encoderCallbackMs": 4.53675
+          },
+          {
+            "previousFrameID": 3307,
+            "frameID": 3311,
+            "sourceSubmitGapMs": 22.453542,
+            "encodeSubmitGapMs": 22.441625,
+            "encodeOutputGapMs": 22.615375,
+            "sourceToEncoderMs": 0.026,
+            "encoderCallbackMs": 4.626458
+          }
+        ],
+        "limits": [
+          "Only retained events; overwritten history and unmatched tail are not classified as drops.",
+          "Exact RTC wrapper identity only; changed wrappers and missing observations remain unknown.",
+          "Source without encoder can reflect adaptation or another unobserved path; not proof of VT or network loss.",
+          "Sender-local only. No packet/receiver/display timestamps or physical end-to-end measurement.",
+          "Gap rows show observations, not a unique causal attribution; RTP timestamps here are pre-packetization."
+        ]
+      }
+    },
+    {
+      "case": "noise-on",
+      "traceEnabled": true,
+      "source": "noise",
+      "scope": "single-Mac loopback; not Ponte",
+      "wallSeconds": 30.328438291995553,
+      "processCPUSeconds": 9.444694999999994,
+      "host": {
+        "samples": 26,
+        "fpsMean": 12.846153846153847,
+        "fpsMin": 10,
+        "videoMbpsMean": 19.134019107942656,
+        "encodeMsMean": 8.73130155101309,
+        "decodeMsMean": null,
+        "receiveBufferMsMean": null,
+        "sendDelayMsMean": 21.644767288184728,
+        "frameGapMaxMs": 0,
+        "last": {
+          "framesEncoded": 386,
+          "framesDecoded": 0,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "encoderDetails": {
+            "asyncFailures": {},
+            "callbackMillisecondsP95": 9.664250013884157,
+            "callbackRejected": 0,
+            "encodedBytes": 73369627,
+            "encodedFrames": 386,
+            "frameBytesMax": 285164,
+            "frameBytesP95": 285164,
+            "keyframes": 1,
+            "outputWithoutInput": 0,
+            "qpLatest": 51,
+            "qpMaximum": 51,
+            "requestedFPS": 60,
+            "resetPendingUnknown": 0,
+            "submissionErrors": 0,
+            "submittedFrames": 386,
+            "targetMbps": 9.544,
+            "timestampCollisions": 0,
+            "trace": {
+              "capacity": 32768,
+              "epoch": "C40FFA60-493F-422F-85EF-7569A89A6CE8",
+              "overwritten": 0,
+              "recorded": 3983,
+              "retained": 3983
+            },
+            "trackingOverflow": 0,
+            "unmatchedExpired": 0,
+            "unmatchedInputs": 0
+          },
+          "captureDetails": null
+        }
+      },
+      "viewer": {
+        "samples": 26,
+        "fpsMean": 12.846153846153847,
+        "fpsMin": 10,
+        "videoMbpsMean": 19.13373853444597,
+        "encodeMsMean": null,
+        "decodeMsMean": 4.829273541682676,
+        "receiveBufferMsMean": 37.186382374996796,
+        "sendDelayMsMean": null,
+        "frameGapMaxMs": 235.24549999274313,
+        "last": {
+          "framesEncoded": 0,
+          "framesDecoded": 384,
+          "framesDropped": 0,
+          "freezeCount": 5,
+          "packetsLost": 0,
+          "encoderDetails": null,
+          "captureDetails": null
+        }
+      },
+      "traceAnalysis": {
+        "schemaVersion": 1,
+        "trace": {
+          "capacity": 32768,
+          "epoch": "C40FFA60-493F-422F-85EF-7569A89A6CE8",
+          "overwritten": 0,
+          "recorded": 3991,
+          "retained": 3991
+        },
+        "stageCounts": {
+          "sourceSubmit": 1801,
+          "encodeSubmit": 387,
+          "encodeOutput": 387,
+          "sourceUnmatched": 1414,
+          "encodeCallbackRejected": 1,
+          "encoderReset": 1
+        },
+        "reasonCounts": {
+          "encodeSubmit:exact_wrapper_identity": 387,
+          "encodeOutput:key": 1,
+          "encodeOutput:delta": 386,
+          "sourceUnmatched:released_before_encoder_unknown": 1414
+        },
+        "ambiguousFrameIdentities": 0,
+        "encoderInputsWithoutSourceIdentity": 0,
+        "sourceWithoutEncoderAfterTwoSecondsUnknown": 1320,
+        "intervals": {
+          "captureCallbackToSourceMs": {
+            "count": 0
+          },
+          "sourceToEncoderMs": {
+            "count": 387,
+            "p50": 0.042291,
+            "p95": 0.064209,
+            "max": 3.937458
+          },
+          "encoderCallbackMs": {
+            "count": 387,
+            "p50": 8.577375,
+            "p95": 9.859458,
+            "max": 25.791667
+          },
+          "sourceToEncodedMs": {
+            "count": 387,
+            "p50": 8.620625,
+            "p95": 9.892458,
+            "max": 29.729125
+          }
+        },
+        "encodedCallbackGapsMs": {
+          "count": 386,
+          "p50": 50.147375,
+          "p95": 231.398375,
+          "max": 319.448625
+        },
+        "largestEncodedCallbackGaps": [
+          {
+            "previousFrameID": 17,
+            "frameID": 36,
+            "sourceSubmitGapMs": 317.967375,
+            "encodeSubmitGapMs": 318.011167,
+            "encodeOutputGapMs": 319.448625,
+            "sourceToEncoderMs": 0.065333,
+            "encoderCallbackMs": 8.897333
+          },
+          {
+            "previousFrameID": 55,
+            "frameID": 70,
+            "sourceSubmitGapMs": 250.855917,
+            "encodeSubmitGapMs": 250.863291,
+            "encodeOutputGapMs": 250.783042,
+            "sourceToEncoderMs": 0.057958,
+            "encoderCallbackMs": 7.860709
+          },
+          {
+            "previousFrameID": 324,
+            "frameID": 339,
+            "sourceSubmitGapMs": 250.51025,
+            "encodeSubmitGapMs": 250.551458,
+            "encodeOutputGapMs": 250.065,
+            "sourceToEncoderMs": 0.078041,
+            "encoderCallbackMs": 7.716375
+          },
+          {
+            "previousFrameID": 1206,
+            "frameID": 1221,
+            "sourceSubmitGapMs": 250.333667,
+            "encodeSubmitGapMs": 250.330208,
+            "encodeOutputGapMs": 249.909042,
+            "sourceToEncoderMs": 0.040208,
+            "encoderCallbackMs": 8.31775
+          },
+          {
+            "previousFrameID": 1691,
+            "frameID": 1706,
+            "sourceSubmitGapMs": 250.430833,
+            "encodeSubmitGapMs": 250.411791,
+            "encodeOutputGapMs": 249.681291,
+            "sourceToEncoderMs": 0.027708,
+            "encoderCallbackMs": 7.85875
+          },
+          {
+            "previousFrameID": 295,
+            "frameID": 310,
+            "sourceSubmitGapMs": 250.124292,
+            "encodeSubmitGapMs": 250.124167,
+            "encodeOutputGapMs": 249.285834,
+            "sourceToEncoderMs": 0.042375,
+            "encoderCallbackMs": 7.782
+          },
+          {
+            "previousFrameID": 1391,
+            "frameID": 1406,
+            "sourceSubmitGapMs": 248.92775,
+            "encodeSubmitGapMs": 248.938083,
+            "encodeOutputGapMs": 248.076875,
+            "sourceToEncoderMs": 0.056333,
+            "encoderCallbackMs": 8.791333
+          },
+          {
+            "previousFrameID": 1657,
+            "frameID": 1671,
+            "sourceSubmitGapMs": 234.535959,
+            "encodeSubmitGapMs": 234.543708,
+            "encodeOutputGapMs": 235.656917,
+            "sourceToEncoderMs": 0.032833,
+            "encoderCallbackMs": 9.013542
+          },
+          {
+            "previousFrameID": 1576,
+            "frameID": 1590,
+            "sourceSubmitGapMs": 233.91175,
+            "encodeSubmitGapMs": 233.898625,
+            "encodeOutputGapMs": 235.293208,
+            "sourceToEncoderMs": 0.030417,
+            "encoderCallbackMs": 9.664708
+          },
+          {
+            "previousFrameID": 1761,
+            "frameID": 1775,
+            "sourceSubmitGapMs": 234.147125,
+            "encodeSubmitGapMs": 234.150708,
+            "encodeOutputGapMs": 234.2785,
+            "sourceToEncoderMs": 0.029583,
+            "encoderCallbackMs": 8.541625
+          }
+        ],
+        "limits": [
+          "Only retained events; overwritten history and unmatched tail are not classified as drops.",
+          "Exact RTC wrapper identity only; changed wrappers and missing observations remain unknown.",
+          "Source without encoder can reflect adaptation or another unobserved path; not proof of VT or network loss.",
+          "Sender-local only. No packet/receiver/display timestamps or physical end-to-end measurement.",
+          "Gap rows show observations, not a unique causal attribution; RTP timestamps here are pre-packetization."
+        ]
+      }
+    }
+  ],
+  "finalBuildChecks": {
+    "binarySHA256": "9bac67cb8960ce840264b23e8de237149dbe60789cb3ed618194ab5297071055",
+    "durationPerCaseSeconds": 20,
+    "results": [
+      {
+        "case": "hdr-window",
+        "traceAnalysis": {
+          "schemaVersion": 1,
+          "trace": {
+            "capacity": 32768,
+            "epoch": "D9113AF2-748D-4358-AED1-D9CC14B36EAB",
+            "overwritten": 0,
+            "recorded": 11658,
+            "retained": 11658
+          },
+          "stageCounts": {
+            "capture": 3489,
+            "sourceSubmit": 3489,
+            "sourceUnmatched": 2300,
+            "encodeSubmit": 1189,
+            "encodeOutput": 1189,
+            "mediaStop": 1,
+            "encoderReset": 1
+          },
+          "reasonCounts": {
+            "sourceUnmatched:released_before_encoder_unknown": 2300,
+            "encodeSubmit:exact_wrapper_identity": 1189,
+            "encodeOutput:key": 10,
+            "encodeOutput:delta": 1179
+          },
+          "ambiguousFrameIdentities": 0,
+          "shutdownBoundaryRecorded": true,
+          "eventsAtOrAfterStop": 2,
+          "encoderInputsWithoutSourceIdentity": 0,
+          "sourceWithoutEncoderAfterTwoSecondsUnknown": 2106,
+          "intervals": {
+            "captureCallbackToSourceMs": {
+              "count": 3489,
+              "p50": 0.035292,
+              "p95": 0.065542,
+              "max": 0.144583
+            },
+            "sourceToEncoderMs": {
+              "count": 1189,
+              "p50": 0.029084,
+              "p95": 0.054125,
+              "max": 13.78675
+            },
+            "encoderCallbackMs": {
+              "count": 1189,
+              "p50": 4.525208,
+              "p95": 5.106625,
+              "max": 13.113334
+            },
+            "sourceToEncodedMs": {
+              "count": 1189,
+              "p50": 4.561542,
+              "p95": 5.158708,
+              "max": 23.49575
+            }
+          },
+          "encodedCallbackGapsMs": {
+            "count": 1188,
+            "p50": 16.814959,
+            "p95": 20.516333,
+            "max": 22.955458
+          },
+          "largestEncodedCallbackGaps": [
+            {
+              "previousFrameID": 2820,
+              "frameID": 2823,
+              "sourceSubmitGapMs": 23.021125,
+              "encodeSubmitGapMs": 23.027208,
+              "encodeOutputGapMs": 22.955458,
+              "sourceToEncoderMs": 0.030708,
+              "encoderCallbackMs": 4.622625
+            },
+            {
+              "previousFrameID": 687,
+              "frameID": 690,
+              "sourceSubmitGapMs": 22.044916,
+              "encodeSubmitGapMs": 22.08525,
+              "encodeOutputGapMs": 22.814,
+              "sourceToEncoderMs": 0.0745,
+              "encoderCallbackMs": 5.469625
+            },
+            {
+              "previousFrameID": 1123,
+              "frameID": 1127,
+              "sourceSubmitGapMs": 22.547083,
+              "encodeSubmitGapMs": 22.548708,
+              "encodeOutputGapMs": 22.633208,
+              "sourceToEncoderMs": 0.027208,
+              "encoderCallbackMs": 4.437375
+            },
+            {
+              "previousFrameID": 3266,
+              "frameID": 3269,
+              "sourceSubmitGapMs": 22.420041,
+              "encodeSubmitGapMs": 22.417834,
+              "encodeOutputGapMs": 22.308334,
+              "sourceToEncoderMs": 0.026334,
+              "encoderCallbackMs": 4.241375
+            },
+            {
+              "previousFrameID": 2598,
+              "frameID": 2602,
+              "sourceSubmitGapMs": 21.993541,
+              "encodeSubmitGapMs": 21.992791,
+              "encodeOutputGapMs": 22.193708,
+              "sourceToEncoderMs": 0.026,
+              "encoderCallbackMs": 4.415875
+            },
+            {
+              "previousFrameID": 2005,
+              "frameID": 2009,
+              "sourceSubmitGapMs": 22.046,
+              "encodeSubmitGapMs": 22.061625,
+              "encodeOutputGapMs": 22.185917,
+              "sourceToEncoderMs": 0.04125,
+              "encoderCallbackMs": 4.567083
+            },
+            {
+              "previousFrameID": 1172,
+              "frameID": 1176,
+              "sourceSubmitGapMs": 22.2255,
+              "encodeSubmitGapMs": 22.229875,
+              "encodeOutputGapMs": 22.128917,
+              "sourceToEncoderMs": 0.044958,
+              "encoderCallbackMs": 4.370834
+            },
+            {
+              "previousFrameID": 509,
+              "frameID": 513,
+              "sourceSubmitGapMs": 22.04,
+              "encodeSubmitGapMs": 22.037292,
+              "encodeOutputGapMs": 22.100542,
+              "sourceToEncoderMs": 0.027084,
+              "encoderCallbackMs": 4.51575
+            },
+            {
+              "previousFrameID": 2138,
+              "frameID": 2141,
+              "sourceSubmitGapMs": 21.8725,
+              "encodeSubmitGapMs": 21.88025,
+              "encodeOutputGapMs": 22.054416,
+              "sourceToEncoderMs": 0.034334,
+              "encoderCallbackMs": 4.501791
+            },
+            {
+              "previousFrameID": 2275,
+              "frameID": 2278,
+              "sourceSubmitGapMs": 22.000708,
+              "encodeSubmitGapMs": 21.99925,
+              "encodeOutputGapMs": 22.007375,
+              "sourceToEncoderMs": 0.026417,
+              "encoderCallbackMs": 4.234375
+            }
+          ],
+          "limits": [
+            "Only retained events; overwritten history and unmatched tail are not classified as drops.",
+            "Exact RTC wrapper identity only; changed wrappers and missing observations remain unknown.",
+            "Source without encoder can reflect adaptation or another unobserved path; not proof of VT or network loss.",
+            "Sender-local only. No packet/receiver/display timestamps or physical end-to-end measurement.",
+            "Gap rows show observations, not a unique causal attribution; RTP timestamps here are pre-packetization."
+          ]
+        },
+        "hostFinal": {
+          "availableOutgoingMbps": 20,
+          "bridge": {
+            "acceptedPackets": 517,
+            "authenticated": true,
+            "endpointScope": "loopback socket endpoint (remote topology unknown)",
+            "expiredAssemblies": 0,
+            "fragmentedInnerDatagrams": 0,
+            "innerDatagramsReceived": 499,
+            "innerDatagramsSent": 1796,
+            "largestSequenceGap": 0,
+            "localInvalidSizes": 0,
+            "localRejectedSources": 31,
+            "localSendErrors": 0,
+            "localSocketDrops": 31,
+            "localUnboundSends": 0,
+            "maxQueueAgeMilliseconds": 0.03941668546758592,
+            "pathDatagramBytes": 1280,
+            "pendingPackets": 0,
+            "queueDeadlineDrops": 0,
+            "queueDrops": 0,
+            "queueHighWater": 1,
+            "queueOverflowDrops": 0,
+            "receiveDepth": 16,
+            "receivedDatagrams": 517,
+            "receivedWireBytes": 44324,
+            "rejectedDatagrams": 0,
+            "reorderedPackets": 0,
+            "rtpSizeCounts": {
+              "1169-1200": 14,
+              "1201-1248": 261,
+              "<=1168": 1431
+            },
+            "sendErrors": 0,
+            "sentDatagrams": 1814,
+            "sentWireBytes": 1234696,
+            "sequenceHoles": 0,
+            "simulatedDrops": 0,
+            "socketReceiveBufferBytes": 262144,
+            "socketRejectedPeers": 0,
+            "socketTruncatedPackets": 0,
+            "transport": "socket",
+            "wireVersion": 2
+          },
+          "candidatePair": "prflx/udp → host/udp",
+          "captureDetails": {
+            "callbackGapMillisecondsMax": 8.658624981762841,
+            "callbackGapMillisecondsP95": 8.268333331216127,
+            "completeFrames": 3486,
+            "height": 1440,
+            "idleFrames": 0,
+            "invalidFrames": 0,
+            "luma10BitSamples": {
+              "maximum": 572,
+              "minimum": 64,
+              "non8BitSamples": 460,
+              "sampleCount": 2048
+            },
+            "otherFrames": 0,
+            "pixelFormat": {
+              "height": "1440",
+              "matrix": "ITU_R_2020",
+              "pixelFormat": "2016686640",
+              "primaries": "ITU_R_2020",
+              "transfer": "SMPTE_ST_2084_PQ",
+              "width": "2560"
+            },
+            "pointPixelScale": 2,
+            "skippedReasons": {},
+            "sourceHeightPoints": 720,
+            "sourceWidthPoints": 1280,
+            "width": 2560,
+            "windowServerAgeMillisecondsMax": 0.572958349948749,
+            "windowServerAgeMillisecondsP95": 0.37158335908316076
+          },
+          "codec": "video/H265",
+          "codecParameters": "level-id=150;profile-id=2;tier-flag=0;tx-mode=SRST",
+          "controlP95Milliseconds": 17.667959,
+          "controlRTTMilliseconds": 1.734083,
+          "controlResponseAgeMilliseconds": 1003.9011666667648,
+          "decoder": "unknown",
+          "displayHeadroom": 1.2000000476837158,
+          "encodeMilliseconds": 4.199999999999997,
+          "encoder": "KKRemote-VT-HEVC-Main10",
+          "encoderDetails": {
+            "asyncFailures": {},
+            "callbackMillisecondsP95": 4.294416663469747,
+            "callbackRejected": 0,
+            "encodedBytes": 940151,
+            "encodedFrames": 1188,
+            "frameBytesMax": 459,
+            "frameBytesP95": 459,
+            "keyframes": 10,
+            "outputWithoutInput": 0,
+            "requestedFPS": 60,
+            "resetPendingUnknown": 0,
+            "submissionErrors": 0,
+            "submittedFrames": 1188,
+            "targetMbps": 19.12,
+            "timestampCollisions": 0,
+            "trace": {
+              "capacity": 32768,
+              "epoch": "D9113AF2-748D-4358-AED1-D9CC14B36EAB",
+              "overwritten": 0,
+              "recorded": 11646,
+              "retained": 11646
+            },
+            "trackingOverflow": 0,
+            "unmatchedExpired": 0,
+            "unmatchedInputs": 0
+          },
+          "fps": 60,
+          "framesDecoded": 0,
+          "framesDropped": 0,
+          "framesEncoded": 1187,
+          "framesSent": 1187,
+          "freezeCount": 0,
+          "height": 1440,
+          "nackCount": 0,
+          "networkRTTMilliseconds": 0,
+          "packetsLost": 0,
+          "packetsSent": 1674,
+          "playoutDelayExtensionNegotiated": true,
+          "pliCount": 0,
+          "potentialDisplayHeadroom": 16,
+          "probeExpired": 0,
+          "probeReceived": 19,
+          "probeSent": 20,
+          "qualityLimitationReason": "none",
+          "retransmittedPacketsSent": 0,
+          "retransmittedPayloadBytes": 0,
+          "rtpHeaderBytes": 50810,
+          "rtpPayloadBytes": 1096972,
+          "seconds": 20.17879041665583,
+          "sendDelayMilliseconds": 0,
+          "sourceFrames": 1188,
+          "transportBytesReceived": 24476,
+          "transportBytesSent": 1172749,
+          "videoMbps": 0.21742328928817536,
+          "width": 2560
+        },
+        "viewerFinal": {
+          "availableOutgoingMbps": 0.3,
+          "bridge": {
+            "acceptedPackets": 1815,
+            "authenticated": true,
+            "endpointScope": "loopback socket endpoint (remote topology unknown)",
+            "expiredAssemblies": 0,
+            "fragmentedInnerDatagrams": 0,
+            "innerDatagramsReceived": 1797,
+            "innerDatagramsSent": 501,
+            "largestSequenceGap": 0,
+            "localInvalidSizes": 0,
+            "localRejectedSources": 31,
+            "localSendErrors": 0,
+            "localSocketDrops": 31,
+            "localUnboundSends": 0,
+            "maxQueueAgeMilliseconds": 0.023333326680585742,
+            "pathDatagramBytes": 1280,
+            "pendingPackets": 0,
+            "probeRTTMilliseconds": 0.13062500511296093,
+            "queueDeadlineDrops": 0,
+            "queueDrops": 0,
+            "queueHighWater": 1,
+            "queueOverflowDrops": 0,
+            "receiveDepth": 16,
+            "receivedDatagrams": 1815,
+            "receivedWireBytes": 1234778,
+            "rejectedDatagrams": 0,
+            "reorderedPackets": 0,
+            "rtpSizeCounts": {
+              "<=1168": 410
+            },
+            "sendErrors": 0,
+            "sentDatagrams": 519,
+            "sentWireBytes": 44592,
+            "sequenceHoles": 0,
+            "simulatedDrops": 0,
+            "socketReceiveBufferBytes": 262144,
+            "socketRejectedPeers": 0,
+            "socketTruncatedPackets": 0,
+            "transport": "socket",
+            "wireVersion": 2
+          },
+          "candidatePair": "prflx/udp → host/udp",
+          "codec": "video/H265",
+          "codecParameters": "level-id=150;profile-id=2;tier-flag=0;tx-mode=SRST",
+          "controlP95Milliseconds": 5.266917,
+          "controlRTTMilliseconds": 0.917625,
+          "controlResponseAgeMilliseconds": 1003.8207083416637,
+          "decodeMilliseconds": 1.0571803278688505,
+          "decoded10BitSamples": {
+            "maximum": 579,
+            "minimum": 63,
+            "non8BitSamples": 534,
+            "sampleCount": 2048
+          },
+          "decodedPixelFormat": {
+            "height": "1440",
+            "matrix": "ITU_R_2020",
+            "pixelFormat": "2016686640",
+            "primaries": "ITU_R_2020",
+            "transfer": "SMPTE_ST_2084_PQ",
+            "width": "2560"
+          },
+          "decoder": "KKRemote-VT-HEVC-Main10",
+          "displayHeadroom": 1.2000000476837158,
+          "encoder": "unknown",
+          "firstFrameMilliseconds": 247.42366667487659,
+          "fps": 61,
+          "frameGapMaxMilliseconds": 21.60470833769068,
+          "frameGapP95Milliseconds": 21.005041664466262,
+          "framesDecoded": 1188,
+          "framesDropped": 0,
+          "framesEncoded": 0,
+          "framesSent": 0,
+          "freezeCount": 0,
+          "height": 1440,
+          "jitterBufferMilliseconds": 0.02386885245901638,
+          "jitterBufferMinimumMilliseconds": 11.05426229508194,
+          "jitterBufferTargetMilliseconds": 11.05426229508194,
+          "jitterMilliseconds": 0,
+          "nackCount": 0,
+          "networkRTTMilliseconds": 0,
+          "packetsLost": 0,
+          "packetsReceived": 1675,
+          "playoutDelayExtensionNegotiated": true,
+          "pliCount": 0,
+          "potentialDisplayHeadroom": 16,
+          "probeExpired": 0,
+          "probeReceived": 19,
+          "probeSent": 20,
+          "qualityLimitationReason": "unknown",
+          "retransmittedPacketsReceived": 155,
+          "retransmittedPayloadBytes": 161094,
+          "rtpHeaderBytes": 50838,
+          "rtpPayloadBytes": 1097427,
+          "seconds": 20.00681816667202,
+          "sourceFrames": 0,
+          "transportBytesReceived": 1173336,
+          "transportBytesSent": 24476,
+          "videoMbps": 0.22107014684669385,
+          "width": 2560
+        }
+      },
+      {
+        "case": "noise",
+        "traceAnalysis": {
+          "schemaVersion": 1,
+          "trace": {
+            "capacity": 32768,
+            "epoch": "F54657CA-B375-4167-B4EA-4EE263A1D3A6",
+            "overwritten": 0,
+            "recorded": 2695,
+            "retained": 2695
+          },
+          "stageCounts": {
+            "sourceSubmit": 1201,
+            "encodeSubmit": 292,
+            "encodeOutput": 292,
+            "sourceUnmatched": 908,
+            "mediaStop": 1,
+            "encoderReset": 1
+          },
+          "reasonCounts": {
+            "encodeSubmit:exact_wrapper_identity": 292,
+            "encodeOutput:key": 1,
+            "encodeOutput:delta": 291,
+            "sourceUnmatched:released_before_encoder_unknown": 908
+          },
+          "ambiguousFrameIdentities": 0,
+          "shutdownBoundaryRecorded": true,
+          "eventsAtOrAfterStop": 2,
+          "encoderInputsWithoutSourceIdentity": 0,
+          "sourceWithoutEncoderAfterTwoSecondsUnknown": 816,
+          "intervals": {
+            "captureCallbackToSourceMs": {
+              "count": 0
+            },
+            "sourceToEncoderMs": {
+              "count": 292,
+              "p50": 0.031625,
+              "p95": 0.068459,
+              "max": 3.92525
+            },
+            "encoderCallbackMs": {
+              "count": 292,
+              "p50": 7.968583,
+              "p95": 10.085167,
+              "max": 24.163375
+            },
+            "sourceToEncodedMs": {
+              "count": 292,
+              "p50": 8.0025,
+              "p95": 10.14775,
+              "max": 28.088625
+            }
+          },
+          "encodedCallbackGapsMs": {
+            "count": 291,
+            "p50": 49.753167,
+            "p95": 133.734542,
+            "max": 249.915458
+          },
+          "largestEncodedCallbackGaps": [
+            {
+              "previousFrameID": 19,
+              "frameID": 34,
+              "sourceSubmitGapMs": 250.014042,
+              "encodeSubmitGapMs": 250.010833,
+              "encodeOutputGapMs": 249.915458,
+              "sourceToEncoderMs": 0.029208,
+              "encoderCallbackMs": 7.560375
+            },
+            {
+              "previousFrameID": 293,
+              "frameID": 308,
+              "sourceSubmitGapMs": 250.199917,
+              "encodeSubmitGapMs": 250.193708,
+              "encodeOutputGapMs": 249.738625,
+              "sourceToEncoderMs": 0.026208,
+              "encoderCallbackMs": 7.461417
+            },
+            {
+              "previousFrameID": 101,
+              "frameID": 116,
+              "sourceSubmitGapMs": 249.990708,
+              "encodeSubmitGapMs": 249.996334,
+              "encodeOutputGapMs": 248.853834,
+              "sourceToEncoderMs": 0.031584,
+              "encoderCallbackMs": 7.477625
+            },
+            {
+              "previousFrameID": 459,
+              "frameID": 473,
+              "sourceSubmitGapMs": 233.371875,
+              "encodeSubmitGapMs": 233.375417,
+              "encodeOutputGapMs": 233.5345,
+              "sourceToEncoderMs": 0.028083,
+              "encoderCallbackMs": 7.906875
+            },
+            {
+              "previousFrameID": 132,
+              "frameID": 144,
+              "sourceSubmitGapMs": 200.347166,
+              "encodeSubmitGapMs": 200.34475,
+              "encodeOutputGapMs": 200.027,
+              "sourceToEncoderMs": 0.027417,
+              "encoderCallbackMs": 7.556917
+            },
+            {
+              "previousFrameID": 1175,
+              "frameID": 1186,
+              "sourceSubmitGapMs": 183.454917,
+              "encodeSubmitGapMs": 183.479667,
+              "encodeOutputGapMs": 183.667166,
+              "sourceToEncoderMs": 0.058625,
+              "encoderCallbackMs": 9.107666
+            },
+            {
+              "previousFrameID": 161,
+              "frameID": 172,
+              "sourceSubmitGapMs": 183.587792,
+              "encodeSubmitGapMs": 183.589042,
+              "encodeOutputGapMs": 183.569166,
+              "sourceToEncoderMs": 0.028542,
+              "encoderCallbackMs": 7.896041
+            },
+            {
+              "previousFrameID": 890,
+              "frameID": 901,
+              "sourceSubmitGapMs": 183.401167,
+              "encodeSubmitGapMs": 183.402333,
+              "encodeOutputGapMs": 183.474416,
+              "sourceToEncoderMs": 0.035916,
+              "encoderCallbackMs": 8.51825
+            },
+            {
+              "previousFrameID": 361,
+              "frameID": 372,
+              "sourceSubmitGapMs": 183.306042,
+              "encodeSubmitGapMs": 183.308292,
+              "encodeOutputGapMs": 183.200958,
+              "sourceToEncoderMs": 0.028375,
+              "encoderCallbackMs": 7.869833
+            },
+            {
+              "previousFrameID": 328,
+              "frameID": 338,
+              "sourceSubmitGapMs": 167.388041,
+              "encodeSubmitGapMs": 167.384459,
+              "encodeOutputGapMs": 167.317542,
+              "sourceToEncoderMs": 0.025209,
+              "encoderCallbackMs": 7.814833
+            }
+          ],
+          "limits": [
+            "Only retained events; overwritten history and unmatched tail are not classified as drops.",
+            "Exact RTC wrapper identity only; changed wrappers and missing observations remain unknown.",
+            "Source without encoder can reflect adaptation or another unobserved path; not proof of VT or network loss.",
+            "Sender-local only. No packet/receiver/display timestamps or physical end-to-end measurement.",
+            "Gap rows show observations, not a unique causal attribution; RTP timestamps here are pre-packetization."
+          ]
+        },
+        "hostFinal": {
+          "availableOutgoingMbps": 20,
+          "bridge": {
+            "acceptedPackets": 461,
+            "authenticated": true,
+            "endpointScope": "loopback socket endpoint (remote topology unknown)",
+            "expiredAssemblies": 0,
+            "fragmentedInnerDatagrams": 0,
+            "innerDatagramsReceived": 443,
+            "innerDatagramsSent": 43374,
+            "largestSequenceGap": 0,
+            "localInvalidSizes": 0,
+            "localRejectedSources": 31,
+            "localSendErrors": 0,
+            "localSocketDrops": 31,
+            "localUnboundSends": 0,
+            "maxQueueAgeMilliseconds": 0.04266665200702846,
+            "pathDatagramBytes": 1280,
+            "pendingPackets": 0,
+            "queueDeadlineDrops": 0,
+            "queueDrops": 0,
+            "queueHighWater": 1,
+            "queueOverflowDrops": 0,
+            "receiveDepth": 16,
+            "receivedDatagrams": 461,
+            "receivedWireBytes": 80302,
+            "rejectedDatagrams": 0,
+            "reorderedPackets": 0,
+            "rtpSizeCounts": {
+              "1169-1200": 14,
+              "1201-1248": 41898,
+              "<=1168": 1372
+            },
+            "sendErrors": 0,
+            "sentDatagrams": 43392,
+            "sentWireBytes": 52320387,
+            "sequenceHoles": 0,
+            "simulatedDrops": 0,
+            "socketReceiveBufferBytes": 262144,
+            "socketRejectedPeers": 0,
+            "socketTruncatedPackets": 0,
+            "transport": "socket",
+            "wireVersion": 2
+          },
+          "candidatePair": "prflx/udp → host/udp",
+          "codec": "video/H264",
+          "codecParameters": "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=640c33",
+          "controlP95Milliseconds": 12.516875,
+          "controlRTTMilliseconds": 10.734125,
+          "controlResponseAgeMilliseconds": 992.2813333105296,
+          "decoder": "unknown",
+          "displayHeadroom": 1,
+          "encodeMilliseconds": 8.416666666666664,
+          "encoder": "VideoToolbox",
+          "encoderDetails": {
+            "asyncFailures": {},
+            "callbackMillisecondsP95": 9.691916668089107,
+            "callbackRejected": 0,
+            "encodedBytes": 49146977,
+            "encodedFrames": 291,
+            "frameBytesMax": 289798,
+            "frameBytesP95": 289798,
+            "keyframes": 1,
+            "outputWithoutInput": 0,
+            "qpLatest": 51,
+            "qpMaximum": 51,
+            "requestedFPS": 60,
+            "resetPendingUnknown": 0,
+            "submissionErrors": 0,
+            "submittedFrames": 292,
+            "targetMbps": 9.546,
+            "timestampCollisions": 0,
+            "trace": {
+              "capacity": 32768,
+              "epoch": "F54657CA-B375-4167-B4EA-4EE263A1D3A6",
+              "overwritten": 0,
+              "recorded": 2689,
+              "retained": 2689
+            },
+            "trackingOverflow": 0,
+            "unmatchedExpired": 0,
+            "unmatchedInputs": 1
+          },
+          "fps": 12,
+          "framesDecoded": 0,
+          "framesDropped": 0,
+          "framesEncoded": 291,
+          "framesSent": 291,
+          "freezeCount": 0,
+          "height": 1440,
+          "nackCount": 0,
+          "networkRTTMilliseconds": 0,
+          "packetsLost": 0,
+          "packetsSent": 42234,
+          "playoutDelayExtensionNegotiated": true,
+          "pliCount": 0,
+          "potentialDisplayHeadroom": 1,
+          "probeExpired": 0,
+          "probeReceived": 19,
+          "probeSent": 20,
+          "qualityLimitationReason": "none",
+          "retransmittedPacketsSent": 0,
+          "retransmittedPayloadBytes": 0,
+          "rtpHeaderBytes": 1196533,
+          "rtpPayloadBytes": 49229955,
+          "seconds": 20.186626749986317,
+          "sendDelayMilliseconds": 23.07294736842105,
+          "sourceFrames": 1198,
+          "transportBytesReceived": 62246,
+          "transportBytesSent": 50928437,
+          "videoMbps": 19.26763553453837,
+          "width": 2560
+        },
+        "viewerFinal": {
+          "availableOutgoingMbps": 0.3,
+          "bridge": {
+            "acceptedPackets": 43393,
+            "authenticated": true,
+            "endpointScope": "loopback socket endpoint (remote topology unknown)",
+            "expiredAssemblies": 0,
+            "fragmentedInnerDatagrams": 0,
+            "innerDatagramsReceived": 43375,
+            "innerDatagramsSent": 445,
+            "largestSequenceGap": 0,
+            "localInvalidSizes": 0,
+            "localRejectedSources": 31,
+            "localSendErrors": 0,
+            "localSocketDrops": 31,
+            "localUnboundSends": 0,
+            "maxQueueAgeMilliseconds": 0.00837500556372106,
+            "pathDatagramBytes": 1280,
+            "pendingPackets": 0,
+            "probeRTTMilliseconds": 0.14429166913032532,
+            "queueDeadlineDrops": 0,
+            "queueDrops": 0,
+            "queueHighWater": 1,
+            "queueOverflowDrops": 0,
+            "receiveDepth": 16,
+            "receivedDatagrams": 43393,
+            "receivedWireBytes": 52320469,
+            "rejectedDatagrams": 0,
+            "reorderedPackets": 0,
+            "rtpSizeCounts": {
+              "<=1168": 354
+            },
+            "sendErrors": 0,
+            "sentDatagrams": 463,
+            "sentWireBytes": 80570,
+            "sequenceHoles": 0,
+            "simulatedDrops": 0,
+            "socketReceiveBufferBytes": 262144,
+            "socketRejectedPeers": 0,
+            "socketTruncatedPackets": 0,
+            "transport": "socket",
+            "wireVersion": 2
+          },
+          "candidatePair": "prflx/udp → host/udp",
+          "codec": "video/H264",
+          "codecParameters": "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=640c33",
+          "controlP95Milliseconds": 6.36975,
+          "controlRTTMilliseconds": 0.932791,
+          "controlResponseAgeMilliseconds": 992.88008332951,
+          "decodeMilliseconds": 4.784615384615387,
+          "decodedPixelFormat": {
+            "height": "1440",
+            "matrix": "ITU_R_709_2",
+            "pixelFormat": "875704422",
+            "primaries": "ITU_R_709_2",
+            "transfer": "ITU_R_709_2",
+            "width": "2560"
+          },
+          "decoder": "VideoToolbox",
+          "displayHeadroom": 1,
+          "encoder": "unknown",
+          "firstFrameMilliseconds": 146.06124997953884,
+          "fps": 13,
+          "frameGapMaxMilliseconds": 183.48724997485988,
+          "frameGapP95Milliseconds": 183.48724997485988,
+          "framesDecoded": 291,
+          "framesDropped": 0,
+          "framesEncoded": 0,
+          "framesSent": 0,
+          "freezeCount": 1,
+          "height": 1440,
+          "jitterBufferMilliseconds": 36.78176923076926,
+          "jitterBufferMinimumMilliseconds": 37.65215384615385,
+          "jitterBufferTargetMilliseconds": 37.65215384615385,
+          "jitterMilliseconds": 33,
+          "nackCount": 0,
+          "networkRTTMilliseconds": 0,
+          "packetsLost": 0,
+          "packetsReceived": 42234,
+          "playoutDelayExtensionNegotiated": true,
+          "pliCount": 0,
+          "potentialDisplayHeadroom": 1,
+          "probeExpired": 0,
+          "probeReceived": 19,
+          "probeSent": 20,
+          "qualityLimitationReason": "unknown",
+          "retransmittedPacketsReceived": 3,
+          "retransmittedPayloadBytes": 0,
+          "rtpHeaderBytes": 1196533,
+          "rtpPayloadBytes": 49229955,
+          "seconds": 20.0033083333401,
+          "sourceFrames": 0,
+          "transportBytesReceived": 50928531,
+          "transportBytesSent": 62246,
+          "videoMbps": 18.778875927118776,
+          "width": 2560
+        }
+      },
+      {
+        "case": "hdr-loss",
+        "traceAnalysis": {
+          "schemaVersion": 1,
+          "trace": {
+            "capacity": 32768,
+            "epoch": "827834C2-917C-41BD-B111-714E6C9099C8",
+            "overwritten": 0,
+            "recorded": 3599,
+            "retained": 3599
+          },
+          "stageCounts": {
+            "sourceSubmit": 1199,
+            "encodeSubmit": 1199,
+            "encodeOutput": 1199,
+            "mediaStop": 1,
+            "encoderReset": 1
+          },
+          "reasonCounts": {
+            "encodeSubmit:exact_wrapper_identity": 1199,
+            "encodeOutput:key": 10,
+            "encodeOutput:delta": 1189
+          },
+          "ambiguousFrameIdentities": 0,
+          "shutdownBoundaryRecorded": true,
+          "eventsAtOrAfterStop": 2,
+          "encoderInputsWithoutSourceIdentity": 0,
+          "sourceWithoutEncoderAfterTwoSecondsUnknown": 0,
+          "intervals": {
+            "captureCallbackToSourceMs": {
+              "count": 0
+            },
+            "sourceToEncoderMs": {
+              "count": 1199,
+              "p50": 0.039208,
+              "p95": 0.060542,
+              "max": 9.93625
+            },
+            "encoderCallbackMs": {
+              "count": 1199,
+              "p50": 4.420625,
+              "p95": 4.898292,
+              "max": 13.223333
+            },
+            "sourceToEncodedMs": {
+              "count": 1199,
+              "p50": 4.461125,
+              "p95": 4.945166,
+              "max": 23.159583
+            }
+          },
+          "encodedCallbackGapsMs": {
+            "count": 1198,
+            "p50": 16.662541,
+            "p95": 17.21675,
+            "max": 18.207708
+          },
+          "largestEncodedCallbackGaps": [
+            {
+              "previousFrameID": 1095,
+              "frameID": 1096,
+              "sourceSubmitGapMs": 16.664417,
+              "encodeSubmitGapMs": 16.668584,
+              "encodeOutputGapMs": 18.207708,
+              "sourceToEncoderMs": 0.018875,
+              "encoderCallbackMs": 5.629458
+            },
+            {
+              "previousFrameID": 60,
+              "frameID": 61,
+              "sourceSubmitGapMs": 16.715,
+              "encodeSubmitGapMs": 18.162167,
+              "encodeOutputGapMs": 18.180666,
+              "sourceToEncoderMs": 1.486292,
+              "encoderCallbackMs": 4.501291
+            },
+            {
+              "previousFrameID": 1093,
+              "frameID": 1094,
+              "sourceSubmitGapMs": 16.542458,
+              "encodeSubmitGapMs": 16.5365,
+              "encodeOutputGapMs": 18.17125,
+              "sourceToEncoderMs": 0.022708,
+              "encoderCallbackMs": 5.830917
+            },
+            {
+              "previousFrameID": 843,
+              "frameID": 844,
+              "sourceSubmitGapMs": 16.737375,
+              "encodeSubmitGapMs": 16.754833,
+              "encodeOutputGapMs": 17.87825,
+              "sourceToEncoderMs": 0.046125,
+              "encoderCallbackMs": 5.4145
+            },
+            {
+              "previousFrameID": 1194,
+              "frameID": 1195,
+              "sourceSubmitGapMs": 17.56825,
+              "encodeSubmitGapMs": 17.580583,
+              "encodeOutputGapMs": 17.7655,
+              "sourceToEncoderMs": 0.044041,
+              "encoderCallbackMs": 4.467042
+            },
+            {
+              "previousFrameID": 391,
+              "frameID": 392,
+              "sourceSubmitGapMs": 16.669875,
+              "encodeSubmitGapMs": 16.675292,
+              "encodeOutputGapMs": 17.727917,
+              "sourceToEncoderMs": 0.046833,
+              "encoderCallbackMs": 5.556042
+            },
+            {
+              "previousFrameID": 1015,
+              "frameID": 1016,
+              "sourceSubmitGapMs": 17.212125,
+              "encodeSubmitGapMs": 17.208833,
+              "encodeOutputGapMs": 17.722167,
+              "sourceToEncoderMs": 0.028375,
+              "encoderCallbackMs": 4.6625
+            },
+            {
+              "previousFrameID": 1148,
+              "frameID": 1149,
+              "sourceSubmitGapMs": 17.469625,
+              "encodeSubmitGapMs": 17.482916,
+              "encodeOutputGapMs": 17.7075,
+              "sourceToEncoderMs": 0.057291,
+              "encoderCallbackMs": 4.689584
+            },
+            {
+              "previousFrameID": 1188,
+              "frameID": 1189,
+              "sourceSubmitGapMs": 17.610458,
+              "encodeSubmitGapMs": 17.614666,
+              "encodeOutputGapMs": 17.70475,
+              "sourceToEncoderMs": 0.047708,
+              "encoderCallbackMs": 4.559584
+            },
+            {
+              "previousFrameID": 685,
+              "frameID": 686,
+              "sourceSubmitGapMs": 17.388584,
+              "encodeSubmitGapMs": 17.403,
+              "encodeOutputGapMs": 17.6625,
+              "sourceToEncoderMs": 0.0395,
+              "encoderCallbackMs": 4.346
+            }
+          ],
+          "limits": [
+            "Only retained events; overwritten history and unmatched tail are not classified as drops.",
+            "Exact RTC wrapper identity only; changed wrappers and missing observations remain unknown.",
+            "Source without encoder can reflect adaptation or another unobserved path; not proof of VT or network loss.",
+            "Sender-local only. No packet/receiver/display timestamps or physical end-to-end measurement.",
+            "Gap rows show observations, not a unique causal attribution; RTP timestamps here are pre-packetization."
+          ]
+        },
+        "hostFinal": {
+          "availableOutgoingMbps": 20,
+          "bridge": {
+            "acceptedPackets": 523,
+            "authenticated": true,
+            "endpointScope": "loopback socket endpoint (remote topology unknown)",
+            "expiredAssemblies": 0,
+            "fragmentedInnerDatagrams": 0,
+            "innerDatagramsReceived": 505,
+            "innerDatagramsSent": 1511,
+            "largestSequenceGap": 0,
+            "localInvalidSizes": 0,
+            "localRejectedSources": 31,
+            "localSendErrors": 0,
+            "localSocketDrops": 31,
+            "localUnboundSends": 0,
+            "maxQueueAgeMilliseconds": 0.026916677597910166,
+            "pathDatagramBytes": 1280,
+            "pendingPackets": 0,
+            "queueDeadlineDrops": 0,
+            "queueDrops": 0,
+            "queueHighWater": 1,
+            "queueOverflowDrops": 0,
+            "receiveDepth": 16,
+            "receivedDatagrams": 523,
+            "receivedWireBytes": 44395,
+            "rejectedDatagrams": 0,
+            "reorderedPackets": 0,
+            "rtpSizeCounts": {
+              "1169-1200": 1,
+              "1201-1248": 10,
+              "<=1168": 1411
+            },
+            "sendErrors": 0,
+            "sentDatagrams": 1529,
+            "sentWireBytes": 866583,
+            "sequenceHoles": 0,
+            "simulatedDrops": 19,
+            "socketReceiveBufferBytes": 262144,
+            "socketRejectedPeers": 0,
+            "socketTruncatedPackets": 0,
+            "transport": "socket",
+            "wireVersion": 2
+          },
+          "candidatePair": "prflx/udp → host/udp",
+          "codec": "video/H265",
+          "codecParameters": "level-id=150;profile-id=2;tier-flag=0;tx-mode=SRST",
+          "controlP95Milliseconds": 21.363083,
+          "controlRTTMilliseconds": 5.327667,
+          "controlResponseAgeMilliseconds": 996.7030416592024,
+          "decoder": "unknown",
+          "displayHeadroom": 1.2000000476837158,
+          "encodeMilliseconds": 4.5499999999999945,
+          "encoder": "KKRemote-VT-HEVC-Main10",
+          "encoderDetails": {
+            "asyncFailures": {},
+            "callbackMillisecondsP95": 5.046166683314368,
+            "callbackRejected": 0,
+            "encodedBytes": 568989,
+            "encodedFrames": 1197,
+            "frameBytesMax": 483,
+            "frameBytesP95": 479,
+            "keyframes": 10,
+            "outputWithoutInput": 0,
+            "requestedFPS": 60,
+            "resetPendingUnknown": 0,
+            "submissionErrors": 0,
+            "submittedFrames": 1197,
+            "targetMbps": 19.12,
+            "timestampCollisions": 0,
+            "trace": {
+              "capacity": 32768,
+              "epoch": "827834C2-917C-41BD-B111-714E6C9099C8",
+              "overwritten": 0,
+              "recorded": 3591,
+              "retained": 3591
+            },
+            "trackingOverflow": 0,
+            "unmatchedExpired": 0,
+            "unmatchedInputs": 0
+          },
+          "fps": 60,
+          "framesDecoded": 0,
+          "framesDropped": 0,
+          "framesEncoded": 1197,
+          "framesSent": 1197,
+          "freezeCount": 0,
+          "height": 1440,
+          "nackCount": 8,
+          "networkRTTMilliseconds": 0,
+          "packetsLost": 0,
+          "packetsSent": 1416,
+          "playoutDelayExtensionNegotiated": true,
+          "pliCount": 0,
+          "potentialDisplayHeadroom": 16,
+          "probeExpired": 0,
+          "probeReceived": 19,
+          "probeSent": 20,
+          "qualityLimitationReason": "none",
+          "retransmittedPacketsSent": 19,
+          "retransmittedPayloadBytes": 8699,
+          "rtpHeaderBytes": 43374,
+          "rtpPayloadBytes": 758434,
+          "seconds": 20.17015258333413,
+          "sendDelayMilliseconds": 0,
+          "sourceFrames": 1197,
+          "transportBytesReceived": 24451,
+          "transportBytesSent": 823728,
+          "videoMbps": 0.2205347922617844,
+          "width": 2560
+        },
+        "viewerFinal": {
+          "availableOutgoingMbps": 0.3,
+          "bridge": {
+            "acceptedPackets": 1530,
+            "authenticated": true,
+            "endpointScope": "loopback socket endpoint (remote topology unknown)",
+            "expiredAssemblies": 0,
+            "fragmentedInnerDatagrams": 0,
+            "innerDatagramsReceived": 1512,
+            "innerDatagramsSent": 507,
+            "largestSequenceGap": 12,
+            "localInvalidSizes": 0,
+            "localRejectedSources": 31,
+            "localSendErrors": 0,
+            "localSocketDrops": 31,
+            "localUnboundSends": 0,
+            "maxQueueAgeMilliseconds": 0.016333331586793065,
+            "pathDatagramBytes": 1280,
+            "pendingPackets": 0,
+            "probeRTTMilliseconds": 0.2849583397619426,
+            "queueDeadlineDrops": 0,
+            "queueDrops": 0,
+            "queueHighWater": 1,
+            "queueOverflowDrops": 0,
+            "receiveDepth": 16,
+            "receivedDatagrams": 1530,
+            "receivedWireBytes": 866665,
+            "rejectedDatagrams": 0,
+            "reorderedPackets": 0,
+            "rtpSizeCounts": {
+              "<=1168": 417
+            },
+            "sendErrors": 0,
+            "sentDatagrams": 525,
+            "sentWireBytes": 44663,
+            "sequenceHoles": 19,
+            "simulatedDrops": 0,
+            "socketReceiveBufferBytes": 262144,
+            "socketRejectedPeers": 0,
+            "socketTruncatedPackets": 0,
+            "transport": "socket",
+            "wireVersion": 2
+          },
+          "candidatePair": "prflx/udp → host/udp",
+          "codec": "video/H265",
+          "codecParameters": "level-id=150;profile-id=2;tier-flag=0;tx-mode=SRST",
+          "controlP95Milliseconds": 8.263125,
+          "controlRTTMilliseconds": 0.972625,
+          "controlResponseAgeMilliseconds": 997.4027500138618,
+          "decodeMilliseconds": 1.4157333333333317,
+          "decoded10BitSamples": {
+            "maximum": 926,
+            "minimum": 64,
+            "non8BitSamples": 1569,
+            "sampleCount": 2048
+          },
+          "decodedPixelFormat": {
+            "height": "1440",
+            "matrix": "ITU_R_2020",
+            "pixelFormat": "2016686640",
+            "primaries": "ITU_R_2020",
+            "transfer": "SMPTE_ST_2084_PQ",
+            "width": "2560"
+          },
+          "decoder": "KKRemote-VT-HEVC-Main10",
+          "displayHeadroom": 1.2000000476837158,
+          "encoder": "unknown",
+          "firstFrameMilliseconds": 82.68887500162236,
+          "fps": 60,
+          "frameGapMaxMilliseconds": 18.146416667150334,
+          "frameGapP95Milliseconds": 17.600999999558553,
+          "framesDecoded": 1196,
+          "framesDropped": 0,
+          "framesEncoded": 0,
+          "framesSent": 0,
+          "freezeCount": 1,
+          "height": 1440,
+          "jitterBufferMilliseconds": 0.04223333333333209,
+          "jitterBufferMinimumMilliseconds": 11.929300000000016,
+          "jitterBufferTargetMilliseconds": 11.929300000000016,
+          "jitterMilliseconds": 0,
+          "nackCount": 8,
+          "networkRTTMilliseconds": 0,
+          "packetsLost": 19,
+          "packetsReceived": 1397,
+          "playoutDelayExtensionNegotiated": true,
+          "pliCount": 0,
+          "potentialDisplayHeadroom": 16,
+          "probeExpired": 0,
+          "probeReceived": 19,
+          "probeSent": 20,
+          "qualityLimitationReason": "unknown",
+          "retransmittedPacketsReceived": 195,
+          "retransmittedPayloadBytes": 194238,
+          "rtpHeaderBytes": 42810,
+          "rtpPayloadBytes": 749773,
+          "seconds": 20.003089958336204,
+          "sourceFrames": 0,
+          "transportBytesReceived": 814407,
+          "transportBytesSent": 24451,
+          "videoMbps": 0.22051922217043854,
+          "width": 2560
+        }
+      }
+    ]
+  }
+}

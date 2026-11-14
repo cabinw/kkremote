@@ -1,0 +1,306 @@
+{
+  "date": "2026-11-14",
+  "usbBuild": 39,
+  "source": "owned AppKit text/lines/table window",
+  "network": "Ponte endpoint over observed Wi-Fi; outer channel unknown",
+  "budget": {
+    "maximumPixels": 3686400,
+    "fps": 60,
+    "Mbps": 20
+  },
+  "selectedProfile": "native P010 capture with maximum frame QP 16",
+  "experimentalProfile": "RGBA half-float capture -> RGB Lanczos -> P010 at client display pixel density",
+  "limits": [
+    "Source remains 2x; resampling is not native 3x rendering",
+    "Both 126-second runs recorded 9 SDK freezes; steady 60 fps not accepted",
+    "Desktop client display remains SDR UI conversion; no new physical HDR brightness acceptance",
+    "No iOS layout/input changes; owned fixture input not tested"
+  ],
+  "qualityROIs": {
+    "baseline": {
+      "black9": {
+        "mae": 10.401741293532337,
+        "psnr": 24.23857783091394
+      },
+      "red12": {
+        "mae": 32.16932721043808,
+        "psnr": 15.537288483554248
+      },
+      "blue12": {
+        "mae": 36.18199398366996,
+        "psnr": 13.92583135477281
+      },
+      "black22": {
+        "mae": 5.787472259765397,
+        "psnr": 27.12626603136144
+      }
+    },
+    "qp16": {
+      "black9": {
+        "mae": 3.586442786069652,
+        "psnr": 33.08344145149191
+      },
+      "red12": {
+        "mae": 25.90123186821197,
+        "psnr": 17.25763563310624
+      },
+      "blue12": {
+        "mae": 23.19782266150981,
+        "psnr": 17.231749459606817
+      },
+      "black22": {
+        "mae": 2.1670587842685753,
+        "psnr": 35.457752767919565
+      }
+    },
+    "rgb": {
+      "black9": {
+        "mae": 6.030939054726368,
+        "psnr": 27.69033026520475
+      },
+      "red12": {
+        "mae": 18.468109920548144,
+        "psnr": 19.37664774521744
+      },
+      "blue12": {
+        "mae": 15.951081506947428,
+        "psnr": 20.358694609470632
+      },
+      "black22": {
+        "mae": 4.74026797483773,
+        "psnr": 28.059140361930513
+      }
+    }
+  },
+  "qualityReference": "Uncompressed owned RGB capture, CI Lanczos to display size, ICC-converted screenshot ROI, fixed coordinates",
+  "runs": {
+    "native": {
+      "host": {
+        "activeSampleSpanSeconds": 125.99805862503126,
+        "samples": 127,
+        "fps": {
+          "min": 31,
+          "median": 60,
+          "max": 61
+        },
+        "videoMbpsMedian": 2.515801231590184,
+        "freezeCount": 0,
+        "framesDropped": 0,
+        "physicalFootprintMiBLast": 29.001121520996094,
+        "thermalLast": "nominal",
+        "reportSHA256": "464bba591eb9f99ccfbeed8111ec80529ecdf0110dab62a692012417dfb3618a",
+        "capture": {
+          "callbackGapMillisecondsMax": 19.654749950859696,
+          "callbackGapMillisecondsP95": 18.713208322878927,
+          "completeFrames": 7603,
+          "height": 1746,
+          "idleFrames": 0,
+          "invalidFrames": 0,
+          "luma10BitSamples": {
+            "maximum": 572,
+            "minimum": 64,
+            "non8BitSamples": 81,
+            "sampleCount": 2211
+          },
+          "nativePixelHeight": 1746,
+          "nativePixelWidth": 860,
+          "otherFrames": 0,
+          "pixelFormat": {
+            "height": "1746",
+            "matrix": "ITU_R_2020",
+            "pixelFormat": "2016686640",
+            "primaries": "ITU_R_2020",
+            "transfer": "SMPTE_ST_2084_PQ",
+            "width": "860"
+          },
+          "pointPixelScale": 2,
+          "queueDepth": 3,
+          "skippedReasons": {},
+          "sourceHeightPoints": 873,
+          "sourceWidthPoints": 430,
+          "textQualityConversion": false,
+          "width": 860,
+          "windowServerAgeMillisecondsMax": 0.7853750139474869,
+          "windowServerAgeMillisecondsP95": 0.7000833284109831
+        },
+        "encoder": {
+          "asyncFailures": {},
+          "callbackMillisecondsP95": 9.211291675455868,
+          "callbackRejected": 0,
+          "configuredMaximumFrameQP": 16,
+          "encodedBytes": 39460071,
+          "encodedFrames": 7335,
+          "frameBytesMax": 6483,
+          "frameBytesP95": 6268,
+          "keyframes": 13,
+          "maximumKeyframeIntervalFrames": 600,
+          "outputWithoutInput": 0,
+          "requestedFPS": 60,
+          "resetPendingUnknown": 0,
+          "submissionErrors": 0,
+          "submittedFrames": 7335,
+          "targetMbps": 2.114,
+          "timestampCollisions": 0,
+          "trackingOverflow": 0,
+          "unmatchedExpired": 0,
+          "unmatchedInputs": 0
+        }
+      },
+      "viewer": {
+        "activeSampleSpanSeconds": 125.9958931250003,
+        "samples": 127,
+        "fps": {
+          "min": 33,
+          "median": 59,
+          "max": 69
+        },
+        "videoMbpsMedian": 2.5222853311403837,
+        "freezeCount": 9,
+        "framesDropped": 0,
+        "physicalFootprintMiBLast": 274.0802688598633,
+        "thermalLast": "fair",
+        "reportSHA256": "6abed63a2d6c4f8055743ce71b0f75fde83c30a96a1125ec353bd5764062e269",
+        "decoderFailures": {},
+        "decoderCallbackMillisecondsP95": 2.5445,
+        "display": [
+          {
+            "active": true,
+            "backpressureDrops": 5,
+            "cancelled": 0,
+            "enqueued": 7143,
+            "failures": 0,
+            "mainQueueWaitMillisecondsMax": 14.638542,
+            "mainQueueWaitMillisecondsP95": 5.217875,
+            "outputHeight": 2619,
+            "outputWidth": 1290,
+            "pending": 0,
+            "received": 7335,
+            "replaced": 187,
+            "staleCallbacks": 0
+          }
+        ]
+      }
+    },
+    "rgb": {
+      "host": {
+        "activeSampleSpanSeconds": 126.99901933333604,
+        "samples": 128,
+        "fps": {
+          "min": 59,
+          "median": 61.0,
+          "max": 63
+        },
+        "videoMbpsMedian": 1.9834551328081302,
+        "freezeCount": 0,
+        "framesDropped": 0,
+        "physicalFootprintMiBLast": 212.98556518554688,
+        "thermalLast": "nominal",
+        "reportSHA256": "cc5b7daf1e2dc3bb6c27180684de7abacbc9c1ac2d211fef104d5a37337bc84f",
+        "capture": {
+          "callbackGapMillisecondsMax": 19.141583354212344,
+          "callbackGapMillisecondsP95": 18.13104166649282,
+          "completeFrames": 7650,
+          "conversionMillisecondsP95": 3.7312916829250753,
+          "height": 2618,
+          "idleFrames": 0,
+          "invalidFrames": 0,
+          "luma10BitSamples": {
+            "maximum": 583,
+            "minimum": 64,
+            "non8BitSamples": 1251,
+            "sampleCount": 2145
+          },
+          "nativePixelHeight": 1746,
+          "nativePixelWidth": 860,
+          "otherFrames": 0,
+          "pixelFormat": {
+            "height": "2618",
+            "matrix": "ITU_R_2020",
+            "pixelFormat": "2016686640",
+            "primaries": "ITU_R_2020",
+            "transfer": "SMPTE_ST_2084_PQ",
+            "width": "1290"
+          },
+          "pointPixelScale": 2,
+          "queueDepth": 3,
+          "skippedReasons": {},
+          "sourceHeightPoints": 873,
+          "sourceWidthPoints": 430,
+          "textQualityConversion": true,
+          "width": 1290,
+          "windowServerAgeMillisecondsMax": 0.647958368062973,
+          "windowServerAgeMillisecondsP95": 0.6307083531282842
+        },
+        "encoder": {
+          "asyncFailures": {},
+          "callbackMillisecondsP95": 15.066749998368323,
+          "callbackRejected": 0,
+          "configuredMaximumFrameQP": 16,
+          "encodedBytes": 33578423,
+          "encodedFrames": 7646,
+          "frameBytesMax": 68131,
+          "frameBytesP95": 5256,
+          "keyframes": 13,
+          "maximumKeyframeIntervalFrames": 600,
+          "outputWithoutInput": 0,
+          "requestedFPS": 60,
+          "resetPendingUnknown": 0,
+          "submissionErrors": 0,
+          "submittedFrames": 7646,
+          "targetMbps": 7.166,
+          "timestampCollisions": 0,
+          "trackingOverflow": 0,
+          "unmatchedExpired": 0,
+          "unmatchedInputs": 0
+        }
+      },
+      "viewer": {
+        "activeSampleSpanSeconds": 126.0236810833303,
+        "samples": 127,
+        "fps": {
+          "min": 49,
+          "median": 60,
+          "max": 76
+        },
+        "videoMbpsMedian": 1.9766602436508265,
+        "freezeCount": 9,
+        "framesDropped": 0,
+        "physicalFootprintMiBLast": 338.6271438598633,
+        "thermalLast": "fair",
+        "reportSHA256": "c52b446c3c1b22d0b88a1f00b0e2396979419abf6c424dc6d2293e89f402d3af",
+        "decoderFailures": {},
+        "decoderCallbackMillisecondsP95": 3.872833,
+        "display": [
+          {
+            "active": true,
+            "backpressureDrops": 2,
+            "cancelled": 0,
+            "enqueued": 7351,
+            "failures": 0,
+            "mainQueueWaitMillisecondsMax": 14.923458,
+            "mainQueueWaitMillisecondsP95": 6.011958,
+            "outputHeight": 2619,
+            "outputWidth": 1290,
+            "pending": 1,
+            "received": 7592,
+            "replaced": 238,
+            "staleCallbacks": 0
+          }
+        ]
+      }
+    }
+  },
+  "tests": {
+    "pixelBudgetHDRPool": "passed",
+    "signalingAndBackwardCompatibility": "passed",
+    "gitDiffCheck": "passed",
+    "iosPhysicalUITests": [
+      "baseline37",
+      "QP16-37",
+      "RGB38",
+      "scroll38",
+      "RGB39-126s",
+      "native39-126s"
+    ]
+  }
+}

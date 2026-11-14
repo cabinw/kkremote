@@ -1,0 +1,276 @@
+{
+  "date": "2026-11-15",
+  "build": 41,
+  "transportBudget": {
+    "maxPixels": 3686400,
+    "fps": 60,
+    "Mbps": 20
+  },
+  "endpointChanged": false,
+  "workspace": {
+    "currentEDR": 5,
+    "potentialEDR": 5,
+    "experimentalPrivateAPI": true,
+    "hdrRequested": true,
+    "refreshRate": 60,
+    "backingScale": 2,
+    "colorSpace": "KKRemote HDR Native Workspace",
+    "displayID": 12,
+    "logicalSize": [
+      1280,
+      1440
+    ],
+    "pid": 63322,
+    "pixelSize": [
+      2560,
+      2880
+    ],
+    "name": "KKRemote HDR Native Workspace",
+    "transferFunction": 1
+  },
+  "physicalDisplay": "3456x2234 pixels / 1728x1117 points / 60 Hz (verify final observation separately)",
+  "tests": {
+    "browser": {
+      "samples": 51,
+      "seconds": 51.009801916676224,
+      "receiveFPS": {
+        "min": 55,
+        "median": 60,
+        "max": 64
+      },
+      "actualVideoMbps": {
+        "median": 0.6514763915817801,
+        "max": 7.109096563475359
+      },
+      "decodeMillisecondsMedian": 3.8080862068965513,
+      "framesDropped": 0,
+      "sdkFreezeCount": 4,
+      "decodedFormat": {
+        "height": "2620",
+        "matrix": "ITU_R_2020",
+        "pixelFormat": "2016686640",
+        "primaries": "ITU_R_2020",
+        "transfer": "SMPTE_ST_2084_PQ",
+        "width": "1290"
+      },
+      "maximumObservedPQCode": 724,
+      "phoneCurrentEDR": 8,
+      "renderer": [
+        {
+          "active": true,
+          "backpressureDrops": 0,
+          "cancelled": 0,
+          "enqueued": 3014,
+          "failures": 0,
+          "mainQueueWaitMillisecondsMax": 23.1735,
+          "mainQueueWaitMillisecondsP95": 0.106875,
+          "observerID": "3CC0573F-039A-4BE2-997C-7B5A7AC52959",
+          "outputHeight": 2620,
+          "outputWidth": 1290,
+          "pending": 0,
+          "received": 3035,
+          "replaced": 21,
+          "staleCallbacks": 0
+        }
+      ],
+      "hostPreset": {
+        "fps": 60,
+        "height": 1440,
+        "megabits": 20,
+        "pattern": "grid",
+        "width": 2560
+      },
+      "sourceCapture": {
+        "height": 2620,
+        "pointPixelScale": 2,
+        "primaries": "Optional(ITU_R_2020)",
+        "rowBytes": 2688,
+        "scalesToFit": false,
+        "sourcePoints": [
+          645,
+          1310
+        ],
+        "title": "KKRemote HDR Workspace Browser",
+        "transfer": "Optional(SMPTE_ST_2084_PQ)",
+        "width": 1290
+      },
+      "filmAndScrollingSeconds35to50": {
+        "samples": 15,
+        "fpsMedian": 60,
+        "videoMbpsMedian": 3.788522590186839
+      }
+    },
+    "office": {
+      "samples": 51,
+      "seconds": 51.004968208333594,
+      "receiveFPS": {
+        "min": 56,
+        "median": 60,
+        "max": 64
+      },
+      "actualVideoMbps": {
+        "median": 0.2407509877469799,
+        "max": 1.9823493676545727
+      },
+      "decodeMillisecondsMedian": 3.7926842105263314,
+      "framesDropped": 0,
+      "sdkFreezeCount": 2,
+      "decodedFormat": {
+        "height": "2620",
+        "matrix": "ITU_R_2020",
+        "pixelFormat": "2016686640",
+        "primaries": "ITU_R_2020",
+        "transfer": "SMPTE_ST_2084_PQ",
+        "width": "1290"
+      },
+      "maximumObservedPQCode": 588,
+      "phoneCurrentEDR": 8,
+      "renderer": [
+        {
+          "active": true,
+          "backpressureDrops": 0,
+          "cancelled": 0,
+          "enqueued": 3023,
+          "failures": 0,
+          "mainQueueWaitMillisecondsMax": 39.551166,
+          "mainQueueWaitMillisecondsP95": 0.106958,
+          "observerID": "184DE16A-2C22-4E4F-99A8-23A22E6BE6B6",
+          "outputHeight": 2620,
+          "outputWidth": 1290,
+          "pending": 0,
+          "received": 3035,
+          "replaced": 12,
+          "staleCallbacks": 0
+        }
+      ],
+      "hostPreset": {
+        "fps": 60,
+        "height": 1440,
+        "megabits": 20,
+        "pattern": "grid",
+        "width": 2560
+      },
+      "sourceCapture": {
+        "height": 2620,
+        "pointPixelScale": 2,
+        "primaries": "Optional(ITU_R_2020)",
+        "rowBytes": 2688,
+        "scalesToFit": false,
+        "sourcePoints": [
+          645,
+          1310
+        ],
+        "title": "KKRemote-Office-Native-HDR-20261115",
+        "transfer": "Optional(SMPTE_ST_2084_PQ)",
+        "width": 1290
+      }
+    }
+  },
+  "gray": {
+    "authoredNits": [
+      10,
+      25,
+      50,
+      100,
+      203,
+      400,
+      700,
+      1000
+    ],
+    "capturedPQ10": [
+      365.0,
+      431.0,
+      487.0,
+      544.0,
+      602.0,
+      655.0,
+      697.0,
+      724.0
+    ],
+    "sdrDocumentWhitePQ10": 572,
+    "measurement": "Central patches in raw capture P010; values include host compositor tone mapping, not a physical luminance measurement."
+  },
+  "grating": {
+    "source": {
+      "alternatingColumnDifference": 254,
+      "width": 1290,
+      "roi": [
+        165,
+        1600,
+        290,
+        10
+      ]
+    },
+    "phone": {
+      "alternatingColumnDifference": 178.0593103448276,
+      "width": 1290,
+      "roi": [
+        165,
+        1777,
+        290,
+        10
+      ]
+    }
+  },
+  "limits": [
+    "Private CoreGraphics runtime; local prototype on macOS 27.2.1, not shipping compatibility guarantee.",
+    "Browser content uses fixture CSS layout zoom 150%; Excel workbook view zoom 150%. Generic app zoom automation not implemented.",
+    "1290x2620 encoded versus 1290x2619 viewport; renderer fits by a small fractional scale. Not lossless pixel-perfect display.",
+    "Phone screenshot shows Wi-Fi; no cellular-5G claim. Ponte outer path unknown.",
+    "Gray fixture is static in a 60fps container; HDR film source is 23.976fps with a 60fps browser composition.",
+    "Freeze counters remain nonzero and deliberately not investigated.",
+    "Chrome/Excel return to physical display after disconnect, but both end at 645x1084; original wide window sizes were not fully restored. Restoration needs a two-stage move/resize transaction."
+  ],
+  "finalDisplayObservation": {
+    "displays": [
+      {
+        "backingScale": 2,
+        "EDR": 16,
+        "hz": 60,
+        "id": 1,
+        "pixels": [
+          3456,
+          2234
+        ],
+        "points": [
+          1728,
+          1117
+        ]
+      },
+      {
+        "backingScale": 2,
+        "EDR": 5,
+        "hz": 60,
+        "id": 12,
+        "pixels": [
+          2560,
+          2880
+        ],
+        "points": [
+          1280,
+          1440
+        ]
+      }
+    ],
+    "ownedWindows": [
+      {
+        "bounds": {
+          "Height": 1084,
+          "Width": 645,
+          "X": 0,
+          "Y": 33
+        },
+        "id": 10298
+      },
+      {
+        "bounds": {
+          "Height": 1084,
+          "Width": 645,
+          "X": 0,
+          "Y": 33
+        },
+        "id": 10284
+      }
+    ]
+  }
+}

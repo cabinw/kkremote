@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "id": "window-1440p60-20m-v1",
+  "status": "integration-baseline-with-known-limits",
+  "purpose": "Documented configuration snapshot; not automatically loaded by the app.",
+  "media": {
+    "width": 2560,
+    "height": 1440,
+    "fpsCeiling": 60,
+    "videoBudgetMbps": 20,
+    "preferredCodec": "HEVC Main10 BT.2020 PQ",
+    "fallbackCodec": "H264 SDR",
+    "capabilityConfirmationRequired": true
+  },
+  "transport": {
+    "route": "fixed-udp-v2",
+    "bridgeTransport": "socket",
+    "addressFamily": "IPv4",
+    "pacing": "interactive",
+    "pacingFactor": 1.5,
+    "pacerDrainTargetMs": 60,
+    "playout": "realtime",
+    "playoutHintMs": [
+      0,
+      50
+    ],
+    "processRestartForPolicyChange": true,
+    "waitingPacketLimit": 256,
+    "networkFrameworkAdditionalInFlightLimit": 32,
+    "waitingDeadlineMs": 25,
+    "outerUDPPayloadBytes": 1280
+  },
+  "capture": {
+    "queueDepth": 3,
+    "minimumFrameInterval": "zero/system maximum",
+    "includeCursor": false,
+    "sourceFPSNotGuaranteed": true
+  },
+  "codec": {
+    "hevcPeriodicKeyframeSeconds": 10,
+    "requestedKeyframesEnabled": true,
+    "frameDropperEnabled": true,
+    "congestionControlEnabled": true,
+    "degradationPreference": "maintainResolution"
+  },
+  "presentation": {
+    "latestPendingFramesPerView": 1,
+    "epochIsolation": true,
+    "physicalPresentationMeasured": false
+  },
+  "diagnostics": {
+    "frameTraceDefault": false,
+    "impairment": "none",
+    "resourceSamplingSeconds": 1
+  },
+  "hostCLIArguments": [
+    "--hdr",
+    "--resolution",
+    "2560x1440",
+    "--fps",
+    "60",
+    "--mbps",
+    "20",
+    "--route",
+    "fixed-udp-v2",
+    "--bridge-transport",
+    "socket",
+    "--receive-depth",
+    "16",
+    "--pacing",
+    "interactive",
+    "--playout",
+    "realtime",
+    "--hevc-keyframe-seconds",
+    "10",
+    "--diagnostic-impairment",
+    "none"
+  ],
+  "deployment": {
+    "phoneBuildInstalled": "12 (USB)",
+    "testFlightUploadThisStage": false,
+    "preserveExistingEndpointAndPairing": true,
+    "requiresSelectedWindowAndExistingPrivateKeyFile": true
+  },
+  "evidence": {
+    "lan15Minute": "59.986 fps / 17.726 Mbps, zero SDK freeze/drop/loss under fixed60 source condition",
+    "ponte15Minute": "59.981 fps /16.604 Mbps, one SDK freeze; strict gate failed",
+    "phone3PercentLoss60Second": "59.921 fps, zero SDK freeze",
+    "phoneLongRuns": "2026-11-14: Main10 real-window cellular Ponte nominal 600 s, 59.987 fps / 11.829 Mbps, zero SDK freeze/decode drops in report; 15/30-minute acceptance remains open.",
+    "physicalLatency": "unmeasured",
+    "transportOnly30Minute": "59.999 fps /3.728 Mbps, 3 SDK freezes; footprint increased11.13/6.74MiB, plateau unverified"
+  },
+  "releaseDecision": "Proceed with iOS real-window integration. Active transport tests and sporadic-incident investigations are paused at user request; known limits remain recorded.",
+  "explicitFallbacks": [
+    "Restart Host with playout adaptive for a same-source comparison; buffering may increase and it cannot repair source starvation.",
+    "Use H264 SDR only through capability negotiation.",
+    "Lower a quality preset explicitly when capacity is insufficient; report actual resolution, fps and payload."
+  ],
+  "deferred": [
+    "Tailscale qualification",
+    "IPv6-only",
+    "audio",
+    "multi-window",
+    "input execution",
+    "resize execution",
+    "public discovery/relay"
+  ],
+  "integrationHandoff": {
+    "id": "transport-v1-ios-20261114",
+    "document": "iOS真实体验接入交接.md",
+    "sourceDelivery": "working-tree snapshot, not a Git release",
+    "deviceOwner": "iOS development",
+    "transportTesting": "paused-by-user",
+    "keepExistingHostAvailable": true,
+    "noActiveBenchmarkForIntegration": true,
+    "supportedNow": [
+      "connection",
+      "catalog",
+      "single-window selection and switching",
+      "Main10 PQ / H264 viewing",
+      "local viewport presentation"
+    ],
+    "nextContractWork": [
+      "control capability and lease",
+      "target geometry and media epoch",
+      "input delivery and host execution",
+      "text commit acknowledgment",
+      "resize transaction"
+    ],
+    "deferredAcceptance": [
+      "sporadic freeze investigation",
+      "keyframe pacing micro-stalls",
+      "stop-boundary display drops",
+      "15/30-minute phone acceptance",
+      "trace-off memory capacity A/B",
+      "optical latency"
+    ]
+  }
+}
