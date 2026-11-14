@@ -134,6 +134,11 @@ enum HDRFormat {
 private final class HEVCInfo: NSObject, RTCCodecSpecificInfo {}
 
 final class HEVCEncoder: NSObject, RTCVideoEncoder {
+    private let telemetry: EncoderTelemetry?
+    private let maximumFrameQP: Int?
+    init(telemetry: EncoderTelemetry? = nil, maximumFrameQP: Int? = nil) {
+        self.telemetry = telemetry; self.maximumFrameQP = maximumFrameQP; super.init()
+    }
     private var session: VTCompressionSession?
     private var callback: RTCVideoEncoderCallback?
     private var fps: Int32 = 60
@@ -153,7 +158,7 @@ final class HEVCEncoder: NSObject, RTCVideoEncoder {
             (kVTCompressionPropertyKey_RealTime, kCFBooleanTrue),
             (kVTCompressionPropertyKey_AllowFrameReordering, kCFBooleanFalse),
             (kVTCompressionPropertyKey_ExpectedFrameRate, fps as CFNumber),
-            (kVTCompressionPropertyKey_MaxKeyFrameInterval, (fps * 2) as CFNumber),
+            (kVTCompressionPropertyKey_MaxKeyFrameInterval, (fps * WebRTCRuntime.hevcKeyframeSeconds) as CFNumber),
             (kVTCompressionPropertyKey_ColorPrimaries, kCVImageBufferColorPrimaries_ITU_R_2020),
             (kVTCompressionPropertyKey_TransferFunction, kCVImageBufferTransferFunction_SMPTE_ST_2084_PQ),
             (kVTCompressionPropertyKey_YCbCrMatrix, kCVImageBufferYCbCrMatrix_ITU_R_2020)
@@ -162,6 +167,14 @@ final class HEVCEncoder: NSObject, RTCVideoEncoder {
             let result = VTSessionSetProperty(session, key: key, value: value)
             if result != noErr { _ = release(); return Int(result) }
         }
+        telemetry?.keyframeInterval(Int(fps * WebRTCRuntime.hevcKeyframeSeconds))
+        if let maximumFrameQP {
+            guard (0...51).contains(maximumFrameQP),
+                  VTSessionSetProperty(session,key:kVTCompressionPropertyKey_MaxAllowedFrameQP,value:maximumFrameQP as CFNumber)==noErr else {
+                _ = release(); return -1
+            }
+        }
+        telemetry?.qualityLimit(maximumFrameQP)
         guard setBitrate(settings.startBitrate, framerate: settings.maxFramerate) == 0 else { _ = release(); return -1 }
         return Int(VTCompressionSessionPrepareToEncodeFrames(session))
     }
@@ -185,7 +198,10 @@ final class HEVCEncoder: NSObject, RTCVideoEncoder {
         return Int(VTCompressionSessionEncodeFrame(session, imageBuffer: native.pixelBuffer,
             presentationTimeStamp: CMTime(value: ns, timescale: 1_000_000_000), duration: CMTime(value: 1, timescale: fps),
             frameProperties: options, infoFlagsOut: nil) { [weak self] status, flags, sample in
-            guard status == noErr, !flags.contains(.frameDropped), let sample, let bytes = HEVCNAL.annexB(sample) else { return }
+            guard status == noErr else { self?.telemetry?.failedOutput(timestamp: timestamp, reason: "vt_async_status", status: Int(status)); return }
+            guard !flags.contains(.frameDropped) else { self?.telemetry?.failedOutput(timestamp: timestamp, reason: "vt_frame_dropped"); return }
+            guard let sample else { self?.telemetry?.failedOutput(timestamp: timestamp, reason: "vt_empty_sample"); return }
+            guard let bytes = HEVCNAL.annexB(sample) else { self?.telemetry?.failedOutput(timestamp: timestamp, reason: "annex_b_conversion"); return }
             let attachments = CMSampleBufferGetSampleAttachmentsArray(sample, createIfNecessary: false) as? [[CFString: Any]]
             let image = RTCEncodedImage()
             image.buffer = bytes; image.encodedWidth = width; image.encodedHeight = height
@@ -208,6 +224,8 @@ final class HEVCEncoder: NSObject, RTCVideoEncoder {
 }
 
 final class HEVCDecoder: NSObject, RTCVideoDecoder {
+    private let telemetry: ReceiverTelemetry?
+    init(telemetry: ReceiverTelemetry? = nil) { self.telemetry = telemetry; super.init() }
     private var session: VTDecompressionSession?
     private var callback: RTCVideoDecoderCallback?
     private var sets: [Int: Data] = [:]
@@ -215,7 +233,10 @@ final class HEVCDecoder: NSObject, RTCVideoDecoder {
     func setCallback(_ callback: @escaping RTCVideoDecoderCallback) { self.callback = callback }
     func startDecode(withNumberOfCores numberOfCores: Int32) -> Int { 0 }
     func decode(_ image: RTCEncodedImage, missingFrames: Bool, codecSpecificInfo info: (any RTCCodecSpecificInfo)?, renderTimeMs: Int64) -> Int {
-        guard let nals = HEVCNAL.split(image.buffer) else { return -1 }
+        func fail(_ reason: String, _ status: Int = -1) -> Int {
+            telemetry?.failed(image.timeStamp, reason: reason, status: status); return status
+        }
+        guard let nals = HEVCNAL.split(image.buffer) else { return fail("hevc_annex_b_invalid") }
         var changed = false, payload = Data(), isKey = false
         for nal in nals {
             let type = Int((nal[0] >> 1) & 0x3f)
@@ -228,35 +249,44 @@ final class HEVCDecoder: NSObject, RTCVideoDecoder {
             }
         }
         if changed || session == nil {
-            guard isKey, let next = HEVCNAL.format(sets) else { return -1 }
+            guard isKey else { return fail("hevc_keyframe_required") }
+            guard let next = HEVCNAL.format(sets) else { return fail("hevc_parameter_sets_invalid") }
             invalidate(); format = next
             let spec = [kVTVideoDecoderSpecification_RequireHardwareAcceleratedVideoDecoder: true] as CFDictionary
             let attrs = [kCVPixelBufferPixelFormatTypeKey: HDRFormat.pixelFormat,
                          kCVPixelBufferMetalCompatibilityKey: true, kCVPixelBufferIOSurfacePropertiesKey: [:]] as CFDictionary
             let result = VTDecompressionSessionCreate(allocator: nil, formatDescription: next, decoderSpecification: spec,
                 imageBufferAttributes: attrs, outputCallback: nil, decompressionSessionOut: &session)
-            guard result == noErr else { return Int(result) }
+            guard result == noErr else { return fail("vt_decoder_session_create", Int(result)) }
             if let session { _ = VTSessionSetProperty(session, key: kVTDecompressionPropertyKey_RealTime, value: kCFBooleanTrue) }
         }
-        guard let session, let format, !payload.isEmpty else { return -1 }
+        guard let session, let format, !payload.isEmpty else { return fail("hevc_empty_payload_or_session") }
         var block: CMBlockBuffer?
         guard CMBlockBufferCreateWithMemoryBlock(allocator: nil, memoryBlock: nil, blockLength: payload.count,
             blockAllocator: nil, customBlockSource: nil, offsetToData: 0, dataLength: payload.count, flags: 0,
-            blockBufferOut: &block) == noErr, let block else { return -1 }
-        guard payload.withUnsafeBytes({ CMBlockBufferReplaceDataBytes(with: $0.baseAddress!, blockBuffer: block, offsetIntoDestination: 0, dataLength: payload.count) }) == noErr else { return -1 }
+            blockBufferOut: &block) == noErr, let block else { return fail("decode_block_create") }
+        guard payload.withUnsafeBytes({ CMBlockBufferReplaceDataBytes(with: $0.baseAddress!, blockBuffer: block, offsetIntoDestination: 0, dataLength: payload.count) }) == noErr else { return fail("decode_block_copy") }
         var timing = CMSampleTimingInfo(duration: .invalid, presentationTimeStamp: CMTime(value: Int64(image.timeStamp), timescale: 90_000), decodeTimeStamp: .invalid)
         var size = payload.count, sample: CMSampleBuffer?
         guard CMSampleBufferCreateReady(allocator: nil, dataBuffer: block, formatDescription: format, sampleCount: 1,
             sampleTimingEntryCount: 1, sampleTimingArray: &timing, sampleSizeEntryCount: 1, sampleSizeArray: &size,
-            sampleBufferOut: &sample) == noErr, let sample else { return -1 }
+            sampleBufferOut: &sample) == noErr, let sample else { return fail("decode_sample_create") }
         let timestamp = image.timeStamp
-        return Int(VTDecompressionSessionDecodeFrame(session, sampleBuffer: sample, flags: [._EnableAsynchronousDecompression], infoFlagsOut: nil) { [weak self] status, flags, buffer, pts, duration in
-            guard status == noErr, let buffer, CVPixelBufferGetPixelFormatType(buffer) == HDRFormat.pixelFormat else { return }
+        telemetry?.vt(.decodeVTSubmit, timestamp: timestamp)
+        let result = VTDecompressionSessionDecodeFrame(session, sampleBuffer: sample, flags: [._EnableAsynchronousDecompression], infoFlagsOut: nil) { [weak self] status, flags, buffer, pts, duration in
+            guard let self else { return }
+            self.telemetry?.vt(.decodeVTOutput, timestamp: timestamp, status: Int(status))
+            guard status == noErr else { self.telemetry?.failed(timestamp, reason: "vt_decode_async_status", status: Int(status)); return }
+            guard !flags.contains(.frameDropped) else { self.telemetry?.failed(timestamp, reason: "vt_decode_frame_dropped"); return }
+            guard let buffer else { self.telemetry?.failed(timestamp, reason: "vt_decode_empty_buffer"); return }
+            guard CVPixelBufferGetPixelFormatType(buffer) == HDRFormat.pixelFormat else { self.telemetry?.failed(timestamp, reason: "vt_decode_pixel_format_mismatch"); return }
             let frame = RTCVideoFrame(buffer: RTCCVPixelBuffer(pixelBuffer: buffer), rotation: ._0,
                 timeStampNs: Int64(timestamp) * 1_000_000_000 / 90_000)
             frame.timeStamp = Int32(bitPattern: timestamp)
-            self?.callback?(frame)
-        })
+            self.callback?(frame)
+        }
+        if result != noErr { return fail("vt_decode_submission", Int(result)) }
+        return Int(result)
     }
     private func invalidate() {
         if let session { VTDecompressionSessionWaitForAsynchronousFrames(session); VTDecompressionSessionInvalidate(session) }
@@ -274,16 +304,23 @@ final class HEVCEncoderFactory: NSObject, RTCVideoEncoderFactory {
     func createEncoder(_ info: RTCVideoCodecInfo) -> (any RTCVideoEncoder)? {
         if info.name == "H264" { return LabH264EncoderFactory(telemetry: telemetry).createEncoder(info) }
         guard info.name == "H265", info.parameters["profile-id"] == "2" else { return nil }
-        return MeasuredH264Encoder(native: HEVCEncoder(), telemetry: telemetry)
+        return MeasuredH264Encoder(native: HEVCEncoder(telemetry: telemetry, maximumFrameQP: WebRTCRuntime.hevcMaximumFrameQP), telemetry: telemetry)
     }
 }
 final class HEVCDecoderFactory: NSObject, RTCVideoDecoderFactory {
+    private let telemetry: ReceiverTelemetry?
+    init(telemetry: ReceiverTelemetry? = nil) { self.telemetry = telemetry }
     func supportedCodecs() -> [RTCVideoCodecInfo] {
         (Main10Capability.canDecode ? [HDRFormat.codec] : []) + LabH264Capabilities.codecs
     }
     func createDecoder(_ info: RTCVideoCodecInfo) -> (any RTCVideoDecoder)? {
-        if info.name == "H265" { return info.parameters["profile-id"] == "2" ? HEVCDecoder() : nil }
-        return LabH264DecoderFactory().createDecoder(info)
+        if info.name == "H265" {
+            guard info.parameters["profile-id"] == "2" else { return nil }
+            let native = HEVCDecoder(telemetry: telemetry)
+            if let telemetry { return MeasuredVideoDecoder(native: native, telemetry: telemetry) }
+            return native
+        }
+        return LabH264DecoderFactory(telemetry: telemetry).createDecoder(info)
     }
 }
 

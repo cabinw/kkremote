@@ -11,7 +11,9 @@ final class HDRTestPattern: LabVideoSource {
     private var timer: DispatchSourceTimer?
     private var buffers: [CVPixelBuffer] = []
     private var frame = 0
-    init(source: RTCVideoSource, width: Int, height: Int, fps: Int) throws {
+    private let trace: FrameTrace?
+    init(source: RTCVideoSource, width: Int, height: Int, fps: Int, trace: FrameTrace? = nil) throws {
+        self.trace = trace
         self.source = source; self.fps = fps; capturer = RTCVideoCapturer(delegate: source)
         source.adaptOutputFormat(toWidth: Int32(width), height: Int32(height), fps: Int32(fps))
         for phase in 0..<16 {
@@ -44,8 +46,10 @@ final class HDRTestPattern: LabVideoSource {
         timer.setEventHandler { [weak self] in
             guard let self else { return }
             let buffer = self.buffers[self.frame % self.buffers.count]; self.frame += 1
-            self.source.capturer(self.capturer, didCapture: RTCVideoFrame(buffer: RTCCVPixelBuffer(pixelBuffer: buffer),
-                rotation: ._0, timeStampNs: Int64(DispatchTime.now().uptimeNanoseconds)))
+            let timestamp = Int64(DispatchTime.now().uptimeNanoseconds)
+            let frame = RTCVideoFrame(buffer: RTCCVPixelBuffer(pixelBuffer: buffer), rotation: ._0, timeStampNs: timestamp)
+            self.trace?.sourceSubmitted(buffer: frame.buffer, frameID: UInt64(self.frame), ptsNs: timestamp)
+            self.source.capturer(self.capturer, didCapture: frame)
         }
         timer.resume()
     }

@@ -37,10 +37,14 @@ final class UDPSocket {
     private(set) var truncatedPackets = 0
     private(set) var receiveBufferBytes: Int32 = 0
     var hasPeer: Bool { peer != nil }
-    var onPacket: ((Data, UDPPeer) -> Void)?
+    var onPacket: ((Data, UDPPeer, UInt64?) -> Void)?
+    private(set) var kernelTimestampEnabled = false
+    private(set) var kernelTimestampPackets = 0
+    private(set) var kernelTimestampMissing = 0
+    private var controlBuffer = [UInt8](repeating: 0, count: 128)
     var onFailure: ((String) -> Void)?
 
-    init(queue: DispatchQueue, host: String?, port: UInt16) throws {
+    init(queue: DispatchQueue, host: String?, port: UInt16, traceKernelArrival: Bool = false) throws {
         self.queue = queue
         guard port > 0 else { throw LabError.message("UDP 端口不能为 0") }
         if let host {
@@ -70,6 +74,11 @@ final class UDPSocket {
             Darwin.close(descriptor); throw LabError.message("无法绑定非阻塞 UDP socket")
         }
         fd = descriptor
+        if traceKernelArrival {
+            var enabled: Int32 = 1
+            kernelTimestampEnabled = setsockopt(fd, SOL_SOCKET, SO_TIMESTAMP_MONOTONIC, &enabled,
+                socklen_t(MemoryLayout<Int32>.size)) == 0
+        }
         var capacity: Int32 = 256 * 1024
         _ = setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &capacity, socklen_t(MemoryLayout<Int32>.size))
         _ = setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &capacity, socklen_t(MemoryLayout<Int32>.size))
@@ -97,9 +106,13 @@ final class UDPSocket {
         }
         return count == data.count
     }
-    func stop() {
-        guard fd >= 0 else { return }
-        if let source { source.cancel(); self.source = nil } else { Darwin.close(fd) }
+    func stop(completion: @escaping () -> Void = {}) {
+        guard fd >= 0 else { completion(); return }
+        let descriptor = fd
+        if let source {
+            source.setCancelHandler { Darwin.close(descriptor); completion() }
+            source.cancel(); self.source = nil
+        } else { Darwin.close(fd); completion() }
         fd = -1; peer = nil; onPacket = nil; onFailure = nil
     }
     deinit { stop() }
@@ -107,9 +120,37 @@ final class UDPSocket {
         for _ in 0..<32 {
             guard fd >= 0 else { return }
             var address = sockaddr_in(), length = socklen_t(MemoryLayout<sockaddr_in>.size)
-            let count = withUnsafeMutablePointer(to: &address) {
-                $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {
-                    Darwin.recvfrom(fd, &buffer, buffer.count, 0, $0, &length)
+            var kernelArrivalNs: UInt64?
+            let count: Int
+            if kernelTimestampEnabled {
+                var controlLength = 0, flags: Int32 = 0
+                count = buffer.withUnsafeMutableBytes { payload in
+                    controlBuffer.withUnsafeMutableBytes { control in
+                        withUnsafeMutablePointer(to: &address) { sender in
+                            var vector = iovec(iov_base: payload.baseAddress, iov_len: payload.count)
+                            return withUnsafeMutablePointer(to: &vector) { vector in
+                                var message = msghdr(msg_name: UnsafeMutableRawPointer(sender), msg_namelen: length,
+                                    msg_iov: vector, msg_iovlen: 1, msg_control: control.baseAddress,
+                                    msg_controllen: socklen_t(control.count), msg_flags: 0)
+                                let received = Darwin.recvmsg(fd, &message, 0)
+                                length = message.msg_namelen; controlLength = Int(message.msg_controllen)
+                                flags = message.msg_flags
+                                return received
+                            }
+                        }
+                    }
+                }
+                if count >= 0 && flags & MSG_CTRUNC == 0 {
+                    kernelArrivalNs = controlBuffer.withUnsafeBytes {
+                        KernelDatagramTimestamp.parse(UnsafeRawBufferPointer(rebasing: $0.prefix(controlLength)))
+                    }
+                }
+                if flags & MSG_TRUNC != 0 { truncatedPackets += 1; continue }
+            } else {
+                count = withUnsafeMutablePointer(to: &address) {
+                    $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {
+                        Darwin.recvfrom(fd, &buffer, buffer.count, 0, $0, &length)
+                    }
                 }
             }
             if count < 0 {
@@ -120,7 +161,45 @@ final class UDPSocket {
             guard address.sin_family == AF_INET, length >= MemoryLayout<sockaddr_in>.size else { continue }
             let sender = UDPPeer(address: address)
             if let peer, sender.key != peer.key { rejectedPeers += 1; continue }
-            onPacket?(Data(buffer.prefix(count)), sender)
+            if kernelTimestampEnabled {
+                if kernelArrivalNs != nil { kernelTimestampPackets += 1 } else { kernelTimestampMissing += 1 }
+            }
+            onPacket?(Data(buffer.prefix(count)), sender, kernelArrivalNs)
         }
+    }
+}
+
+/// Darwin SCM_TIMESTAMP_MONOTONIC contains mach_absolute_time ticks (not nanoseconds).
+/// XNU bsd/netinet/ip_input.c ip_savecontrol; CMSG records use Darwin's 32-bit alignment.
+/// Only diagnostic sockets request this metadata. It timestamps IP-stack delivery,
+/// not the physical NIC or the outer Ponte tunnel.
+enum KernelDatagramTimestamp {
+    private static let timebase: mach_timebase_info_data_t = {
+        var value = mach_timebase_info_data_t()
+        mach_timebase_info(&value)
+        return value
+    }()
+    static func nanoseconds(ticks: UInt64, numerator: UInt64, denominator: UInt64) -> UInt64? {
+        guard denominator > 0 else { return nil }
+        let (whole, overflow1) = (ticks / denominator).multipliedReportingOverflow(by: numerator)
+        let (fraction, overflow2) = (ticks % denominator).multipliedReportingOverflow(by: numerator)
+        let (result, overflow3) = whole.addingReportingOverflow(fraction / denominator)
+        return overflow1 || overflow2 || overflow3 ? nil : result
+    }
+    static func parse(_ bytes: UnsafeRawBufferPointer) -> UInt64? {
+        let headerBytes = (MemoryLayout<cmsghdr>.size + 3) & ~3
+        var offset = 0
+        while bytes.count - offset >= headerBytes {
+            let header = bytes.loadUnaligned(fromByteOffset: offset, as: cmsghdr.self)
+            let length = Int(header.cmsg_len)
+            guard length >= headerBytes, length <= bytes.count - offset else { return nil }
+            if header.cmsg_level == SOL_SOCKET && header.cmsg_type == SCM_TIMESTAMP_MONOTONIC {
+                guard length >= headerBytes + MemoryLayout<UInt64>.size else { return nil }
+                let ticks = bytes.loadUnaligned(fromByteOffset: offset + headerBytes, as: UInt64.self)
+                return nanoseconds(ticks: ticks, numerator: UInt64(timebase.numer), denominator: UInt64(timebase.denom))
+            }
+            offset += (length + 3) & ~3
+        }
+        return nil
     }
 }

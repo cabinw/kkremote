@@ -1,0 +1,161 @@
+{
+  "date": "2026-11-15",
+  "build": "0.1.0 (40), USB only",
+  "network": "Original Ponte endpoint; Wi-Fi shown on phone; outer tunnel path unobserved",
+  "budget": {
+    "maximumPixels": 3686400,
+    "fps": 60,
+    "Mbps": 20,
+    "hevcMaxQP": 16
+  },
+  "physicalDisplay": {
+    "points": [
+      1728,
+      1117
+    ],
+    "pixels": [
+      3456,
+      2234
+    ],
+    "refreshHz": 60,
+    "changed": false
+  },
+  "workspace": {
+    "points": [
+      1280,
+      1440
+    ],
+    "pixels": [
+      2560,
+      2880
+    ],
+    "refreshHz": 60,
+    "backingScale": 2,
+    "potentialEDRHeadroom": 1,
+    "experimentalPrivateAPI": true
+  },
+  "controlSource": {
+    "points": [
+      430,
+      873
+    ],
+    "pixels": [
+      860,
+      1746
+    ],
+    "drawingScale": 1
+  },
+  "nativeSource": {
+    "points": [
+      645,
+      1310
+    ],
+    "pixels": [
+      1290,
+      2620
+    ],
+    "drawingScale": 1.5,
+    "captureScalesToFit": false
+  },
+  "sourcePixelIncrease": 2.25086,
+  "states": {
+    "native-portrait": {
+      "sourceWidth": 645,
+      "sourceHeight": 1310,
+      "width": 1290,
+      "height": 2620,
+      "viewportWidth": 430,
+      "viewportHeight": 873,
+      "codec": "video/H265",
+      "transfer": "SMPTE_ST_2084_PQ",
+      "displayFailures": 0,
+      "layoutWarning": "",
+      "displayEnqueued": 754,
+      "desktopColors": true
+    },
+    "native-landscape": {
+      "sourceWidth": 1221,
+      "sourceHeight": 645,
+      "width": 2442,
+      "height": 1290,
+      "viewportWidth": 814,
+      "viewportHeight": 430,
+      "codec": "video/H265",
+      "transfer": "SMPTE_ST_2084_PQ",
+      "displayFailures": 0,
+      "layoutWarning": "",
+      "displayEnqueued": 35,
+      "desktopColors": true
+    },
+    "native-portrait-restored": {
+      "sourceWidth": 645,
+      "sourceHeight": 1310,
+      "width": 1290,
+      "height": 2620,
+      "viewportWidth": 430,
+      "viewportHeight": 873,
+      "codec": "video/H265",
+      "transfer": "SMPTE_ST_2084_PQ",
+      "displayFailures": 0,
+      "layoutWarning": "",
+      "displayEnqueued": 312,
+      "desktopColors": true
+    }
+  },
+  "onePixelGrating": {
+    "old_2x_source_lanczos_1_5": {
+      "alternating_column_contrast_8bit": 1.078,
+      "minimum_column": 87.733,
+      "maximum_column": 229.567
+    },
+    "native_source": {
+      "alternating_column_contrast_8bit": 255.0,
+      "minimum_column": 0.0,
+      "maximum_column": 255.0
+    },
+    "phone_received": {
+      "alternating_column_contrast_8bit": 253.581,
+      "minimum_column": 0.0,
+      "maximum_column": 255.0
+    }
+  },
+  "restoration": {
+    "beforeAXFrame": [
+      20,
+      43,
+      430,
+      873
+    ],
+    "afterAXFrame": [
+      20,
+      43,
+      430,
+      873
+    ],
+    "matched": true
+  },
+  "latestGenerationOnly": {
+    "samples": 9,
+    "seconds": 9.004135208335356,
+    "fpsMedianAfter3s": 60,
+    "videoMbpsMedianAfter3s": 0.22368924304547877,
+    "decodeMsMedianAfter3s": 3.3114310344827604,
+    "freezeCount": 0,
+    "framesDropped": 0,
+    "note": "Static quality fixture with a moving footer, not full-window motion or 20 Mbps sustained throughput acceptance."
+  },
+  "checks": {
+    "deviceNativePortraitLandscapeReturn": true,
+    "windowRestoration": true,
+    "nativeDensityAndBudgetTests": true,
+    "signalingRegression": true
+  },
+  "limitations": [
+    "Private virtual-display helper; local non-sandbox control Host; not a distributable release.",
+    "This virtual display advertises SDR headroom 1; PQ/Main10 transport alone does not prove HDR source preservation.",
+    "Fixture scales text/vector drawing before rasterization; arbitrary apps need their own content zoom, typically 150%, to preserve mobile text size.",
+    "Current client desktop color presentation is SDR; this test does not validate HDR highlight brightness.",
+    "HEVC 4:2:0, quantization and final presentation can still lose detail; native source pixels do not imply lossless rendering.",
+    "No freeze investigation or long-run/high-motion performance acceptance in this task."
+  ]
+}

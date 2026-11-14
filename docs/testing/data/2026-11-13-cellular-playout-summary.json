@@ -1,0 +1,4436 @@
+{
+  "date": "2026-11-13",
+  "target": {
+    "width": 2560,
+    "height": 1440,
+    "fps": 60,
+    "budgetCeilingMbps": 20,
+    "format": "HEVC Main10 BT.2020 PQ"
+  },
+  "method": {
+    "warmup": "10 seconds from first nonzero media counter per report",
+    "fps": "delta decoded frames / delta seconds",
+    "buffer": "mean and P95 of per-second interval means",
+    "frameGap": "decoded renderer callback, not physical display",
+    "network": "iPhone cellular 5G as user-confirmed and observed status; configured Surge Ponte; outer path unknown",
+    "content": "60-second real HDR film / 45-second gray cycle; source film 23.976 fps",
+    "limits": [
+      "Not a saturated 20 Mbps bandwidth test",
+      "Not input-to-photon measurement",
+      "Runs sequential, not simultaneously matched network conditions",
+      "Phone UI build7 unchanged; no new TestFlight upload"
+    ]
+  },
+  "cellular": [
+    {
+      "run": "A1-adaptive",
+      "warmupSeconds": 10,
+      "host": {
+        "samples": 795,
+        "warmupOriginSeconds": 26.002236375003122,
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "playout": null,
+        "preset": {
+          "fps": 60,
+          "height": 1440,
+          "megabits": 20,
+          "pattern": "grid",
+          "width": 2560
+        },
+        "network": "Surge Ponte",
+        "receiveDepth": 16,
+        "bridgeTransport": "socket",
+        "videoMbps": {
+          "mean": 2.035380958235293,
+          "p95": 4.945000546899541
+        },
+        "fps": {
+          "mean": 60.14088050314466,
+          "p95": 61
+        },
+        "controlRTTMilliseconds": {
+          "mean": 41.003838152201254,
+          "p95": 58.967667
+        },
+        "sendDelayMilliseconds": {
+          "mean": 0.20189732584868378,
+          "p95": 0.8340174563590977
+        },
+        "encodeMilliseconds": {
+          "mean": 7.729078436066855,
+          "p95": 8.066666666666814
+        },
+        "decodeMilliseconds": null,
+        "jitterBufferMilliseconds": null,
+        "jitterBufferTargetMilliseconds": null,
+        "jitterBufferMinimumMilliseconds": null,
+        "frameGapP95Milliseconds": null,
+        "frameGapMaxMilliseconds": null,
+        "callbackMillisecondsP95": {
+          "mean": 8.402433962255142,
+          "p95": 8.945208333898336
+        },
+        "frameBytesMax": {
+          "mean": 36482.18616352201,
+          "p95": 83709
+        },
+        "frameBytesP95": {
+          "mean": 10916.186163522012,
+          "p95": 31704
+        },
+        "targetMbps": {
+          "mean": 14.844582389937107,
+          "p95": 19.115
+        },
+        "cumulative": {
+          "framesDecoded": 0,
+          "framesEncoded": 48287,
+          "sourceFrames": 48287,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "packetsReceived": null,
+          "packetsSent": 196013,
+          "retransmittedPacketsReceived": null,
+          "retransmittedPacketsSent": 0,
+          "pliCount": 0,
+          "nackCount": 0,
+          "probeSent": 805,
+          "probeReceived": 804,
+          "probeExpired": 0
+        },
+        "fpsBelow58Intervals": 0,
+        "fpsMinimum": 59,
+        "frameGapMaximumMs": 0,
+        "observedSeconds": 793.9991303333372,
+        "counterFPS": 60.00006571795582,
+        "actualFormat": {
+          "width": 2560,
+          "height": 1440,
+          "codec": "video/H265",
+          "decodedPixelFormat": null,
+          "playoutDelayExtensionNegotiated": null
+        },
+        "byteRatesMbps": {
+          "rtpPayloadBytes": null,
+          "rtpHeaderBytes": null,
+          "retransmittedPayloadBytes": null,
+          "transportBytesSent": null,
+          "transportBytesReceived": null,
+          "sentWireBytes": 2.1739640335315444,
+          "receivedWireBytes": 0.017758568569313682,
+          "encodedBytes": 1.975313266831356
+        },
+        "steadyCounterDelta": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "bridge": {
+          "acceptedPackets": 20438,
+          "authenticated": true,
+          "endpointScope": "loopback socket endpoint (remote topology unknown)",
+          "expiredAssemblies": 0,
+          "fragmentedInnerDatagrams": 0,
+          "innerDatagramsReceived": 19736,
+          "innerDatagramsSent": 203886,
+          "largestSequenceGap": 0,
+          "localInvalidSizes": 0,
+          "localRejectedSources": 31,
+          "localSendErrors": 0,
+          "localSocketDrops": 31,
+          "localUnboundSends": 0,
+          "maxQueueAgeMilliseconds": 0.04449998959898949,
+          "pathDatagramBytes": 1280,
+          "pendingPackets": 0,
+          "queueDeadlineDrops": 0,
+          "queueDrops": 0,
+          "queueHighWater": 1,
+          "queueOverflowDrops": 0,
+          "receiveDepth": 16,
+          "receivedDatagrams": 20438,
+          "receivedWireBytes": 1788512,
+          "rejectedDatagrams": 0,
+          "reorderedPackets": 0,
+          "rtpSizeCounts": {
+            "1169-1200": 65512,
+            "1201-1248": 23309,
+            "<=1168": 111994
+          },
+          "sendErrors": 0,
+          "sentDatagrams": 204588,
+          "sentWireBytes": 217211424,
+          "sequenceHoles": 0,
+          "simulatedDrops": 0,
+          "socketReceiveBufferBytes": 262144,
+          "socketRejectedPeers": 0,
+          "socketTruncatedPackets": 0,
+          "transport": "socket",
+          "wireVersion": 2
+        },
+        "encoderDetails": {
+          "callbackMillisecondsP95": 8.267875004094094,
+          "callbackRejected": 0,
+          "encodedBytes": 197297879,
+          "encodedFrames": 48287,
+          "frameBytesMax": 28097,
+          "frameBytesP95": 917,
+          "keyframes": 403,
+          "requestedFPS": 60,
+          "submissionErrors": 0,
+          "submittedFrames": 48287,
+          "targetMbps": 10.262,
+          "unmatchedExpired": 0,
+          "unmatchedInputs": 0
+        }
+      },
+      "viewer": {
+        "samples": 766,
+        "warmupOriginSeconds": 1.0506884166666168,
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "playout": null,
+        "preset": {
+          "fps": 60,
+          "height": 1080,
+          "megabits": 25,
+          "pattern": "grid",
+          "width": 1920
+        },
+        "network": "Surge Ponte",
+        "receiveDepth": 16,
+        "bridgeTransport": "socket",
+        "videoMbps": {
+          "mean": 1.9977517996655412,
+          "p95": 4.674240109806883
+        },
+        "fps": {
+          "mean": 59.95691906005222,
+          "p95": 61
+        },
+        "controlRTTMilliseconds": {
+          "mean": 40.32258859399478,
+          "p95": 57.551667
+        },
+        "sendDelayMilliseconds": null,
+        "encodeMilliseconds": null,
+        "decodeMilliseconds": {
+          "mean": 4.152001083508329,
+          "p95": 4.31331666666684
+        },
+        "jitterBufferMilliseconds": {
+          "mean": 53.69295931463967,
+          "p95": 66.2179180327876
+        },
+        "jitterBufferTargetMilliseconds": {
+          "mean": 54.15960606440247,
+          "p95": 67.13161666666565
+        },
+        "jitterBufferMinimumMilliseconds": {
+          "mean": 54.15960606440247,
+          "p95": 67.13161666666565
+        },
+        "frameGapP95Milliseconds": {
+          "mean": 23.609631690595393,
+          "p95": 25.310791666697696
+        },
+        "frameGapMaxMilliseconds": {
+          "mean": 26.595153067886585,
+          "p95": 30.395958333201634
+        },
+        "callbackMillisecondsP95": null,
+        "frameBytesMax": null,
+        "frameBytesP95": null,
+        "targetMbps": null,
+        "cumulative": {
+          "framesDecoded": 46573,
+          "framesEncoded": 0,
+          "sourceFrames": 0,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "packetsReceived": 186053,
+          "packetsSent": null,
+          "retransmittedPacketsReceived": 5154,
+          "retransmittedPacketsSent": null,
+          "pliCount": 0,
+          "nackCount": 0,
+          "probeSent": 777,
+          "probeReceived": 776,
+          "probeExpired": 0
+        },
+        "fpsBelow58Intervals": 0,
+        "fpsMinimum": 58,
+        "frameGapMaximumMs": 70.53091666671207,
+        "observedSeconds": 765.0019353750001,
+        "counterFPS": 59.997233833795505,
+        "actualFormat": {
+          "width": 2560,
+          "height": 1440,
+          "codec": "video/H265",
+          "decodedPixelFormat": {
+            "height": "1440",
+            "matrix": "ITU_R_2020",
+            "pixelFormat": "2016686640",
+            "primaries": "ITU_R_2020",
+            "transfer": "SMPTE_ST_2084_PQ",
+            "width": "2560"
+          },
+          "playoutDelayExtensionNegotiated": null
+        },
+        "byteRatesMbps": {
+          "rtpPayloadBytes": null,
+          "rtpHeaderBytes": null,
+          "retransmittedPayloadBytes": null,
+          "transportBytesSent": null,
+          "transportBytesReceived": null,
+          "sentWireBytes": 0.01773038128766446,
+          "receivedWireBytes": 2.1352072412722682,
+          "encodedBytes": null
+        },
+        "steadyCounterDelta": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "bridge": {
+          "acceptedPackets": 194232,
+          "authenticated": true,
+          "endpointScope": "overlay virtual address (outer path unknown)",
+          "expiredAssemblies": 0,
+          "fragmentedInnerDatagrams": 0,
+          "innerDatagramsReceived": 193554,
+          "innerDatagramsSent": 19041,
+          "largestSequenceGap": 0,
+          "localInvalidSizes": 0,
+          "localRejectedSources": 0,
+          "localSendErrors": 0,
+          "localSocketDrops": 0,
+          "localUnboundSends": 0,
+          "maxQueueAgeMilliseconds": 0.5620416666261008,
+          "pathDatagramBytes": 1280,
+          "pendingPackets": 0,
+          "probeRTTMilliseconds": 32.7334166665878,
+          "queueDeadlineDrops": 0,
+          "queueDrops": 0,
+          "queueHighWater": 1,
+          "queueOverflowDrops": 0,
+          "receiveDepth": 16,
+          "receivedDatagrams": 194232,
+          "receivedWireBytes": 205765989,
+          "rejectedDatagrams": 0,
+          "reorderedPackets": 0,
+          "rtpSizeCounts": {
+            "<=1168": 16078
+          },
+          "sendErrors": 0,
+          "sentDatagrams": 19719,
+          "sentWireBytes": 1722776,
+          "sequenceHoles": 0,
+          "simulatedDrops": 0,
+          "socketReceiveBufferBytes": 262144,
+          "socketRejectedPeers": 0,
+          "socketTruncatedPackets": 0,
+          "transport": "socket",
+          "wireVersion": 2
+        },
+        "encoderDetails": null
+      },
+      "reportEvidence": {
+        "host": {
+          "sha256": "83ce5e4c6cc7a118b58b3b863125a54b39ab9f1ddcc2deb5d398ad4dc8794501",
+          "schema": 6,
+          "appVersion": "0.1.0",
+          "build": "1",
+          "sampleCount": 830
+        },
+        "viewer": {
+          "sha256": "b7eff4fc254ee079adefa68d6ab914bbaec0b8e8b6148de921c3c8109d71da8f",
+          "schema": 6,
+          "appVersion": "0.1.0",
+          "build": "7",
+          "sampleCount": 777
+        }
+      },
+      "configuredSenderPlayout": "adaptive"
+    },
+    {
+      "run": "B1-realtime",
+      "warmupSeconds": 10,
+      "host": {
+        "samples": 365,
+        "warmupOriginSeconds": 154.17305283332826,
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "playout": "realtime",
+        "preset": {
+          "fps": 60,
+          "height": 1440,
+          "megabits": 20,
+          "pattern": "grid",
+          "width": 2560
+        },
+        "network": "Surge Ponte",
+        "receiveDepth": 16,
+        "bridgeTransport": "socket",
+        "videoMbps": {
+          "mean": 1.8281048904168264,
+          "p95": 4.786159119772586
+        },
+        "fps": {
+          "mean": 59.961643835616435,
+          "p95": 60
+        },
+        "controlRTTMilliseconds": {
+          "mean": 34.07442433150685,
+          "p95": 44.7575
+        },
+        "sendDelayMilliseconds": {
+          "mean": 0.21108316917025194,
+          "p95": 0.5526984615384615
+        },
+        "encodeMilliseconds": {
+          "mean": 7.440502980914283,
+          "p95": 7.627118644067604
+        },
+        "decodeMilliseconds": null,
+        "jitterBufferMilliseconds": null,
+        "jitterBufferTargetMilliseconds": null,
+        "jitterBufferMinimumMilliseconds": null,
+        "frameGapP95Milliseconds": null,
+        "frameGapMaxMilliseconds": null,
+        "callbackMillisecondsP95": {
+          "mean": 7.887486643668213,
+          "p95": 8.219124982133508
+        },
+        "frameBytesMax": {
+          "mean": 34773.12602739726,
+          "p95": 78459
+        },
+        "frameBytesP95": {
+          "mean": 9873.123287671233,
+          "p95": 34370
+        },
+        "targetMbps": {
+          "mean": 14.96897808219178,
+          "p95": 19.12
+        },
+        "cumulative": {
+          "framesDecoded": 0,
+          "framesEncoded": 22485,
+          "sourceFrames": 22485,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "packetsReceived": null,
+          "packetsSent": 82834,
+          "retransmittedPacketsReceived": null,
+          "retransmittedPacketsSent": 0,
+          "pliCount": 0,
+          "nackCount": 0,
+          "probeSent": 375,
+          "probeReceived": 374,
+          "probeExpired": 0
+        },
+        "fpsBelow58Intervals": 0,
+        "fpsMinimum": 59,
+        "frameGapMaximumMs": 0,
+        "observedSeconds": 363.9905482500035,
+        "counterFPS": 60.001558021224774,
+        "actualFormat": {
+          "width": 2560,
+          "height": 1440,
+          "codec": "video/H265",
+          "decodedPixelFormat": null,
+          "playoutDelayExtensionNegotiated": true
+        },
+        "byteRatesMbps": {
+          "rtpPayloadBytes": 1.8304821463176375,
+          "rtpHeaderBytes": 0.051393532304447195,
+          "retransmittedPayloadBytes": 0.0,
+          "transportBytesSent": 1.9050863472524067,
+          "transportBytesReceived": 0.010515525797035482,
+          "sentWireBytes": 1.9656228642195055,
+          "receivedWireBytes": 0.017572060677814423,
+          "encodedBytes": 1.7734884466192835
+        },
+        "steadyCounterDelta": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "bridge": {
+          "acceptedPackets": 9517,
+          "authenticated": true,
+          "endpointScope": "loopback socket endpoint (remote topology unknown)",
+          "expiredAssemblies": 0,
+          "fragmentedInnerDatagrams": 0,
+          "innerDatagramsReceived": 9190,
+          "innerDatagramsSent": 86289,
+          "largestSequenceGap": 0,
+          "localInvalidSizes": 0,
+          "localRejectedSources": 31,
+          "localSendErrors": 0,
+          "localSocketDrops": 31,
+          "localUnboundSends": 0,
+          "maxQueueAgeMilliseconds": 0.08020835230126977,
+          "pathDatagramBytes": 1280,
+          "pendingPackets": 0,
+          "queueDeadlineDrops": 0,
+          "queueDrops": 0,
+          "queueHighWater": 1,
+          "queueOverflowDrops": 0,
+          "receiveDepth": 16,
+          "receivedDatagrams": 9517,
+          "receivedWireBytes": 825352,
+          "rejectedDatagrams": 0,
+          "reorderedPackets": 0,
+          "rtpSizeCounts": {
+            "1169-1200": 29184,
+            "1201-1248": 8369,
+            "<=1168": 47298
+          },
+          "sendErrors": 0,
+          "sentDatagrams": 86616,
+          "sentWireBytes": 90638081,
+          "sequenceHoles": 0,
+          "simulatedDrops": 0,
+          "socketReceiveBufferBytes": 262144,
+          "socketRejectedPeers": 0,
+          "socketTruncatedPackets": 0,
+          "transport": "socket",
+          "wireVersion": 2
+        },
+        "encoderDetails": {
+          "callbackMillisecondsP95": 7.67995833302848,
+          "callbackRejected": 0,
+          "encodedBytes": 81686067,
+          "encodedFrames": 22485,
+          "frameBytesMax": 56738,
+          "frameBytesP95": 28323,
+          "keyframes": 188,
+          "requestedFPS": 60,
+          "submissionErrors": 0,
+          "submittedFrames": 22486,
+          "targetMbps": 16.572,
+          "unmatchedExpired": 0,
+          "unmatchedInputs": 1
+        }
+      },
+      "viewer": {
+        "samples": 332,
+        "warmupOriginSeconds": 1.0024394166666752,
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "playout": null,
+        "preset": {
+          "fps": 60,
+          "height": 1080,
+          "megabits": 25,
+          "pattern": "grid",
+          "width": 1920
+        },
+        "network": "Surge Ponte",
+        "receiveDepth": 16,
+        "bridgeTransport": "socket",
+        "videoMbps": {
+          "mean": 1.867171844594329,
+          "p95": 4.413534414735627
+        },
+        "fps": {
+          "mean": 59.91566265060241,
+          "p95": 61
+        },
+        "controlRTTMilliseconds": {
+          "mean": 34.78908724096386,
+          "p95": 43.588208
+        },
+        "sendDelayMilliseconds": null,
+        "encodeMilliseconds": null,
+        "decodeMilliseconds": {
+          "mean": 4.118667771019331,
+          "p95": 4.21005000000001
+        },
+        "jitterBufferMilliseconds": {
+          "mean": 1.9840584540821065,
+          "p95": 5.144249999999977
+        },
+        "jitterBufferTargetMilliseconds": {
+          "mean": 51.17590730718805,
+          "p95": 69.01676666666675
+        },
+        "jitterBufferMinimumMilliseconds": {
+          "mean": 51.17590730718805,
+          "p95": 69.01676666666675
+        },
+        "frameGapP95Milliseconds": {
+          "mean": 29.361201179722503,
+          "p95": 35.95408333330852
+        },
+        "frameGapMaxMilliseconds": {
+          "mean": 37.75752961848592,
+          "p95": 56.77408333349376
+        },
+        "callbackMillisecondsP95": null,
+        "frameBytesMax": null,
+        "frameBytesP95": null,
+        "targetMbps": null,
+        "cumulative": {
+          "framesDecoded": 20463,
+          "framesEncoded": 0,
+          "sourceFrames": 0,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "packetsReceived": 76775,
+          "packetsSent": null,
+          "retransmittedPacketsReceived": 2182,
+          "retransmittedPacketsSent": null,
+          "pliCount": 0,
+          "nackCount": 0,
+          "probeSent": 342,
+          "probeReceived": 341,
+          "probeExpired": 0
+        },
+        "fpsBelow58Intervals": 8,
+        "fpsMinimum": 56,
+        "frameGapMaximumMs": 86.65187499991589,
+        "observedSeconds": 330.99642183333344,
+        "counterFPS": 60.000648617283545,
+        "actualFormat": {
+          "width": 2560,
+          "height": 1440,
+          "codec": "video/H265",
+          "decodedPixelFormat": {
+            "height": "1440",
+            "matrix": "ITU_R_2020",
+            "pixelFormat": "2016686640",
+            "primaries": "ITU_R_2020",
+            "transfer": "SMPTE_ST_2084_PQ",
+            "width": "2560"
+          },
+          "playoutDelayExtensionNegotiated": null
+        },
+        "byteRatesMbps": {
+          "rtpPayloadBytes": null,
+          "rtpHeaderBytes": null,
+          "retransmittedPayloadBytes": null,
+          "transportBytesSent": null,
+          "transportBytesReceived": null,
+          "sentWireBytes": 0.017608891261473556,
+          "receivedWireBytes": 2.008726802293916,
+          "encodedBytes": null
+        },
+        "steadyCounterDelta": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "bridge": {
+          "acceptedPackets": 80267,
+          "authenticated": true,
+          "endpointScope": "overlay virtual address (outer path unknown)",
+          "expiredAssemblies": 0,
+          "fragmentedInnerDatagrams": 0,
+          "innerDatagramsReceived": 79969,
+          "innerDatagramsSent": 8368,
+          "largestSequenceGap": 0,
+          "localInvalidSizes": 0,
+          "localRejectedSources": 0,
+          "localSendErrors": 0,
+          "localSocketDrops": 0,
+          "localUnboundSends": 0,
+          "maxQueueAgeMilliseconds": 0.3922500000044238,
+          "pathDatagramBytes": 1280,
+          "pendingPackets": 0,
+          "probeRTTMilliseconds": 42.618416666755365,
+          "queueDeadlineDrops": 0,
+          "queueDrops": 0,
+          "queueHighWater": 1,
+          "queueOverflowDrops": 0,
+          "receiveDepth": 16,
+          "receivedDatagrams": 80267,
+          "receivedWireBytes": 84243495,
+          "rejectedDatagrams": 0,
+          "reorderedPackets": 0,
+          "rtpSizeCounts": {
+            "<=1168": 7057
+          },
+          "sendErrors": 0,
+          "sentDatagrams": 8666,
+          "sentWireBytes": 753054,
+          "sequenceHoles": 0,
+          "simulatedDrops": 0,
+          "socketReceiveBufferBytes": 262144,
+          "socketRejectedPeers": 0,
+          "socketTruncatedPackets": 0,
+          "transport": "socket",
+          "wireVersion": 2
+        },
+        "encoderDetails": null
+      },
+      "reportEvidence": {
+        "host": {
+          "sha256": "68c19d6c54bca7a5ff1e305c96156d5f588e58931c0b5f9fcc932194740c7119",
+          "schema": 7,
+          "appVersion": "0.1.0",
+          "build": "1",
+          "sampleCount": 528
+        },
+        "viewer": {
+          "sha256": "b95ae6719481195f309ffe13da8080870a0c5a79eb6ab98fee4ce2b3821ad7c7",
+          "schema": 6,
+          "appVersion": "0.1.0",
+          "build": "7",
+          "sampleCount": 342
+        }
+      },
+      "configuredSenderPlayout": "realtime",
+      "binaryManifest": {
+        "mode": "realtime",
+        "binarySHA256": "c0aff482fca2c21c9d498d6980b1bf0f769d6f8c903b387c7ec980298fe7c87d",
+        "width": 2560,
+        "height": 1440,
+        "fps": 60,
+        "ceilingMbps": 20,
+        "clientBuild": 7,
+        "fixtureMode": "60-second HDR film / 45-second grayscale cycle"
+      }
+    },
+    {
+      "run": "A2-adaptive",
+      "warmupSeconds": 10,
+      "host": {
+        "samples": 277,
+        "warmupOriginSeconds": 17.190579250018345,
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "playout": "adaptive",
+        "preset": {
+          "fps": 60,
+          "height": 1440,
+          "megabits": 20,
+          "pattern": "grid",
+          "width": 2560
+        },
+        "network": "Surge Ponte",
+        "receiveDepth": 16,
+        "bridgeTransport": "socket",
+        "videoMbps": {
+          "mean": 1.8062196616399004,
+          "p95": 4.477954802496988
+        },
+        "fps": {
+          "mean": 59.898916967509024,
+          "p95": 60
+        },
+        "controlRTTMilliseconds": {
+          "mean": 34.25536310469314,
+          "p95": 44.217666
+        },
+        "sendDelayMilliseconds": {
+          "mean": 0.16207404358941999,
+          "p95": 0.498836776859503
+        },
+        "encodeMilliseconds": {
+          "mean": 7.666906839010302,
+          "p95": 8.049999999999832
+        },
+        "decodeMilliseconds": null,
+        "jitterBufferMilliseconds": null,
+        "jitterBufferTargetMilliseconds": null,
+        "jitterBufferMinimumMilliseconds": null,
+        "frameGapP95Milliseconds": null,
+        "frameGapMaxMilliseconds": null,
+        "callbackMillisecondsP95": {
+          "mean": 8.279517297809507,
+          "p95": 8.819375012535602
+        },
+        "frameBytesMax": {
+          "mean": 33840.31768953068,
+          "p95": 85573
+        },
+        "frameBytesP95": {
+          "mean": 9548.494584837545,
+          "p95": 30713
+        },
+        "targetMbps": {
+          "mean": 15.632931407942237,
+          "p95": 19.119
+        },
+        "cumulative": {
+          "framesDecoded": 0,
+          "framesEncoded": 17237,
+          "sourceFrames": 17237,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "packetsReceived": null,
+          "packetsSent": 65294,
+          "retransmittedPacketsReceived": null,
+          "retransmittedPacketsSent": 0,
+          "pliCount": 0,
+          "nackCount": 0,
+          "probeSent": 288,
+          "probeReceived": 287,
+          "probeExpired": 0
+        },
+        "fpsBelow58Intervals": 0,
+        "fpsMinimum": 59,
+        "frameGapMaximumMs": 0,
+        "observedSeconds": 276.0018417916435,
+        "counterFPS": 59.999599613184124,
+        "actualFormat": {
+          "width": 2560,
+          "height": 1440,
+          "codec": "video/H265",
+          "decodedPixelFormat": null,
+          "playoutDelayExtensionNegotiated": true
+        },
+        "byteRatesMbps": {
+          "rtpPayloadBytes": 1.801944381137307,
+          "rtpHeaderBytes": 0.04350547779700922,
+          "retransmittedPayloadBytes": 0.0,
+          "transportBytesSent": 1.868181011593566,
+          "transportBytesReceived": 0.010486422776065799,
+          "sentWireBytes": 1.9277064114726092,
+          "receivedWireBytes": 0.017540520630491593,
+          "encodedBytes": 1.7428319350242971
+        },
+        "steadyCounterDelta": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "bridge": {
+          "acceptedPackets": 7296,
+          "authenticated": true,
+          "endpointScope": "loopback socket endpoint (remote topology unknown)",
+          "expiredAssemblies": 0,
+          "fragmentedInnerDatagrams": 0,
+          "innerDatagramsReceived": 7044,
+          "innerDatagramsSent": 68002,
+          "largestSequenceGap": 0,
+          "localInvalidSizes": 0,
+          "localRejectedSources": 31,
+          "localSendErrors": 0,
+          "localSocketDrops": 31,
+          "localUnboundSends": 0,
+          "maxQueueAgeMilliseconds": 0.03816667594946921,
+          "pathDatagramBytes": 1280,
+          "pendingPackets": 0,
+          "queueDeadlineDrops": 0,
+          "queueDrops": 0,
+          "queueHighWater": 1,
+          "queueOverflowDrops": 0,
+          "receiveDepth": 16,
+          "receivedDatagrams": 7296,
+          "receivedWireBytes": 635153,
+          "rejectedDatagrams": 0,
+          "reorderedPackets": 0,
+          "rtpSizeCounts": {
+            "1169-1200": 21707,
+            "1201-1248": 8857,
+            "<=1168": 36332
+          },
+          "sendErrors": 0,
+          "sentDatagrams": 68254,
+          "sentWireBytes": 71756773,
+          "sequenceHoles": 0,
+          "simulatedDrops": 0,
+          "socketReceiveBufferBytes": 262144,
+          "socketRejectedPeers": 0,
+          "socketTruncatedPackets": 0,
+          "transport": "socket",
+          "wireVersion": 2
+        },
+        "encoderDetails": {
+          "callbackMillisecondsP95": 8.616291655926034,
+          "callbackRejected": 0,
+          "encodedBytes": 64927069,
+          "encodedFrames": 17237,
+          "frameBytesMax": 40926,
+          "frameBytesP95": 18308,
+          "keyframes": 144,
+          "requestedFPS": 60,
+          "submissionErrors": 0,
+          "submittedFrames": 17238,
+          "targetMbps": 19.01,
+          "unmatchedExpired": 0,
+          "unmatchedInputs": 1
+        }
+      },
+      "viewer": {
+        "samples": 247,
+        "warmupOriginSeconds": 1.005976541666314,
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "playout": null,
+        "preset": {
+          "fps": 60,
+          "height": 1080,
+          "megabits": 25,
+          "pattern": "grid",
+          "width": 1920
+        },
+        "network": "Surge Ponte",
+        "receiveDepth": 16,
+        "bridgeTransport": "socket",
+        "videoMbps": {
+          "mean": 1.8826392203295417,
+          "p95": 4.711175782571089
+        },
+        "fps": {
+          "mean": 59.96761133603239,
+          "p95": 61
+        },
+        "controlRTTMilliseconds": {
+          "mean": 34.07521456680162,
+          "p95": 42.447084
+        },
+        "sendDelayMilliseconds": null,
+        "encodeMilliseconds": null,
+        "decodeMilliseconds": {
+          "mean": 4.169878514537139,
+          "p95": 4.3174666666666655
+        },
+        "jitterBufferMilliseconds": {
+          "mean": 53.16514432166902,
+          "p95": 66.96811666666729
+        },
+        "jitterBufferTargetMilliseconds": {
+          "mean": 52.43269455618315,
+          "p95": 66.63314754098337
+        },
+        "jitterBufferMinimumMilliseconds": {
+          "mean": 52.43269455618315,
+          "p95": 66.63314754098337
+        },
+        "frameGapP95Milliseconds": {
+          "mean": 24.643057354939153,
+          "p95": 26.519916666529753
+        },
+        "frameGapMaxMilliseconds": {
+          "mean": 27.074648110673984,
+          "p95": 30.59050000001662
+        },
+        "callbackMillisecondsP95": null,
+        "frameBytesMax": null,
+        "frameBytesP95": null,
+        "targetMbps": null,
+        "cumulative": {
+          "framesDecoded": 15444,
+          "framesEncoded": 0,
+          "sourceFrames": 0,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "packetsReceived": 60752,
+          "packetsSent": null,
+          "retransmittedPacketsReceived": 1713,
+          "retransmittedPacketsSent": null,
+          "pliCount": 0,
+          "nackCount": 0,
+          "probeSent": 258,
+          "probeReceived": 257,
+          "probeExpired": 0
+        },
+        "fpsBelow58Intervals": 0,
+        "fpsMinimum": 59,
+        "frameGapMaximumMs": 38.4157083331047,
+        "observedSeconds": 245.99832579166696,
+        "counterFPS": 60.00040834627496,
+        "actualFormat": {
+          "width": 2560,
+          "height": 1440,
+          "codec": "video/H265",
+          "decodedPixelFormat": {
+            "height": "1440",
+            "matrix": "ITU_R_2020",
+            "pixelFormat": "2016686640",
+            "primaries": "ITU_R_2020",
+            "transfer": "SMPTE_ST_2084_PQ",
+            "width": "2560"
+          },
+          "playoutDelayExtensionNegotiated": null
+        },
+        "byteRatesMbps": {
+          "rtpPayloadBytes": null,
+          "rtpHeaderBytes": null,
+          "retransmittedPayloadBytes": null,
+          "transportBytesSent": null,
+          "transportBytesReceived": null,
+          "sentWireBytes": 0.01759582706943214,
+          "receivedWireBytes": 2.0090341932593,
+          "encodedBytes": null
+        },
+        "steadyCounterDelta": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "bridge": {
+          "acceptedPackets": 63475,
+          "authenticated": true,
+          "endpointScope": "overlay virtual address (outer path unknown)",
+          "expiredAssemblies": 0,
+          "fragmentedInnerDatagrams": 0,
+          "innerDatagramsReceived": 63249,
+          "innerDatagramsSent": 6314,
+          "largestSequenceGap": 0,
+          "localInvalidSizes": 0,
+          "localRejectedSources": 0,
+          "localSendErrors": 0,
+          "localSocketDrops": 0,
+          "localUnboundSends": 0,
+          "maxQueueAgeMilliseconds": 0.39545833351439796,
+          "pathDatagramBytes": 1280,
+          "pendingPackets": 0,
+          "probeRTTMilliseconds": 30.70279166649925,
+          "queueDeadlineDrops": 0,
+          "queueDrops": 0,
+          "queueHighWater": 1,
+          "queueOverflowDrops": 0,
+          "receiveDepth": 16,
+          "receivedDatagrams": 63475,
+          "receivedWireBytes": 67091599,
+          "rejectedDatagrams": 0,
+          "reorderedPackets": 0,
+          "rtpSizeCounts": {
+            "<=1168": 5321
+          },
+          "sendErrors": 0,
+          "sentDatagrams": 6540,
+          "sentWireBytes": 571681,
+          "sequenceHoles": 0,
+          "simulatedDrops": 0,
+          "socketReceiveBufferBytes": 262144,
+          "socketRejectedPeers": 0,
+          "socketTruncatedPackets": 0,
+          "transport": "socket",
+          "wireVersion": 2
+        },
+        "encoderDetails": null
+      },
+      "reportEvidence": {
+        "host": {
+          "sha256": "8e170d43c9cfd1e72ae95a9d7cd7b5e53171d2e5952d55188fcf8d1d1edbd468",
+          "schema": 7,
+          "appVersion": "0.1.0",
+          "build": "1",
+          "sampleCount": 304
+        },
+        "viewer": {
+          "sha256": "1d5373367c4eb34f2a7a1b3c10016976c4a0a82e5712f1d767ad1a6be5677bfe",
+          "schema": 6,
+          "appVersion": "0.1.0",
+          "build": "7",
+          "sampleCount": 258
+        }
+      },
+      "configuredSenderPlayout": "adaptive",
+      "binaryManifest": {
+        "mode": "adaptive",
+        "binarySHA256": "c0aff482fca2c21c9d498d6980b1bf0f769d6f8c903b387c7ec980298fe7c87d",
+        "width": 2560,
+        "height": 1440,
+        "fps": 60,
+        "ceilingMbps": 20,
+        "clientBuild": 7,
+        "fixtureMode": "60-second HDR film / 45-second grayscale cycle"
+      }
+    },
+    {
+      "run": "C1-balanced",
+      "warmupSeconds": 10,
+      "host": {
+        "samples": 172,
+        "warmupOriginSeconds": 16.160179833328584,
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "playout": "balanced",
+        "preset": {
+          "fps": 60,
+          "height": 1440,
+          "megabits": 20,
+          "pattern": "grid",
+          "width": 2560
+        },
+        "network": "Surge Ponte",
+        "receiveDepth": 16,
+        "bridgeTransport": "socket",
+        "videoMbps": {
+          "mean": 1.607923178547778,
+          "p95": 4.378830324105885
+        },
+        "fps": {
+          "mean": 59.97093023255814,
+          "p95": 61
+        },
+        "controlRTTMilliseconds": {
+          "mean": 55.14522938372093,
+          "p95": 98.925667
+        },
+        "sendDelayMilliseconds": {
+          "mean": 0.3890478187121333,
+          "p95": 3.535340659340643
+        },
+        "encodeMilliseconds": {
+          "mean": 7.675062913166763,
+          "p95": 7.950819672131138
+        },
+        "decodeMilliseconds": null,
+        "jitterBufferMilliseconds": null,
+        "jitterBufferTargetMilliseconds": null,
+        "jitterBufferMinimumMilliseconds": null,
+        "frameGapP95Milliseconds": null,
+        "frameGapMaxMilliseconds": null,
+        "callbackMillisecondsP95": {
+          "mean": 8.287529311167228,
+          "p95": 8.645499998237938
+        },
+        "frameBytesMax": {
+          "mean": 30622.668604651164,
+          "p95": 70560
+        },
+        "frameBytesP95": {
+          "mean": 8126.674418604651,
+          "p95": 28951
+        },
+        "targetMbps": {
+          "mean": 12.363872093023256,
+          "p95": 19.034
+        },
+        "cumulative": {
+          "framesDecoded": 0,
+          "framesEncoded": 10760,
+          "sourceFrames": 10879,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "packetsReceived": null,
+          "packetsSent": 36498,
+          "retransmittedPacketsReceived": null,
+          "retransmittedPacketsSent": 0,
+          "pliCount": 0,
+          "nackCount": 0,
+          "probeSent": 182,
+          "probeReceived": 181,
+          "probeExpired": 0
+        },
+        "fpsBelow58Intervals": 5,
+        "fpsMinimum": 31,
+        "frameGapMaximumMs": 0,
+        "observedSeconds": 170.99992537498474,
+        "counterFPS": 59.46786220929898,
+        "actualFormat": {
+          "width": 2560,
+          "height": 1440,
+          "codec": "video/H265",
+          "decodedPixelFormat": null,
+          "playoutDelayExtensionNegotiated": true
+        },
+        "byteRatesMbps": {
+          "rtpPayloadBytes": 1.612305124668389,
+          "rtpHeaderBytes": 0.046381587492553646,
+          "retransmittedPayloadBytes": 0.0,
+          "transportBytesSent": 1.6798167330780662,
+          "transportBytesReceived": 0.010407022085521533,
+          "sentWireBytes": 1.7341340433320436,
+          "receivedWireBytes": 0.01758662755790848,
+          "encodedBytes": 1.551162174008777
+        },
+        "steadyCounterDelta": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "bridge": {
+          "acceptedPackets": 4632,
+          "authenticated": true,
+          "endpointScope": "loopback socket endpoint (remote topology unknown)",
+          "expiredAssemblies": 0,
+          "fragmentedInnerDatagrams": 0,
+          "innerDatagramsReceived": 4472,
+          "innerDatagramsSent": 38244,
+          "largestSequenceGap": 0,
+          "localInvalidSizes": 0,
+          "localRejectedSources": 32,
+          "localSendErrors": 0,
+          "localSocketDrops": 32,
+          "localUnboundSends": 0,
+          "maxQueueAgeMilliseconds": 0.04600000102072954,
+          "pathDatagramBytes": 1280,
+          "pendingPackets": 0,
+          "queueDeadlineDrops": 0,
+          "queueDrops": 0,
+          "queueHighWater": 1,
+          "queueOverflowDrops": 0,
+          "receiveDepth": 16,
+          "receivedDatagrams": 4632,
+          "receivedWireBytes": 398522,
+          "rejectedDatagrams": 0,
+          "reorderedPackets": 0,
+          "rtpSizeCounts": {
+            "1169-1200": 10372,
+            "1201-1248": 4118,
+            "<=1168": 22866
+          },
+          "sendErrors": 0,
+          "sentDatagrams": 38404,
+          "sentWireBytes": 39582093,
+          "sequenceHoles": 0,
+          "simulatedDrops": 0,
+          "socketReceiveBufferBytes": 262144,
+          "socketRejectedPeers": 0,
+          "socketTruncatedPackets": 0,
+          "transport": "socket",
+          "wireVersion": 2
+        },
+        "encoderDetails": {
+          "callbackMillisecondsP95": 8.178416639566422,
+          "callbackRejected": 0,
+          "encodedBytes": 35441081,
+          "encodedFrames": 10760,
+          "frameBytesMax": 34840,
+          "frameBytesP95": 6190,
+          "keyframes": 90,
+          "requestedFPS": 60,
+          "submissionErrors": 0,
+          "submittedFrames": 10760,
+          "targetMbps": 18.106,
+          "unmatchedExpired": 0,
+          "unmatchedInputs": 0
+        }
+      },
+      "viewer": {
+        "samples": 131,
+        "warmupOriginSeconds": 1.004163999999946,
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "playout": null,
+        "preset": {
+          "fps": 60,
+          "height": 1080,
+          "megabits": 25,
+          "pattern": "grid",
+          "width": 1920
+        },
+        "network": "Surge Ponte",
+        "receiveDepth": 16,
+        "bridgeTransport": "socket",
+        "videoMbps": {
+          "mean": 1.6188623300840057,
+          "p95": 4.307983867802723
+        },
+        "fps": {
+          "mean": 59.61068702290076,
+          "p95": 63
+        },
+        "controlRTTMilliseconds": {
+          "mean": 57.3940178091603,
+          "p95": 138.712959
+        },
+        "sendDelayMilliseconds": null,
+        "encodeMilliseconds": null,
+        "decodeMilliseconds": {
+          "mean": 4.264819269159063,
+          "p95": 4.674953846153848
+        },
+        "jitterBufferMilliseconds": {
+          "mean": 13.145923742279589,
+          "p95": 16.83840000000008
+        },
+        "jitterBufferTargetMilliseconds": {
+          "mean": 55.52578826469034,
+          "p95": 79.38558333333295
+        },
+        "jitterBufferMinimumMilliseconds": {
+          "mean": 55.52578826469034,
+          "p95": 79.38558333333295
+        },
+        "frameGapP95Milliseconds": {
+          "mean": 24.581908268733375,
+          "p95": 27.153083333359973
+        },
+        "frameGapMaxMilliseconds": {
+          "mean": 68.37169638239463,
+          "p95": 147.39970833352345
+        },
+        "callbackMillisecondsP95": null,
+        "frameBytesMax": null,
+        "frameBytesP95": null,
+        "targetMbps": null,
+        "cumulative": {
+          "framesDecoded": 8285,
+          "framesEncoded": 0,
+          "sourceFrames": 0,
+          "framesDropped": 72,
+          "freezeCount": 3,
+          "packetsLost": 0,
+          "packetsReceived": 28422,
+          "packetsSent": null,
+          "retransmittedPacketsReceived": 1028,
+          "retransmittedPacketsSent": null,
+          "pliCount": 0,
+          "nackCount": 0,
+          "probeSent": 142,
+          "probeReceived": 141,
+          "probeExpired": 0
+        },
+        "fpsBelow58Intervals": 7,
+        "fpsMinimum": 0,
+        "frameGapMaximumMs": 2765.284166666788,
+        "observedSeconds": 130.01198904166677,
+        "counterFPS": 59.10993329651376,
+        "actualFormat": {
+          "width": 2560,
+          "height": 1440,
+          "codec": "video/H265",
+          "decodedPixelFormat": {
+            "height": "1440",
+            "matrix": "ITU_R_2020",
+            "pixelFormat": "2016686640",
+            "primaries": "ITU_R_2020",
+            "transfer": "SMPTE_ST_2084_PQ",
+            "width": "2560"
+          },
+          "playoutDelayExtensionNegotiated": null
+        },
+        "byteRatesMbps": {
+          "rtpPayloadBytes": null,
+          "rtpHeaderBytes": null,
+          "retransmittedPayloadBytes": null,
+          "transportBytesSent": null,
+          "transportBytesReceived": null,
+          "sentWireBytes": 0.017486018149229406,
+          "receivedWireBytes": 1.7367110961408097,
+          "encodedBytes": null
+        },
+        "steadyCounterDelta": {
+          "freezeCount": 1,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "bridge": {
+          "acceptedPackets": 29917,
+          "authenticated": true,
+          "endpointScope": "overlay virtual address (outer path unknown)",
+          "expiredAssemblies": 0,
+          "fragmentedInnerDatagrams": 0,
+          "innerDatagramsReceived": 29792,
+          "innerDatagramsSent": 3460,
+          "largestSequenceGap": 0,
+          "localInvalidSizes": 0,
+          "localRejectedSources": 0,
+          "localSendErrors": 0,
+          "localSocketDrops": 0,
+          "localUnboundSends": 0,
+          "maxQueueAgeMilliseconds": 0.1604999997653067,
+          "pathDatagramBytes": 1280,
+          "pendingPackets": 0,
+          "probeRTTMilliseconds": 29.66675000016039,
+          "queueDeadlineDrops": 0,
+          "queueDrops": 0,
+          "queueHighWater": 1,
+          "queueOverflowDrops": 0,
+          "receiveDepth": 16,
+          "receivedDatagrams": 29917,
+          "receivedWireBytes": 30833275,
+          "rejectedDatagrams": 0,
+          "reorderedPackets": 0,
+          "rtpSizeCounts": {
+            "<=1168": 2766
+          },
+          "sendErrors": 0,
+          "sentDatagrams": 3585,
+          "sentWireBytes": 309462,
+          "sequenceHoles": 0,
+          "simulatedDrops": 0,
+          "socketReceiveBufferBytes": 262144,
+          "socketRejectedPeers": 0,
+          "socketTruncatedPackets": 0,
+          "transport": "socket",
+          "wireVersion": 2
+        },
+        "encoderDetails": null
+      },
+      "reportEvidence": {
+        "host": {
+          "sha256": "f2603f7f86c955e42202660fca57661057ec0484b12cf68d66a756029f394d9a",
+          "schema": 7,
+          "appVersion": "0.1.0",
+          "build": "1",
+          "sampleCount": 197
+        },
+        "viewer": {
+          "sha256": "aef2226d47f53c77f5e0a1c36420ab1cbba19a4dce73e357fa07d79fdf02a7d8",
+          "schema": 6,
+          "appVersion": "0.1.0",
+          "build": "7",
+          "sampleCount": 142
+        }
+      },
+      "configuredSenderPlayout": "balanced-rejected",
+      "binaryManifest": {
+        "mode": "balanced",
+        "binarySHA256": "e7b57ad2104cb96ba29797a887c7bd31531f71c99b1683063d6fe5d8d5297c95",
+        "width": 2560,
+        "height": 1440,
+        "fps": 60,
+        "ceilingMbps": 20,
+        "clientBuild": 7,
+        "fixtureMode": "60-second HDR film / 45-second grayscale cycle"
+      },
+      "qualification": "Failed: freezes and SDK dropped frames; coincident network RTT spikes confound parameter causality. Candidate removed."
+    },
+    {
+      "run": "B2-realtime",
+      "warmupSeconds": 10,
+      "host": {
+        "samples": 383,
+        "warmupOriginSeconds": 35.172583791660145,
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "playout": "realtime",
+        "preset": {
+          "fps": 60,
+          "height": 1440,
+          "megabits": 20,
+          "pattern": "grid",
+          "width": 2560
+        },
+        "network": "Surge Ponte",
+        "receiveDepth": 16,
+        "bridgeTransport": "socket",
+        "videoMbps": {
+          "mean": 1.9548884346820017,
+          "p95": 4.980953876808666
+        },
+        "fps": {
+          "mean": 60.02088772845953,
+          "p95": 60
+        },
+        "controlRTTMilliseconds": {
+          "mean": 31.031015015665798,
+          "p95": 39.501667
+        },
+        "sendDelayMilliseconds": {
+          "mean": 0.1660567192013939,
+          "p95": 0.6037315026697179
+        },
+        "encodeMilliseconds": {
+          "mean": 7.751483078052577,
+          "p95": 8.150000000000071
+        },
+        "decodeMilliseconds": null,
+        "jitterBufferMilliseconds": null,
+        "jitterBufferTargetMilliseconds": null,
+        "jitterBufferMinimumMilliseconds": null,
+        "frameGapP95Milliseconds": null,
+        "frameGapMaxMilliseconds": null,
+        "callbackMillisecondsP95": {
+          "mean": 8.459182985171958,
+          "p95": 9.351375018013641
+        },
+        "frameBytesMax": {
+          "mean": 34921.107049608356,
+          "p95": 84293
+        },
+        "frameBytesP95": {
+          "mean": 10983.563968668408,
+          "p95": 36961
+        },
+        "targetMbps": {
+          "mean": 15.02966318537859,
+          "p95": 19.118
+        },
+        "cumulative": {
+          "framesDecoded": 0,
+          "framesEncoded": 23615,
+          "sourceFrames": 23616,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "packetsReceived": null,
+          "packetsSent": 94263,
+          "retransmittedPacketsReceived": null,
+          "retransmittedPacketsSent": 0,
+          "pliCount": 0,
+          "nackCount": 0,
+          "probeSent": 394,
+          "probeReceived": 393,
+          "probeExpired": 0
+        },
+        "fpsBelow58Intervals": 0,
+        "fpsMinimum": 60,
+        "frameGapMaximumMs": 0,
+        "observedSeconds": 381.99199224999757,
+        "counterFPS": 60.00125778814712,
+        "actualFormat": {
+          "width": 2560,
+          "height": 1440,
+          "codec": "video/H265",
+          "decodedPixelFormat": null,
+          "playoutDelayExtensionNegotiated": true
+        },
+        "byteRatesMbps": {
+          "rtpPayloadBytes": 1.9534250537682698,
+          "rtpHeaderBytes": 0.05436011335653891,
+          "retransmittedPayloadBytes": 0.0,
+          "transportBytesSent": 2.0321987888477917,
+          "transportBytesReceived": 0.010632055337280504,
+          "sentWireBytes": 2.0959846076459345,
+          "receivedWireBytes": 0.017692768793898826,
+          "encodedBytes": 1.8972711227037629
+        },
+        "steadyCounterDelta": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "bridge": {
+          "acceptedPackets": 10002,
+          "authenticated": true,
+          "endpointScope": "loopback socket endpoint (remote topology unknown)",
+          "expiredAssemblies": 0,
+          "fragmentedInnerDatagrams": 0,
+          "innerDatagramsReceived": 9658,
+          "innerDatagramsSent": 98067,
+          "largestSequenceGap": 0,
+          "localInvalidSizes": 0,
+          "localRejectedSources": 31,
+          "localSendErrors": 0,
+          "localSocketDrops": 31,
+          "localUnboundSends": 0,
+          "maxQueueAgeMilliseconds": 0.05629166844300926,
+          "pathDatagramBytes": 1280,
+          "pendingPackets": 0,
+          "queueDeadlineDrops": 0,
+          "queueDrops": 0,
+          "queueHighWater": 1,
+          "queueOverflowDrops": 0,
+          "receiveDepth": 16,
+          "receivedDatagrams": 10002,
+          "receivedWireBytes": 874696,
+          "rejectedDatagrams": 0,
+          "reorderedPackets": 0,
+          "rtpSizeCounts": {
+            "1169-1200": 33549,
+            "1201-1248": 10470,
+            "<=1168": 52538
+          },
+          "sendErrors": 0,
+          "sentDatagrams": 98411,
+          "sentWireBytes": 104287391,
+          "sequenceHoles": 0,
+          "simulatedDrops": 0,
+          "socketReceiveBufferBytes": 262144,
+          "socketRejectedPeers": 0,
+          "socketTruncatedPackets": 0,
+          "transport": "socket",
+          "wireVersion": 2
+        },
+        "encoderDetails": {
+          "callbackMillisecondsP95": 8.913500001654029,
+          "callbackRejected": 0,
+          "encodedBytes": 94394485,
+          "encodedFrames": 23615,
+          "frameBytesMax": 784,
+          "frameBytesP95": 723,
+          "keyframes": 197,
+          "requestedFPS": 60,
+          "submissionErrors": 0,
+          "submittedFrames": 23616,
+          "targetMbps": 14.284,
+          "unmatchedExpired": 0,
+          "unmatchedInputs": 1
+        }
+      },
+      "viewer": {
+        "samples": 341,
+        "warmupOriginSeconds": 1.0036140416668786,
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "playout": null,
+        "preset": {
+          "fps": 60,
+          "height": 1080,
+          "megabits": 25,
+          "pattern": "grid",
+          "width": 1920
+        },
+        "network": "Surge Ponte",
+        "receiveDepth": 16,
+        "bridgeTransport": "socket",
+        "videoMbps": {
+          "mean": 2.1296335872425374,
+          "p95": 4.803228591102279
+        },
+        "fps": {
+          "mean": 59.950146627565985,
+          "p95": 61
+        },
+        "controlRTTMilliseconds": {
+          "mean": 32.51828675659824,
+          "p95": 40.815084
+        },
+        "sendDelayMilliseconds": null,
+        "encodeMilliseconds": null,
+        "decodeMilliseconds": {
+          "mean": 4.13813672917156,
+          "p95": 4.284666666666699
+        },
+        "jitterBufferMilliseconds": {
+          "mean": 2.1581250449488163,
+          "p95": 5.422349999999998
+        },
+        "jitterBufferTargetMilliseconds": {
+          "mean": 51.0127281049999,
+          "p95": 67.9137118644069
+        },
+        "jitterBufferMinimumMilliseconds": {
+          "mean": 51.0127281049999,
+          "p95": 67.9137118644069
+        },
+        "frameGapP95Milliseconds": {
+          "mean": 28.088107404689634,
+          "p95": 34.45874999943044
+        },
+        "frameGapMaxMilliseconds": {
+          "mean": 36.44577077225129,
+          "p95": 50.468833333070506
+        },
+        "callbackMillisecondsP95": null,
+        "frameBytesMax": null,
+        "frameBytesP95": null,
+        "targetMbps": null,
+        "cumulative": {
+          "framesDecoded": 21017,
+          "framesEncoded": 0,
+          "sourceFrames": 0,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "packetsReceived": 90307,
+          "packetsSent": null,
+          "retransmittedPacketsReceived": 2202,
+          "retransmittedPacketsSent": null,
+          "pliCount": 0,
+          "nackCount": 0,
+          "probeSent": 351,
+          "probeReceived": 350,
+          "probeExpired": 0
+        },
+        "fpsBelow58Intervals": 0,
+        "fpsMinimum": 58,
+        "frameGapMaximumMs": 152.0964166675185,
+        "observedSeconds": 340.00275579166646,
+        "counterFPS": 59.99951368776526,
+        "actualFormat": {
+          "width": 2560,
+          "height": 1440,
+          "codec": "video/H265",
+          "decodedPixelFormat": {
+            "height": "1440",
+            "matrix": "ITU_R_2020",
+            "pixelFormat": "2016686640",
+            "primaries": "ITU_R_2020",
+            "transfer": "SMPTE_ST_2084_PQ",
+            "width": "2560"
+          },
+          "playoutDelayExtensionNegotiated": null
+        },
+        "byteRatesMbps": {
+          "rtpPayloadBytes": null,
+          "rtpHeaderBytes": null,
+          "retransmittedPayloadBytes": null,
+          "transportBytesSent": null,
+          "transportBytesReceived": null,
+          "sentWireBytes": 0.01782498493545606,
+          "receivedWireBytes": 2.2776489978643313,
+          "encodedBytes": null
+        },
+        "steadyCounterDelta": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "bridge": {
+          "acceptedPackets": 94171,
+          "authenticated": true,
+          "endpointScope": "overlay virtual address (outer path unknown)",
+          "expiredAssemblies": 0,
+          "fragmentedInnerDatagrams": 0,
+          "innerDatagramsReceived": 93865,
+          "innerDatagramsSent": 8594,
+          "largestSequenceGap": 0,
+          "localInvalidSizes": 0,
+          "localRejectedSources": 0,
+          "localSendErrors": 0,
+          "localSocketDrops": 0,
+          "localUnboundSends": 0,
+          "maxQueueAgeMilliseconds": 0.28174999988550553,
+          "pathDatagramBytes": 1280,
+          "pendingPackets": 0,
+          "probeRTTMilliseconds": 25.417916666810925,
+          "queueDeadlineDrops": 0,
+          "queueDrops": 0,
+          "queueHighWater": 1,
+          "queueOverflowDrops": 0,
+          "receiveDepth": 16,
+          "receivedDatagrams": 94171,
+          "receivedWireBytes": 100584754,
+          "rejectedDatagrams": 0,
+          "reorderedPackets": 0,
+          "rtpSizeCounts": {
+            "<=1168": 7249
+          },
+          "sendErrors": 0,
+          "sentDatagrams": 8900,
+          "sentWireBytes": 784518,
+          "sequenceHoles": 0,
+          "simulatedDrops": 0,
+          "socketReceiveBufferBytes": 262144,
+          "socketRejectedPeers": 0,
+          "socketTruncatedPackets": 0,
+          "transport": "socket",
+          "wireVersion": 2
+        },
+        "encoderDetails": null
+      },
+      "reportEvidence": {
+        "host": {
+          "sha256": "15b11259cbbd00ce2df8ae70a929802060983891b42e7efe88b7b07368293d07",
+          "schema": 7,
+          "appVersion": "0.1.0",
+          "build": "1",
+          "sampleCount": 428
+        },
+        "viewer": {
+          "sha256": "f019e40fbcb7641d966a17fbea973352d5d44ec1ef159c0be6baf93d0b3e1255",
+          "schema": 6,
+          "appVersion": "0.1.0",
+          "build": "7",
+          "sampleCount": 351
+        }
+      },
+      "configuredSenderPlayout": "realtime",
+      "binaryManifest": {
+        "mode": "realtime",
+        "binarySHA256": "91e83a7288e90299ff0f5e92be1c1fcc058713e41cefb5e66b4de930115ad457",
+        "width": 2560,
+        "height": 1440,
+        "fps": 60,
+        "ceilingMbps": 20,
+        "clientBuild": 7,
+        "fixtureMode": "60-second HDR film / 45-second grayscale cycle"
+      }
+    }
+  ],
+  "local": [
+    {
+      "run": "adaptive-clean",
+      "warmupSeconds": 10,
+      "host": {
+        "samples": 24,
+        "warmupOriginSeconds": 1.1922939583309926,
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "playout": "adaptive",
+        "preset": {
+          "fps": 60,
+          "height": 1440,
+          "megabits": 20,
+          "pattern": "desktop",
+          "width": 2560
+        },
+        "network": "Surge Ponte",
+        "receiveDepth": 16,
+        "bridgeTransport": "socket",
+        "videoMbps": {
+          "mean": 0.26551715415399996,
+          "p95": 0.5287944299278676
+        },
+        "fps": {
+          "mean": 60,
+          "p95": 60
+        },
+        "controlRTTMilliseconds": {
+          "mean": 2.772161375,
+          "p95": 6.718708
+        },
+        "sendDelayMilliseconds": {
+          "mean": 3.85421589390825e-05,
+          "p95": 0.00015789473684211708
+        },
+        "encodeMilliseconds": {
+          "mean": 7.423611111111112,
+          "p95": 7.566666666666662
+        },
+        "decodeMilliseconds": null,
+        "jitterBufferMilliseconds": null,
+        "jitterBufferTargetMilliseconds": null,
+        "jitterBufferMinimumMilliseconds": null,
+        "frameGapP95Milliseconds": null,
+        "frameGapMaxMilliseconds": null,
+        "callbackMillisecondsP95": {
+          "mean": 7.9805781291118665,
+          "p95": 8.334500016644597
+        },
+        "frameBytesMax": {
+          "mean": 890.25,
+          "p95": 1334
+        },
+        "frameBytesP95": {
+          "mean": 460.3333333333333,
+          "p95": 469
+        },
+        "targetMbps": {
+          "mean": 19.12,
+          "p95": 19.12
+        },
+        "cumulative": {
+          "framesDecoded": 0,
+          "framesEncoded": 2095,
+          "sourceFrames": 2097,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "packetsReceived": null,
+          "packetsSent": 2411,
+          "retransmittedPacketsReceived": null,
+          "retransmittedPacketsSent": 0,
+          "pliCount": 0,
+          "nackCount": 0,
+          "probeSent": 35,
+          "probeReceived": 34,
+          "probeExpired": 0
+        },
+        "fpsBelow58Intervals": 0,
+        "fpsMinimum": 60,
+        "frameGapMaximumMs": 0,
+        "observedSeconds": 22.996429458347848,
+        "counterFPS": 60.00931590269338,
+        "actualFormat": {
+          "width": 2560,
+          "height": 1440,
+          "codec": "video/H265",
+          "decodedPixelFormat": null,
+          "playoutDelayExtensionNegotiated": true
+        },
+        "byteRatesMbps": {
+          "rtpPayloadBytes": 0.26792333180068595,
+          "rtpHeaderBytes": 0.014848913855017763,
+          "retransmittedPayloadBytes": 0.0,
+          "transportBytesSent": 0.29092168469533564,
+          "transportBytesReceived": 0.009458859706633235,
+          "sentWireBytes": 0.31002204115700155,
+          "receivedWireBytes": 0.016547264465087034,
+          "encodedBytes": 0.21542926952956296
+        },
+        "steadyCounterDelta": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "bridge": {
+          "acceptedPackets": 900,
+          "authenticated": true,
+          "endpointScope": "loopback socket endpoint (remote topology unknown)",
+          "expiredAssemblies": 0,
+          "fragmentedInnerDatagrams": 0,
+          "innerDatagramsReceived": 870,
+          "innerDatagramsSent": 2604,
+          "largestSequenceGap": 0,
+          "localInvalidSizes": 0,
+          "localRejectedSources": 31,
+          "localSendErrors": 0,
+          "localSocketDrops": 31,
+          "localUnboundSends": 0,
+          "maxQueueAgeMilliseconds": 0.028541660867631435,
+          "pathDatagramBytes": 1280,
+          "pendingPackets": 0,
+          "queueDeadlineDrops": 0,
+          "queueDrops": 0,
+          "queueHighWater": 1,
+          "queueOverflowDrops": 0,
+          "receiveDepth": 16,
+          "receivedDatagrams": 900,
+          "receivedWireBytes": 75198,
+          "rejectedDatagrams": 0,
+          "reorderedPackets": 0,
+          "rtpSizeCounts": {
+            "1169-1200": 1,
+            "1201-1248": 267,
+            "<=1168": 2190
+          },
+          "sendErrors": 0,
+          "sentDatagrams": 2634,
+          "sentWireBytes": 1440887,
+          "sequenceHoles": 0,
+          "simulatedDrops": 0,
+          "socketReceiveBufferBytes": 262144,
+          "socketRejectedPeers": 0,
+          "socketTruncatedPackets": 0,
+          "transport": "socket",
+          "wireVersion": 2
+        },
+        "encoderDetails": {
+          "callbackMillisecondsP95": 7.84445833414793,
+          "callbackRejected": 0,
+          "encodedBytes": 948416,
+          "encodedFrames": 2095,
+          "frameBytesMax": 1307,
+          "frameBytesP95": 469,
+          "keyframes": 18,
+          "requestedFPS": 60,
+          "submissionErrors": 0,
+          "submittedFrames": 2096,
+          "targetMbps": 19.12,
+          "unmatchedExpired": 0,
+          "unmatchedInputs": 1
+        }
+      },
+      "viewer": {
+        "samples": 25,
+        "warmupOriginSeconds": 1.010373166674981,
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "playout": "adaptive",
+        "preset": {
+          "fps": 60,
+          "height": 1440,
+          "megabits": 20,
+          "pattern": "desktop",
+          "width": 2560
+        },
+        "network": "本机回环（不代表远程网络）",
+        "receiveDepth": 16,
+        "bridgeTransport": "socket",
+        "videoMbps": {
+          "mean": 0.2758979419236156,
+          "p95": 0.5292482041060923
+        },
+        "fps": {
+          "mean": 60,
+          "p95": 60
+        },
+        "controlRTTMilliseconds": {
+          "mean": 5.56442828,
+          "p95": 14.781834
+        },
+        "sendDelayMilliseconds": null,
+        "encodeMilliseconds": null,
+        "decodeMilliseconds": {
+          "mean": 1.245026,
+          "p95": 1.3519166666666675
+        },
+        "jitterBufferMilliseconds": {
+          "mean": 12.069309999999998,
+          "p95": 12.585083333333339
+        },
+        "jitterBufferTargetMilliseconds": {
+          "mean": 11.426527333333333,
+          "p95": 11.921666666666653
+        },
+        "jitterBufferMinimumMilliseconds": {
+          "mean": 11.426527333333333,
+          "p95": 11.921666666666653
+        },
+        "frameGapP95Milliseconds": {
+          "mean": 18.29726333497092,
+          "p95": 18.86862501851283
+        },
+        "frameGapMaxMilliseconds": {
+          "mean": 18.922936664894223,
+          "p95": 19.42529165535234
+        },
+        "callbackMillisecondsP95": null,
+        "frameBytesMax": null,
+        "frameBytesP95": null,
+        "targetMbps": null,
+        "cumulative": {
+          "framesDecoded": 2095,
+          "framesEncoded": 0,
+          "sourceFrames": 0,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "packetsReceived": 2411,
+          "packetsSent": null,
+          "retransmittedPacketsReceived": 276,
+          "retransmittedPacketsSent": null,
+          "pliCount": 0,
+          "nackCount": 0,
+          "probeSent": 35,
+          "probeReceived": 34,
+          "probeExpired": 0
+        },
+        "fpsBelow58Intervals": 0,
+        "fpsMinimum": 60,
+        "frameGapMaximumMs": 19.852375000482425,
+        "observedSeconds": 23.994071666675154,
+        "counterFPS": 60.01482449516831,
+        "actualFormat": {
+          "width": 2560,
+          "height": 1440,
+          "codec": "video/H265",
+          "decodedPixelFormat": {
+            "height": "1440",
+            "matrix": "ITU_R_2020",
+            "pixelFormat": "2016686640",
+            "primaries": "ITU_R_2020",
+            "transfer": "SMPTE_ST_2084_PQ",
+            "width": "2560"
+          },
+          "playoutDelayExtensionNegotiated": true
+        },
+        "byteRatesMbps": {
+          "rtpPayloadBytes": 0.2655069172293912,
+          "rtpHeaderBytes": 0.014738307233246779,
+          "retransmittedPayloadBytes": 0.05201018057027942,
+          "transportBytesSent": 0.009460336834588365,
+          "transportBytesReceived": 0.2883979049546149,
+          "sentWireBytes": 0.016512078712770644,
+          "receivedWireBytes": 0.3075946468164694,
+          "encodedBytes": null
+        },
+        "steadyCounterDelta": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "bridge": {
+          "acceptedPackets": 2637,
+          "authenticated": true,
+          "endpointScope": "loopback socket endpoint (remote topology unknown)",
+          "expiredAssemblies": 0,
+          "fragmentedInnerDatagrams": 0,
+          "innerDatagramsReceived": 2606,
+          "innerDatagramsSent": 872,
+          "largestSequenceGap": 0,
+          "localInvalidSizes": 0,
+          "localRejectedSources": 31,
+          "localSendErrors": 0,
+          "localSocketDrops": 31,
+          "localUnboundSends": 0,
+          "maxQueueAgeMilliseconds": 0.023208354832604527,
+          "pathDatagramBytes": 1280,
+          "pendingPackets": 0,
+          "probeRTTMilliseconds": 0.13912501162849367,
+          "queueDeadlineDrops": 0,
+          "queueDrops": 0,
+          "queueHighWater": 1,
+          "queueOverflowDrops": 0,
+          "receiveDepth": 16,
+          "receivedDatagrams": 2637,
+          "receivedWireBytes": 1441424,
+          "rejectedDatagrams": 0,
+          "reorderedPackets": 0,
+          "rtpSizeCounts": {
+            "<=1168": 725
+          },
+          "sendErrors": 0,
+          "sentDatagrams": 903,
+          "sentWireBytes": 75506,
+          "sequenceHoles": 0,
+          "simulatedDrops": 0,
+          "socketReceiveBufferBytes": 262144,
+          "socketRejectedPeers": 0,
+          "socketTruncatedPackets": 0,
+          "transport": "socket",
+          "wireVersion": 2
+        },
+        "encoderDetails": null
+      },
+      "reportEvidence": {
+        "host": {
+          "sha256": "0d204f409f6678cbed2ede7eb40d1c3d557adb506f4a9b4dc2a44eff6e07235e",
+          "schema": 7,
+          "appVersion": "0.1.0",
+          "build": "1",
+          "sampleCount": 35
+        },
+        "viewer": {
+          "sha256": "57ad6e6d0fbdea57546f19b7f3c4a5f8ffd6746aaad0036af2665f89fb7c35ec",
+          "schema": 7,
+          "appVersion": "0.1.0",
+          "build": "1",
+          "sampleCount": 35
+        }
+      },
+      "scope": "synthetic Main10 loopback, 35 seconds each",
+      "binarySHA256": "c0aff482fca2c21c9d498d6980b1bf0f769d6f8c903b387c7ec980298fe7c87d",
+      "id": "1c8a9925ad19/adaptive-clean"
+    },
+    {
+      "run": "adaptive-loss",
+      "warmupSeconds": 10,
+      "host": {
+        "samples": 24,
+        "warmupOriginSeconds": 1.1759244583372492,
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "playout": "adaptive",
+        "preset": {
+          "fps": 60,
+          "height": 1440,
+          "megabits": 20,
+          "pattern": "desktop",
+          "width": 2560
+        },
+        "network": "Surge Ponte",
+        "receiveDepth": 16,
+        "bridgeTransport": "socket",
+        "videoMbps": {
+          "mean": 0.2675668331744239,
+          "p95": 0.5304936342077089
+        },
+        "fps": {
+          "mean": 60,
+          "p95": 60
+        },
+        "controlRTTMilliseconds": {
+          "mean": 2.499857583333333,
+          "p95": 4.503792
+        },
+        "sendDelayMilliseconds": {
+          "mean": 4.0746308008640314e-05,
+          "p95": 0.00018556701030927826
+        },
+        "encodeMilliseconds": {
+          "mean": 7.774305555555555,
+          "p95": 8.133333333333356
+        },
+        "decodeMilliseconds": null,
+        "jitterBufferMilliseconds": null,
+        "jitterBufferTargetMilliseconds": null,
+        "jitterBufferMinimumMilliseconds": null,
+        "frameGapP95Milliseconds": null,
+        "frameGapMaxMilliseconds": null,
+        "callbackMillisecondsP95": {
+          "mean": 8.457614581857342,
+          "p95": 8.907791663659737
+        },
+        "frameBytesMax": {
+          "mean": 892.8333333333334,
+          "p95": 1330
+        },
+        "frameBytesP95": {
+          "mean": 460.2916666666667,
+          "p95": 469
+        },
+        "targetMbps": {
+          "mean": 18.847958333333334,
+          "p95": 19.12
+        },
+        "cumulative": {
+          "framesDecoded": 0,
+          "framesEncoded": 2096,
+          "sourceFrames": 2097,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "packetsReceived": null,
+          "packetsSent": 2426,
+          "retransmittedPacketsReceived": null,
+          "retransmittedPacketsSent": 18,
+          "pliCount": 0,
+          "nackCount": 7,
+          "probeSent": 35,
+          "probeReceived": 34,
+          "probeExpired": 0
+        },
+        "fpsBelow58Intervals": 0,
+        "fpsMinimum": 60,
+        "frameGapMaximumMs": 0,
+        "observedSeconds": 22.9978380833345,
+        "counterFPS": 60.00564031277462,
+        "actualFormat": {
+          "width": 2560,
+          "height": 1440,
+          "codec": "video/H265",
+          "decodedPixelFormat": null,
+          "playoutDelayExtensionNegotiated": true
+        },
+        "byteRatesMbps": {
+          "rtpPayloadBytes": 0.2701154768326511,
+          "rtpHeaderBytes": 0.014976016386930855,
+          "retransmittedPayloadBytes": 0.0021744652614211833,
+          "transportBytesSent": 0.29327174039404685,
+          "transportBytesReceived": 0.009447148867329466,
+          "sentWireBytes": 0.31023229114610457,
+          "receivedWireBytes": 0.016549033810086607,
+          "encodedBytes": 0.21560635317252658
+        },
+        "steadyCounterDelta": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 3,
+          "pliCount": 0
+        },
+        "bridge": {
+          "acceptedPackets": 904,
+          "authenticated": true,
+          "endpointScope": "loopback socket endpoint (remote topology unknown)",
+          "expiredAssemblies": 0,
+          "fragmentedInnerDatagrams": 0,
+          "innerDatagramsReceived": 873,
+          "innerDatagramsSent": 2600,
+          "largestSequenceGap": 0,
+          "localInvalidSizes": 0,
+          "localRejectedSources": 31,
+          "localSendErrors": 0,
+          "localSocketDrops": 31,
+          "localUnboundSends": 0,
+          "maxQueueAgeMilliseconds": 0.015041674487292767,
+          "pathDatagramBytes": 1280,
+          "pendingPackets": 0,
+          "queueDeadlineDrops": 0,
+          "queueDrops": 0,
+          "queueHighWater": 1,
+          "queueOverflowDrops": 0,
+          "receiveDepth": 16,
+          "receivedDatagrams": 904,
+          "receivedWireBytes": 75333,
+          "rejectedDatagrams": 0,
+          "reorderedPackets": 0,
+          "rtpSizeCounts": {
+            "1169-1200": 1,
+            "1201-1248": 263,
+            "<=1168": 2190
+          },
+          "sendErrors": 0,
+          "sentDatagrams": 2631,
+          "sentWireBytes": 1435564,
+          "sequenceHoles": 0,
+          "simulatedDrops": 19,
+          "socketReceiveBufferBytes": 262144,
+          "socketRejectedPeers": 0,
+          "socketTruncatedPackets": 0,
+          "transport": "socket",
+          "wireVersion": 2
+        },
+        "encoderDetails": {
+          "callbackMillisecondsP95": 8.760875003645197,
+          "callbackRejected": 0,
+          "encodedBytes": 948125,
+          "encodedFrames": 2096,
+          "frameBytesMax": 1320,
+          "frameBytesP95": 461,
+          "keyframes": 18,
+          "requestedFPS": 60,
+          "submissionErrors": 0,
+          "submittedFrames": 2097,
+          "targetMbps": 19.12,
+          "unmatchedExpired": 0,
+          "unmatchedInputs": 1
+        }
+      },
+      "viewer": {
+        "samples": 24,
+        "warmupOriginSeconds": 1.0078376249875873,
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "playout": "adaptive",
+        "preset": {
+          "fps": 60,
+          "height": 1440,
+          "megabits": 20,
+          "pattern": "desktop",
+          "width": 2560
+        },
+        "network": "本机回环（不代表远程网络）",
+        "receiveDepth": 16,
+        "bridgeTransport": "socket",
+        "videoMbps": {
+          "mean": 0.26554610206719953,
+          "p95": 0.529762131700826
+        },
+        "fps": {
+          "mean": 59.958333333333336,
+          "p95": 60
+        },
+        "controlRTTMilliseconds": {
+          "mean": 1.4698575833333334,
+          "p95": 4.592625
+        },
+        "sendDelayMilliseconds": null,
+        "encodeMilliseconds": null,
+        "decodeMilliseconds": {
+          "mean": 1.520479635739866,
+          "p95": 1.7588333333333317
+        },
+        "jitterBufferMilliseconds": {
+          "mean": 12.99712361111111,
+          "p95": 13.726716666666642
+        },
+        "jitterBufferTargetMilliseconds": {
+          "mean": 11.928722916666665,
+          "p95": 11.976383333333372
+        },
+        "jitterBufferMinimumMilliseconds": {
+          "mean": 11.928722916666665,
+          "p95": 11.976383333333372
+        },
+        "frameGapP95Milliseconds": {
+          "mean": 18.474274305238698,
+          "p95": 19.25691668293439
+        },
+        "frameGapMaxMilliseconds": {
+          "mean": 27.725302083126735,
+          "p95": 22.11579165305011
+        },
+        "callbackMillisecondsP95": null,
+        "frameBytesMax": null,
+        "frameBytesP95": null,
+        "targetMbps": null,
+        "cumulative": {
+          "framesDecoded": 2096,
+          "framesEncoded": 0,
+          "sourceFrames": 0,
+          "framesDropped": 0,
+          "freezeCount": 1,
+          "packetsLost": 18,
+          "packetsReceived": 2407,
+          "packetsSent": null,
+          "retransmittedPacketsReceived": 290,
+          "retransmittedPacketsSent": null,
+          "pliCount": 0,
+          "nackCount": 7,
+          "probeSent": 35,
+          "probeReceived": 34,
+          "probeExpired": 0
+        },
+        "fpsBelow58Intervals": 0,
+        "fpsMinimum": 59,
+        "frameGapMaximumMs": 206.0802500054706,
+        "observedSeconds": 22.99882087498554,
+        "counterFPS": 60.003076136000715,
+        "actualFormat": {
+          "width": 2560,
+          "height": 1440,
+          "codec": "video/H265",
+          "decodedPixelFormat": {
+            "height": "1440",
+            "matrix": "ITU_R_2020",
+            "pixelFormat": "2016686640",
+            "primaries": "ITU_R_2020",
+            "transfer": "SMPTE_ST_2084_PQ",
+            "width": "2560"
+          },
+          "playoutDelayExtensionNegotiated": true
+        },
+        "byteRatesMbps": {
+          "rtpPayloadBytes": 0.26778451093110106,
+          "rtpHeaderBytes": 0.014839021611372698,
+          "retransmittedPayloadBytes": 0.056435241052366164,
+          "transportBytesSent": 0.009470398555818873,
+          "transportBytesReceived": 0.2907512535685247,
+          "sentWireBytes": 0.01652258618237701,
+          "receivedWireBytes": 0.31004128597547,
+          "encodedBytes": null
+        },
+        "steadyCounterDelta": {
+          "freezeCount": 1,
+          "packetsLost": 14,
+          "nackCount": 3,
+          "pliCount": 0
+        },
+        "bridge": {
+          "acceptedPackets": 2632,
+          "authenticated": true,
+          "endpointScope": "loopback socket endpoint (remote topology unknown)",
+          "expiredAssemblies": 0,
+          "fragmentedInnerDatagrams": 0,
+          "innerDatagramsReceived": 2601,
+          "innerDatagramsSent": 875,
+          "largestSequenceGap": 12,
+          "localInvalidSizes": 0,
+          "localRejectedSources": 32,
+          "localSendErrors": 0,
+          "localSocketDrops": 32,
+          "localUnboundSends": 0,
+          "maxQueueAgeMilliseconds": 0.00958333839662373,
+          "pathDatagramBytes": 1280,
+          "pendingPackets": 0,
+          "probeRTTMilliseconds": 0.20895831403322518,
+          "queueDeadlineDrops": 0,
+          "queueDrops": 0,
+          "queueHighWater": 1,
+          "queueOverflowDrops": 0,
+          "receiveDepth": 16,
+          "receivedDatagrams": 2632,
+          "receivedWireBytes": 1435646,
+          "rejectedDatagrams": 0,
+          "reorderedPackets": 0,
+          "rtpSizeCounts": {
+            "<=1168": 728
+          },
+          "sendErrors": 0,
+          "sentDatagrams": 906,
+          "sentWireBytes": 75601,
+          "sequenceHoles": 19,
+          "simulatedDrops": 0,
+          "socketReceiveBufferBytes": 262144,
+          "socketRejectedPeers": 0,
+          "socketTruncatedPackets": 0,
+          "transport": "socket",
+          "wireVersion": 2
+        },
+        "encoderDetails": null
+      },
+      "reportEvidence": {
+        "host": {
+          "sha256": "2f9f699d8861b0d93b8e4357485105b613e8e9ce2dbbe1ef8fe2b487090f7764",
+          "schema": 7,
+          "appVersion": "0.1.0",
+          "build": "1",
+          "sampleCount": 35
+        },
+        "viewer": {
+          "sha256": "9cc96121fca68e7e5c8125096225225f045ebc654229c7608fb31f5c878fb437",
+          "schema": 7,
+          "appVersion": "0.1.0",
+          "build": "1",
+          "sampleCount": 35
+        }
+      },
+      "scope": "synthetic Main10 loopback, 35 seconds each",
+      "binarySHA256": "c0aff482fca2c21c9d498d6980b1bf0f769d6f8c903b387c7ec980298fe7c87d",
+      "id": "1c8a9925ad19/adaptive-loss"
+    },
+    {
+      "run": "realtime-clean",
+      "warmupSeconds": 10,
+      "host": {
+        "samples": 24,
+        "warmupOriginSeconds": 1.1674521666718647,
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "playout": "realtime",
+        "preset": {
+          "fps": 60,
+          "height": 1440,
+          "megabits": 20,
+          "pattern": "desktop",
+          "width": 2560
+        },
+        "network": "Surge Ponte",
+        "receiveDepth": 16,
+        "bridgeTransport": "socket",
+        "videoMbps": {
+          "mean": 0.26539048740449883,
+          "p95": 0.5265293115272492
+        },
+        "fps": {
+          "mean": 59.166666666666664,
+          "p95": 60
+        },
+        "controlRTTMilliseconds": {
+          "mean": 7.1742238333333335,
+          "p95": 13.495541
+        },
+        "sendDelayMilliseconds": {
+          "mean": 2.6968053761435353e-05,
+          "p95": 0.00011340206185567006
+        },
+        "encodeMilliseconds": {
+          "mean": 7.3939568475811175,
+          "p95": 7.649999999999994
+        },
+        "decodeMilliseconds": null,
+        "jitterBufferMilliseconds": null,
+        "jitterBufferTargetMilliseconds": null,
+        "jitterBufferMinimumMilliseconds": null,
+        "frameGapP95Milliseconds": null,
+        "frameGapMaxMilliseconds": null,
+        "callbackMillisecondsP95": {
+          "mean": 7.805574651380691,
+          "p95": 8.107500005280599
+        },
+        "frameBytesMax": {
+          "mean": 892.5,
+          "p95": 1330
+        },
+        "frameBytesP95": {
+          "mean": 459.9166666666667,
+          "p95": 461
+        },
+        "targetMbps": {
+          "mean": 19.12,
+          "p95": 19.12
+        },
+        "cumulative": {
+          "framesDecoded": 0,
+          "framesEncoded": 2096,
+          "sourceFrames": 2097,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "packetsReceived": null,
+          "packetsSent": 2408,
+          "retransmittedPacketsReceived": null,
+          "retransmittedPacketsSent": 0,
+          "pliCount": 0,
+          "nackCount": 0,
+          "probeSent": 35,
+          "probeReceived": 34,
+          "probeExpired": 0
+        },
+        "fpsBelow58Intervals": 0,
+        "fpsMinimum": 59,
+        "frameGapMaximumMs": 0,
+        "observedSeconds": 23.00719462498091,
+        "counterFPS": 59.98123728225492,
+        "actualFormat": {
+          "width": 2560,
+          "height": 1440,
+          "codec": "video/H265",
+          "decodedPixelFormat": null,
+          "playoutDelayExtensionNegotiated": true
+        },
+        "byteRatesMbps": {
+          "rtpPayloadBytes": 0.26792940645214,
+          "rtpHeaderBytes": 0.01697277770563146,
+          "retransmittedPayloadBytes": 0.0,
+          "transportBytesSent": 0.2930387693891034,
+          "transportBytesReceived": 0.009387672139978657,
+          "sentWireBytes": 0.3124786014629528,
+          "receivedWireBytes": 0.016464414987332,
+          "encodedBytes": 0.21573877567022662
+        },
+        "steadyCounterDelta": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "bridge": {
+          "acceptedPackets": 900,
+          "authenticated": true,
+          "endpointScope": "loopback socket endpoint (remote topology unknown)",
+          "expiredAssemblies": 0,
+          "fragmentedInnerDatagrams": 0,
+          "innerDatagramsReceived": 869,
+          "innerDatagramsSent": 2601,
+          "largestSequenceGap": 0,
+          "localInvalidSizes": 0,
+          "localRejectedSources": 31,
+          "localSendErrors": 0,
+          "localSocketDrops": 31,
+          "localUnboundSends": 0,
+          "maxQueueAgeMilliseconds": 0.04383330815471709,
+          "pathDatagramBytes": 1280,
+          "pendingPackets": 0,
+          "queueDeadlineDrops": 0,
+          "queueDrops": 0,
+          "queueHighWater": 1,
+          "queueOverflowDrops": 0,
+          "receiveDepth": 16,
+          "receivedDatagrams": 900,
+          "receivedWireBytes": 75048,
+          "rejectedDatagrams": 0,
+          "reorderedPackets": 0,
+          "rtpSizeCounts": {
+            "1201-1248": 265,
+            "<=1168": 2190
+          },
+          "sendErrors": 0,
+          "sentDatagrams": 2632,
+          "sentWireBytes": 1446943,
+          "sequenceHoles": 0,
+          "simulatedDrops": 0,
+          "socketReceiveBufferBytes": 262144,
+          "socketRejectedPeers": 0,
+          "socketTruncatedPackets": 0,
+          "transport": "socket",
+          "wireVersion": 2
+        },
+        "encoderDetails": {
+          "callbackMillisecondsP95": 7.969166676048189,
+          "callbackRejected": 0,
+          "encodedBytes": 948747,
+          "encodedFrames": 2097,
+          "frameBytesMax": 1320,
+          "frameBytesP95": 461,
+          "keyframes": 18,
+          "requestedFPS": 60,
+          "submissionErrors": 0,
+          "submittedFrames": 2097,
+          "targetMbps": 19.12,
+          "unmatchedExpired": 0,
+          "unmatchedInputs": 0
+        }
+      },
+      "viewer": {
+        "samples": 24,
+        "warmupOriginSeconds": 1.012273208325496,
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "playout": "realtime",
+        "preset": {
+          "fps": 60,
+          "height": 1440,
+          "megabits": 20,
+          "pattern": "desktop",
+          "width": 2560
+        },
+        "network": "本机回环（不代表远程网络）",
+        "receiveDepth": 16,
+        "bridgeTransport": "socket",
+        "videoMbps": {
+          "mean": 0.2656599375263372,
+          "p95": 0.5267692014076335
+        },
+        "fps": {
+          "mean": 60,
+          "p95": 61
+        },
+        "controlRTTMilliseconds": {
+          "mean": 3.067305541666667,
+          "p95": 7.037709
+        },
+        "sendDelayMilliseconds": null,
+        "encodeMilliseconds": null,
+        "decodeMilliseconds": {
+          "mean": 1.133735786368127,
+          "p95": 1.313433333333336
+        },
+        "jitterBufferMilliseconds": {
+          "mean": 0.023556944444444443,
+          "p95": 0.028749999999999956
+        },
+        "jitterBufferTargetMilliseconds": {
+          "mean": 11.021871527777778,
+          "p95": 11.051499999999978
+        },
+        "jitterBufferMinimumMilliseconds": {
+          "mean": 11.021871527777778,
+          "p95": 11.051499999999978
+        },
+        "frameGapP95Milliseconds": {
+          "mean": 17.7892725696438,
+          "p95": 18.65791666205041
+        },
+        "frameGapMaxMilliseconds": {
+          "mean": 18.991404511325527,
+          "p95": 20.93929165857844
+        },
+        "callbackMillisecondsP95": null,
+        "frameBytesMax": null,
+        "frameBytesP95": null,
+        "targetMbps": null,
+        "cumulative": {
+          "framesDecoded": 2097,
+          "framesEncoded": 0,
+          "sourceFrames": 0,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "packetsReceived": 2409,
+          "packetsSent": null,
+          "retransmittedPacketsReceived": 273,
+          "retransmittedPacketsSent": null,
+          "pliCount": 0,
+          "nackCount": 0,
+          "probeSent": 35,
+          "probeReceived": 34,
+          "probeExpired": 0
+        },
+        "fpsBelow58Intervals": 0,
+        "fpsMinimum": 59,
+        "frameGapMaximumMs": 22.86870832904242,
+        "observedSeconds": 23.00204416664201,
+        "counterFPS": 60.03814226227562,
+        "actualFormat": {
+          "width": 2560,
+          "height": 1440,
+          "codec": "video/H265",
+          "decodedPixelFormat": {
+            "height": "1440",
+            "matrix": "ITU_R_2020",
+            "pixelFormat": "2016686640",
+            "primaries": "ITU_R_2020",
+            "transfer": "SMPTE_ST_2084_PQ",
+            "width": "2560"
+          },
+          "playoutDelayExtensionNegotiated": true
+        },
+        "byteRatesMbps": {
+          "rtpPayloadBytes": 0.26795601101133765,
+          "rtpHeaderBytes": 0.016976578132403754,
+          "retransmittedPayloadBytes": 0.0542532650993593,
+          "transportBytesSent": 0.009351516693109728,
+          "transportBytesReceived": 0.2930709962628565,
+          "sentWireBytes": 0.016454189778005848,
+          "receivedWireBytes": 0.3123555431833991,
+          "encodedBytes": null
+        },
+        "steadyCounterDelta": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "bridge": {
+          "acceptedPackets": 2633,
+          "authenticated": true,
+          "endpointScope": "loopback socket endpoint (remote topology unknown)",
+          "expiredAssemblies": 0,
+          "fragmentedInnerDatagrams": 0,
+          "innerDatagramsReceived": 2602,
+          "innerDatagramsSent": 871,
+          "largestSequenceGap": 0,
+          "localInvalidSizes": 0,
+          "localRejectedSources": 31,
+          "localSendErrors": 0,
+          "localSocketDrops": 31,
+          "localUnboundSends": 0,
+          "maxQueueAgeMilliseconds": 0.01541667734272778,
+          "pathDatagramBytes": 1280,
+          "pendingPackets": 0,
+          "probeRTTMilliseconds": 0.13208333984948695,
+          "queueDeadlineDrops": 0,
+          "queueDrops": 0,
+          "queueHighWater": 1,
+          "queueOverflowDrops": 0,
+          "receiveDepth": 16,
+          "receivedDatagrams": 2633,
+          "receivedWireBytes": 1447025,
+          "rejectedDatagrams": 0,
+          "reorderedPackets": 0,
+          "rtpSizeCounts": {
+            "<=1168": 724
+          },
+          "sendErrors": 0,
+          "sentDatagrams": 902,
+          "sentWireBytes": 75316,
+          "sequenceHoles": 0,
+          "simulatedDrops": 0,
+          "socketReceiveBufferBytes": 262144,
+          "socketRejectedPeers": 0,
+          "socketTruncatedPackets": 0,
+          "transport": "socket",
+          "wireVersion": 2
+        },
+        "encoderDetails": null
+      },
+      "reportEvidence": {
+        "host": {
+          "sha256": "fc259aceb4e8d53b17e460a916bf80e6754df46099f25085a4d4c5e4b0b97225",
+          "schema": 7,
+          "appVersion": "0.1.0",
+          "build": "1",
+          "sampleCount": 35
+        },
+        "viewer": {
+          "sha256": "ab21f95bda5e57300f26d7750948f1090c14e06da706433116dc711a3f801e00",
+          "schema": 7,
+          "appVersion": "0.1.0",
+          "build": "1",
+          "sampleCount": 35
+        }
+      },
+      "scope": "synthetic Main10 loopback, 35 seconds each",
+      "binarySHA256": "c0aff482fca2c21c9d498d6980b1bf0f769d6f8c903b387c7ec980298fe7c87d",
+      "id": "1c8a9925ad19/realtime-clean"
+    },
+    {
+      "run": "realtime-loss",
+      "warmupSeconds": 10,
+      "host": {
+        "samples": 24,
+        "warmupOriginSeconds": 1.1723237083351705,
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "playout": "realtime",
+        "preset": {
+          "fps": 60,
+          "height": 1440,
+          "megabits": 20,
+          "pattern": "desktop",
+          "width": 2560
+        },
+        "network": "Surge Ponte",
+        "receiveDepth": 16,
+        "bridgeTransport": "socket",
+        "videoMbps": {
+          "mean": 0.267621747528738,
+          "p95": 0.5304627444174931
+        },
+        "fps": {
+          "mean": 60,
+          "p95": 60
+        },
+        "controlRTTMilliseconds": {
+          "mean": 1.512204875,
+          "p95": 2.809458
+        },
+        "sendDelayMilliseconds": {
+          "mean": 3.5280615966396115e-05,
+          "p95": 0.0001649484536082474
+        },
+        "encodeMilliseconds": {
+          "mean": 8.106944444444444,
+          "p95": 8.53333333333334
+        },
+        "decodeMilliseconds": null,
+        "jitterBufferMilliseconds": null,
+        "jitterBufferTargetMilliseconds": null,
+        "jitterBufferMinimumMilliseconds": null,
+        "frameGapP95Milliseconds": null,
+        "frameGapMaxMilliseconds": null,
+        "callbackMillisecondsP95": {
+          "mean": 8.799107636150438,
+          "p95": 9.189375006826594
+        },
+        "frameBytesMax": {
+          "mean": 892.875,
+          "p95": 1330
+        },
+        "frameBytesP95": {
+          "mean": 459.8333333333333,
+          "p95": 461
+        },
+        "targetMbps": {
+          "mean": 18.92941666666667,
+          "p95": 19.12
+        },
+        "cumulative": {
+          "framesDecoded": 0,
+          "framesEncoded": 2096,
+          "sourceFrames": 2097,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "packetsReceived": null,
+          "packetsSent": 2426,
+          "retransmittedPacketsReceived": null,
+          "retransmittedPacketsSent": 18,
+          "pliCount": 0,
+          "nackCount": 7,
+          "probeSent": 35,
+          "probeReceived": 34,
+          "probeExpired": 0
+        },
+        "fpsBelow58Intervals": 0,
+        "fpsMinimum": 60,
+        "frameGapMaximumMs": 0,
+        "observedSeconds": 23.000007083348464,
+        "counterFPS": 59.99998152170535,
+        "actualFormat": {
+          "width": 2560,
+          "height": 1440,
+          "codec": "video/H265",
+          "decodedPixelFormat": null,
+          "playoutDelayExtensionNegotiated": true
+        },
+        "byteRatesMbps": {
+          "rtpPayloadBytes": 0.27014009071754796,
+          "rtpHeaderBytes": 0.017131125158881343,
+          "retransmittedPayloadBytes": 0.0021742601999546673,
+          "transportBytesSent": 0.29545973509372775,
+          "transportBytesReceived": 0.009458084043699778,
+          "sentWireBytes": 0.312413121176913,
+          "receivedWireBytes": 0.01660103836561132,
+          "encodedBytes": 0.21563610750323084
+        },
+        "steadyCounterDelta": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 3,
+          "pliCount": 0
+        },
+        "bridge": {
+          "acceptedPackets": 906,
+          "authenticated": true,
+          "endpointScope": "loopback socket endpoint (remote topology unknown)",
+          "expiredAssemblies": 0,
+          "fragmentedInnerDatagrams": 0,
+          "innerDatagramsReceived": 876,
+          "innerDatagramsSent": 2599,
+          "largestSequenceGap": 0,
+          "localInvalidSizes": 0,
+          "localRejectedSources": 31,
+          "localSendErrors": 0,
+          "localSocketDrops": 31,
+          "localUnboundSends": 0,
+          "maxQueueAgeMilliseconds": 0.016375008272007108,
+          "pathDatagramBytes": 1280,
+          "pendingPackets": 0,
+          "queueDeadlineDrops": 0,
+          "queueDrops": 0,
+          "queueHighWater": 1,
+          "queueOverflowDrops": 0,
+          "receiveDepth": 16,
+          "receivedDatagrams": 906,
+          "receivedWireBytes": 75615,
+          "rejectedDatagrams": 0,
+          "reorderedPackets": 0,
+          "rtpSizeCounts": {
+            "1201-1248": 264,
+            "<=1168": 2188
+          },
+          "sendErrors": 0,
+          "sentDatagrams": 2629,
+          "sentWireBytes": 1445249,
+          "sequenceHoles": 0,
+          "simulatedDrops": 19,
+          "socketReceiveBufferBytes": 262144,
+          "socketRejectedPeers": 0,
+          "socketTruncatedPackets": 0,
+          "transport": "socket",
+          "wireVersion": 2
+        },
+        "encoderDetails": {
+          "callbackMillisecondsP95": 8.603624999523163,
+          "callbackRejected": 0,
+          "encodedBytes": 948269,
+          "encodedFrames": 2096,
+          "frameBytesMax": 1320,
+          "frameBytesP95": 461,
+          "keyframes": 18,
+          "requestedFPS": 60,
+          "submissionErrors": 0,
+          "submittedFrames": 2097,
+          "targetMbps": 19.12,
+          "unmatchedExpired": 0,
+          "unmatchedInputs": 1
+        }
+      },
+      "viewer": {
+        "samples": 24,
+        "warmupOriginSeconds": 1.0087935416668188,
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "playout": "realtime",
+        "preset": {
+          "fps": 60,
+          "height": 1440,
+          "megabits": 20,
+          "pattern": "desktop",
+          "width": 2560
+        },
+        "network": "本机回环（不代表远程网络）",
+        "receiveDepth": 16,
+        "bridgeTransport": "socket",
+        "videoMbps": {
+          "mean": 0.26554310299003503,
+          "p95": 0.5302478979058449
+        },
+        "fps": {
+          "mean": 60,
+          "p95": 60
+        },
+        "controlRTTMilliseconds": {
+          "mean": 4.817241291666667,
+          "p95": 6.656
+        },
+        "sendDelayMilliseconds": null,
+        "encodeMilliseconds": null,
+        "decodeMilliseconds": {
+          "mean": 1.3042555555555555,
+          "p95": 1.4299333333333368
+        },
+        "jitterBufferMilliseconds": {
+          "mean": 0.51853125,
+          "p95": 0.2309333333333332
+        },
+        "jitterBufferTargetMilliseconds": {
+          "mean": 11.92755,
+          "p95": 12.011633333333343
+        },
+        "jitterBufferMinimumMilliseconds": {
+          "mean": 11.92755,
+          "p95": 12.011633333333343
+        },
+        "frameGapP95Milliseconds": {
+          "mean": 17.87934722112065,
+          "p95": 18.220208352431655
+        },
+        "frameGapMaxMilliseconds": {
+          "mean": 28.367484377668006,
+          "p95": 34.786541655194014
+        },
+        "callbackMillisecondsP95": null,
+        "frameBytesMax": null,
+        "frameBytesP95": null,
+        "targetMbps": null,
+        "cumulative": {
+          "framesDecoded": 2096,
+          "framesEncoded": 0,
+          "sourceFrames": 0,
+          "framesDropped": 0,
+          "freezeCount": 1,
+          "packetsLost": 18,
+          "packetsReceived": 2407,
+          "packetsSent": null,
+          "retransmittedPacketsReceived": 290,
+          "retransmittedPacketsSent": null,
+          "pliCount": 0,
+          "nackCount": 7,
+          "probeSent": 35,
+          "probeReceived": 34,
+          "probeExpired": 0
+        },
+        "fpsBelow58Intervals": 0,
+        "fpsMinimum": 60,
+        "frameGapMaximumMs": 217.10850001545623,
+        "observedSeconds": 22.999188541667536,
+        "counterFPS": 60.00211692251053,
+        "actualFormat": {
+          "width": 2560,
+          "height": 1440,
+          "codec": "video/H265",
+          "decodedPixelFormat": {
+            "height": "1440",
+            "matrix": "ITU_R_2020",
+            "pixelFormat": "2016686640",
+            "primaries": "ITU_R_2020",
+            "transfer": "SMPTE_ST_2084_PQ",
+            "width": "2560"
+          },
+          "playoutDelayExtensionNegotiated": true
+        },
+        "byteRatesMbps": {
+          "rtpPayloadBytes": 0.2679851069020857,
+          "rtpHeaderBytes": 0.016989816805583213,
+          "retransmittedPayloadBytes": 0.056434338874544215,
+          "transportBytesSent": 0.009458420657141487,
+          "transportBytesReceived": 0.2931150369843101,
+          "sentWireBytes": 0.016615542731330337,
+          "receivedWireBytes": 0.31240476101941006,
+          "encodedBytes": null
+        },
+        "steadyCounterDelta": {
+          "freezeCount": 1,
+          "packetsLost": 14,
+          "nackCount": 3,
+          "pliCount": 0
+        },
+        "bridge": {
+          "acceptedPackets": 2632,
+          "authenticated": true,
+          "endpointScope": "loopback socket endpoint (remote topology unknown)",
+          "expiredAssemblies": 0,
+          "fragmentedInnerDatagrams": 0,
+          "innerDatagramsReceived": 2601,
+          "innerDatagramsSent": 878,
+          "largestSequenceGap": 12,
+          "localInvalidSizes": 0,
+          "localRejectedSources": 31,
+          "localSendErrors": 0,
+          "localSocketDrops": 31,
+          "localUnboundSends": 0,
+          "maxQueueAgeMilliseconds": 0.018208316760137677,
+          "pathDatagramBytes": 1280,
+          "pendingPackets": 0,
+          "probeRTTMilliseconds": 0.0954166753217578,
+          "queueDeadlineDrops": 0,
+          "queueDrops": 0,
+          "queueHighWater": 1,
+          "queueOverflowDrops": 0,
+          "receiveDepth": 16,
+          "receivedDatagrams": 2632,
+          "receivedWireBytes": 1445790,
+          "rejectedDatagrams": 0,
+          "reorderedPackets": 0,
+          "rtpSizeCounts": {
+            "<=1168": 730
+          },
+          "sendErrors": 0,
+          "sentDatagrams": 909,
+          "sentWireBytes": 75923,
+          "sequenceHoles": 19,
+          "simulatedDrops": 0,
+          "socketReceiveBufferBytes": 262144,
+          "socketRejectedPeers": 0,
+          "socketTruncatedPackets": 0,
+          "transport": "socket",
+          "wireVersion": 2
+        },
+        "encoderDetails": null
+      },
+      "reportEvidence": {
+        "host": {
+          "sha256": "fb71224a65e8b5f371e6d02cead393f508a4a56845e68518e86df81a65e50d0c",
+          "schema": 7,
+          "appVersion": "0.1.0",
+          "build": "1",
+          "sampleCount": 35
+        },
+        "viewer": {
+          "sha256": "5e6185dba4b251b9130742c833c1b984af51f9f39232cfc86d23f29efe347f8a",
+          "schema": 7,
+          "appVersion": "0.1.0",
+          "build": "1",
+          "sampleCount": 35
+        }
+      },
+      "scope": "synthetic Main10 loopback, 35 seconds each",
+      "binarySHA256": "c0aff482fca2c21c9d498d6980b1bf0f769d6f8c903b387c7ec980298fe7c87d",
+      "id": "1c8a9925ad19/realtime-loss"
+    },
+    {
+      "run": "adaptive-clean",
+      "warmupSeconds": 10,
+      "host": {
+        "samples": 9,
+        "warmupOriginSeconds": 1.1766248749918304,
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "playout": "adaptive",
+        "preset": {
+          "fps": 60,
+          "height": 1440,
+          "megabits": 20,
+          "pattern": "desktop",
+          "width": 2560
+        },
+        "network": "Surge Ponte",
+        "receiveDepth": 16,
+        "bridgeTransport": "socket",
+        "videoMbps": {
+          "mean": 2.790989203018491,
+          "p95": 3.948465495172744
+        },
+        "fps": {
+          "mean": 60,
+          "p95": 60
+        },
+        "controlRTTMilliseconds": {
+          "mean": 7.343759111111111,
+          "p95": 27.037708
+        },
+        "sendDelayMilliseconds": {
+          "mean": 0.056724746308931186,
+          "p95": 0.25985882352941175
+        },
+        "encodeMilliseconds": {
+          "mean": 7.974074074074076,
+          "p95": 8.066666666666666
+        },
+        "decodeMilliseconds": null,
+        "jitterBufferMilliseconds": null,
+        "jitterBufferTargetMilliseconds": null,
+        "jitterBufferMinimumMilliseconds": null,
+        "frameGapP95Milliseconds": null,
+        "frameGapMaxMilliseconds": null,
+        "callbackMillisecondsP95": {
+          "mean": 8.684490736211753,
+          "p95": 9.02825000230223
+        },
+        "frameBytesMax": {
+          "mean": 47065.666666666664,
+          "p95": 97579
+        },
+        "frameBytesP95": {
+          "mean": 18895.11111111111,
+          "p95": 39600
+        },
+        "targetMbps": {
+          "mean": 19.052888888888887,
+          "p95": 19.113
+        },
+        "cumulative": {
+          "framesDecoded": 0,
+          "framesEncoded": 1176,
+          "sourceFrames": 1177,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "packetsReceived": null,
+          "packetsSent": 6715,
+          "retransmittedPacketsReceived": null,
+          "retransmittedPacketsSent": 0,
+          "pliCount": 0,
+          "nackCount": 0,
+          "probeSent": 20,
+          "probeReceived": 19,
+          "probeExpired": 0
+        },
+        "fpsBelow58Intervals": 0,
+        "fpsMinimum": 60,
+        "frameGapMaximumMs": 0,
+        "observedSeconds": 8.004444624995813,
+        "counterFPS": 59.966683822270944,
+        "actualFormat": {
+          "width": 2560,
+          "height": 1440,
+          "codec": "video/H265",
+          "decodedPixelFormat": null,
+          "playoutDelayExtensionNegotiated": true
+        },
+        "byteRatesMbps": {
+          "rtpPayloadBytes": 2.8504093749054995,
+          "rtpHeaderBytes": 0.06465907683136364,
+          "retransmittedPayloadBytes": 0.0,
+          "transportBytesSent": 2.948262010121951,
+          "transportBytesReceived": 0.011329705463487725,
+          "sentWireBytes": 3.039563285130819,
+          "receivedWireBytes": 0.01845374750157351,
+          "encodedBytes": 2.8120666772695393
+        },
+        "steadyCounterDelta": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "bridge": {
+          "acceptedPackets": 515,
+          "authenticated": true,
+          "endpointScope": "loopback socket endpoint (remote topology unknown)",
+          "expiredAssemblies": 0,
+          "fragmentedInnerDatagrams": 0,
+          "innerDatagramsReceived": 497,
+          "innerDatagramsSent": 6979,
+          "largestSequenceGap": 0,
+          "localInvalidSizes": 0,
+          "localRejectedSources": 31,
+          "localSendErrors": 0,
+          "localSocketDrops": 31,
+          "localUnboundSends": 0,
+          "maxQueueAgeMilliseconds": 0.028791662771254778,
+          "pathDatagramBytes": 1280,
+          "pendingPackets": 0,
+          "queueDeadlineDrops": 0,
+          "queueDrops": 0,
+          "queueHighWater": 1,
+          "queueOverflowDrops": 0,
+          "receiveDepth": 16,
+          "receivedDatagrams": 515,
+          "receivedWireBytes": 48688,
+          "rejectedDatagrams": 0,
+          "reorderedPackets": 0,
+          "rtpSizeCounts": {
+            "1169-1200": 2004,
+            "1201-1248": 949,
+            "<=1168": 3937
+          },
+          "sendErrors": 0,
+          "sentDatagrams": 6997,
+          "sentWireBytes": 7717863,
+          "sequenceHoles": 0,
+          "simulatedDrops": 0,
+          "socketReceiveBufferBytes": 262144,
+          "socketRejectedPeers": 0,
+          "socketTruncatedPackets": 0,
+          "transport": "socket",
+          "wireVersion": 2
+        },
+        "encoderDetails": {
+          "callbackMillisecondsP95": 8.513166685588658,
+          "callbackRejected": 0,
+          "encodedBytes": 7060505,
+          "encodedFrames": 1177,
+          "frameBytesMax": 29386,
+          "frameBytesP95": 21156,
+          "keyframes": 10,
+          "requestedFPS": 60,
+          "submissionErrors": 0,
+          "submittedFrames": 1177,
+          "targetMbps": 19.113,
+          "unmatchedExpired": 0,
+          "unmatchedInputs": 0
+        }
+      },
+      "viewer": {
+        "samples": 9,
+        "warmupOriginSeconds": 1.023757624992868,
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "playout": "adaptive",
+        "preset": {
+          "fps": 60,
+          "height": 1440,
+          "megabits": 20,
+          "pattern": "desktop",
+          "width": 2560
+        },
+        "network": "本机回环（不代表远程网络）",
+        "receiveDepth": 16,
+        "bridgeTransport": "socket",
+        "videoMbps": {
+          "mean": 2.7950988853002343,
+          "p95": 3.945402828227452
+        },
+        "fps": {
+          "mean": 60.111111111111114,
+          "p95": 61
+        },
+        "controlRTTMilliseconds": {
+          "mean": 5.282976888888889,
+          "p95": 11.354166
+        },
+        "sendDelayMilliseconds": null,
+        "encodeMilliseconds": null,
+        "decodeMilliseconds": {
+          "mean": 1.2329962299198336,
+          "p95": 1.2981500000000017
+        },
+        "jitterBufferMilliseconds": {
+          "mean": 18.06052077634734,
+          "p95": 20.810881355932217
+        },
+        "jitterBufferTargetMilliseconds": {
+          "mean": 16.74582414611054,
+          "p95": 19.75177966101695
+        },
+        "jitterBufferMinimumMilliseconds": {
+          "mean": 16.74582414611054,
+          "p95": 19.75177966101695
+        },
+        "frameGapP95Milliseconds": {
+          "mean": 23.825777775426914,
+          "p95": 25.29699998558499
+        },
+        "frameGapMaxMilliseconds": {
+          "mean": 26.697379624238238,
+          "p95": 31.066541647305712
+        },
+        "callbackMillisecondsP95": null,
+        "frameBytesMax": null,
+        "frameBytesP95": null,
+        "targetMbps": null,
+        "cumulative": {
+          "framesDecoded": 1175,
+          "framesEncoded": 0,
+          "sourceFrames": 0,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "packetsReceived": 6717,
+          "packetsSent": null,
+          "retransmittedPacketsReceived": 155,
+          "retransmittedPacketsSent": null,
+          "pliCount": 0,
+          "nackCount": 0,
+          "probeSent": 20,
+          "probeReceived": 19,
+          "probeExpired": 0
+        },
+        "fpsBelow58Intervals": 0,
+        "fpsMinimum": 59,
+        "frameGapMaximumMs": 31.066541647305712,
+        "observedSeconds": 7.992115958331851,
+        "counterFPS": 60.0591886432273,
+        "actualFormat": {
+          "width": 2560,
+          "height": 1440,
+          "codec": "video/H265",
+          "decodedPixelFormat": {
+            "height": "1440",
+            "matrix": "ITU_R_2020",
+            "pixelFormat": "2016686640",
+            "primaries": "ITU_R_2020",
+            "transfer": "SMPTE_ST_2084_PQ",
+            "width": "2560"
+          },
+          "playoutDelayExtensionNegotiated": true
+        },
+        "byteRatesMbps": {
+          "rtpPayloadBytes": 2.8570126007988903,
+          "rtpHeaderBytes": 0.06480686750547442,
+          "retransmittedPayloadBytes": 0.03577425571533834,
+          "transportBytesSent": 0.011237074195147828,
+          "transportBytesReceived": 2.9550842509208937,
+          "sentWireBytes": 0.01840013342733007,
+          "receivedWireBytes": 3.03191596897922,
+          "encodedBytes": null
+        },
+        "steadyCounterDelta": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "bridge": {
+          "acceptedPackets": 6998,
+          "authenticated": true,
+          "endpointScope": "loopback socket endpoint (remote topology unknown)",
+          "expiredAssemblies": 0,
+          "fragmentedInnerDatagrams": 0,
+          "innerDatagramsReceived": 6980,
+          "innerDatagramsSent": 499,
+          "largestSequenceGap": 0,
+          "localInvalidSizes": 0,
+          "localRejectedSources": 31,
+          "localSendErrors": 0,
+          "localSocketDrops": 31,
+          "localUnboundSends": 0,
+          "maxQueueAgeMilliseconds": 0.012375006917864084,
+          "pathDatagramBytes": 1280,
+          "pendingPackets": 0,
+          "probeRTTMilliseconds": 0.17141664284281433,
+          "queueDeadlineDrops": 0,
+          "queueDrops": 0,
+          "queueHighWater": 1,
+          "queueOverflowDrops": 0,
+          "receiveDepth": 16,
+          "receivedDatagrams": 6998,
+          "receivedWireBytes": 7717945,
+          "rejectedDatagrams": 0,
+          "reorderedPackets": 0,
+          "rtpSizeCounts": {
+            "<=1168": 409
+          },
+          "sendErrors": 0,
+          "sentDatagrams": 517,
+          "sentWireBytes": 48956,
+          "sequenceHoles": 0,
+          "simulatedDrops": 0,
+          "socketReceiveBufferBytes": 262144,
+          "socketRejectedPeers": 0,
+          "socketTruncatedPackets": 0,
+          "transport": "socket",
+          "wireVersion": 2
+        },
+        "encoderDetails": null
+      },
+      "reportEvidence": {
+        "host": {
+          "sha256": "94d4ee9ccf6b8aa67258562e66bb00d3bf6d50fa9be1c5ee583366eeaa70a492",
+          "schema": 7,
+          "appVersion": "0.1.0",
+          "build": "1",
+          "sampleCount": 20
+        },
+        "viewer": {
+          "sha256": "d516a9884fd42055a69e81019df65f2fda3f97e888e452b801291e514b534cf6",
+          "schema": 7,
+          "appVersion": "0.1.0",
+          "build": "1",
+          "sampleCount": 20
+        }
+      },
+      "scope": "real HDR window loopback, 20 seconds each",
+      "binarySHA256": "c0aff482fca2c21c9d498d6980b1bf0f769d6f8c903b387c7ec980298fe7c87d",
+      "id": "1193152a4c89/adaptive-clean"
+    },
+    {
+      "run": "realtime-clean",
+      "warmupSeconds": 10,
+      "host": {
+        "samples": 10,
+        "warmupOriginSeconds": 1.1710657916555647,
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "playout": "realtime",
+        "preset": {
+          "fps": 60,
+          "height": 1440,
+          "megabits": 20,
+          "pattern": "desktop",
+          "width": 2560
+        },
+        "network": "Surge Ponte",
+        "receiveDepth": 16,
+        "bridgeTransport": "socket",
+        "videoMbps": {
+          "mean": 2.8376254897386146,
+          "p95": 6.610196698278467
+        },
+        "fps": {
+          "mean": 59.9,
+          "p95": 60
+        },
+        "controlRTTMilliseconds": {
+          "mean": 10.507541699999999,
+          "p95": 28.824167
+        },
+        "sendDelayMilliseconds": {
+          "mean": 0.017183679105163132,
+          "p95": 0.16235596707818906
+        },
+        "encodeMilliseconds": {
+          "mean": 7.61863341668982,
+          "p95": 8.033333333333323
+        },
+        "decodeMilliseconds": null,
+        "jitterBufferMilliseconds": null,
+        "jitterBufferTargetMilliseconds": null,
+        "jitterBufferMinimumMilliseconds": null,
+        "frameGapP95Milliseconds": null,
+        "frameGapMaxMilliseconds": null,
+        "callbackMillisecondsP95": {
+          "mean": 8.020012493943796,
+          "p95": 8.618166670203209
+        },
+        "frameBytesMax": {
+          "mean": 44074.5,
+          "p95": 69008
+        },
+        "frameBytesP95": {
+          "mean": 16787.7,
+          "p95": 35139
+        },
+        "targetMbps": {
+          "mean": 19.0733,
+          "p95": 19.114
+        },
+        "cumulative": {
+          "framesDecoded": 0,
+          "framesEncoded": 1187,
+          "sourceFrames": 1187,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "packetsReceived": null,
+          "packetsSent": 7902,
+          "retransmittedPacketsReceived": null,
+          "retransmittedPacketsSent": 0,
+          "pliCount": 0,
+          "nackCount": 0,
+          "probeSent": 20,
+          "probeReceived": 19,
+          "probeExpired": 0
+        },
+        "fpsBelow58Intervals": 0,
+        "fpsMinimum": 59,
+        "frameGapMaximumMs": 0,
+        "observedSeconds": 8.984449625015259,
+        "counterFPS": 60.103848598192,
+        "actualFormat": {
+          "width": 2560,
+          "height": 1440,
+          "codec": "video/H265",
+          "decodedPixelFormat": null,
+          "playoutDelayExtensionNegotiated": true
+        },
+        "byteRatesMbps": {
+          "rtpPayloadBytes": 2.792192404324087,
+          "rtpHeaderBytes": 0.07459911602530263,
+          "retransmittedPayloadBytes": 0.0,
+          "transportBytesSent": 2.9001130940122275,
+          "transportBytesReceived": 0.011547062349945984,
+          "sentWireBytes": 2.9825452997578012,
+          "receivedWireBytes": 0.018679385716931434,
+          "encodedBytes": 2.7541542367942182
+        },
+        "steadyCounterDelta": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "bridge": {
+          "acceptedPackets": 520,
+          "authenticated": true,
+          "endpointScope": "loopback socket endpoint (remote topology unknown)",
+          "expiredAssemblies": 0,
+          "fragmentedInnerDatagrams": 0,
+          "innerDatagramsReceived": 502,
+          "innerDatagramsSent": 8198,
+          "largestSequenceGap": 0,
+          "localInvalidSizes": 0,
+          "localRejectedSources": 31,
+          "localSendErrors": 0,
+          "localSocketDrops": 31,
+          "localUnboundSends": 0,
+          "maxQueueAgeMilliseconds": 0.027208327082917094,
+          "pathDatagramBytes": 1280,
+          "pendingPackets": 0,
+          "queueDeadlineDrops": 0,
+          "queueDrops": 0,
+          "queueHighWater": 1,
+          "queueOverflowDrops": 0,
+          "receiveDepth": 16,
+          "receivedDatagrams": 520,
+          "receivedWireBytes": 50507,
+          "rejectedDatagrams": 0,
+          "reorderedPackets": 0,
+          "rtpSizeCounts": {
+            "1169-1200": 3416,
+            "1201-1248": 1179,
+            "<=1168": 3513
+          },
+          "sendErrors": 0,
+          "sentDatagrams": 8216,
+          "sentWireBytes": 9148818,
+          "sequenceHoles": 0,
+          "simulatedDrops": 0,
+          "socketReceiveBufferBytes": 262144,
+          "socketRejectedPeers": 0,
+          "socketTruncatedPackets": 0,
+          "transport": "socket",
+          "wireVersion": 2
+        },
+        "encoderDetails": {
+          "callbackMillisecondsP95": 8.013124985154718,
+          "callbackRejected": 0,
+          "encodedBytes": 8372260,
+          "encodedFrames": 1188,
+          "frameBytesMax": 860,
+          "frameBytesP95": 749,
+          "keyframes": 10,
+          "requestedFPS": 60,
+          "submissionErrors": 0,
+          "submittedFrames": 1188,
+          "targetMbps": 19.114,
+          "unmatchedExpired": 0,
+          "unmatchedInputs": 0
+        }
+      },
+      "viewer": {
+        "samples": 10,
+        "warmupOriginSeconds": 1.0066202916495968,
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "playout": "realtime",
+        "preset": {
+          "fps": 60,
+          "height": 1440,
+          "megabits": 20,
+          "pattern": "desktop",
+          "width": 2560
+        },
+        "network": "本机回环（不代表远程网络）",
+        "receiveDepth": 16,
+        "bridgeTransport": "socket",
+        "videoMbps": {
+          "mean": 2.83887676516345,
+          "p95": 6.664700651350844
+        },
+        "fps": {
+          "mean": 60,
+          "p95": 61
+        },
+        "controlRTTMilliseconds": {
+          "mean": 4.2122041,
+          "p95": 16.711875
+        },
+        "sendDelayMilliseconds": null,
+        "encodeMilliseconds": null,
+        "decodeMilliseconds": {
+          "mean": 1.2077317009354451,
+          "p95": 1.4260169491525436
+        },
+        "jitterBufferMilliseconds": {
+          "mean": 0.2527567130623665,
+          "p95": 0.8830000000000005
+        },
+        "jitterBufferTargetMilliseconds": {
+          "mean": 15.635950107315166,
+          "p95": 16.989112903225823
+        },
+        "jitterBufferMinimumMilliseconds": {
+          "mean": 15.635950107315166,
+          "p95": 16.989112903225823
+        },
+        "frameGapP95Milliseconds": {
+          "mean": 25.749341669143178,
+          "p95": 28.336583345662802
+        },
+        "frameGapMaxMilliseconds": {
+          "mean": 30.83283749583643,
+          "p95": 43.017708347178996
+        },
+        "callbackMillisecondsP95": null,
+        "frameBytesMax": null,
+        "frameBytesP95": null,
+        "targetMbps": null,
+        "cumulative": {
+          "framesDecoded": 1188,
+          "framesEncoded": 0,
+          "sourceFrames": 0,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "packetsReceived": 7903,
+          "packetsSent": null,
+          "retransmittedPacketsReceived": 162,
+          "retransmittedPacketsSent": null,
+          "pliCount": 0,
+          "nackCount": 0,
+          "probeSent": 20,
+          "probeReceived": 19,
+          "probeExpired": 0
+        },
+        "fpsBelow58Intervals": 0,
+        "fpsMinimum": 59,
+        "frameGapMaximumMs": 43.017708347178996,
+        "observedSeconds": 8.984667416661978,
+        "counterFPS": 60.10239165876917,
+        "actualFormat": {
+          "width": 2560,
+          "height": 1440,
+          "codec": "video/H265",
+          "decodedPixelFormat": {
+            "height": "1440",
+            "matrix": "ITU_R_2020",
+            "pixelFormat": "2016686640",
+            "primaries": "ITU_R_2020",
+            "transfer": "SMPTE_ST_2084_PQ",
+            "width": "2560"
+          },
+          "playoutDelayExtensionNegotiated": true
+        },
+        "byteRatesMbps": {
+          "rtpPayloadBytes": 2.7866985875924675,
+          "rtpHeaderBytes": 0.07444771954046443,
+          "retransmittedPayloadBytes": 0.027923125961762982,
+          "transportBytesSent": 0.0115058237779943,
+          "transportBytesReceived": 2.894351320314248,
+          "sentWireBytes": 0.018678932921743108,
+          "receivedWireBytes": 2.9824730017614343,
+          "encodedBytes": null
+        },
+        "steadyCounterDelta": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "bridge": {
+          "acceptedPackets": 8217,
+          "authenticated": true,
+          "endpointScope": "loopback socket endpoint (remote topology unknown)",
+          "expiredAssemblies": 0,
+          "fragmentedInnerDatagrams": 0,
+          "innerDatagramsReceived": 8199,
+          "innerDatagramsSent": 504,
+          "largestSequenceGap": 0,
+          "localInvalidSizes": 0,
+          "localRejectedSources": 31,
+          "localSendErrors": 0,
+          "localSocketDrops": 31,
+          "localUnboundSends": 0,
+          "maxQueueAgeMilliseconds": 0.009291659807786345,
+          "pathDatagramBytes": 1280,
+          "pendingPackets": 0,
+          "probeRTTMilliseconds": 0.14745834050700068,
+          "queueDeadlineDrops": 0,
+          "queueDrops": 0,
+          "queueHighWater": 1,
+          "queueOverflowDrops": 0,
+          "receiveDepth": 16,
+          "receivedDatagrams": 8217,
+          "receivedWireBytes": 9148900,
+          "rejectedDatagrams": 0,
+          "reorderedPackets": 0,
+          "rtpSizeCounts": {
+            "<=1168": 413
+          },
+          "sendErrors": 0,
+          "sentDatagrams": 522,
+          "sentWireBytes": 50775,
+          "sequenceHoles": 0,
+          "simulatedDrops": 0,
+          "socketReceiveBufferBytes": 262144,
+          "socketRejectedPeers": 0,
+          "socketTruncatedPackets": 0,
+          "transport": "socket",
+          "wireVersion": 2
+        },
+        "encoderDetails": null
+      },
+      "reportEvidence": {
+        "host": {
+          "sha256": "4b29e045abf49c37862e03971000f9c18e1ea9f396a60a3a1db51bc4241e20eb",
+          "schema": 7,
+          "appVersion": "0.1.0",
+          "build": "1",
+          "sampleCount": 20
+        },
+        "viewer": {
+          "sha256": "d7f70bb0f0cd61aaa55216cf5ba6fc3a922d727f4b9ad7548ae4a2cf57a13365",
+          "schema": 7,
+          "appVersion": "0.1.0",
+          "build": "1",
+          "sampleCount": 20
+        }
+      },
+      "scope": "real HDR window loopback, 20 seconds each",
+      "binarySHA256": "c0aff482fca2c21c9d498d6980b1bf0f769d6f8c903b387c7ec980298fe7c87d",
+      "id": "1193152a4c89/realtime-clean"
+    },
+    {
+      "run": "balanced-clean",
+      "warmupSeconds": 10,
+      "host": {
+        "samples": 24,
+        "warmupOriginSeconds": 1.1756684583378956,
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "playout": "balanced",
+        "preset": {
+          "fps": 60,
+          "height": 1440,
+          "megabits": 20,
+          "pattern": "desktop",
+          "width": 2560
+        },
+        "network": "Surge Ponte",
+        "receiveDepth": 16,
+        "bridgeTransport": "socket",
+        "videoMbps": {
+          "mean": 0.2656120670892651,
+          "p95": 0.529537213742712
+        },
+        "fps": {
+          "mean": 60,
+          "p95": 60
+        },
+        "controlRTTMilliseconds": {
+          "mean": 9.570414708333333,
+          "p95": 13.82325
+        },
+        "sendDelayMilliseconds": {
+          "mean": 3.0253239517150037e-05,
+          "p95": 0.00013402061855670108
+        },
+        "encodeMilliseconds": {
+          "mean": 7.597222222222222,
+          "p95": 7.783333333333342
+        },
+        "decodeMilliseconds": null,
+        "jitterBufferMilliseconds": null,
+        "jitterBufferTargetMilliseconds": null,
+        "jitterBufferMinimumMilliseconds": null,
+        "frameGapP95Milliseconds": null,
+        "frameGapMaxMilliseconds": null,
+        "callbackMillisecondsP95": {
+          "mean": 8.130732638771102,
+          "p95": 8.353000011993572
+        },
+        "frameBytesMax": {
+          "mean": 892.5,
+          "p95": 1330
+        },
+        "frameBytesP95": {
+          "mean": 459.9166666666667,
+          "p95": 461
+        },
+        "targetMbps": {
+          "mean": 19.12,
+          "p95": 19.12
+        },
+        "cumulative": {
+          "framesDecoded": 0,
+          "framesEncoded": 2096,
+          "sourceFrames": 2097,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "packetsReceived": null,
+          "packetsSent": 2408,
+          "retransmittedPacketsReceived": null,
+          "retransmittedPacketsSent": 0,
+          "pliCount": 0,
+          "nackCount": 0,
+          "probeSent": 35,
+          "probeReceived": 34,
+          "probeExpired": 0
+        },
+        "fpsBelow58Intervals": 0,
+        "fpsMinimum": 60,
+        "frameGapMaximumMs": 0,
+        "observedSeconds": 23.00247604167089,
+        "counterFPS": 59.99354145614654,
+        "actualFormat": {
+          "width": 2560,
+          "height": 1440,
+          "codec": "video/H265",
+          "decodedPixelFormat": null,
+          "playoutDelayExtensionNegotiated": true
+        },
+        "byteRatesMbps": {
+          "rtpPayloadBytes": 0.2679843678060072,
+          "rtpHeaderBytes": 0.016981824012873757,
+          "retransmittedPayloadBytes": 0.0,
+          "transportBytesSent": 0.2929660262569927,
+          "transportBytesReceived": 0.00943550596930583,
+          "sentWireBytes": 0.3124014991682614,
+          "receivedWireBytes": 0.016594387461093194,
+          "encodedBytes": 0.21578303096623724
+        },
+        "steadyCounterDelta": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "bridge": {
+          "acceptedPackets": 905,
+          "authenticated": true,
+          "endpointScope": "loopback socket endpoint (remote topology unknown)",
+          "expiredAssemblies": 0,
+          "fragmentedInnerDatagrams": 0,
+          "innerDatagramsReceived": 873,
+          "innerDatagramsSent": 2597,
+          "largestSequenceGap": 0,
+          "localInvalidSizes": 0,
+          "localRejectedSources": 31,
+          "localSendErrors": 0,
+          "localSocketDrops": 31,
+          "localUnboundSends": 0,
+          "maxQueueAgeMilliseconds": 0.019875005818903446,
+          "pathDatagramBytes": 1280,
+          "pendingPackets": 0,
+          "queueDeadlineDrops": 0,
+          "queueDrops": 0,
+          "queueHighWater": 1,
+          "queueOverflowDrops": 0,
+          "receiveDepth": 16,
+          "receivedDatagrams": 905,
+          "receivedWireBytes": 75606,
+          "rejectedDatagrams": 0,
+          "reorderedPackets": 0,
+          "rtpSizeCounts": {
+            "1201-1248": 265,
+            "<=1168": 2185
+          },
+          "sendErrors": 0,
+          "sentDatagrams": 2629,
+          "sentWireBytes": 1446553,
+          "sequenceHoles": 0,
+          "simulatedDrops": 0,
+          "socketReceiveBufferBytes": 262144,
+          "socketRejectedPeers": 0,
+          "socketTruncatedPackets": 0,
+          "transport": "socket",
+          "wireVersion": 2
+        },
+        "encoderDetails": {
+          "callbackMillisecondsP95": 8.177249983418733,
+          "callbackRejected": 0,
+          "encodedBytes": 948747,
+          "encodedFrames": 2097,
+          "frameBytesMax": 1320,
+          "frameBytesP95": 461,
+          "keyframes": 18,
+          "requestedFPS": 60,
+          "submissionErrors": 0,
+          "submittedFrames": 2097,
+          "targetMbps": 19.12,
+          "unmatchedExpired": 0,
+          "unmatchedInputs": 0
+        }
+      },
+      "viewer": {
+        "samples": 24,
+        "warmupOriginSeconds": 1.0130287916690577,
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "playout": "balanced",
+        "preset": {
+          "fps": 60,
+          "height": 1440,
+          "megabits": 20,
+          "pattern": "desktop",
+          "width": 2560
+        },
+        "network": "本机回环（不代表远程网络）",
+        "receiveDepth": 16,
+        "bridgeTransport": "socket",
+        "videoMbps": {
+          "mean": 0.26552706946081933,
+          "p95": 0.5287080730493979
+        },
+        "fps": {
+          "mean": 60,
+          "p95": 60
+        },
+        "controlRTTMilliseconds": {
+          "mean": 3.520440916666667,
+          "p95": 6.536291
+        },
+        "sendDelayMilliseconds": null,
+        "encodeMilliseconds": null,
+        "decodeMilliseconds": {
+          "mean": 1.1984479166666666,
+          "p95": 1.253700000000002
+        },
+        "jitterBufferMilliseconds": {
+          "mean": 12.057494444444444,
+          "p95": 12.322116666666686
+        },
+        "jitterBufferTargetMilliseconds": {
+          "mean": 11.007135416666666,
+          "p95": 11.011750000000003
+        },
+        "jitterBufferMinimumMilliseconds": {
+          "mean": 11.007135416666666,
+          "p95": 11.011750000000003
+        },
+        "frameGapP95Milliseconds": {
+          "mean": 18.221201388466095,
+          "p95": 18.505333340726793
+        },
+        "frameGapMaxMilliseconds": {
+          "mean": 18.804628471116303,
+          "p95": 19.43879167083651
+        },
+        "callbackMillisecondsP95": null,
+        "frameBytesMax": null,
+        "frameBytesP95": null,
+        "targetMbps": null,
+        "cumulative": {
+          "framesDecoded": 2096,
+          "framesEncoded": 0,
+          "sourceFrames": 0,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "packetsReceived": 2409,
+          "packetsSent": null,
+          "retransmittedPacketsReceived": 273,
+          "retransmittedPacketsSent": null,
+          "pliCount": 0,
+          "nackCount": 0,
+          "probeSent": 35,
+          "probeReceived": 34,
+          "probeExpired": 0
+        },
+        "fpsBelow58Intervals": 0,
+        "fpsMinimum": 60,
+        "frameGapMaximumMs": 19.562708330340683,
+        "observedSeconds": 22.99795862499741,
+        "counterFPS": 60.005325798787304,
+        "actualFormat": {
+          "width": 2560,
+          "height": 1440,
+          "codec": "video/H265",
+          "decodedPixelFormat": {
+            "height": "1440",
+            "matrix": "ITU_R_2020",
+            "pixelFormat": "2016686640",
+            "primaries": "ITU_R_2020",
+            "transfer": "SMPTE_ST_2084_PQ",
+            "width": "2560"
+          },
+          "playoutDelayExtensionNegotiated": true
+        },
+        "byteRatesMbps": {
+          "rtpPayloadBytes": 0.2681584092118826,
+          "rtpHeaderBytes": 0.016994899694061174,
+          "retransmittedPayloadBytes": 0.05426290308408365,
+          "transportBytesSent": 0.009437359356064346,
+          "transportBytesReceived": 0.2931581932959825,
+          "sentWireBytes": 0.016597647044425144,
+          "receivedWireBytes": 0.31228371687710216,
+          "encodedBytes": null
+        },
+        "steadyCounterDelta": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "pliCount": 0
+        },
+        "bridge": {
+          "acceptedPackets": 2630,
+          "authenticated": true,
+          "endpointScope": "loopback socket endpoint (remote topology unknown)",
+          "expiredAssemblies": 0,
+          "fragmentedInnerDatagrams": 0,
+          "innerDatagramsReceived": 2598,
+          "innerDatagramsSent": 875,
+          "largestSequenceGap": 0,
+          "localInvalidSizes": 0,
+          "localRejectedSources": 31,
+          "localSendErrors": 0,
+          "localSocketDrops": 31,
+          "localUnboundSends": 0,
+          "maxQueueAgeMilliseconds": 0.03287501749582589,
+          "pathDatagramBytes": 1280,
+          "pendingPackets": 0,
+          "probeRTTMilliseconds": 0.11579165584407747,
+          "queueDeadlineDrops": 0,
+          "queueDrops": 0,
+          "queueHighWater": 1,
+          "queueOverflowDrops": 0,
+          "receiveDepth": 16,
+          "receivedDatagrams": 2630,
+          "receivedWireBytes": 1446635,
+          "rejectedDatagrams": 0,
+          "reorderedPackets": 0,
+          "rtpSizeCounts": {
+            "<=1168": 727
+          },
+          "sendErrors": 0,
+          "sentDatagrams": 907,
+          "sentWireBytes": 75874,
+          "sequenceHoles": 0,
+          "simulatedDrops": 0,
+          "socketReceiveBufferBytes": 262144,
+          "socketRejectedPeers": 0,
+          "socketTruncatedPackets": 0,
+          "transport": "socket",
+          "wireVersion": 2
+        },
+        "encoderDetails": null
+      },
+      "reportEvidence": {
+        "host": {
+          "sha256": "bcb89408268b4ea17dfb9e4d4ef873cd4e216e876e523f7c7112f91105b3fadc",
+          "schema": 7,
+          "appVersion": "0.1.0",
+          "build": "1",
+          "sampleCount": 35
+        },
+        "viewer": {
+          "sha256": "73fd461617620bcacfd8bb9e35d8e52385926ad33ff9028a1f236948e3e87e9a",
+          "schema": 7,
+          "appVersion": "0.1.0",
+          "build": "1",
+          "sampleCount": 35
+        }
+      },
+      "scope": "rejected balanced candidate loopback, 35 seconds each",
+      "binarySHA256": "e7b57ad2104cb96ba29797a887c7bd31531f71c99b1683063d6fe5d8d5297c95",
+      "id": "fe27dc5d8530/balanced-clean"
+    },
+    {
+      "run": "balanced-loss",
+      "warmupSeconds": 10,
+      "host": {
+        "samples": 24,
+        "warmupOriginSeconds": 1.1645861666474957,
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "playout": "balanced",
+        "preset": {
+          "fps": 60,
+          "height": 1440,
+          "megabits": 20,
+          "pattern": "desktop",
+          "width": 2560
+        },
+        "network": "Surge Ponte",
+        "receiveDepth": 16,
+        "bridgeTransport": "socket",
+        "videoMbps": {
+          "mean": 0.26756980274009173,
+          "p95": 0.5303578963071787
+        },
+        "fps": {
+          "mean": 59,
+          "p95": 59
+        },
+        "controlRTTMilliseconds": {
+          "mean": 3.6187482916666665,
+          "p95": 5.955666
+        },
+        "sendDelayMilliseconds": {
+          "mean": 3.641179706562726e-05,
+          "p95": 0.00014432989690721636
+        },
+        "encodeMilliseconds": {
+          "mean": 7.5874999999999995,
+          "p95": 7.683333333333338
+        },
+        "decodeMilliseconds": null,
+        "jitterBufferMilliseconds": null,
+        "jitterBufferTargetMilliseconds": null,
+        "jitterBufferMinimumMilliseconds": null,
+        "frameGapP95Milliseconds": null,
+        "frameGapMaxMilliseconds": null,
+        "callbackMillisecondsP95": {
+          "mean": 7.985116318498815,
+          "p95": 8.219541661674157
+        },
+        "frameBytesMax": {
+          "mean": 892.5833333333334,
+          "p95": 1330
+        },
+        "frameBytesP95": {
+          "mean": 459.7083333333333,
+          "p95": 461
+        },
+        "targetMbps": {
+          "mean": 18.784875,
+          "p95": 19.12
+        },
+        "cumulative": {
+          "framesDecoded": 0,
+          "framesEncoded": 2096,
+          "sourceFrames": 2097,
+          "framesDropped": 0,
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "packetsReceived": null,
+          "packetsSent": 2426,
+          "retransmittedPacketsReceived": null,
+          "retransmittedPacketsSent": 18,
+          "pliCount": 0,
+          "nackCount": 7,
+          "probeSent": 35,
+          "probeReceived": 34,
+          "probeExpired": 0
+        },
+        "fpsBelow58Intervals": 0,
+        "fpsMinimum": 59,
+        "frameGapMaximumMs": 0,
+        "observedSeconds": 22.99930483335629,
+        "counterFPS": 60.00181353301436,
+        "actualFormat": {
+          "width": 2560,
+          "height": 1440,
+          "codec": "video/H265",
+          "decodedPixelFormat": null,
+          "playoutDelayExtensionNegotiated": true
+        },
+        "byteRatesMbps": {
+          "rtpPayloadBytes": 0.27009338086561147,
+          "rtpHeaderBytes": 0.01713164823262622,
+          "retransmittedPayloadBytes": 0.0021743265877963635,
+          "transportBytesSent": 0.29542979882355214,
+          "transportBytesReceived": 0.009358195891549091,
+          "sentWireBytes": 0.31229743907663315,
+          "receivedWireBytes": 0.016392843293819716,
+          "encodedBytes": 0.21555434113860286
+        },
+        "steadyCounterDelta": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 3,
+          "pliCount": 0
+        },
+        "bridge": {
+          "acceptedPackets": 901,
+          "authenticated": true,
+          "endpointScope": "loopback socket endpoint (remote topology unknown)",
+          "expiredAssemblies": 0,
+          "fragmentedInnerDatagrams": 0,
+          "innerDatagramsReceived": 870,
+          "innerDatagramsSent": 2596,
+          "largestSequenceGap": 0,
+          "localInvalidSizes": 0,
+          "localRejectedSources": 31,
+          "localSendErrors": 0,
+          "localSocketDrops": 31,
+          "localUnboundSends": 0,
+          "maxQueueAgeMilliseconds": 0.03204168751835823,
+          "pathDatagramBytes": 1280,
+          "pendingPackets": 0,
+          "queueDeadlineDrops": 0,
+          "queueDrops": 0,
+          "queueHighWater": 1,
+          "queueOverflowDrops": 0,
+          "receiveDepth": 16,
+          "receivedDatagrams": 901,
+          "receivedWireBytes": 75006,
+          "rejectedDatagrams": 0,
+          "reorderedPackets": 0,
+          "rtpSizeCounts": {
+            "1201-1248": 264,
+            "<=1168": 2187
+          },
+          "sendErrors": 0,
+          "sentDatagrams": 2627,
+          "sentWireBytes": 1445049,
+          "sequenceHoles": 0,
+          "simulatedDrops": 19,
+          "socketReceiveBufferBytes": 262144,
+          "socketRejectedPeers": 0,
+          "socketTruncatedPackets": 0,
+          "transport": "socket",
+          "wireVersion": 2
+        },
+        "encoderDetails": {
+          "callbackMillisecondsP95": 7.966541685163975,
+          "callbackRejected": 0,
+          "encodedBytes": 948464,
+          "encodedFrames": 2097,
+          "frameBytesMax": 1320,
+          "frameBytesP95": 461,
+          "keyframes": 18,
+          "requestedFPS": 60,
+          "submissionErrors": 0,
+          "submittedFrames": 2097,
+          "targetMbps": 19.12,
+          "unmatchedExpired": 0,
+          "unmatchedInputs": 0
+        }
+      },
+      "viewer": {
+        "samples": 24,
+        "warmupOriginSeconds": 1.0045790416770615,
+        "route": "fixed-udp-v2",
+        "pacing": "interactive",
+        "playout": "balanced",
+        "preset": {
+          "fps": 60,
+          "height": 1440,
+          "megabits": 20,
+          "pattern": "desktop",
+          "width": 2560
+        },
+        "network": "本机回环（不代表远程网络）",
+        "receiveDepth": 16,
+        "bridgeTransport": "socket",
+        "videoMbps": {
+          "mean": 0.26549394887460426,
+          "p95": 0.5294305287981913
+        },
+        "fps": {
+          "mean": 60,
+          "p95": 60
+        },
+        "controlRTTMilliseconds": {
+          "mean": 1.0496753333333333,
+          "p95": 1.276292
+        },
+        "sendDelayMilliseconds": null,
+        "encodeMilliseconds": null,
+        "decodeMilliseconds": {
+          "mean": 1.275748611111111,
+          "p95": 1.3595000000000022
+        },
+        "jitterBufferMilliseconds": {
+          "mean": 12.862300694444444,
+          "p95": 13.50535
+        },
+        "jitterBufferTargetMilliseconds": {
+          "mean": 11.904954166666666,
+          "p95": 11.91006666666666
+        },
+        "jitterBufferMinimumMilliseconds": {
+          "mean": 11.904954166666666,
+          "p95": 11.91006666666666
+        },
+        "frameGapP95Milliseconds": {
+          "mean": 17.941225693599943,
+          "p95": 18.30004167277366
+        },
+        "frameGapMaxMilliseconds": {
+          "mean": 26.512467016194325,
+          "p95": 20.185666653560475
+        },
+        "callbackMillisecondsP95": null,
+        "frameBytesMax": null,
+        "frameBytesP95": null,
+        "targetMbps": null,
+        "cumulative": {
+          "framesDecoded": 2096,
+          "framesEncoded": 0,
+          "sourceFrames": 0,
+          "framesDropped": 0,
+          "freezeCount": 1,
+          "packetsLost": 18,
+          "packetsReceived": 2408,
+          "packetsSent": null,
+          "retransmittedPacketsReceived": 290,
+          "retransmittedPacketsSent": null,
+          "pliCount": 0,
+          "nackCount": 7,
+          "probeSent": 35,
+          "probeReceived": 34,
+          "probeExpired": 0
+        },
+        "fpsBelow58Intervals": 0,
+        "fpsMinimum": 60,
+        "frameGapMaximumMs": 203.74645834090188,
+        "observedSeconds": 22.999475541670108,
+        "counterFPS": 60.001368183362985,
+        "actualFormat": {
+          "width": 2560,
+          "height": 1440,
+          "codec": "video/H265",
+          "decodedPixelFormat": {
+            "height": "1440",
+            "matrix": "ITU_R_2020",
+            "pixelFormat": "2016686640",
+            "primaries": "ITU_R_2020",
+            "transfer": "SMPTE_ST_2084_PQ",
+            "width": "2560"
+          },
+          "playoutDelayExtensionNegotiated": true
+        },
+        "byteRatesMbps": {
+          "rtpPayloadBytes": 0.26789341299704217,
+          "rtpHeaderBytes": 0.01698960479738076,
+          "retransmittedPayloadBytes": 0.05643363465607745,
+          "transportBytesSent": 0.0093581264324939,
+          "transportBytesReceived": 0.2930390298591388,
+          "sentWireBytes": 0.01639272162171322,
+          "receivedWireBytes": 0.3122951211207677,
+          "encodedBytes": null
+        },
+        "steadyCounterDelta": {
+          "freezeCount": 1,
+          "packetsLost": 14,
+          "nackCount": 3,
+          "pliCount": 0
+        },
+        "bridge": {
+          "acceptedPackets": 2628,
+          "authenticated": true,
+          "endpointScope": "loopback socket endpoint (remote topology unknown)",
+          "expiredAssemblies": 0,
+          "fragmentedInnerDatagrams": 0,
+          "innerDatagramsReceived": 2597,
+          "innerDatagramsSent": 872,
+          "largestSequenceGap": 12,
+          "localInvalidSizes": 0,
+          "localRejectedSources": 31,
+          "localSendErrors": 0,
+          "localSocketDrops": 31,
+          "localUnboundSends": 0,
+          "maxQueueAgeMilliseconds": 0.012666656402871013,
+          "pathDatagramBytes": 1280,
+          "pendingPackets": 0,
+          "probeRTTMilliseconds": 0.17654168186709285,
+          "queueDeadlineDrops": 0,
+          "queueDrops": 0,
+          "queueHighWater": 1,
+          "queueOverflowDrops": 0,
+          "receiveDepth": 16,
+          "receivedDatagrams": 2628,
+          "receivedWireBytes": 1445131,
+          "rejectedDatagrams": 0,
+          "reorderedPackets": 0,
+          "rtpSizeCounts": {
+            "<=1168": 726
+          },
+          "sendErrors": 0,
+          "sentDatagrams": 903,
+          "sentWireBytes": 75274,
+          "sequenceHoles": 19,
+          "simulatedDrops": 0,
+          "socketReceiveBufferBytes": 262144,
+          "socketRejectedPeers": 0,
+          "socketTruncatedPackets": 0,
+          "transport": "socket",
+          "wireVersion": 2
+        },
+        "encoderDetails": null
+      },
+      "reportEvidence": {
+        "host": {
+          "sha256": "978a3f40607ebb1e9da2cb96ccc8d1a5a950e71ca26177c19a3963f0fb2c2e86",
+          "schema": 7,
+          "appVersion": "0.1.0",
+          "build": "1",
+          "sampleCount": 35
+        },
+        "viewer": {
+          "sha256": "fc6dcb4e371646ca2ad86bb1991db30943d6aa47917ab6378079e453b88479ba",
+          "schema": 7,
+          "appVersion": "0.1.0",
+          "build": "1",
+          "sampleCount": 35
+        }
+      },
+      "scope": "rejected balanced candidate loopback, 35 seconds each",
+      "binarySHA256": "e7b57ad2104cb96ba29797a887c7bd31531f71c99b1683063d6fe5d8d5297c95",
+      "id": "fe27dc5d8530/balanced-loss"
+    }
+  ]
+}

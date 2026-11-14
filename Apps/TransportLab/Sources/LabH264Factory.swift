@@ -41,6 +41,12 @@ final class LabH264EncoderFactory: NSObject, RTCVideoEncoderFactory {
 
 final class LabH264DecoderFactory: NSObject, RTCVideoDecoderFactory {
     private let native = RTCVideoDecoderFactoryH264()
+    private let telemetry: ReceiverTelemetry?
+    init(telemetry: ReceiverTelemetry? = nil) { self.telemetry = telemetry }
     func supportedCodecs() -> [RTCVideoCodecInfo] { LabH264Capabilities.codecs }
-    func createDecoder(_ info: RTCVideoCodecInfo) -> (any RTCVideoDecoder)? { native.createDecoder(info) }
+    func createDecoder(_ info: RTCVideoCodecInfo) -> (any RTCVideoDecoder)? {
+        guard let decoder = native.createDecoder(info) else { return nil }
+        if let telemetry { return MeasuredVideoDecoder(native: decoder, telemetry: telemetry) }
+        return decoder
+    }
 }

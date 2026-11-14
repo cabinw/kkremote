@@ -3,7 +3,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 framework_dir="$PWD/.build/SourcePackages/artifacts/webrtc/WebRTC/WebRTC.xcframework/macos-x86_64_arm64"
 mkdir -p .build/hdr
-common=(Apps/TransportLab/Sources/HEVCCodec.swift Apps/TransportLab/Sources/EncoderTelemetry.swift Apps/TransportLab/Sources/LabH264Factory.swift)
+common=(Apps/TransportLab/Sources/ReceiverTelemetry.swift Apps/TransportLab/Sources/HEVCCodec.swift Apps/TransportLab/Sources/EncoderTelemetry.swift Apps/TransportLab/Sources/LabH264Factory.swift)
+common+=(Apps/TransportLab/Sources/RTPTrace.swift Apps/TransportLab/Sources/FrameTrace.swift Apps/TransportLab/Sources/WebRTCRuntime.swift)
 xcrun swiftc -O -F "$framework_dir" -framework WebRTC -Xlinker -rpath -Xlinker "$framework_dir" \
   "${common[@]}" Tests/HEVCNALTests.swift -o .build/hdr/HEVCNALTests
 .build/hdr/HEVCNALTests

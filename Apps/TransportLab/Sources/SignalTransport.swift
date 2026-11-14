@@ -14,6 +14,12 @@ struct SignalMessage: Codable {
     var mediaPort: UInt16? = nil
     var mediaKey: String? = nil
     var videoFormat: String? = nil
+    var windowProtocol: Int? = nil
+    var windowSession: String? = nil
+    var windowLayout: Bool? = nil
+    var windowControl: Bool? = nil
+    var windowKeyboard: Bool? = nil
+    var window: WindowMessage? = nil
 }
 
 /// TLS-PSK is only the lab's authenticated signaling transport.

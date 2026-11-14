@@ -13,12 +13,16 @@ struct LabApp: App {
     }
     var body: some Scene {
         WindowGroup {
+            #if os(iOS)
+            IOSLabView(model: model)
+            #else
             LabView(model: model)
                 .onChange(of: scenePhase) { _, phase in
                     #if os(iOS)
                     if phase == .background { model.stop() }
                     #endif
                 }
+            #endif
         }
     }
 }
@@ -33,9 +37,11 @@ struct LabView: View {
                     Text("传输实验室").font(.largeTitle.bold())
                     Text("真实窗口串流 · H.264 SDR / HEVC Main10 PQ · WebRTC M157")
                         .foregroundStyle(.secondary)
+                    if model.mode != "host" { RemoteWindowControls(model: model) }
                     ZStack {
                         Color.black
-                        if let track = model.track { ColorManagedVideo(track: track) }
+                        if model.windowBusy { ProgressView("正在切换窗口…").tint(.white).foregroundStyle(.white) }
+                        else if let track = model.track { ColorManagedVideo(track: track) }
                         else {
                             VStack(spacing: 12) {
                                 Image(systemName: "rectangle.connected.to.line.below").font(.largeTitle)

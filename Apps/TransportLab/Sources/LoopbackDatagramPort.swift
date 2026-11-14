@@ -46,8 +46,8 @@ final class LoopbackDatagramPort {
         source = reader; reader.resume()
     }
     func setPeer(port: UInt16) { destination = Self.address(port: port) }
-    func send(_ data: Data) {
-        guard fd >= 0, var destination else { dropped += 1; unboundSends += 1; return }
+    @discardableResult func send(_ data: Data) -> Bool {
+        guard fd >= 0, var destination else { dropped += 1; unboundSends += 1; return false }
         let sent = data.withUnsafeBytes { bytes in
             withUnsafePointer(to: &destination) { pointer in
                 pointer.withMemoryRebound(to: sockaddr.self, capacity: 1) {
@@ -56,10 +56,15 @@ final class LoopbackDatagramPort {
             }
         }
         if sent != data.count { dropped += 1; sendErrors += 1 }
+        return sent == data.count
     }
-    func stop() {
-        guard fd >= 0 else { return }
-        if let source { source.cancel(); self.source = nil } else { Darwin.close(fd) }
+    func stop(completion: @escaping () -> Void = {}) {
+        guard fd >= 0 else { completion(); return }
+        let descriptor = fd
+        if let source {
+            source.setCancelHandler { Darwin.close(descriptor); completion() }
+            source.cancel(); self.source = nil
+        } else { Darwin.close(fd); completion() }
         fd = -1; destination = nil; onPacket = nil
     }
     deinit { stop() }
