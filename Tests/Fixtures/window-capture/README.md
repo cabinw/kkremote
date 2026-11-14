@@ -69,3 +69,76 @@ loads at a phase transition must be separated from within-phase network freezes.
 
 The browser window remains the captured source. Changing these fixtures requires
 neither a new TestFlight build nor new pairing credentials or media endpoints.
+
+## T01 repeatable load suite
+
+`high-load.html` adds independently selectable native-60-fps video, four-column
+DOM scrolling, static text/line detail, image pan/zoom/rotation, and a generated
+SVG schematic. The schematic is a deterministic CAD-style stress workload, not
+a real customer document. The image transform is procedural motion of a still,
+not a claim of native film frames. All these sources are SDR content; a Main10/PQ
+capture transport does not turn them into HDR-mastered scenes. Keep the existing
+HDR film and grayscale suite for color validation.
+
+Prepare the local assets once (media remains ignored by Git):
+
+```bash
+python3 scripts/prepare-load-fixtures.py \
+  --source .build/window-capture/media/bbb_sunflower_2160p_60fps_normal.mp4
+python3 scripts/serve-capture-fixture.py \
+  --media .build/load-fixtures/bbb-highmotion-60.mp4 \
+  --photo .build/load-fixtures/photo.jpg --port 47982
+```
+
+The requested excerpt starts at 420 seconds and lasts 30 seconds. Stream-copy
+preroll makes the actual prepared file 33.5 seconds / 2010 frames; the manifest
+records the actual metadata, original and derived SHA-256, and credit. No frames
+are interpolated. `photo.jpg` is extracted at 9 seconds of this prepared clip.
+
+Open `http://127.0.0.1:47982/high-load.html?mode=video`. Other explicit modes are
+`scroll`, `static`, `photo`, and `diagram`. `speed=1|2|3` changes the procedural
+motion speed; it never changes the video's playback rate. Use the same mode,
+speed, window dimensions, source asset hashes and restart position for a
+comparison. The visible telemetry shows browser animation callbacks, video
+callbacks / unique media timestamps, local video drops, visibility, viewport
+and pixel scale; none is a physical-display or end-to-end latency measurement.
+
+`immersive=1` removes the fixture's header/footer space, keeping the browser window
+and capture resolution unchanged. Use “退出铺满 / Esc” to return to controls.
+The [initial calibration report](../../../docs/testing/真实负载素材校准.md) records
+both ordinary and immersive cases; none yet passes the sustained 15–20 Mbps gate.
+
+An existing host can be sampled without restarting or launching another stream:
+
+```bash
+python3 scripts/sample-persistent-report.py \
+  --report /private/path/to/live/host.json \
+  --output .build/load-fixtures/unique-run --duration 55 \
+  --label diagram-speed3 \
+  --fixture Tests/Fixtures/window-capture/high-load.html
+python3 scripts/summarize-lab.py .build/load-fixtures/unique-run --relative-warmup
+```
+
+The collector only includes new samples and refuses to combine a detected
+session reset. Its output is host-side load calibration, not receiver acceptance.
+Preserve the browser telemetry at the beginning and end of the same measurement
+when calculating source frame rates. File preparation, first play, seek and loop
+boundaries need separate interpretation from transport freezes.
+
+### 通信 v1 固定配方
+
+- 高负载图纸：`high-load.html?mode=diagram&speed=3&panels=4&immersive=1`，4 个相位不同的图纸面板。H.264 / HEVC 的实际码率分别校准。
+- 严格静态：`high-load.html?mode=static&strict=1&immersive=1`，首份观测后停止更新页面计数；不要以静态低 fps 判冻结。
+- 30 分钟混合：`high-load.html?mode=cycle&speed=3&panels=4&immersive=1`，每 120 秒在图纸、滚动、原生 60 fps 视频之间循环。
+
+每次实验保存当时的 HTML 和 SHA-256，不能用后续改过的页面替代原始配方。
+
+持续热测试使用 `mode=cycle&phaseSeconds=100&speed=3&panels=4&immersive=1`，每段 100 秒，完整循环 5 分钟，使首 / 末 5 分钟内容比例一致。未指定 phaseSeconds 时保留每段 120 秒。
+
+### 绘制瓶颈对照
+
+`raster=1` 将同一 SVG 电路图先画到 3200×1600 的静态位图，再在四块面板上执行相同平移、缩放和旋转。它不复制视频帧、不降低输出尺寸或改变 3× 运动速度；用于排除每帧重绘上万个 SVG 元素的源端开销。原始 live SVG 是 `raster` 不设或为 0，两种源分开记录，不能混称同一次标定。开始前检查 `diagramRasterReady=true`。
+
+长测还应记录刷新率与源端 complete / idle 回调；若源本身只有 30–40 fps，不得把接收端同样的 fps 记作网络丢帧。
+
+可指定 `mode=cycle&cycleScenes=scroll,video&phaseSeconds=150&speed=3&panels=4&immersive=1`，在真实滚动和原生 60 fps 视频之间交替，每五分钟重复；默认仍为图纸 / 滚动 / 视频三段。两种素材负载不同，必须分开标注，不能拿双段结果替代四面板图纸压力验收。页面指标记录 `cycleScenes`。

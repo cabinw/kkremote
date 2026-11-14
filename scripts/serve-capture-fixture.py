@@ -10,6 +10,7 @@ parser.add_argument('--media', type=Path, required=True)
 parser.add_argument('--hdr-media', type=Path)
 parser.add_argument('--reference-media', type=Path)
 parser.add_argument('--gray-media', type=Path)
+parser.add_argument('--photo', type=Path, help='Optional local still image for repeatable pan/zoom load')
 parser.add_argument('--port', type=int, default=47980)
 args = parser.parse_args()
 media = args.media.resolve(strict=True)
@@ -20,6 +21,8 @@ if args.reference_media:
     media_paths['/reference.mp4'] = args.reference_media.resolve(strict=True)
 if args.gray_media:
     media_paths['/gray.mp4'] = args.gray_media.resolve(strict=True)
+if args.photo:
+    media_paths['/photo.jpg'] = args.photo.resolve(strict=True)
 fixture = Path(__file__).resolve().parents[1] / 'Tests/Fixtures/window-capture'
 
 
@@ -43,7 +46,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self.send_error(416)
                 return
         self.send_response(206 if value else 200)
-        self.send_header('Content-Type', 'video/mp4')
+        self.send_header('Content-Type', 'image/jpeg' if media.suffix.lower() in {'.jpg', '.jpeg'} else 'video/mp4')
         self.send_header('Accept-Ranges', 'bytes')
         self.send_header('Content-Length', str(end - start + 1))
         if value:
