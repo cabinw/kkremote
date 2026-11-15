@@ -21,3 +21,7 @@
 - Communication work owns capture, codecs, transport, telemetry and host window lifecycle. The iOS chat owns client interaction; coordinate shared interfaces and files.
 - Run checks appropriate to changed modules. Publishing a previously verified stage does not itself require restarting the phone, Host, virtual display or long-running media tests.
 - Keep original endpoint and pairing settings unchanged unless the user asks to change them. Report experimental virtual-display and deferred stability limitations accurately.
+
+## Current display preference
+
+- The user disabled the virtual display because it disrupted local use. Keep the default Host on physical-window capture, with automatic window layout disabled; do not recreate or re-enable the experimental virtual workspace unless the user explicitly requests it again. Historical HDR/HiDPI validation is not a request to restore that runtime.
