@@ -1,0 +1,5205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KKRemote Mobile UX v2 — Liquid Glass &amp; 物理单窗高保真交互原型</title>
+  <style>
+    :root {
+      --in-oklab: ;
+      --studio-bg: #070a10;
+      --studio-surface: #0f1420;
+      --studio-surface-2: #171f30;
+      --studio-border: rgba(255, 255, 255, 0.10);
+      --studio-text: #f3f6fc;
+      --studio-muted: #9aa7bd;
+      --accent: #38bdf8;
+      --accent-strong: #0284c7;
+      --accent-soft: color-mix(in oklab, #38bdf8 18%, transparent);
+      --mint: #34d399;
+      --amber: #fbbf24;
+      --rose: #fb7185;
+      --glass-dark: rgba(18, 22, 32, 0.82);
+      --glass-border: rgba(255, 255, 255, 0.16);
+      --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+      --ease-spring: linear(
+        0, 0.009, 0.035 2.1%, 0.141, 0.281 6.7%, 0.723 12.9%, 0.938 16.7%,
+        1.017, 1.077, 1.107 24.3%, 1.116, 1.11 29.2%, 1.044 37.8%,
+        0.996 47.4%, 0.985 54%, 1.001 70%, 1
+      );
+      --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      --font-mono: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, monospace;
+    }
+
+    @supports (background: linear-gradient(in oklab, white, black)) {
+      :root {
+        --in-oklab: in oklab;
+      }
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(1100px 560px at 18% -8%, rgba(14, 165, 233, 0.15), transparent 56%),
+        radial-gradient(880px 480px at 84% 108%, rgba(52, 211, 153, 0.09), transparent 56%),
+        var(--studio-bg);
+      color: var(--studio-text);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      overflow-wrap: break-word;
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      text-wrap: balance;
+    }
+
+    p, li {
+      text-wrap: pretty;
+    }
+
+    button, input, select {
+      font: inherit;
+      color: inherit;
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      padding: 0;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    /* ================= Studio Chrome ================= */
+    .studio-shell {
+      display: flex;
+      flex-direction: column;
+      min-height: 100dvh;
+    }
+
+    .studio-header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 18px;
+      background: rgba(9, 12, 18, 0.86);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--studio-border);
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .brand-logo {
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: -0.03em;
+      box-shadow: 0 4px 14px rgba(56, 189, 248, 0.35);
+    }
+
+    .brand-title {
+      font-size: 14px;
+      font-weight: 650;
+      line-height: 1.15;
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: var(--studio-muted);
+    }
+
+    .studio-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* ARIA Tabs following modern-web-guidance: single row, border indicator via ::after */
+    .studio-tablist {
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 2px;
+      padding: 3px;
+      background: var(--studio-surface);
+      border: 1px solid var(--studio-border);
+      border-radius: 10px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .studio-tablist::-webkit-scrollbar {
+      display: none;
+    }
+
+    .studio-tab {
+      position: relative;
+      border: 0;
+      background: transparent;
+      color: var(--studio-muted);
+      padding: 6px 10px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 550;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: color 160ms var(--ease-standard), background-color 160ms var(--ease-standard);
+    }
+
+    .studio-tab:hover {
+      color: var(--studio-text);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .studio-tab[aria-selected="true"] {
+      color: var(--studio-text);
+      background: var(--studio-surface-2);
+    }
+
+    .studio-tab[aria-selected="true"]::after {
+      content: "";
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 1px;
+      border-bottom: 2px solid var(--accent);
+      border-radius: 2px;
+    }
+
+    .studio-select-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--studio-surface);
+      border: 1px solid var(--studio-border);
+      border-radius: 10px;
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+
+    .studio-select-wrap label {
+      color: var(--studio-muted);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .studio-select-wrap select {
+      background: transparent;
+      border: 0;
+      outline: none;
+      color: var(--studio-text);
+      font-size: 12px;
+      font-weight: 550;
+      cursor: pointer;
+    }
+
+    .studio-select-wrap select option {
+      background: #141923;
+      color: #f3f6fc;
+    }
+
+    .studio-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 11px;
+      border-radius: 9px;
+      border: 1px solid var(--studio-border);
+      background: var(--studio-surface);
+      font-size: 12px;
+      font-weight: 550;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color 160ms var(--ease-standard), border-color 160ms var(--ease-standard), transform 140ms var(--ease-standard);
+    }
+
+    .studio-btn:hover {
+      background: var(--studio-surface-2);
+      border-color: rgba(255, 255, 255, 0.22);
+    }
+
+    .studio-btn:active {
+      transform: scale(0.97);
+    }
+
+    .studio-btn.is-primary {
+      background: color-mix(in oklab, #38bdf8 18%, var(--studio-surface));
+      border-color: rgba(56, 189, 248, 0.45);
+      color: #7dd3fc;
+    }
+
+    .scene-pill-bar {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      padding: 3px;
+      border-radius: 10px;
+      background: var(--studio-surface);
+      border: 1px solid var(--studio-border);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .scene-pill-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .scene-pill-btn {
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--studio-muted);
+      padding: 5px 9px;
+      border-radius: 7px;
+      font-size: 11.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .scene-pill-btn[aria-pressed="true"] {
+      background: color-mix(in oklab, #38bdf8 20%, var(--studio-surface-2));
+      border-color: rgba(56, 189, 248, 0.48);
+      color: #e0f2fe;
+    }
+
+    .studio-btn:focus-visible,
+    .studio-tab:focus-visible,
+    .scene-pill-btn:focus-visible,
+    .try-btn:focus-visible {
+      outline: 2px solid #38bdf8;
+      outline-offset: 2px;
+    }
+
+    /* ================= Main Workspace Grid ================= */
+    .studio-main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      align-items: stretch;
+      min-height: 0;
+    }
+
+    .studio-main.inspector-collapsed {
+      grid-template-columns: minmax(0, 1fr) 0px;
+    }
+
+    .stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 18px 20px 22px;
+      gap: 12px;
+      position: relative;
+      min-height: 0;
+    }
+
+    .stage-hint-strip {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-size: 11.5px;
+      color: var(--studio-muted);
+    }
+
+    .hint-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .hint-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--mint);
+    }
+
+    /* ================= Apple Device Bezel ================= */
+    .device-bezel {
+      position: relative;
+      background: linear-gradient(145deg, #2b303c 0%, #161922 50%, #262b36 100%);
+      padding: 11px;
+      border-radius: 48px;
+      box-shadow:
+        0 32px 80px rgba(0, 0, 0, 0.65),
+        0 0 0 1px rgba(255, 255, 255, 0.14),
+        inset 0 0 0 2px rgba(255, 255, 255, 0.06);
+      transition: transform 360ms var(--ease-spring);
+      flex-shrink: 0;
+    }
+
+    .device-bezel.mode-iphone-portrait {
+      width: 382px;
+      height: min(762px, calc(100dvh - 128px));
+      min-height: 610px;
+      border-radius: 48px;
+    }
+
+    .device-bezel.mode-iphone-landscape {
+      width: min(790px, calc(100vw - 410px));
+      min-width: 640px;
+      height: 382px;
+      border-radius: 44px;
+    }
+
+    .device-bezel.mode-ipad-pro {
+      width: min(900px, calc(100vw - 400px));
+      min-width: 660px;
+      height: min(640px, calc(100dvh - 130px));
+      min-height: 500px;
+      border-radius: 30px;
+      padding: 13px;
+    }
+
+    .studio-main.inspector-collapsed .device-bezel.mode-iphone-landscape {
+      width: min(812px, calc(100vw - 72px));
+    }
+
+    .studio-main.inspector-collapsed .device-bezel.mode-ipad-pro {
+      width: min(940px, calc(100vw - 72px));
+    }
+
+    .device-screen {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 38px;
+      overflow: hidden;
+      background: #0d1118;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .device-bezel.mode-ipad-pro .device-screen {
+      border-radius: 18px;
+    }
+
+    /* Dynamic Island & Adaptive Status Bar */
+    .ios-statusbar {
+      position: relative;
+      z-index: 25;
+      height: 44px;
+      padding: 0 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      flex-shrink: 0;
+      transition: background-color 260ms var(--ease-standard), color 220ms var(--ease-standard);
+    }
+
+    .device-bezel.mode-iphone-landscape .ios-statusbar {
+      height: 28px;
+      padding: 0 28px;
+      font-size: 11.5px;
+    }
+
+    .device-bezel.mode-ipad-pro .ios-statusbar {
+      height: 28px;
+      padding: 0 18px;
+      font-size: 11.5px;
+    }
+
+    .ios-statusbar.theme-light {
+      color: #111827;
+    }
+
+    .ios-statusbar.theme-dark {
+      color: #f8fafc;
+    }
+
+    .dynamic-island {
+      position: absolute;
+      left: 50%;
+      top: 9px;
+      transform: translateX(-50%);
+      width: 106px;
+      height: 27px;
+      background: #040507;
+      border-radius: 999px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 9px;
+      pointer-events: none;
+    }
+
+    .device-bezel.mode-iphone-landscape .dynamic-island,
+    .device-bezel.mode-ipad-pro .dynamic-island {
+      display: none;
+    }
+
+    .island-cam {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #2d4d88, #080b12 70%);
+    }
+
+    .island-hdr {
+      font-size: 9px;
+      font-weight: 700;
+      color: #38bdf8;
+      letter-spacing: 0.04em;
+    }
+
+    .status-icons {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .home-indicator {
+      position: absolute;
+      left: 50%;
+      bottom: 6px;
+      transform: translateX(-50%);
+      width: 122px;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.45);
+      z-index: 35;
+      pointer-events: none;
+      transition: background-color 200ms var(--ease-standard);
+    }
+
+    .device-screen.light-bottom .home-indicator {
+      background: rgba(15, 23, 42, 0.35);
+    }
+
+    /* ================= Screen Body Architecture ================= */
+    .device-body {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* iPad Right-Side Floating Liquid Glass Rail (05-ipad-and-external-peripherals.md · iPhone Duo style) */
+    .ipad-rail {
+      --rail-glass-bg: linear-gradient(155deg, rgba(255, 255, 255, 0.80), rgba(241, 245, 249, 0.64));
+      --rail-glass-border: rgba(255, 255, 255, 0.88);
+      --rail-glass-rim: rgba(15, 23, 42, 0.09);
+      --rail-glass-shadow: 0 12px 28px rgba(15, 23, 42, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.94);
+      --rail-ink: #0f172a;
+      --rail-ink-muted: #475569;
+      --rail-hover: rgba(15, 23, 42, 0.07);
+      --rail-active-bg: rgba(37, 99, 235, 0.16);
+      --rail-active-ink: #1d4ed8;
+      --rail-active-ring: rgba(37, 99, 235, 0.45);
+      --rail-sep: rgba(15, 23, 42, 0.11);
+      --rail-tip-bg: rgba(15, 23, 42, 0.88);
+      --rail-tip-ink: #f8fafc;
+      --rail-route-bg: rgba(5, 150, 105, 0.14);
+      --rail-route-ink: #047857;
+      --rail-route-ring: rgba(5, 150, 105, 0.40);
+      display: none;
+      position: absolute;
+      right: max(10px, env(safe-area-inset-right, 0px));
+      top: 53%;
+      transform: translate3d(0, -50%, 0);
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      z-index: 26;
+      pointer-events: none;
+    }
+
+    .ipad-rail.tone-dark {
+      --rail-glass-bg: linear-gradient(155deg, rgba(30, 41, 59, 0.78), rgba(15, 23, 42, 0.66));
+      --rail-glass-border: rgba(255, 255, 255, 0.22);
+      --rail-glass-rim: rgba(255, 255, 255, 0.08);
+      --rail-glass-shadow: 0 14px 32px rgba(0, 0, 0, 0.44), inset 0 1px 0 rgba(255, 255, 255, 0.26);
+      --rail-ink: #f1f5f9;
+      --rail-ink-muted: #cbd5e1;
+      --rail-hover: rgba(255, 255, 255, 0.12);
+      --rail-active-bg: rgba(56, 189, 248, 0.22);
+      --rail-active-ink: #7dd3fc;
+      --rail-active-ring: rgba(56, 189, 248, 0.55);
+      --rail-sep: rgba(255, 255, 255, 0.14);
+      --rail-tip-bg: rgba(15, 23, 42, 0.92);
+      --rail-tip-ink: #f8fafc;
+      --rail-route-bg: rgba(16, 185, 129, 0.22);
+      --rail-route-ink: #6ee7b7;
+      --rail-route-ring: rgba(52, 211, 153, 0.45);
+    }
+
+    .device-bezel.mode-ipad-pro .ipad-rail {
+      display: flex;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .ipad-rail {
+        transition: transform 240ms var(--ease-standard), opacity 180ms var(--ease-standard);
+      }
+      .rail-btn,
+      .rail-pill-mini,
+      .rail-restore-btn {
+        transition: background-color 150ms ease-out, color 150ms ease-out, box-shadow 150ms ease-out, scale 140ms ease-out;
+      }
+      .rail-tip {
+        transition: opacity 140ms ease-out, transform 140ms ease-out;
+      }
+    }
+
+    .device-bezel.mode-ipad-pro.rail-collapsed .ipad-rail {
+      transform: translate3d(76px, -50%, 0);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .rail-capsule-group {
+      pointer-events: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 5px;
+      border-radius: 999px;
+      background: var(--rail-glass-bg);
+      -webkit-backdrop-filter: blur(22px) saturate(185%);
+      backdrop-filter: blur(22px) saturate(185%);
+      border: 1px solid var(--rail-glass-border);
+      box-shadow: var(--rail-glass-shadow), 0 0 0 0.5px var(--rail-glass-rim);
+    }
+
+    .rail-sep {
+      width: 24px;
+      height: 0;
+      border: 0;
+      border-top: 1px solid var(--rail-sep);
+      margin: 2px 0;
+      flex-shrink: 0;
+    }
+
+    .rail-btn {
+      position: relative;
+      min-inline-size: 40px;
+      min-block-size: 40px;
+      padding: 0;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--rail-ink);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+
+    .rail-btn:active,
+    .rail-pill-mini:active {
+      scale: 0.94;
+    }
+
+    .rail-btn:focus-visible,
+    .rail-pill-mini:focus-visible,
+    .rail-restore-btn:focus-visible {
+      outline: 2px solid var(--rail-active-ink);
+      outline-offset: 2px;
+    }
+
+    @media (hover: hover) {
+      .rail-btn:hover {
+        background: var(--rail-hover);
+      }
+      .rail-btn:hover .rail-tip,
+      .rail-pill-mini:hover .rail-tip {
+        opacity: 1;
+        transform: translate3d(0, -50%, 0);
+      }
+    }
+
+    .rail-btn:focus-visible .rail-tip,
+    .rail-pill-mini:focus-visible .rail-tip {
+      opacity: 1;
+      transform: translate3d(0, -50%, 0);
+    }
+
+    .rail-btn[aria-pressed="true"] {
+      background: var(--rail-active-bg);
+      color: var(--rail-active-ink);
+      box-shadow: inset 0 0 0 1.5px var(--rail-active-ring);
+    }
+
+    .rail-pill-mini {
+      position: relative;
+      min-inline-size: 40px;
+      min-block-size: 38px;
+      padding: 4px 2px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: rgba(15, 23, 42, 0.05);
+      color: var(--rail-ink-muted);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1px;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 700;
+      line-height: 1.05;
+    }
+
+    .ipad-rail.tone-dark .rail-pill-mini {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .rail-pill-mini[aria-pressed="true"] {
+      background: var(--rail-route-bg);
+      color: var(--rail-route-ink);
+      box-shadow: inset 0 0 0 1.5px var(--rail-route-ring);
+    }
+
+    /* Open labels leftward (perpendicular to vertical stacking axis) so next stacked controls are never covered */
+    .rail-tip {
+      position: absolute;
+      right: calc(100% + 12px);
+      top: 50%;
+      transform: translate3d(4px, -50%, 0);
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: var(--rail-tip-bg);
+      color: var(--rail-tip-ink);
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.24);
+      z-index: 30;
+    }
+
+    @media (pointer: coarse) {
+      .rail-btn,
+      .rail-pill-mini {
+        min-inline-size: 44px;
+        min-block-size: 44px;
+      }
+      .rail-tip {
+        display: none;
+      }
+    }
+
+    .rail-restore-btn {
+      display: none;
+      position: absolute;
+      right: max(6px, env(safe-area-inset-right, 0px));
+      top: 50%;
+      transform: translate3d(0, -50%, 0);
+      z-index: 27;
+      min-inline-size: 28px;
+      min-block-size: 58px;
+      padding: 12px 6px;
+      border-radius: 999px;
+      background: linear-gradient(155deg, rgba(255, 255, 255, 0.80), rgba(241, 245, 249, 0.64));
+      -webkit-backdrop-filter: blur(22px) saturate(185%);
+      backdrop-filter: blur(22px) saturate(185%);
+      border: 1px solid rgba(255, 255, 255, 0.88);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .rail-restore-btn.tone-dark {
+      background: linear-gradient(155deg, rgba(30, 41, 59, 0.80), rgba(15, 23, 42, 0.68));
+      border-color: rgba(255, 255, 255, 0.22);
+      box-shadow: 0 12px 26px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+      color: #f1f5f9;
+    }
+
+    .device-bezel.mode-ipad-pro.rail-collapsed .rail-restore-btn {
+      display: inline-flex;
+    }
+
+    @media (forced-colors: active) {
+      .rail-capsule-group,
+      .rail-restore-btn {
+        background: Canvas;
+        border-color: ButtonText;
+      }
+      .rail-btn[aria-pressed="true"],
+      .rail-pill-mini[aria-pressed="true"] {
+        background: Highlight;
+        color: HighlightText;
+      }
+    }
+
+    /* Main Device Viewport Area */
+    .viewport-stage {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* ================= View: Home ================= */
+    .view-panel {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+
+    .view-panel::-webkit-scrollbar {
+      display: none;
+    }
+
+    .view-panel[hidden] {
+      display: none;
+    }
+
+    .home-view {
+      background:
+        radial-gradient(360px 280px at 85% -5%, rgba(56, 189, 248, 0.22), transparent 65%),
+        radial-gradient(300px 220px at 10% 95%, rgba(52, 211, 153, 0.10), transparent 65%),
+        linear-gradient(180deg var(--in-oklab), #0d1320 0%, #070b12 100%);
+      padding: 12px 16px 26px;
+      gap: 13px;
+      color: #f3f6fc;
+    }
+
+    .home-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .home-title {
+      font-size: 21px;
+      font-weight: 720;
+      letter-spacing: -0.025em;
+    }
+
+    .icon-circle-btn {
+      min-inline-size: 36px;
+      min-block-size: 36px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: linear-gradient(155deg var(--in-oklab), rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.04));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+
+    .host-hero-card {
+      background: linear-gradient(160deg var(--in-oklab), rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.56));
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 24px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      box-shadow: 0 20px 44px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+      -webkit-backdrop-filter: blur(22px) saturate(180%);
+      backdrop-filter: blur(22px) saturate(180%);
+    }
+
+    .host-mode-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      width: fit-content;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #bae6fd;
+      background: rgba(56, 189, 248, 0.14);
+      border: 1px solid rgba(56, 189, 248, 0.32);
+      padding: 3px 9px;
+      border-radius: 999px;
+    }
+
+    .home-win-strip {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scroll-snap-type: x proximity;
+      scrollbar-width: none;
+      padding-bottom: 2px;
+    }
+
+    .home-win-strip::-webkit-scrollbar {
+      display: none;
+    }
+
+    .home-win-tile {
+      flex: 0 0 132px;
+      scroll-snap-align: start;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.06);
+      padding: 8px 9px;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .home-win-tile:hover {
+      background: rgba(56, 189, 248, 0.14);
+      border-color: rgba(56, 189, 248, 0.45);
+    }
+
+    .space-filter-row {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .space-filter-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .space-filter-btn {
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.05);
+      color: #cbd5e1;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .space-filter-btn[aria-pressed="true"] {
+      background: rgba(56, 189, 248, 0.20);
+      border-color: rgba(56, 189, 248, 0.55);
+      color: #e0f2fe;
+    }
+
+    .host-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .host-badge-online {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #6ee7b7;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+      padding: 3px 9px;
+      border-radius: 999px;
+    }
+
+    .host-thumb {
+      height: 118px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #eaecef 0%, #dbe2ec 100%);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      overflow: hidden;
+      position: relative;
+      color: #1e293b;
+      padding: 9px 11px;
+      font-size: 10px;
+    }
+
+    .host-thumb-tag {
+      position: absolute;
+      right: 8px;
+      bottom: 8px;
+      background: rgba(15, 23, 42, 0.78);
+      color: #f8fafc;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 7px;
+      backdrop-filter: blur(8px);
+    }
+
+    .cta-primary {
+      width: 100%;
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 14px;
+      background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 650;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 8px 20px rgba(14, 165, 233, 0.35);
+      transition: transform 150ms var(--ease-standard), filter 150ms;
+    }
+
+    .cta-primary:hover {
+      filter: brightness(1.06);
+    }
+
+    .cta-primary:active {
+      transform: scale(0.985);
+    }
+
+    .cta-secondary {
+      width: 100%;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 13px;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.06);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .secondary-host-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .section-kicker {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--studio-muted);
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .mini-host-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 12.5px;
+    }
+
+    /* ================= View: Window & Dock Launcher ================= */
+    .launcher-view {
+      background: #101520;
+      padding: 10px 14px 22px;
+      gap: 12px;
+      color: #f3f6fc;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      border-radius: 13px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .search-box input {
+      flex: 1;
+      border: 0;
+      background: transparent;
+      outline: none;
+      font-size: 13px;
+      color: #fff;
+    }
+
+    .window-group-list {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      flex: 1;
+    }
+
+    .window-card {
+      display: grid;
+      grid-template-columns: 74px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      padding: 9px;
+      border-radius: 15px;
+      background: rgba(255, 255, 255, 0.055);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      cursor: pointer;
+      transition: background-color 150ms, border-color 150ms, transform 150ms;
+    }
+
+    .window-card:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+
+    .window-card.is-current {
+      border-color: rgba(56, 189, 248, 0.7);
+      background: rgba(56, 189, 248, 0.12);
+    }
+
+    .win-mini-thumb {
+      width: 74px;
+      height: 50px;
+      border-radius: 9px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      display: flex;
+      flex-direction: column;
+      font-size: 7px;
+      padding: 4px;
+    }
+
+    .win-meta {
+      min-width: 0;
+    }
+
+    .win-title {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .win-sub {
+      font-size: 11px;
+      color: var(--studio-muted);
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .space-chip {
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 5px;
+      background: rgba(251, 191, 36, 0.16);
+      color: #fde68a;
+    }
+
+    .win-quick-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .mini-icon-act {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.06);
+      font-size: 11px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+
+    .mini-icon-act:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .mac-dock-shelf {
+      margin-top: auto;
+      padding: 9px 10px 12px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      backdrop-filter: blur(16px);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      gap: 6px;
+    }
+
+    .dock-app-btn {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      padding: 2px;
+      transition: transform 160ms var(--ease-spring);
+    }
+
+    .dock-app-btn:hover {
+      transform: translateY(-4px) scale(1.06);
+    }
+
+    .dock-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-size: 17px;
+      font-weight: 700;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+    }
+
+    .dock-label {
+      font-size: 9.5px;
+      color: #cbd5e1;
+    }
+
+    .dock-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #e2e8f0;
+    }
+
+    /* ================= View: Live Remote Workspace ================= */
+    .workspace-view {
+      overflow: hidden;
+      background: #0d1118;
+    }
+
+    .remote-canvas-viewport {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    /* Simulated Mac desktop window frame placed inside remote-canvas-viewport */
+    .mac-window-surface {
+      position: absolute;
+      left: 0;
+      top: 0;
+      transform-origin: 0 0;
+      transition: transform 320ms var(--ease-standard);
+      will-change: transform;
+    }
+
+    /* Smart HDR highlight effect */
+    .device-screen.hdr-enabled .mac-window-surface {
+      filter: contrast(1.04) saturate(1.08);
+    }
+
+    /* ---- Mac App: WPS Office (672 x 1084 virtual geometry scaled cleanly) ---- */
+    .wps-window {
+      width: 672px;
+      height: 1084px;
+      background: #ffffff;
+      color: #1e293b;
+      display: flex;
+      flex-direction: column;
+      font-size: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    .mac-titlebar {
+      height: 34px;
+      background: #eaecef;
+      border-bottom: 1px solid #d7dce3;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .traffic-lights {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .tl {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      border: 0;
+      padding: 0;
+      cursor: pointer;
+    }
+    .tl-red { background: #ff5f57; }
+    .tl-yel { background: #febc2e; }
+    .tl-grn { background: #28c840; }
+
+    .wps-ribbon {
+      background: #f6f8fa;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 6px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .wps-tabs-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .wps-tabs-row span.active {
+      color: #16a34a;
+      border-bottom: 2px solid #16a34a;
+      padding-bottom: 2px;
+    }
+
+    .wps-tools-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: nowrap;
+    }
+
+    .wps-tool-btn {
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #1e293b;
+      border-radius: 5px;
+      padding: 3px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .wps-tool-btn:hover {
+      background: #ecfdf5;
+      border-color: #22c55e;
+    }
+
+    .wps-formula-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 12px;
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 12px;
+    }
+
+    .wps-cell-ref {
+      width: 48px;
+      padding: 2px 6px;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      text-align: center;
+      background: #f8fafc;
+    }
+
+    .wps-grid-wrap {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: thin;
+      position: relative;
+      background: #fff;
+    }
+
+    .wps-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: fixed;
+    }
+
+    .wps-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      background: #f1f5f9;
+      border-top: 1px solid #e2e8f0;
+      box-shadow: inset 0 -1px 0 #cbd5e1;
+    }
+
+    .wps-table th,
+    .wps-table td {
+      border-right: 1px solid #e2e8f0;
+      border-bottom: 1px solid #e2e8f0;
+      height: 28px;
+      padding: 0 7px;
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .wps-table th:first-child,
+    .wps-table td:first-child {
+      border-left: 1px solid #e2e8f0;
+    }
+
+    .wps-table th {
+      background: #f1f5f9;
+      color: #475569;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .wps-table td {
+      cursor: pointer;
+    }
+
+    .wps-table td.is-selected {
+      outline: 2px solid #16a34a;
+      outline-offset: -2px;
+      background: #f0fdf4;
+      font-weight: 600;
+    }
+
+    .wps-table td.num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+    }
+
+    .wps-sheetbar {
+      height: 30px;
+      background: #f1f5f9;
+      border-top: 1px solid #cbd5e1;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #475569;
+      flex-shrink: 0;
+    }
+
+    .device-bezel.mode-ipad-pro .wps-sheetbar {
+      height: 38px;
+      padding-bottom: 10px;
+    }
+
+    /* ---- Mac App: Safari / X Adaptive Reflow ---- */
+    .safari-window {
+      width: 390px;
+      height: 760px;
+      background: #ffffff;
+      color: #0f172a;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .safari-toolbar {
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 8px 12px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .safari-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .safari-urlbar {
+      flex: 1;
+      background: #f1f5f9;
+      border-radius: 9px;
+      padding: 5px 10px;
+      font-size: 12px;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .x-feed {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: #ffffff;
+    }
+
+    .x-compose-box {
+      position: relative;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 10px 12px;
+      background: #f8fafc;
+      cursor: text;
+      transition: border-color 160ms, box-shadow 160ms;
+    }
+
+    .x-compose-box:hover,
+    .x-compose-box.is-editing {
+      border-color: #0ea5e9;
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.14);
+      background: #ffffff;
+    }
+
+    .x-post-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 11px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12.5px;
+      line-height: 1.45;
+    }
+
+    /* ---- Mac App: VS Code / Terminal (Dark Mode HDR) ---- */
+    .vscode-window {
+      width: 620px;
+      height: 820px;
+      background: #18181b;
+      color: #e4e4e7;
+      display: flex;
+      flex-direction: column;
+      font-family: var(--font-mono);
+    }
+
+    .vscode-titlebar {
+      height: 32px;
+      background: #18181b;
+      border-bottom: 1px solid #27272a;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font-sans);
+      font-size: 11.5px;
+      color: #a1a1aa;
+    }
+
+    .vscode-tabs {
+      display: flex;
+      background: #141417;
+      border-bottom: 1px solid #27272a;
+      font-size: 11.5px;
+      font-family: var(--font-sans);
+    }
+
+    .vscode-tab {
+      padding: 7px 14px;
+      border-right: 1px solid #27272a;
+      color: #a1a1aa;
+    }
+
+    .vscode-tab.active {
+      background: #18181b;
+      color: #f4f4f5;
+      border-top: 2px solid #38bdf8;
+    }
+
+    .vscode-code {
+      padding: 12px 14px;
+      font-size: 11.5px;
+      line-height: 1.58;
+      color: #d4d4d8;
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+
+    .tok-k { color: #f472b6; }
+    .tok-t { color: #38bdf8; }
+    .tok-s { color: #4ade80; }
+    .tok-c { color: #71717a; }
+
+    .vscode-terminal {
+      height: 185px;
+      background: #111114;
+      border-top: 1px solid #27272a;
+      padding: 10px 14px;
+      font-size: 11.5px;
+      line-height: 1.5;
+      cursor: text;
+    }
+
+    /* ================= Mac Remote Cursor ================= */
+    .mac-cursor {
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 22;
+      pointer-events: none;
+      transform: translate3d(180px, 140px, 0);
+      filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.45));
+      transition: opacity 150ms;
+    }
+
+    .mac-cursor.is-hidden {
+      opacity: 0;
+    }
+
+    /* Mac Simulated Context Menu */
+    .mac-context-menu {
+      position: absolute;
+      z-index: 24;
+      width: 170px;
+      background: rgba(248, 250, 252, 0.96);
+      color: #0f172a;
+      border: 1px solid rgba(15, 23, 42, 0.14);
+      border-radius: 10px;
+      padding: 4px;
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.28);
+      backdrop-filter: blur(14px);
+      font-size: 12px;
+    }
+
+    .mac-context-menu[hidden] { display: none; }
+
+    .mac-ctx-item {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: #0f172a;
+      padding: 6px 9px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      cursor: pointer;
+      text-align: left;
+      font-size: 11.5px;
+    }
+
+    .mac-ctx-item:hover {
+      background: #0ea5e9;
+      color: #fff;
+    }
+
+    /* ================= Precision Offset Loupe (2.2x) ================= */
+    .precision-loupe {
+      position: absolute;
+      z-index: 24;
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      border: 2.5px solid #38bdf8;
+      background: rgba(255, 255, 255, 0.96);
+      color: #0f172a;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.36);
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transform: translate3d(0, 0, 0);
+      overflow: hidden;
+    }
+
+    .precision-loupe[hidden] { display: none; }
+
+    .loupe-zoom-text {
+      font-size: 15px;
+      font-weight: 750;
+      letter-spacing: -0.02em;
+      transform: scale(1.15);
+    }
+
+    .loupe-sub {
+      font-size: 10px;
+      color: #0284c7;
+      font-weight: 650;
+      margin-top: 2px;
+    }
+
+    .loupe-crosshair {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .loupe-crosshair::before,
+    .loupe-crosshair::after {
+      content: "";
+      position: absolute;
+      background: rgba(14, 165, 233, 0.45);
+    }
+
+    .loupe-crosshair::before {
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+    }
+
+    .loupe-crosshair::after {
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+    }
+
+    /* ================= Overview Mini-Map Peek ================= */
+    .minimap-peek {
+      position: absolute;
+      bottom: 66px;
+      left: 12px;
+      z-index: 23;
+      width: 104px;
+      height: 158px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.86);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(12px);
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.4);
+      cursor: crosshair;
+    }
+
+    .minimap-peek[hidden] { display: none; }
+
+    .minimap-surface {
+      position: relative;
+      flex: 1;
+      border-radius: 7px;
+      background: linear-gradient(180deg, #e2e8f0 0 14%, #ffffff 14% 100%);
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .minimap-viewport-box {
+      position: absolute;
+      border: 2px solid #38bdf8;
+      background: rgba(56, 189, 248, 0.22);
+      border-radius: 3px;
+      pointer-events: none;
+    }
+
+    /* ================= Unified v2 Content-Aware Liquid Glass Pill & Duo Side Mode ================= */
+    .device-screen {
+      --lg-surface: linear-gradient(155deg var(--in-oklab), rgba(28, 36, 54, 0.80), rgba(14, 20, 32, 0.68));
+      --lg-border: rgba(255, 255, 255, 0.22);
+      --lg-rim: rgba(255, 255, 255, 0.08);
+      --lg-shadow: 0 14px 34px rgba(0, 0, 0, 0.42), 0 2px 8px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.26);
+      --lg-ink: #f8fafc;
+      --lg-muted: #cbd5e1;
+      --lg-divider: rgba(255, 255, 255, 0.15);
+      --lg-hover: rgba(255, 255, 255, 0.11);
+      --lg-active-bg: rgba(56, 189, 248, 0.24);
+      --lg-active-ink: #7dd3fc;
+      --lg-active-ring: rgba(56, 189, 248, 0.60);
+      --lg-tile-bg: rgba(255, 255, 255, 0.06);
+      --lg-tile-border: rgba(255, 255, 255, 0.12);
+    }
+
+    .device-screen.glass-light {
+      --lg-surface: linear-gradient(155deg var(--in-oklab), rgba(255, 255, 255, 0.84), rgba(241, 245, 249, 0.72));
+      --lg-border: rgba(255, 255, 255, 0.90);
+      --lg-rim: rgba(15, 23, 42, 0.10);
+      --lg-shadow: 0 14px 32px rgba(15, 23, 42, 0.16), 0 2px 6px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+      --lg-ink: #0f172a;
+      --lg-muted: #475569;
+      --lg-divider: rgba(15, 23, 42, 0.12);
+      --lg-hover: rgba(15, 23, 42, 0.07);
+      --lg-active-bg: rgba(37, 99, 235, 0.15);
+      --lg-active-ink: #1d4ed8;
+      --lg-active-ring: rgba(37, 99, 235, 0.48);
+      --lg-tile-bg: rgba(15, 23, 42, 0.045);
+      --lg-tile-border: rgba(15, 23, 42, 0.11);
+    }
+
+    .floating-pill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 28;
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      padding: 4px;
+      border-radius: 999px;
+      background: var(--lg-surface);
+      border: 1px solid var(--lg-border);
+      backdrop-filter: blur(24px) saturate(190%);
+      -webkit-backdrop-filter: blur(24px) saturate(190%);
+      box-shadow: var(--lg-shadow), 0 0 0 0.5px var(--lg-rim);
+      color: var(--lg-ink);
+      will-change: transform, opacity;
+      transition: transform 280ms ease-out, opacity 260ms var(--ease-standard);
+      transition-timing-function: var(--ease-spring), var(--ease-standard);
+    }
+
+    /* Duo-style vertical right-edge capsule on iPhone */
+    .floating-pill.is-side-rail {
+      flex-direction: column;
+      padding: 5px;
+      gap: 3px;
+    }
+
+    .floating-pill.is-side-rail .pill-seg-btn span {
+      display: none;
+    }
+
+    .floating-pill.is-side-rail .pill-seg-btn {
+      padding: 0;
+      min-inline-size: 36px;
+      min-block-size: 36px;
+      justify-content: center;
+    }
+
+    .floating-pill.is-side-rail .pill-divider {
+      width: 22px;
+      height: 0;
+      background: transparent;
+      border-top: 1px solid var(--lg-divider);
+      margin: 1px 0;
+    }
+
+    .floating-pill.is-tucked {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .phone-pill-restore-btn {
+      display: none;
+      position: absolute;
+      right: max(6px, env(safe-area-inset-right, 0px));
+      top: 54%;
+      transform: translate3d(0, -50%, 0);
+      z-index: 28;
+      min-inline-size: 26px;
+      min-block-size: 52px;
+      padding: 10px 5px;
+      border-radius: 999px;
+      background: var(--lg-surface);
+      border: 1px solid var(--lg-border);
+      -webkit-backdrop-filter: blur(22px) saturate(185%);
+      backdrop-filter: blur(22px) saturate(185%);
+      box-shadow: var(--lg-shadow), 0 0 0 0.5px var(--lg-rim);
+      color: var(--lg-ink);
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .device-bezel:not(.mode-ipad-pro).phone-pill-tucked .phone-pill-restore-btn {
+      display: inline-flex;
+    }
+
+    .floating-pill.is-dragging {
+      transition: opacity 120ms linear;
+    }
+
+    .floating-pill.no-transition {
+      transition: none;
+    }
+
+    .device-bezel.mode-ipad-pro .floating-pill,
+    .device-bezel.mode-ipad-pro .phone-pill-restore-btn {
+      display: none;
+    }
+
+    .floating-pill.is-idle {
+      opacity: 0.58;
+    }
+
+    /* Dedicated drag handle only (modern-web-guidance: drag) */
+    .pill-grip {
+      min-inline-size: 26px;
+      min-block-size: 32px;
+      border-radius: 999px;
+      border: 0;
+      background: transparent;
+      color: var(--lg-muted);
+      display: grid;
+      place-items: center;
+      cursor: grab;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+      font-size: 11px;
+      padding: 0;
+    }
+
+    .floating-pill.is-side-rail .pill-grip {
+      min-inline-size: 34px;
+      min-block-size: 22px;
+    }
+
+    .pill-grip.dragging {
+      cursor: grabbing;
+      color: var(--lg-active-ink);
+    }
+
+    .pill-seg-btn {
+      min-block-size: 34px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--lg-ink);
+      padding: 0 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11.5px;
+      font-weight: 620;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    @media (hover: hover) {
+      .pill-seg-btn:hover {
+        background: var(--lg-hover);
+      }
+    }
+
+    .pill-seg-btn:active {
+      scale: 0.95;
+    }
+
+    .pill-seg-btn.is-active {
+      background: var(--lg-active-bg);
+      color: var(--lg-active-ink);
+      box-shadow: inset 0 0 0 1.5px var(--lg-active-ring);
+    }
+
+    .pill-tuck-btn {
+      padding: 0 7px;
+      color: var(--lg-muted);
+    }
+
+    .pill-divider {
+      width: 1px;
+      height: 15px;
+      background: var(--lg-divider);
+    }
+
+    /* ================= Bento Control-Center Quick-Deck v2 ================= */
+    .quick-deck {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 62px;
+      z-index: 29;
+      background: var(--lg-surface);
+      border: 1px solid var(--lg-border);
+      border-radius: 24px;
+      padding: 12px;
+      backdrop-filter: blur(28px) saturate(195%);
+      -webkit-backdrop-filter: blur(28px) saturate(195%);
+      box-shadow: var(--lg-shadow), 0 0 0 0.5px var(--lg-rim);
+      color: var(--lg-ink);
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      max-height: calc(100% - 76px);
+      overflow-y: auto;
+      transform-origin: bottom right;
+    }
+
+    .quick-deck[hidden] {
+      display: none;
+    }
+
+    .quick-deck.is-top-anchored {
+      bottom: auto;
+      top: 54px;
+      transform-origin: top right;
+    }
+
+    .qd-section-label {
+      font-size: 10px;
+      font-weight: 680;
+      color: var(--lg-muted);
+      letter-spacing: 0.03em;
+      margin-bottom: 4px;
+    }
+
+    .qd-seg-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 5px;
+    }
+
+    .qd-seg-btn {
+      border: 1px solid var(--lg-tile-border);
+      background: var(--lg-tile-bg);
+      color: var(--lg-ink);
+      border-radius: 12px;
+      padding: 7px 4px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      text-align: center;
+    }
+
+    .qd-seg-btn.is-active {
+      background: var(--lg-active-bg);
+      border-color: var(--lg-active-ring);
+      color: var(--lg-active-ink);
+    }
+
+    .qd-bento-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 5px;
+    }
+
+    .qd-pill-row {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .qd-chip {
+      border: 1px solid var(--lg-tile-border);
+      background: var(--lg-tile-bg);
+      color: var(--lg-ink);
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .qd-chip.is-active {
+      background: var(--lg-active-bg);
+      border-color: var(--lg-active-ring);
+      color: var(--lg-active-ink);
+    }
+
+    .qd-footer {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+      padding-top: 6px;
+      border-top: 1px solid var(--lg-divider);
+    }
+
+    .qd-footer-btn {
+      border: 1px solid var(--lg-tile-border);
+      background: var(--lg-tile-bg);
+      color: var(--lg-ink);
+      border-radius: 10px;
+      padding: 6px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    /* ================= One-Handed Thumb-Zone Trackpad Drawer ================= */
+    .thumb-trackpad-drawer {
+      position: relative;
+      z-index: 26;
+      height: 196px;
+      flex-shrink: 0;
+      background: rgba(15, 20, 30, 0.88);
+      border-top: 1px solid rgba(255, 255, 255, 0.16);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 8px 12px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      color: #f8fafc;
+    }
+
+    .thumb-trackpad-drawer[hidden] { display: none; }
+
+    .device-bezel.mode-iphone-landscape .thumb-trackpad-drawer {
+      height: 138px;
+      padding: 6px 12px 12px;
+    }
+
+    .trackpad-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    .trackpad-surface {
+      flex: 1;
+      border-radius: 14px;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.1), transparent 70%),
+        rgba(255, 255, 255, 0.05);
+      border: 1px dashed rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11.5px;
+      color: #cbd5e1;
+      touch-action: none;
+      cursor: crosshair;
+      position: relative;
+    }
+
+    .trackpad-buttons {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr 1fr;
+      gap: 6px;
+    }
+
+    .tp-btn {
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 9px;
+      padding: 6px 4px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .tp-btn.is-active {
+      background: rgba(56, 189, 248, 0.25);
+      border-color: #38bdf8;
+      color: #7dd3fc;
+    }
+
+    /* ================= Dual-Track IME Dock & 60% Mac Soft Keyboard ================= */
+    .ime-dock-drawer {
+      position: relative;
+      z-index: 27;
+      background: rgba(20, 25, 36, 0.94);
+      border-top: 1px solid rgba(255, 255, 255, 0.16);
+      padding: 8px 10px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      color: #f8fafc;
+      flex-shrink: 0;
+    }
+
+    .ime-dock-drawer[hidden] { display: none; }
+
+    .ime-input-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ime-target-badge {
+      font-size: 10.5px;
+      font-weight: 650;
+      padding: 4px 7px;
+      border-radius: 7px;
+      background: rgba(56, 189, 248, 0.18);
+      color: #7dd3fc;
+      white-space: nowrap;
+    }
+
+    .ime-field {
+      flex: 1;
+      min-width: 0;
+      width: 0;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 9px;
+      padding: 6px 9px;
+      font-size: 12.5px;
+      color: #ffffff;
+      outline: none;
+    }
+
+    .pinyin-strip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+      font-size: 11.5px;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 4px 8px;
+      border-radius: 8px;
+    }
+
+    .pinyin-cand {
+      border: 0;
+      background: rgba(56, 189, 248, 0.18);
+      color: #e0f2fe;
+      border-radius: 6px;
+      padding: 2px 7px;
+      font-size: 11.5px;
+      cursor: pointer;
+    }
+
+    .modifier-ribbon {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .modifier-ribbon::-webkit-scrollbar { display: none; }
+
+    .mod-key {
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 7px;
+      padding: 5px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .mod-key.is-armed {
+      background: rgba(251, 191, 36, 0.24);
+      border-color: #fbbf24;
+      color: #fde68a;
+    }
+
+    .mod-key.is-locked {
+      background: rgba(56, 189, 248, 0.3);
+      border-color: #38bdf8;
+      color: #e0f2fe;
+    }
+
+    .soft-kbd-60 {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding-top: 4px;
+    }
+
+    .soft-kbd-60[hidden] { display: none; }
+
+    .kbd-row {
+      display: flex;
+      gap: 3px;
+      justify-content: center;
+    }
+
+    .kbd-cap {
+      flex: 1;
+      min-width: 20px;
+      height: 28px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.1);
+      font-size: 11px;
+      font-weight: 550;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+    }
+
+    .device-bezel.mode-iphone-landscape .ime-dock-drawer {
+      padding: 6px 10px 10px;
+      gap: 4px;
+    }
+
+    .device-bezel.mode-iphone-landscape .kbd-cap {
+      height: 21px;
+      font-size: 10px;
+    }
+
+    .kbd-cap:active {
+      background: #38bdf8;
+      color: #090c12;
+    }
+
+    /* ================= In-Device Sheets (MenuBar, Diagnostics, Settings) ================= */
+    .device-sheet-backdrop {
+      position: absolute;
+      inset: 0;
+      z-index: 32;
+      background: rgba(4, 7, 13, 0.56);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: flex-end;
+    }
+
+    .device-sheet-backdrop[hidden] { display: none; }
+
+    .device-sheet {
+      width: 100%;
+      max-height: 84%;
+      background: linear-gradient(165deg var(--in-oklab), rgba(24, 32, 48, 0.94), rgba(13, 18, 28, 0.92));
+      border-top: 1px solid rgba(255, 255, 255, 0.22);
+      box-shadow: 0 -18px 48px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.20);
+      -webkit-backdrop-filter: blur(26px) saturate(185%);
+      backdrop-filter: blur(26px) saturate(185%);
+      border-radius: 26px 26px 0 0;
+      padding: 10px 14px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      color: #f3f6fc;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+
+    .menu-pinned-bento {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .menu-pinned-tile {
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 12px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 620;
+      color: #f8fafc;
+      cursor: pointer;
+    }
+
+    .menu-pinned-tile:hover {
+      background: rgba(56, 189, 248, 0.16);
+      border-color: rgba(56, 189, 248, 0.45);
+    }
+
+    .menu-item-btn[aria-disabled="true"] {
+      opacity: 0.42;
+      cursor: not-allowed;
+    }
+
+    details.insp-details {
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-size: 11.5px;
+      color: var(--studio-muted);
+    }
+
+    details.insp-details summary {
+      cursor: pointer;
+      font-weight: 680;
+      color: var(--studio-text);
+      list-style: revert;
+    }
+
+    .sheet-grabber {
+      width: 38px;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.28);
+      margin: 0 auto 2px;
+      flex-shrink: 0;
+    }
+
+    .sheet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sheet-title {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .menu-item-btn {
+      width: 100%;
+      border: 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      background: transparent;
+      padding: 9px 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .menu-item-btn:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+    }
+
+    .menu-item-btn[disabled] {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .shortcut-kbd {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    /* Telemetry U01 Grid */
+    .u01-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .u01-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 12px;
+      padding: 9px 10px;
+    }
+
+    .u01-label {
+      font-size: 10.5px;
+      color: #94a3b8;
+    }
+
+    .u01-val {
+      font-size: 15px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      margin-top: 2px;
+    }
+
+    /* ================= Lifecycle Overlay States ================= */
+    .lifecycle-banner {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 27;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(251, 191, 36, 0.5);
+      color: #fde68a;
+      font-size: 11px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    .lifecycle-banner[hidden] { display: none; }
+
+    .lifecycle-modal-cover {
+      position: absolute;
+      inset: 0;
+      z-index: 26;
+      background: rgba(9, 13, 20, 0.72);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 20px;
+      text-align: center;
+      color: #f8fafc;
+    }
+
+    .lifecycle-modal-cover[hidden] { display: none; }
+
+    /* Toast inside device screen */
+    .device-toast {
+      position: absolute;
+      top: 52px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 36;
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      color: #f8fafc;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 600;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 180ms var(--ease-standard), transform 220ms var(--ease-spring);
+      white-space: nowrap;
+    }
+
+    .device-toast.is-shown {
+      opacity: 1;
+      transform: translateX(-50%) translateY(4px);
+    }
+
+    /* ================= Right Feature Annotation Inspector ================= */
+    .inspector-aside {
+      background: rgba(14, 18, 28, 0.92);
+      border-left: 1px solid var(--studio-border);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      overflow-y: auto;
+    }
+
+    .studio-main.inspector-collapsed .inspector-aside {
+      display: none;
+    }
+
+    .insp-card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 14px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .insp-badge {
+      display: inline-flex;
+      width: fit-content;
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.16);
+      color: #7dd3fc;
+    }
+
+    .insp-badge.is-innovation {
+      background: rgba(52, 211, 153, 0.16);
+      color: #6ee7b7;
+    }
+
+    .insp-title {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .insp-p {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.55;
+      color: #cbd5e1;
+    }
+
+    .try-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .try-btn {
+      text-align: left;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      transition: background-color 140ms, border-color 140ms;
+    }
+
+    .try-btn:hover {
+      background: rgba(56, 189, 248, 0.12);
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+
+    /* ================= Native Modal Dialog (UX Spec & Matrix) ================= */
+    dialog.studio-dialog {
+      margin: auto;
+      padding: 0;
+      width: min(760px, calc(100vw - 32px));
+      max-height: min(84dvh, 760px);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: #121723;
+      color: #f3f6fc;
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.65);
+    }
+
+    /* modern-web-guidance: scope display styles under dialog[open] */
+    dialog.studio-dialog[open] {
+      display: flex;
+      flex-direction: column;
+    }
+
+    dialog.studio-dialog:modal {
+      overscroll-behavior: contain;
+    }
+
+    dialog.studio-dialog::backdrop {
+      background: rgba(4, 7, 13, 0.72);
+      backdrop-filter: blur(6px);
+      overflow: hidden;
+      overscroll-behavior: contain;
+    }
+
+    .dialog-head {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .dialog-body {
+      padding: 16px 20px 22px;
+      overflow-y: auto;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .matrix-table th,
+    .matrix-table td {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .matrix-table th {
+      background: rgba(255, 255, 255, 0.05);
+      color: #93c5fd;
+    }
+
+    @media (max-width: 1040px) {
+      .studio-main {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .inspector-aside {
+        border-left: 0;
+        border-top: 1px solid var(--studio-border);
+      }
+      .stage {
+        padding: 12px 10px 16px;
+      }
+      .device-bezel.mode-iphone-portrait {
+        width: min(382px, calc(100vw - 24px));
+      }
+      .device-bezel.mode-iphone-landscape {
+        width: min(790px, calc(100vw - 24px));
+        min-width: min(480px, calc(100vw - 24px));
+      }
+      .device-bezel.mode-ipad-pro {
+        width: min(900px, calc(100vw - 24px));
+        min-width: min(500px, calc(100vw - 24px));
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .device-bezel,
+      .mac-window-surface,
+      .floating-pill,
+      .quick-deck,
+      .device-toast,
+      .dock-app-btn {
+        transition: none;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="studio-shell">
+  <!-- Visually hidden polite live region present on page load (drag a11y rule) -->
+  <div class="visually-hidden" aria-live="polite" id="srLive"></div>
+
+  <header class="studio-header">
+    <div class="brand">
+      <div class="brand-logo" aria-hidden="true">KK</div>
+      <div>
+        <div class="brand-title">KKRemote 移动端交互设计 v2</div>
+        <div class="brand-sub">Liquid Glass 自适应材质 · 物理单窗本机零干扰 · Duo 竖排胶囊</div>
+      </div>
+    </div>
+
+    <div class="studio-controls">
+      <!-- Device Switcher Tabs (single row, arrow key support, no wrap) -->
+      <div class="studio-tablist" role="tablist" focusgroup="tablist nomemory" aria-label="设备与方向形态" id="deviceTablist">
+        <button type="button" class="studio-tab" role="tab" id="tab-iphone-p" aria-selected="true" focusgroupstart tabindex="0" data-device="iphone-portrait">iPhone 竖屏</button>
+        <button type="button" class="studio-tab" role="tab" id="tab-iphone-l" aria-selected="false" tabindex="-1" data-device="iphone-landscape">iPhone 横屏</button>
+        <button type="button" class="studio-tab" role="tab" id="tab-ipad" aria-selected="false" tabindex="-1" data-device="ipad-pro">iPad Pro 右侧轨</button>
+      </div>
+
+      <!-- Direct 1-Click Scene Pills + Synced Select -->
+      <div class="scene-pill-bar" role="group" aria-label="快速切换演示界面" id="scenePillBar">
+        <button type="button" class="scene-pill-btn" data-scene-pill="home" aria-pressed="false">连接主页</button>
+        <button type="button" class="scene-pill-btn" data-scene-pill="launcher" aria-pressed="false">启动台</button>
+        <button type="button" class="scene-pill-btn" data-scene-pill="wps" aria-pressed="true">WPS 表格</button>
+        <button type="button" class="scene-pill-btn" data-scene-pill="safari" aria-pressed="false">Safari / X</button>
+        <button type="button" class="scene-pill-btn" data-scene-pill="vscode" aria-pressed="false">VS Code</button>
+      </div>
+
+      <select id="scenarioSelect" class="visually-hidden" aria-label="画面场景选择器">
+        <option value="home">1. 未连接首页</option>
+        <option value="launcher">2. 窗口与 Dock 启动台</option>
+        <option value="wps" selected>3. WPS 表格</option>
+        <option value="safari">4. Safari / X</option>
+        <option value="vscode">5. VS Code / 终端</option>
+      </select>
+
+      <div class="studio-select-wrap">
+        <label for="lifecycleSelect">状态</label>
+        <select id="lifecycleSelect">
+          <option value="live" selected>Live 实时操控</option>
+          <option value="resizing">Resizing 按需对齐</option>
+          <option value="readonly">Read-Only 只读观看</option>
+          <option value="minimized">Minimized 已最小化</option>
+          <option value="reconnecting">Reconnecting 重连宽限</option>
+        </select>
+      </div>
+
+      <button type="button" class="studio-btn is-primary" id="openSpecModalBtn" command="show-modal" commandfor="specModalDialog">v2 对比总览</button>
+      <button type="button" class="studio-btn" id="toggleInspectorBtn">收起讲解栏</button>
+    </div>
+  </header>
+
+  <main class="studio-main" id="studioMain">
+    <section class="stage" aria-label="移动端交互设备画布">
+      <div class="stage-hint-strip" id="stageHintStrip">
+        <span class="hint-pill"><span class="hint-dot"></span>胶囊随画面亮暗自动切换 <b>Liquid Glass</b></span>
+        <span class="hint-pill">支持 <b>底部水平胶囊 ↔ 右侧竖排 Duo 胶囊</b> 与右缘收纳</span>
+        <span class="hint-pill">一键秒切 <b>可读铺满 1:1 ↔ 完整窗口全貌</b></span>
+      </div>
+
+      <!-- Device Shell -->
+      <div class="device-bezel mode-iphone-portrait" id="deviceBezel">
+        <div class="device-screen" id="deviceScreen">
+          <!-- Adaptive Status Bar with P010 Top-Edge Fusion -->
+          <div class="ios-statusbar theme-light" id="iosStatusbar">
+            <span>9:41</span>
+            <div class="dynamic-island" aria-hidden="true">
+              <span class="island-cam"></span>
+              <span class="island-hdr" id="islandHdrBadge">PQ HDR</span>
+            </div>
+            <div class="status-icons">
+              <span id="audioMiniFlag" hidden title="应用音频已开启">🔊</span>
+              <span>5G</span>
+              <span>88%</span>
+            </div>
+          </div>
+
+          <div class="device-toast" id="deviceToast"></div>
+
+          <div class="device-body">
+            <div class="viewport-stage" id="viewportStage">
+              <!-- iPad Right-Side Floating Liquid Glass Rail (iPhone Duo style) -->
+              <aside class="ipad-rail" id="ipadRail" role="toolbar" aria-orientation="vertical" aria-label="iPad 右侧悬浮 Liquid Glass 快控轨" aria-controls="macWindowSurface" focusgroup="toolbar wrap block">
+                <div class="rail-capsule-group" role="group" aria-label="窗口与菜单">
+                  <button type="button" class="rail-btn" id="railLauncherBtn" aria-label="窗口与 Dock 启动台" title="窗口与 Dock 启动台">
+                    <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <rect x="2.5" y="2.5" width="5.2" height="5.2" rx="1.4"/>
+                      <rect x="10.3" y="2.5" width="5.2" height="5.2" rx="1.4"/>
+                      <rect x="2.5" y="10.3" width="5.2" height="5.2" rx="1.4"/>
+                      <rect x="10.3" y="10.3" width="5.2" height="5.2" rx="1.4"/>
+                    </svg>
+                    <span class="rail-tip" aria-hidden="true">窗口与 Dock</span>
+                  </button>
+                  <span class="rail-sep" role="separator" aria-orientation="horizontal"></span>
+                  <button type="button" class="rail-btn" id="railMenuBarBtn" aria-label="Mac 原生菜单栏" title="Mac 原生菜单栏">
+                    <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M6.75 6.75V4.5a2.25 2.25 0 1 0-2.25 2.25h9a2.25 2.25 0 1 0-2.25-2.25v9a2.25 2.25 0 1 0 2.25-2.25h-9a2.25 2.25 0 1 0 2.25 2.25Z"/>
+                    </svg>
+                    <span class="rail-tip" aria-hidden="true">Mac 菜单栏</span>
+                  </button>
+                </div>
+
+                <div class="rail-capsule-group" role="group" aria-label="输入、对齐与快捷键路由">
+                  <button type="button" class="rail-btn" id="railImeBtn" aria-pressed="false" aria-label="中文 IME 与软键盘" title="中文 IME 与软键盘">
+                    <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <rect x="2" y="4" width="14" height="10" rx="2.2"/>
+                      <line x1="5" y1="7.5" x2="6" y2="7.5"/><line x1="8.5" y1="7.5" x2="9.5" y2="7.5"/><line x1="12" y1="7.5" x2="13" y2="7.5"/>
+                      <line x1="5.5" y1="11" x2="12.5" y2="11"/>
+                    </svg>
+                    <span class="rail-tip" aria-hidden="true">中文 IME / 键盘</span>
+                  </button>
+                  <button type="button" class="rail-btn" id="railOverviewBtn" aria-label="整屏对齐复位" title="整屏对齐复位 (ResizeRequest)">
+                    <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M6.5 3H3v3.5M11.5 3H15v3.5M15 11.5V15h-3.5M6.5 15H3v-3.5"/>
+                      <rect x="6" y="6" width="6" height="6" rx="1"/>
+                    </svg>
+                    <span class="rail-tip" aria-hidden="true">整屏对齐复位</span>
+                  </button>
+                  <span class="rail-sep" role="separator" aria-orientation="horizontal"></span>
+                  <button type="button" class="rail-pill-mini" id="ipadCmdRouteBtn" aria-pressed="true" aria-label="切换快捷键路由：当前 ⌘→Mac" title="切换外接键盘 ⌘ 路由">
+                    <span>⌘</span>
+                    <span id="ipadCmdRouteLabel">Mac</span>
+                    <span class="rail-tip" aria-hidden="true">⌘ 路由 · 发往 Mac</span>
+                  </button>
+                </div>
+
+                <div class="rail-capsule-group" role="group" aria-label="性能诊断与收纳">
+                  <button type="button" class="rail-btn" id="railDiagBtn" aria-pressed="false" aria-label="U01 性能诊断" title="U01 实时性能诊断">
+                    <svg width="17" height="17" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M3 13.5v-3M7.5 13.5V6.5M12 13.5v-5M15 13.5V4.5"/>
+                    </svg>
+                    <span class="rail-tip" aria-hidden="true">U01 实时诊断</span>
+                  </button>
+                  <span class="rail-sep" role="separator" aria-orientation="horizontal"></span>
+                  <button type="button" class="rail-btn" id="railCollapseBtn" aria-label="向右收起悬浮轨" title="向右收起侧边轨">
+                    <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M7.5 4.5 12 9l-4.5 4.5"/>
+                      <line x1="14" y1="4.5" x2="14" y2="13.5"/>
+                    </svg>
+                    <span class="rail-tip" aria-hidden="true">收起至右缘</span>
+                  </button>
+                </div>
+              </aside>
+              <button type="button" class="rail-restore-btn" id="railRestoreBtn" aria-label="展开右侧 Liquid Glass 快控轨" title="展开右侧快控轨">
+                <svg width="14" height="14" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M11.5 4.5 7 9l4.5 4.5"/>
+                </svg>
+              </button>
+              <!-- VIEW 1: Spatial Home v2 -->
+              <section class="view-panel home-view" id="viewHome" hidden>
+                <div class="home-topbar">
+                  <div>
+                    <h2 class="home-title">KKRemote</h2>
+                    <div style="font-size:11.5px;color:var(--studio-muted)">Window-First · 物理单窗原生串流</div>
+                  </div>
+                  <div style="display:flex;gap:8px">
+                    <button type="button" class="icon-circle-btn" id="homeDiagBtn" aria-label="U01 性能诊断" title="U01 性能诊断">
+                      <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 13.5v-3M7.5 13.5V6.5M12 13.5v-5M15 13.5V4.5"/></svg>
+                    </button>
+                    <button type="button" class="icon-circle-btn" id="homeSettingsBtn" aria-label="连接设置" title="连接设置">
+                      <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="2.6"/><path d="M9 2.5v1.8M9 13.7v1.8M2.5 9h1.8M13.7 9h1.8M4.4 4.4l1.3 1.3M12.3 12.3l1.3 1.3M13.6 4.4l-1.3 1.3M5.7 12.3l-1.3 1.3"/></svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="host-hero-card">
+                  <div class="host-row">
+                    <div>
+                      <div style="display:flex;align-items:center;gap:6px">
+                        <span style="width:8px;height:8px;border-radius:50%;background:#a855f7;display:inline-block" aria-hidden="true"></span>
+                        <span style="font-size:16px;font-weight:720">MBP-HOME</span>
+                      </div>
+                      <div style="font-size:11.5px;color:#cbd5e1;margin-top:2px">MacBook Pro M3 Max · Surge Ponte 直连</div>
+                    </div>
+                    <span class="host-badge-online">14 ms · Main10 PQ</span>
+                  </div>
+
+                  <div class="host-mode-pill">
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="2" y="3" width="12" height="10" rx="2"/><path d="M5 7h6"/></svg>
+                    <span>物理单窗直采 · 不启用虚拟屏 · 不打乱本机布局</span>
+                  </div>
+
+                  <div>
+                    <div style="font-size:10.5px;color:#94a3b8;font-weight:600;margin-bottom:6px">一键直达运行中窗口（左滑浏览）</div>
+                    <div class="home-win-strip">
+                      <button type="button" class="home-win-tile" data-home-jump="wps">
+                        <span style="font-size:10px;color:#4ade80;font-weight:700">WPS 表格 · 上次使用</span>
+                        <span style="font-size:12px;font-weight:650;color:#f8fafc">Q4预算汇总.xlsx</span>
+                        <span style="font-size:10px;color:#94a3b8">672×1084 · 2× HDR</span>
+                      </button>
+                      <button type="button" class="home-win-tile" data-home-jump="safari">
+                        <span style="font-size:10px;color:#38bdf8;font-weight:700">Safari · 网页</span>
+                        <span style="font-size:12px;font-weight:650;color:#f8fafc">X / 研发动态</span>
+                        <span style="font-size:10px;color:#94a3b8">窄宽重排 · 原位IME</span>
+                      </button>
+                      <button type="button" class="home-win-tile" data-home-jump="vscode">
+                        <span style="font-size:10px;color:#c084fc;font-weight:700">VS Code · 桌面 2</span>
+                        <span style="font-size:12px;font-weight:650;color:#f8fafc">ViewportGeometry</span>
+                        <span style="font-size:10px;color:#94a3b8">10-bit Dark EDR</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <button type="button" class="cta-primary" id="homeResumeBtn">继续上次窗口 · WPS 表格</button>
+                  <button type="button" class="cta-secondary" id="homeOpenLauncherBtn">打开窗口与 Mac Dock 启动台 (4)</button>
+                </div>
+
+                <div class="section-kicker">已配对主机（多主机身份染色预留 X01）</div>
+                <div class="secondary-host-list">
+                  <div class="mini-host-card">
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <span style="width:8px;height:8px;border-radius:50%;background:#34d399;display:inline-block" aria-hidden="true"></span>
+                      <div>
+                        <div style="font-weight:650">Studio-Mac-M4</div>
+                        <div style="font-size:11px;color:var(--studio-muted)">办公室 Tailscale · 待机可唤醒</div>
+                      </div>
+                    </div>
+                    <button type="button" class="studio-btn" id="switchSecondHostBtn">切换</button>
+                  </div>
+                  <button type="button" class="mini-host-card" style="width:100%;justify-content:center;color:#7dd3fc;cursor:pointer" id="addHostDemoBtn">
+                    ＋ 配对新 Mac 主机（扫码 / 6 位配对码）
+                  </button>
+                </div>
+              </section>
+
+              <!-- VIEW 2: Window & Dock Launcher v2 -->
+              <section class="view-panel launcher-view" id="viewLauncher" hidden>
+                <div class="home-topbar">
+                  <div>
+                    <h2 style="font-size:17px;font-weight:720">窗口与 Dock 启动台</h2>
+                    <div style="font-size:10.5px;color:#94a3b8">MBP-HOME · 物理窗口目录实时同步</div>
+                  </div>
+                  <button type="button" class="studio-btn" id="launcherBackBtn">返回画布</button>
+                </div>
+
+                <div class="search-box">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#94a3b8" stroke-width="1.8" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3 3"/></svg>
+                  <input type="search" id="launcherSearchInput" aria-label="搜索打开的窗口或 Mac 应用" placeholder="搜索应用名、窗口标题或空间…" />
+                </div>
+
+                <div class="space-filter-row" role="group" aria-label="macOS 桌面空间筛选" id="launcherSpaceFilter">
+                  <button type="button" class="space-filter-btn" data-space-filter="all" aria-pressed="true">全部窗口 (4)</button>
+                  <button type="button" class="space-filter-btn" data-space-filter="桌面 1" aria-pressed="false">当前空间 · 桌面 1</button>
+                  <button type="button" class="space-filter-btn" data-space-filter="其他" aria-pressed="false">其他桌面空间</button>
+                </div>
+
+                <div class="window-group-list" id="launcherWindowList"></div>
+
+                <div>
+                  <div class="section-kicker" style="margin-bottom:6px">Mac Dock 常驻应用（点击唤醒或冷启动）</div>
+                  <div class="mac-dock-shelf" id="launcherDockShelf"></div>
+                </div>
+              </section>
+
+              <!-- VIEW 3: Immersive Live Remote Workspace -->
+              <section class="view-panel workspace-view" id="viewWorkspace">
+                <!-- Lifecycle State Overlays -->
+                <div class="lifecycle-banner" id="lifecycleBanner" hidden>
+                  <span id="lifecycleBannerText"></span>
+                  <button type="button" class="studio-btn" id="lifecycleActionBtn" style="padding:2px 8px;font-size:10.5px" hidden>抢占控制</button>
+                </div>
+
+                <div class="lifecycle-modal-cover" id="lifecycleCover" hidden>
+                  <div style="font-size:26px" id="lifecycleCoverIcon">⏳</div>
+                  <div style="font-size:15px;font-weight:700" id="lifecycleCoverTitle">正在协商窗口布局</div>
+                  <div style="font-size:12px;color:#cbd5e1;max-width:260px" id="lifecycleCoverDesc">等待 Mac 宿主完成 ResizeRequest 事务并下发首帧</div>
+                  <button type="button" class="cta-primary" style="width:auto;padding:9px 18px;font-size:12.5px" id="lifecycleRecoverBtn">一键恢复实时连接</button>
+                </div>
+
+                <!-- Live Streaming Window Canvas -->
+                <div class="remote-canvas-viewport" id="remoteCanvasViewport">
+                  <div class="mac-window-surface" id="macWindowSurface"></div>
+
+                  <!-- Independent High-DPI Mac Cursor -->
+                  <div class="mac-cursor" id="macCursor" aria-hidden="true">
+                    <svg width="20" height="22" viewBox="0 0 20 22" fill="none">
+                      <path d="M2 1.5L17 12.2L10.3 13.4L13.5 19.6L10.8 20.9L7.6 14.6L2.4 18.2V1.5Z" fill="#0F172A" stroke="#FFFFFF" stroke-width="1.8" stroke-linejoin="round"/>
+                    </svg>
+                  </div>
+
+                  <!-- Simulated macOS Context Menu -->
+                  <div class="mac-context-menu" id="macContextMenu" hidden>
+                    <button type="button" class="mac-ctx-item" data-ctx="剪切 (⌘X)"><span>剪切</span><span class="shortcut-kbd">⌘X</span></button>
+                    <button type="button" class="mac-ctx-item" data-ctx="复制 (⌘C)"><span>复制</span><span class="shortcut-kbd">⌘C</span></button>
+                    <button type="button" class="mac-ctx-item" data-ctx="粘贴值 (⇧⌘V)"><span>粘贴值</span><span class="shortcut-kbd">⇧⌘V</span></button>
+                    <button type="button" class="mac-ctx-item" data-ctx="插入整行"><span>在上方插入行</span></button>
+                  </div>
+
+                  <!-- Precision Offset Loupe (2.2x) -->
+                  <div class="precision-loupe" id="precisionLoupe" hidden>
+                    <div class="loupe-zoom-text" id="loupeTargetText">¥48,200</div>
+                    <div class="loupe-sub" id="loupeCoordText">2.2× · C4</div>
+                    <div class="loupe-crosshair"></div>
+                  </div>
+
+                  <!-- Overview Mini-Map Peek -->
+                  <div class="minimap-peek" id="minimapPeek" hidden title="拖动或点击鸟瞰小地图跳转视口">
+                    <div style="display:flex;justify-content:space-between;font-size:9.5px;color:#cbd5e1;font-weight:600">
+                      <span>鸟瞰地图</span>
+                      <span id="minimapCloseBtn" style="cursor:pointer">✕</span>
+                    </div>
+                    <div class="minimap-surface" id="minimapSurface">
+                      <div class="minimap-viewport-box" id="minimapViewportBox"></div>
+                    </div>
+                  </div>
+
+                  <!-- v2 Adaptive Liquid Glass Pill (Bottom Horizontal OR Right-Side Duo Vertical) -->
+                  <div class="floating-pill no-transition" id="floatingPill">
+                    <button type="button" class="pill-grip" id="pillGrip" aria-label="悬浮控制胶囊拖动手柄，可用方向键微调或在快控盘切换四角及右侧竖排">⋮⋮</button>
+                    <button type="button" class="pill-seg-btn" id="pillSwitchBtn" aria-label="切换窗口或打开启动台" title="切换窗口或打开启动台">
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><rect x="2" y="2" width="5" height="5" rx="1.2"/><rect x="9" y="2" width="5" height="5" rx="1.2"/><rect x="2" y="9" width="5" height="5" rx="1.2"/><rect x="9" y="9" width="5" height="5" rx="1.2"/></svg>
+                      <span>换窗</span>
+                    </button>
+                    <span class="pill-divider"></span>
+                    <button type="button" class="pill-seg-btn" id="pillContextBtn" aria-label="情景主钮：拇指触控垫或中文输入" title="情景主钮：拇指触控垫 / 输入">
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><rect x="2" y="3" width="12" height="10" rx="2"/><line x1="2" y1="9.5" x2="14" y2="9.5"/></svg>
+                      <span>触控垫</span>
+                    </button>
+                    <span class="pill-divider"></span>
+                    <button type="button" class="pill-seg-btn" id="pillDeckBtn" aria-label="展开 Bento 快控盘" title="展开 Bento 快控盘">
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="3.5" cy="8" r="1.3"/><circle cx="8" cy="8" r="1.3"/><circle cx="12.5" cy="8" r="1.3"/></svg>
+                    </button>
+                    <button type="button" class="pill-seg-btn pill-tuck-btn" id="pillTuckBtn" aria-label="收拢胶囊至右缘拉手" title="收拢至右缘拉手">
+                      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 4 10.5 8l-4 4"/><line x1="12.8" y1="4" x2="12.8" y2="12"/></svg>
+                    </button>
+                  </div>
+
+                  <button type="button" class="phone-pill-restore-btn" id="phonePillRestoreBtn" aria-label="展开 Liquid Glass 控制胶囊" title="展开控制胶囊">
+                    <svg width="13" height="13" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M11.5 4.5 7 9l4.5 4.5"/>
+                    </svg>
+                  </button>
+
+                  <!-- v2 Control-Center Bento Quick-Deck Overlay -->
+                  <div class="quick-deck" id="quickDeck" hidden>
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                      <div>
+                        <div style="font-size:12.5px;font-weight:720">快控中心 · Quick-Deck</div>
+                        <div style="font-size:10px;color:var(--lg-muted)">物理单窗直采 · 10-bit PQ HDR</div>
+                      </div>
+                      <button type="button" class="qd-chip" id="closeQuickDeckBtn" aria-label="收起快控盘">收起 ✕</button>
+                    </div>
+
+                    <div>
+                      <div class="qd-section-label">操控模式 · 单步直切</div>
+                      <div class="qd-seg-grid" id="qdModeGrid">
+                        <button type="button" class="qd-seg-btn is-active" data-mode="direct">
+                          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="8" cy="6" r="2.5"/><path d="M8 8.5v5"/></svg>
+                          <span>直触</span>
+                        </button>
+                        <button type="button" class="qd-seg-btn" data-mode="trackpad">
+                          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="2" y="3" width="12" height="10" rx="2"/><path d="M6 13v-3h4v3"/></svg>
+                          <span>整屏垫</span>
+                        </button>
+                        <button type="button" class="qd-seg-btn" data-mode="thumb">
+                          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="2" y="3" width="12" height="10" rx="2"/><line x1="2" y1="9" x2="14" y2="9"/></svg>
+                          <span>拇指垫</span>
+                        </button>
+                        <button type="button" class="qd-seg-btn" data-mode="pan">
+                          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M8 2v12M2 8h12M5 5 2 8l3 3M11 5l3 3-3 3"/></svg>
+                          <span>平移看</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div class="qd-section-label">视口呈现（不改乱本机桌面）与精准辅助</div>
+                      <div class="qd-bento-grid">
+                        <button type="button" class="qd-chip is-active" id="vpSmartBtn">⤢ 可读铺满 (1:1)</button>
+                        <button type="button" class="qd-chip" id="vpFitBtn">🗖 完整窗口全貌</button>
+                        <button type="button" class="qd-chip" id="toggleLoupeBtn">⌖ 2.2× 偏置放大镜</button>
+                        <button type="button" class="qd-chip" id="toggleMinimapBtn">⊞ 鸟瞰小地图</button>
+                      </div>
+                      <div class="qd-pill-row" style="margin-top:5px">
+                        <button type="button" class="qd-chip" data-anchor="topleft">↖ 主区</button>
+                        <button type="button" class="qd-chip" data-anchor="ribbon">↑ 工具栏</button>
+                        <button type="button" class="qd-chip" data-anchor="right">↗ 右侧统计</button>
+                        <button type="button" class="qd-chip" data-anchor="bottom">↙ 底部 Sheet</button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div class="qd-section-label">桌面桥接与画质档位</div>
+                      <div class="qd-bento-grid">
+                        <button type="button" class="qd-chip" id="qdMenuBarBtn">⌘ Mac 菜单栏</button>
+                        <button type="button" class="qd-chip" id="qdImeBtn">⌨ 浮动中文 IME</button>
+                        <button type="button" class="qd-chip" id="qdClipboardBtn">⎘ 粘贴剪贴板</button>
+                        <button type="button" class="qd-chip" id="qdAudioBtn">♪ 应用音频</button>
+                      </div>
+                      <div class="qd-pill-row" style="margin-top:5px" id="qdQualityRow">
+                        <button type="button" class="qd-chip is-active" data-quality="hdr">原画 2× · 10-bit PQ</button>
+                        <button type="button" class="qd-chip" data-quality="ll">极速低延迟</button>
+                        <button type="button" class="qd-chip" data-quality="eco">省流 4Mbps</button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div class="qd-section-label">胶囊停靠姿态（含 Duo 右侧竖排模式）</div>
+                      <div class="qd-pill-row" id="qdCornerRow">
+                        <button type="button" class="qd-chip" data-corner="side-right">⇥ 右侧竖排 (Duo)</button>
+                        <button type="button" class="qd-chip is-active" data-corner="br">↘ 右下</button>
+                        <button type="button" class="qd-chip" data-corner="bl">↙ 左下</button>
+                        <button type="button" class="qd-chip" data-corner="tr">↗ 右上</button>
+                        <button type="button" class="qd-chip" data-corner="tl">↖ 左上</button>
+                      </div>
+                    </div>
+
+                    <div class="qd-footer">
+                      <button type="button" class="qd-footer-btn" id="qdDiagBtn">U01 诊断</button>
+                      <button type="button" class="qd-footer-btn" id="qdSettingsBtn">连接设置</button>
+                      <button type="button" class="qd-footer-btn" id="qdStopBtn" style="color:#fb7185">返回主页</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Innovation 1: One-Handed Thumb-Zone Trackpad Drawer -->
+                <div class="thumb-trackpad-drawer" id="thumbTrackpadDrawer" hidden>
+                  <div class="trackpad-head">
+                    <span><b>拇指触控垫</b> · 滑动映射顶部工具栏与细小按钮</span>
+                    <button type="button" class="studio-btn" id="closeThumbPadBtn" style="padding:2px 8px;font-size:10.5px">收起</button>
+                  </div>
+                  <div class="trackpad-surface" id="thumbPadSurface">
+                    在此滑动拇指移动上方 Mac 光标 · 轻点左键
+                  </div>
+                  <div class="trackpad-buttons">
+                    <button type="button" class="tp-btn" id="tpLeftClickBtn">左键点击</button>
+                    <button type="button" class="tp-btn" id="tpDragLockBtn">🔓 拖选锁</button>
+                    <button type="button" class="tp-btn" id="tpRightClickBtn">右键菜单</button>
+                    <button type="button" class="tp-btn" id="tpScrollDownBtn">⇅ 滚轮</button>
+                  </div>
+                </div>
+
+                <!-- Dual-Track IME Dock + Sticky Modifiers + 60% Keyboard -->
+                <div class="ime-dock-drawer" id="imeDockDrawer" hidden>
+                  <div class="ime-input-row">
+                    <span class="ime-target-badge" id="imeTargetBadge">WPS · C8</span>
+                    <input type="text" class="ime-field" id="imeInputField" placeholder="输入拼音 (如 zhong / ni) 或文本，独立缓冲后提交…" />
+                    <button type="button" class="studio-btn is-primary" id="imeCommitBtn" style="padding:5px 10px">✓ 提交</button>
+                    <button type="button" class="studio-btn" id="imeCloseBtn" style="padding:5px 8px">✕</button>
+                  </div>
+
+                  <div class="pinyin-strip" id="pinyinStrip" hidden>
+                    <span style="color:#7dd3fc;font-weight:600">IME 候选:</span>
+                    <div id="pinyinCandidates" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+                  </div>
+
+                  <div class="modifier-ribbon" id="modifierRibbon">
+                    <button type="button" class="mod-key" data-mod="⌘" title="单击待发 / 双击锁定">⌘</button>
+                    <button type="button" class="mod-key" data-mod="⌥">⌥</button>
+                    <button type="button" class="mod-key" data-mod="⌃">⌃</button>
+                    <button type="button" class="mod-key" data-mod="⇧">⇧</button>
+                    <button type="button" class="mod-key" data-sendkey="Esc">Esc</button>
+                    <button type="button" class="mod-key" data-sendkey="Tab">Tab</button>
+                    <button type="button" class="mod-key" data-sendkey="⌘C">⌘C</button>
+                    <button type="button" class="mod-key" data-sendkey="⌘V">⌘V</button>
+                    <button type="button" class="mod-key" id="smartClipboardChip" style="color:#6ee7b7">📋 贴“+18.4%”</button>
+                    <button type="button" class="mod-key" id="toggle60KbdBtn">⌨ 60%键盘</button>
+                  </div>
+
+                  <div class="soft-kbd-60" id="softKbd60" hidden>
+                    <div class="kbd-row">
+                      <button type="button" class="kbd-cap">Q</button><button type="button" class="kbd-cap">W</button><button type="button" class="kbd-cap">E</button><button type="button" class="kbd-cap">R</button><button type="button" class="kbd-cap">T</button><button type="button" class="kbd-cap">Y</button><button type="button" class="kbd-cap">U</button><button type="button" class="kbd-cap">I</button><button type="button" class="kbd-cap">O</button><button type="button" class="kbd-cap">P</button>
+                    </div>
+                    <div class="kbd-row">
+                      <button type="button" class="kbd-cap">A</button><button type="button" class="kbd-cap">S</button><button type="button" class="kbd-cap">D</button><button type="button" class="kbd-cap">F</button><button type="button" class="kbd-cap">G</button><button type="button" class="kbd-cap">H</button><button type="button" class="kbd-cap">J</button><button type="button" class="kbd-cap">K</button><button type="button" class="kbd-cap">L</button><button type="button" class="kbd-cap">↵</button>
+                    </div>
+                    <div class="kbd-row">
+                      <button type="button" class="kbd-cap">⇧</button><button type="button" class="kbd-cap">Z</button><button type="button" class="kbd-cap">X</button><button type="button" class="kbd-cap">C</button><button type="button" class="kbd-cap">V</button><button type="button" class="kbd-cap">B</button><button type="button" class="kbd-cap">N</button><button type="button" class="kbd-cap">M</button><button type="button" class="kbd-cap" style="flex:2">Space</button><button type="button" class="kbd-cap">⌫</button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <!-- In-Device Sheet Backdrop: Mac MenuBar / U01 Diagnostics / Connection Settings -->
+          <div class="device-sheet-backdrop" id="deviceSheetBackdrop" hidden>
+            <div class="device-sheet" id="deviceSheetBody"></div>
+          </div>
+
+          <div class="home-indicator" aria-hidden="true"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Live UX Inspector Sidebar v2 -->
+    <aside class="inspector-aside" id="inspectorAside" aria-label="交互讲解与 Casement 对比栏">
+      <div class="insp-card">
+        <span class="insp-badge is-innovation" id="inspBadge">v2 核心重构</span>
+        <h3 class="insp-title" id="inspTitle">自适应 Liquid Glass + 双姿态胶囊</h3>
+        <p class="insp-p" id="inspParity">
+          <b>Casement 基线：</b>单窗无背景串流、可拖拽控制入口与 Dock/MenuBar 调起。
+        </p>
+        <p class="insp-p" id="inspInnovation">
+          <b>KKRemote v2 优化：</b>全端统一内容感知 Liquid Glass（随 WPS 浅色 / VS Code 暗色自动反色）；支持底部胶囊与右侧竖排 Duo 侧边胶囊一键切换；默认物理单窗直采不打乱本机桌面。
+        </p>
+        <p class="insp-p" style="color:#93c5fd;font-size:11px" id="inspContract">
+          <b>对应文档：</b>ui-gemini/README.md &amp; 02 / 05
+        </p>
+      </div>
+
+      <div class="insp-card">
+        <h3 class="insp-title" style="font-size:13px">一键体验 v2 关键交互设计</h3>
+        <div class="try-list">
+          <button type="button" class="try-btn" data-try="duo-pill">
+            <span>⇥ 切换 iPhone 右侧竖排 Duo 胶囊（释放底栏）</span>
+            <span>→</span>
+          </button>
+          <button type="button" class="try-btn" data-try="whole-fit">
+            <span>🗖 一键对比「完整窗口全貌 ↔ 可读铺满」</span>
+            <span>→</span>
+          </button>
+          <button type="button" class="try-btn" data-try="ipad-glass">
+            <span>▭ 切到 iPad 右侧 Liquid Glass 轨 + 内部滚动</span>
+            <span>→</span>
+          </button>
+          <button type="button" class="try-btn" data-try="thumb">
+            <span>▭ 打开单手拇指触控垫操控顶部红绿灯</span>
+            <span>→</span>
+          </button>
+          <button type="button" class="try-btn" data-try="loupe">
+            <span>⌖ 开启 2.2× 偏置放大镜精准瞄准单元格</span>
+            <span>→</span>
+          </button>
+          <button type="button" class="try-btn" data-try="menubar">
+            <span>⌘ 打开 MenuBar 置顶 Bento 磁贴 + 搜索</span>
+            <span>→</span>
+          </button>
+          <button type="button" class="try-btn" data-try="safari-ime">
+            <span>⌨ 切到 Safari/X 演示原位中文拼音缓冲</span>
+            <span>→</span>
+          </button>
+          <button type="button" class="try-btn" data-try="vscode-hdr">
+            <span>☾ VS Code 曜石玻璃自动切换 + 60% 键盘</span>
+            <span>→</span>
+          </button>
+        </div>
+      </div>
+
+      <details class="insp-details">
+        <summary>v2 宿主契约与设计边界说明</summary>
+        <p style="margin:8px 0 0;line-height:1.55">
+          1. <b>物理单窗本机零干扰</b>：默认直采 Mac 物理窗口，不创建虚拟显示器、不擅自改乱本机桌面窗口排布；按需提供显式画布对齐。<br/>
+          2. <b>材质无障碍</b>：基于 <code>oklab</code> 感知混色，亮暗双态均保障正文对比度 ≥ 4.5:1、交互边线 ≥ 3:1。<br/>
+          3. 本原型仅位于 <code style="color:#7dd3fc">ui-gemini/</code>，未修改任何 Swift 工程实现代码。
+        </p>
+      </details>
+    </aside>
+  </main>
+</div>
+
+<!-- Native Modal Dialog (Spec & Casement Parity Matrix) -->
+<dialog class="studio-dialog" id="specModalDialog" aria-labelledby="specModalTitle" closedby="any">
+  <div class="dialog-head">
+    <div>
+      <h2 id="specModalTitle" style="font-size:16px;font-weight:720">KKRemote v2 设计升级总表（Casement 对标 + Liquid Glass 创新）</h2>
+      <div style="font-size:12px;color:var(--studio-muted)">对应设计规范 ui-gemini/README.md &amp; 01–06 章节</div>
+    </div>
+    <form method="dialog">
+      <button type="submit" value="close" class="studio-btn" autofocus>关闭</button>
+    </form>
+  </div>
+  <div class="dialog-body">
+    <table class="matrix-table">
+      <thead>
+        <tr>
+          <th style="width:20%">维度</th>
+          <th style="width:36%">Casement 基准体验 (Parity Target)</th>
+          <th style="width:44%">KKRemote 优化与创新点</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>画质与色彩</b></td>
+          <td>8-bit BGRA/sRGB HEVC Main；手持端上限 4Mbps / 2×；平板 6Mbps / 1.5×</td>
+          <td>突破锁死上限，保留 <b>Main10 10-bit PQ HDR</b> 与 2× Retina；<b>P010 顶部颜色融合</b>延伸进 iPhone 安全区，彻底消除黑边。</td>
+        </tr>
+        <tr>
+          <td><b>视觉材质系统 (v2)</b></td>
+          <td>基础深色半透明浮层与系统菜单</td>
+          <td><b>全端内容感知 Liquid Glass（oklab 混色）</b>：随底层 Mac 画面自动切换亮霜白玻璃（WPS/Safari）与深邃曜石玻璃（VS Code Dark EDR），全线性矢量符号。</td>
+        </tr>
+        <tr>
+          <td><b>物理单窗与视口 (v2)</b></td>
+          <td>自动请求缩小窗口或通用缩放适配</td>
+          <td><b>本机零干扰物理单窗直采</b>：默认不创建虚拟屏、不擅自改乱本机布局；iPhone 一键秒切<b>可读铺满 1:1 ↔ 完整窗口全貌</b> + 鸟瞰小地图瞬移。</td>
+        </tr>
+        <tr>
+          <td><b>单手操控与胶囊 (v2)</b></td>
+          <td>全局双模式（Direct Touch / 全屏 Trackpad）+ 悬停圆钮</td>
+          <td><b>双姿态胶囊（底部水平 ↔ 右侧竖排 Duo 侧边态）</b> + 右缘窄拉手收起；配合<b>拇指触控垫</b>与 <b>2.2× 偏置放大镜</b>。</td>
+        </tr>
+        <tr>
+          <td><b>窗口与菜单调用 (v2)</b></td>
+          <td>WindowRegistry + Dock App + AX MenuBar 菜单树</td>
+          <td>主页活跃窗口一触直达、启动台<b>多桌面空间筛选</b>；<b>Bento 快控中心</b> + MenuBar <b>2×2 置顶磁贴</b>与模糊检索。</td>
+        </tr>
+        <tr>
+          <td><b>中文输入法 (IME)</b></td>
+          <td>SoftKeyboard 60%/compact + 修饰键锁存 + markedText 缓冲</td>
+          <td><b>双轨混合 IME</b>：网页场景原位透明输入，桌面表格/IDE 唤醒不挡视区的<b>智能浮动输入停靠条</b> + 一键剪贴板胶囊。</td>
+        </tr>
+        <tr>
+          <td><b>iPad 大屏工作流</b></td>
+          <td>原生 UIScene 多窗口、外接键鼠悬停</td>
+          <td><b>右侧悬浮 Liquid Glass 竖排胶囊（参考 iPhone Duo）</b> + <b>全宽整屏呈窗</b>：右缘三组磨砂胶囊支持随画面亮暗自适应、滑动直接滚动桌面内部内容。</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</dialog>
+
+<script>
+(() => {
+  'use strict';
+
+  /* ================= Application State ================= */
+  const state = {
+    device: 'iphone-portrait', // iphone-portrait | iphone-landscape | ipad-pro
+    railCollapsed: false,
+    ipadCmdToMac: true,
+    scenario: 'wps', // home | launcher | wps | safari | vscode
+    activeApp: 'wps', // wps | safari | vscode
+    lifecycle: 'live', // live | resizing | readonly | minimized | reconnecting
+    mode: 'direct', // direct | trackpad | thumb | pan
+    viewportMode: 'smart', // smart | fit
+    loupeActive: false,
+    minimapOpen: false,
+    quickDeckOpen: false,
+    imeOpen: false,
+    kbd60Open: false,
+    audioOn: false,
+    hdrOn: true,
+    quality: 'hdr',
+    sheet: null, // null | 'menubar' | 'diag' | 'settings'
+    panX: 0,
+    panY: 0,
+    scale: 1,
+    pillCorner: 'br', // tl | tr | bl | br | side-right
+    pillTucked: false,
+    spaceFilter: 'all',
+    pillFreePos: null,
+    cursorX: 140,
+    cursorY: 110,
+    dragLock: false,
+    selectedCell: 'C4',
+    cellValues: {
+      B3: '云算力节点', C3: '¥48,200', D3: '+18.4%',
+      B4: '视频编码流', C4: '¥31,500', D4: '+12.1%',
+      B5: '边缘加速节点', C5: '¥24,800', D5: '+9.5%',
+      B6: '存储与回源', C6: '¥15,350', D6: '+4.2%',
+      B7: '安全合规审计', C7: '¥8,600', D7: '+2.0%',
+      B8: 'Q4总预算', C8: '¥128,450', D8: '+13.8%'
+    },
+    safariDraft: '',
+    vscodeInput: 'swift test --filter ViewportGeometryTests',
+    modifiers: { '⌘': 0, '⌥': 0, '⌃': 0, '⇧': 0 }, // 0=off, 1=armed, 2=locked
+    menuFilter: '',
+    windows: [
+      { id: 'wps', app: 'WPS Office', title: 'Q4产品预算汇总.xlsx', spec: '672×1084 · 当前聚焦', space: '桌面 1', bg: '#eaecef', fg: '#1e293b', iconBg: '#16a34a', iconTxt: 'W', running: true },
+      { id: 'wps2', app: 'WPS Office', title: '2026产品路线规划.docx', spec: '960×1180 · 后台窗口', space: '桌面 1', bg: '#f1f5f9', fg: '#334155', iconBg: '#2563eb', iconTxt: 'W', running: true, target: 'wps' },
+      { id: 'safari', app: 'Safari', title: 'X / 研发动态时间线', spec: '390pt 自适应重排', space: '桌面 1', bg: '#ffffff', fg: '#0f172a', iconBg: '#0ea5e9', iconTxt: '🧭', running: true },
+      { id: 'vscode', app: 'VS Code', title: 'KKRemote — ViewportGeometry.swift', spec: '暗色模式 · EDR HDR', space: '桌面 2 (其他空间)', bg: '#18181b', fg: '#f4f4f5', iconBg: '#3b82f6', iconTxt: '{}', running: true }
+    ],
+    dockApps: [
+      { id: 'finder', name: 'Finder', icon: '☺', bg: 'linear-gradient(135deg,#60a5fa,#2563eb)', running: true, target: 'wps' },
+      { id: 'wps', name: 'WPS', icon: 'W', bg: 'linear-gradient(135deg,#ef4444,#dc2626)', running: true, target: 'wps' },
+      { id: 'safari', name: 'Safari', icon: '🧭', bg: 'linear-gradient(135deg,#38bdf8,#0284c7)', running: true, target: 'safari' },
+      { id: 'vscode', name: 'VS Code', icon: '{}', bg: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', running: true, target: 'vscode' },
+      { id: 'terminal', name: 'Terminal', icon: '>_', bg: 'linear-gradient(135deg,#27272a,#09090b)', running: false, target: 'vscode' }
+    ]
+  };
+
+  /* ================= DOM References ================= */
+  const el = {
+    srLive: document.getElementById('srLive'),
+    studioMain: document.getElementById('studioMain'),
+    stageHintStrip: document.getElementById('stageHintStrip'),
+    deviceBezel: document.getElementById('deviceBezel'),
+    deviceScreen: document.getElementById('deviceScreen'),
+    iosStatusbar: document.getElementById('iosStatusbar'),
+    islandHdrBadge: document.getElementById('islandHdrBadge'),
+    audioMiniFlag: document.getElementById('audioMiniFlag'),
+    deviceToast: document.getElementById('deviceToast'),
+    scenarioSelect: document.getElementById('scenarioSelect'),
+    lifecycleSelect: document.getElementById('lifecycleSelect'),
+    viewportStage: document.getElementById('viewportStage'),
+    viewHome: document.getElementById('viewHome'),
+    viewLauncher: document.getElementById('viewLauncher'),
+    viewWorkspace: document.getElementById('viewWorkspace'),
+    remoteCanvasViewport: document.getElementById('remoteCanvasViewport'),
+    macWindowSurface: document.getElementById('macWindowSurface'),
+    macCursor: document.getElementById('macCursor'),
+    macContextMenu: document.getElementById('macContextMenu'),
+    precisionLoupe: document.getElementById('precisionLoupe'),
+    loupeTargetText: document.getElementById('loupeTargetText'),
+    loupeCoordText: document.getElementById('loupeCoordText'),
+    minimapPeek: document.getElementById('minimapPeek'),
+    minimapSurface: document.getElementById('minimapSurface'),
+    minimapViewportBox: document.getElementById('minimapViewportBox'),
+    floatingPill: document.getElementById('floatingPill'),
+    pillGrip: document.getElementById('pillGrip'),
+    pillSwitchBtn: document.getElementById('pillSwitchBtn'),
+    pillContextBtn: document.getElementById('pillContextBtn'),
+    pillDeckBtn: document.getElementById('pillDeckBtn'),
+    quickDeck: document.getElementById('quickDeck'),
+    thumbTrackpadDrawer: document.getElementById('thumbTrackpadDrawer'),
+    thumbPadSurface: document.getElementById('thumbPadSurface'),
+    imeDockDrawer: document.getElementById('imeDockDrawer'),
+    imeTargetBadge: document.getElementById('imeTargetBadge'),
+    imeInputField: document.getElementById('imeInputField'),
+    pinyinStrip: document.getElementById('pinyinStrip'),
+    pinyinCandidates: document.getElementById('pinyinCandidates'),
+    softKbd60: document.getElementById('softKbd60'),
+    deviceSheetBackdrop: document.getElementById('deviceSheetBackdrop'),
+    deviceSheetBody: document.getElementById('deviceSheetBody'),
+    lifecycleBanner: document.getElementById('lifecycleBanner'),
+    lifecycleBannerText: document.getElementById('lifecycleBannerText'),
+    lifecycleActionBtn: document.getElementById('lifecycleActionBtn'),
+    lifecycleCover: document.getElementById('lifecycleCover'),
+    lifecycleCoverIcon: document.getElementById('lifecycleCoverIcon'),
+    lifecycleCoverTitle: document.getElementById('lifecycleCoverTitle'),
+    lifecycleCoverDesc: document.getElementById('lifecycleCoverDesc'),
+    lifecycleRecoverBtn: document.getElementById('lifecycleRecoverBtn'),
+    launcherSearchInput: document.getElementById('launcherSearchInput'),
+    launcherWindowList: document.getElementById('launcherWindowList'),
+    launcherDockShelf: document.getElementById('launcherDockShelf'),
+    specModalDialog: document.getElementById('specModalDialog'),
+    inspBadge: document.getElementById('inspBadge'),
+    inspTitle: document.getElementById('inspTitle'),
+    inspParity: document.getElementById('inspParity'),
+    inspInnovation: document.getElementById('inspInnovation'),
+    inspContract: document.getElementById('inspContract')
+  };
+
+  /* ================= Utilities ================= */
+  let toastTimer = null;
+  function showToast(msg) {
+    el.deviceToast.textContent = msg;
+    el.deviceToast.classList.add('is-shown');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      el.deviceToast.classList.remove('is-shown');
+    }, 1800);
+  }
+
+  let liveClearTimer = null;
+  function announceA11y(text) {
+    el.srLive.textContent = text;
+    clearTimeout(liveClearTimer);
+    liveClearTimer = setTimeout(() => {
+      el.srLive.textContent = '';
+    }, 1000);
+  }
+
+  function updateInspector(key) {
+    const notes = {
+      wps: {
+        badge: 'v2 视觉与视口升级',
+        isInnovation: true,
+        title: '物理单窗直采 + 内容感知亮霜 Liquid Glass',
+        parity: '<b>Casement 基线：</b>单窗捕获无背景串流；手持端 2×/4Mbps SDR 编码。',
+        innovation: '<b>KKRemote v2：</b>默认直采物理窗口（不打乱本机桌面布局），支持「可读铺满 1:1 ↔ 完整窗口全貌」一键切换；底层为浅色 WPS 时，控制胶囊与 Bento 快控盘自动切为<b>高透亮霜白玻璃</b>，采样顶色延伸进动态岛。',
+        contract: '<b>对应设计：</b>02-iphone-interface-and-adaptive-viewport.md'
+      },
+      duoPill: {
+        badge: 'v2 单手人机工程',
+        isInnovation: true,
+        title: 'iPhone 右侧竖排 Duo 侧边胶囊（零底栏遮挡）',
+        parity: '<b>传统方案：</b>底部工具条或宽胶囊常遮挡表格 Sheet 标签与聊天输入框。',
+        innovation: '<b>KKRemote v2：</b>借鉴 iPhone Duo（iOS 27）竖排侧边按钮，iPhone 可一键将控制胶囊切至<b>右侧竖排悬浮态</b>（横屏默认启用），还可向右收拢为窄边拉手 <code>◂</code>，100% 释放底边像素。',
+        contract: '<b>对应设计：</b>02-iphone-interface-and-adaptive-viewport.md §1.3'
+      },
+      wholeFit: {
+        badge: 'v2 本机零干扰视口',
+        isInnovation: true,
+        title: '完整窗口全貌 ↔ 可读铺满 一键秒切',
+        parity: '<b>痛点：</b>强制改小 Mac 物理窗口会打乱用户本机桌面排布。',
+        innovation: '<b>KKRemote v2：</b>保持 Mac 物理窗口原尺寸不变，客户端秒切「完整窗口全貌（P010 原生取色衬底，0 裁剪）」与「可读铺满 1:1（保留清晰字号 + 小地图瞬移）」。',
+        contract: '<b>对应设计：</b>02-iphone-interface-and-adaptive-viewport.md §2.1'
+      },
+      thumb: {
+        badge: 'KKRemote 核心创新',
+        isInnovation: true,
+        title: '单手拇指触控垫 (Thumb-Zone Trackpad)',
+        parity: '<b>Casement 基线：</b>全屏触控板可操控光标，但双手或大拇指难同时兼顾顶部。',
+        innovation: '<b>KKRemote 创新：</b>屏幕下 1/3 滑出透明玻璃触控垫，拇指小幅移动即可驱动顶部 Mac 红绿灯与工具栏光标，配合「拖选锁」与「一键右键菜单」。',
+        contract: '<b>对应设计：</b>03-touch-trackpad-and-gesture-system.md'
+      },
+      loupe: {
+        badge: 'KKRemote 精准操控',
+        isInnovation: true,
+        title: '2.2× 偏置防遮挡放大镜',
+        parity: '<b>Casement 基线：</b>依赖标准点按或缩放后点击，细密单元格易误触。',
+        innovation: '<b>KKRemote 创新：</b>在直触模式下按住/开启放大镜，十字准星视窗固定出现在手指上方 72pt，零手指遮挡，精准命中 WPS 单元格与按钮。',
+        contract: '<b>对应设计：</b>03-touch-trackpad-and-gesture-system.md'
+      },
+      minimap: {
+        badge: 'KKRemote 空间导航',
+        isInnovation: true,
+        title: '鸟瞰小地图 (Overview Peek)',
+        parity: '<b>Casement 基线：</b>切换缩放查看全局后需再手动放大找回局部。',
+        innovation: '<b>KKRemote 创新：</b>左上角浮动迷你视口，蓝色线框标示当前可见区；点拖蓝框瞬间横移到右侧统计列或底部 Sheet，兼顾清晰度与全局感。',
+        contract: '<b>对应设计：</b>02-iphone-interface-and-adaptive-viewport.md'
+      },
+      menubar: {
+        badge: 'Casement Parity + 增强',
+        isInnovation: false,
+        title: 'Mac 原生 MenuBar + Spotlight 模糊搜索',
+        parity: '<b>Casement 基线：</b>通过 AX 抓取当前焦点 Mac 应用的原生菜单栏结构与快捷键并远程触发。',
+        innovation: '<b>KKRemote 增强：</b>加入跨层级实时拼音/关键词检索（如搜“导出”直达 <code>文件 ▸ 导出为 PDF</code>）与顶部高频钉选胶囊，减少手机多级点按。',
+        contract: '<b>对应设计：</b>04-keyboard-ime-and-menubar.md'
+      },
+      safari: {
+        badge: '双轨 IME 创新',
+        isInnovation: true,
+        title: 'Safari / X 自适应重排 + 原位透明中文 IME',
+        parity: '<b>Casement 基线：</b>支持 <code>markedText</code> 组合态缓冲保护与辅助工具条。',
+        innovation: '<b>KKRemote 创新：</b>像 Safari/X 这类可重排窗口直接匹配 390pt 宽，点击发帖框原位弹出透明中文输入覆盖层，候选词本地确认后再整句安全上屏。',
+        contract: '<b>对应设计：</b>04-keyboard-ime-and-menubar.md'
+      },
+      vscode: {
+        badge: '暗色融合 + 60% 键盘',
+        isInnovation: true,
+        title: 'VS Code 暗色状态栏反白 + 快捷键锁存',
+        parity: '<b>Casement 基线：</b>提供 60%/Compact 软键盘与修饰键单击待发/长按锁定。',
+        innovation: '<b>KKRemote 创新：</b>识别 <code>#18181B</code> 深色顶栏后自动把 iPhone 状态栏切为纯白文字；浮动 IME 停靠条内置 <code>Esc/Tab/⌘C/⌘V</code> 与一键粘贴胶囊。',
+        contract: '<b>对应设计：</b>04-keyboard-ime-and-menubar.md'
+      },
+      launcher: {
+        badge: 'Casement Parity',
+        isInnovation: false,
+        title: 'Window & Dock 应用启动台',
+        parity: '<b>Casement 基线：</b>展示按应用分组的在运行窗口（含跨 Space 提示）+ Mac Dock 应用冷启动能力。',
+        innovation: '<b>KKRemote 优化：</b>增加全局瞬间检索与「Mac 桌面全屏」兜底入口；可从三段式悬浮胶囊 <code>⊞</code> 一键呼出或快速切窗。',
+        contract: '<b>对应设计：</b>01-information-architecture-and-flows.md'
+      },
+      diag: {
+        badge: 'U01 诊断独立边界',
+        isInnovation: false,
+        title: 'U01 性能与画质遥测抽屉',
+        parity: '<b>Casement 基线：</b>专注生产工作流，不将开发调试指标堆在主画面。',
+        innovation: '<b>KKRemote 实践：</b>主画布零工程数据遮挡；需要时在快控盘点开「U01 诊断」，底层持续保持 59.9fps 10-bit PQ 视频流不中断。',
+        contract: '<b>对应设计：</b>01-information-architecture-and-flows.md'
+      },
+      ipad: {
+        badge: 'iPad 右侧 Liquid Glass 轨',
+        isInnovation: true,
+        title: '右侧 Liquid Glass 竖排胶囊（参考 iPhone Duo）+ 整屏呈窗',
+        parity: '<b>Casement 基线：</b>多窗口原生 UIScene、外接键鼠悬停、56pt 侧边快控轨。',
+        innovation: '<b>KKRemote 创新：</b>借鉴 iPhone Duo（iOS 27）竖排侧边胶囊设计，将 Side-Rail 移至<b>右侧悬浮 3 组液态玻璃胶囊</b>（浅白/深邃曜石随画面自动反色）；Mac 窗口 100% 满宽呈窗（红绿灯无遮挡），在画面滑动仅滚动 <b>Mac 桌面窗口内部内容</b>。',
+        contract: '<b>对应设计：</b>05-ipad-and-external-peripherals.md §1.1–1.2'
+      }
+    };
+    const item = notes[key] || notes.wps;
+    el.inspBadge.textContent = item.badge;
+    el.inspBadge.className = 'insp-badge' + (item.isInnovation ? ' is-innovation' : '');
+    el.inspTitle.textContent = item.title;
+    el.inspParity.innerHTML = item.parity;
+    el.inspInnovation.innerHTML = item.innovation;
+    el.inspContract.innerHTML = item.contract;
+  }
+
+  /* ================= Adaptive Status Bar & Liquid Glass Tone ================= */
+  function syncIpadRailStates() {
+    const railImeBtn = document.getElementById('railImeBtn');
+    const railDiagBtn = document.getElementById('railDiagBtn');
+    const cmdBtn = document.getElementById('ipadCmdRouteBtn');
+    const cmdLbl = document.getElementById('ipadCmdRouteLabel');
+    if (railImeBtn) railImeBtn.setAttribute('aria-pressed', String(Boolean(state.imeOpen)));
+    if (railDiagBtn) railDiagBtn.setAttribute('aria-pressed', String(state.sheet === 'diag'));
+    if (cmdBtn) {
+      cmdBtn.setAttribute('aria-pressed', String(Boolean(state.ipadCmdToMac)));
+      cmdBtn.setAttribute('aria-label', state.ipadCmdToMac ? '切换快捷键路由：当前 ⌘→Mac' : '切换快捷键路由：当前 ⌘→iPad');
+      const tip = cmdBtn.querySelector('.rail-tip');
+      if (tip) tip.textContent = state.ipadCmdToMac ? '⌘ 路由 · 发往 Mac' : '⌘ 路由 · 保留给 iPad';
+    }
+    if (cmdLbl) cmdLbl.textContent = state.ipadCmdToMac ? 'Mac' : 'iPad';
+  }
+
+  function syncStatusBarTheme() {
+    el.islandHdrBadge.style.display = state.hdrOn ? 'inline' : 'none';
+    el.audioMiniFlag.hidden = !state.audioOn;
+    const ipadRail = document.getElementById('ipadRail');
+    const railRestoreBtn = document.getElementById('railRestoreBtn');
+    const setRailTone = (isDark) => {
+      if (ipadRail) ipadRail.classList.toggle('tone-dark', isDark);
+      if (railRestoreBtn) railRestoreBtn.classList.toggle('tone-dark', isDark);
+      el.deviceScreen.classList.toggle('glass-light', !isDark);
+    };
+
+    if (state.scenario === 'home' || state.scenario === 'launcher') {
+      el.iosStatusbar.style.backgroundColor = state.scenario === 'home' ? '#0e1420' : '#101520';
+      el.iosStatusbar.className = 'ios-statusbar theme-dark';
+      el.deviceScreen.classList.remove('light-bottom');
+      setRailTone(true);
+      return;
+    }
+
+    if (state.activeApp === 'wps') {
+      el.iosStatusbar.style.backgroundColor = '#eaecef';
+      el.remoteCanvasViewport.style.backgroundColor = '#eaecef';
+      el.iosStatusbar.className = 'ios-statusbar theme-light';
+      el.deviceScreen.classList.add('light-bottom');
+      setRailTone(false);
+    } else if (state.activeApp === 'safari') {
+      el.iosStatusbar.style.backgroundColor = '#ffffff';
+      el.remoteCanvasViewport.style.backgroundColor = '#ffffff';
+      el.iosStatusbar.className = 'ios-statusbar theme-light';
+      el.deviceScreen.classList.add('light-bottom');
+      setRailTone(false);
+    } else {
+      el.iosStatusbar.style.backgroundColor = '#18181b';
+      el.remoteCanvasViewport.style.backgroundColor = '#18181b';
+      el.iosStatusbar.className = 'ios-statusbar theme-dark';
+      el.deviceScreen.classList.remove('light-bottom');
+      setRailTone(true);
+    }
+  }
+
+  let scrollDragged = false;
+
+  /* ================= Simulated Mac App Window Rendering ================= */
+  function renderMacWindow() {
+    const app = state.activeApp;
+    const isIpad = state.device === 'ipad-pro';
+    const vpW = Math.max(350, el.remoteCanvasViewport.clientWidth || (isIpad ? 820 : 360));
+    const vpH = Math.max(320, el.remoteCanvasViewport.clientHeight || (isIpad ? 580 : 680));
+
+    el.imeTargetBadge.textContent =
+      app === 'wps' ? `WPS · ${state.selectedCell}` :
+      app === 'safari' ? 'Safari · X发帖框' : 'VS Code · Terminal';
+
+    if (app === 'wps') {
+      const wpsTopics = [
+        '云算力节点', '视频编码流', '边缘加速节点', '存储与回源', '安全合规审计',
+        'Q4总预算', '跨区专线带宽', 'AI 语音转写', '客户端 CI/CD', '海外CDN冗余',
+        '灰度集群扩容', '日志可观测性', '端侧渲染压测', '企业客户专席', '实时信令网关',
+        'iPad Pro 样机', '灾备演练专项', '性能分析授权', '设计师外设库', '文档本地化',
+        '研发差旅池', '自动化真机墙', '合规渗透测试', '开源镜像托管', '域名与证书',
+        'SRE 值守补贴', '季度复盘预算', '年度预留准备金', '测试备机采购'
+      ];
+      const rows = Array.from({ length: wpsTopics.length }, (_, i) => i + 3);
+      let tbody = '';
+      for (const r of rows) {
+        const idx = r - 3;
+        const b = state.cellValues['B' + r] || wpsTopics[idx];
+        const c = state.cellValues['C' + r] || `¥${((idx + 2) * 1850 + (idx % 3) * 400).toLocaleString()}`;
+        const d = state.cellValues['D' + r] || `+${((idx * 3) % 14) + 2}.${(idx % 9) + 1}%`;
+        const e = r === 8 ? '已批复' : (r % 2 === 0 ? '执行中' : '待复核');
+        const f = `负责人-${String.fromCharCode(65 + (r % 5))}`;
+        const g = `+${((idx * 2) % 8) + 1}.${(idx % 7)}%`;
+        const h = r === 8 ? '核心专项已审批归档' : (r % 3 === 0 ? '按月分摊核算' : '常规采购');
+        tbody += `<tr style="background:${r % 2 === 1 ? '#ffffff' : '#f8fafc'}">
+          <th>${r}</th>
+          <td class="${state.selectedCell === 'B' + r ? 'is-selected' : ''}" data-cell="B${r}">${b}</td>
+          <td class="num ${state.selectedCell === 'C' + r ? 'is-selected' : ''}" data-cell="C${r}">${c}</td>
+          <td class="num ${state.selectedCell === 'D' + r ? 'is-selected' : ''}" data-cell="D${r}" style="color:#15803d">${d}</td>
+          <td class="${state.selectedCell === 'E' + r ? 'is-selected' : ''}" data-cell="E${r}">${e}</td>
+          <td class="${state.selectedCell === 'F' + r ? 'is-selected' : ''}" data-cell="F${r}">${f}</td>
+          ${isIpad ? `<td class="num" style="color:#0284c7">${g}</td><td style="color:#64748b">${h}</td>` : ''}
+        </tr>`;
+      }
+
+      const activeFormula = state.cellValues[state.selectedCell] || '预算明细项';
+      const wpsStyle = isIpad ? `style="width:${vpW}px;height:${vpH}px"` : '';
+      const colsHtml = isIpad
+        ? `<col style="width:36px"><col style="width:130px"><col style="width:98px"><col style="width:74px"><col style="width:86px"><col style="width:94px"><col style="width:74px"><col>`
+        : `<col style="width:36px"><col style="width:142px"><col style="width:118px"><col style="width:94px"><col style="width:118px"><col style="width:164px">`;
+      el.macWindowSurface.innerHTML = `
+        <div class="wps-window" ${wpsStyle}>
+          <div class="mac-titlebar">
+            <div class="traffic-lights">
+              <button type="button" class="tl tl-red" data-mac-act="关闭文档" aria-label="关闭窗口"></button>
+              <button type="button" class="tl tl-yel" data-mac-act="最小化窗口" aria-label="最小化"></button>
+              <button type="button" class="tl tl-grn" data-mac-act="切换全屏" aria-label="缩放"></button>
+            </div>
+            <div style="font-weight:650;font-size:12px;color:#334155">WPS 表格 — Q4产品预算汇总.xlsx (${isIpad ? `物理单窗 · 整屏 ${vpW}×${vpH}` : '10-bit PQ'})</div>
+            <div style="font-size:11px;color:#64748b">云同步 ✓</div>
+          </div>
+          <div class="wps-ribbon">
+            <div class="wps-tabs-row">
+              <span class="active">开始</span><span>插入</span><span>页面布局</span><span>公式</span><span>数据</span><span>审阅</span><span>视图</span>
+            </div>
+            <div class="wps-tools-row">
+              <button type="button" class="wps-tool-btn" data-mac-act="撤销 (⌘Z)">↶ 撤销</button>
+              <button type="button" class="wps-tool-btn" data-mac-act="复制格式">🖌 格式刷</button>
+              <button type="button" class="wps-tool-btn" data-mac-act="加粗 (⌘B)"><b>B</b></button>
+              <button type="button" class="wps-tool-btn" data-mac-act="千分位货币格式">¥ 货币</button>
+              <button type="button" class="wps-tool-btn" data-mac-act="自动求和 Σ">Σ 求和</button>
+              <button type="button" class="wps-tool-btn" data-mac-act="冻结首行">❄ 冻结首行</button>
+              <button type="button" class="wps-tool-btn" data-mac-act="导出 PDF (⇧⌘E)">导出 PDF</button>
+            </div>
+          </div>
+          <div class="wps-formula-bar">
+            <div class="wps-cell-ref">${state.selectedCell}</div>
+            <div style="color:#64748b;font-weight:700">fx</div>
+            <div style="flex:1;color:#0f172a">${activeFormula}</div>
+            ${isIpad ? '<span style="font-size:10.5px;color:#0284c7;margin-right:58px">⇅ 滑动仅滚表格内容，外框整屏锁定</span>' : ''}
+          </div>
+          <div class="wps-grid-wrap">
+            <table class="wps-table">
+              <colgroup>${colsHtml}</colgroup>
+              <thead>
+                <tr><th></th><th>A/B 项目名称</th><th>C Q4预算</th><th>D 同比</th><th>E 状态</th><th>F 责任团队</th>${isIpad ? '<th>G 环比</th><th>H 备注</th>' : ''}</tr>
+              </thead>
+              <tbody>${tbody}</tbody>
+            </table>
+          </div>
+          <div class="wps-sheetbar">
+            <div style="display:flex;gap:12px">
+              <b style="color:#16a34a">Sheet1 · 预算总览</b>
+              <span>各部门明细</span>
+              <span>年度透视表</span>
+            </div>
+            <span>求和: ¥128,450 · 缩放 100%</span>
+          </div>
+        </div>`;
+    } else if (app === 'safari') {
+      el.macWindowSurface.innerHTML = `
+        <div class="safari-window" style="width:${vpW}px;height:${vpH}px">
+          <div class="safari-toolbar">
+            <div class="safari-top-row">
+              <div class="traffic-lights">
+                <button type="button" class="tl tl-red" data-mac-act="关闭标签"></button>
+                <button type="button" class="tl tl-yel" data-mac-act="最小化 Safari"></button>
+                <button type="button" class="tl tl-grn" data-mac-act="适应窗口"></button>
+              </div>
+              <div class="safari-urlbar">
+                <span>🔒 x.com / home</span>
+                <span style="color:#0284c7;font-size:10.5px">${isIpad ? `物理单窗 · 整屏 ${vpW}×${vpH}` : '390pt 自适应'}</span>
+              </div>
+              <button type="button" class="wps-tool-btn" data-mac-act="刷新页面 (⌘R)">↻</button>
+            </div>
+          </div>
+          <div class="x-feed">
+            <div class="x-compose-box ${state.imeOpen ? 'is-editing' : ''}" id="safariComposeTrigger">
+              <div style="font-size:11px;color:#0284c7;font-weight:650;margin-bottom:4px">点击体验「原位中文 IME 保护输入」↓</div>
+              <div style="font-size:13px;color:${state.safariDraft ? '#0f172a' : '#64748b'};min-height:38px">
+                ${state.safariDraft ? escapeHtml(state.safariDraft) : '有什么新鲜事？(点击唤起不挡屏幕的拼音缓冲输入条)'}
+              </div>
+              <div style="display:flex;justify-content:flex-end;margin-top:6px">
+                <span style="background:#0ea5e9;color:#fff;font-size:11px;font-weight:650;padding:4px 12px;border-radius:999px">发帖</span>
+              </div>
+            </div>
+            <div class="x-post-card">
+              <div style="display:flex;justify-content:space-between;font-weight:700">
+                <span>KKRemote Lab · 开发日志</span>
+                <span style="color:#64748b;font-weight:500">14m</span>
+              </div>
+              <div>iPhone Ponte 真实桌面投流实测达到 <b>59.99 fps / 11.83 Mbps</b>，采用 Main10 10-bit PQ HDR 色彩流水线，动态采样顶边颜色填充刘海区域。</div>
+            </div>
+            <div class="x-post-card">
+              <div style="display:flex;justify-content:space-between;font-weight:700">
+                <span>窗口自适应协议</span>
+                <span style="color:#64748b;font-weight:500">1h</span>
+              </div>
+              <div>网页与聊天类应用直接按客户端宽度重排，不再产生双指频繁缩放；中文拼音仅在本地完成选词后再原子提交。</div>
+            </div>
+            <div class="x-post-card">
+              <div style="display:flex;justify-content:space-between;font-weight:700">
+                <span>iPad 整屏呈窗设计</span>
+                <span style="color:#64748b;font-weight:500">2h</span>
+              </div>
+              <div>iPad 横屏直接整屏完整显示桌面窗口（包含顶部红绿灯与底栏），在画面上滑动仅滚动页面正文本身，无需拖来拖去找边。</div>
+            </div>
+            <div class="x-post-card">
+              <div style="display:flex;justify-content:space-between;font-weight:700">
+                <span>外接妙控键盘与路由</span>
+                <span style="color:#64748b;font-weight:500">3h</span>
+              </div>
+              <div>侧边轨显式切换 ⌘→Mac 或 ⌘→iPad，让 ⌘Tab / ⌘Space 不再和 iPadOS 冲突。</div>
+            </div>
+            <div class="x-post-card">
+              <div style="display:flex;justify-content:space-between;font-weight:700">
+                <span>单手拇指触控垫 · Corner-Dock</span>
+                <span style="color:#64748b;font-weight:500">5h</span>
+              </div>
+              <div>iPhone 单手够不到左上角关闭/菜单按钮时，开启拇指触控垫即可按 1.65× 倍率把指针送到任意角落。</div>
+            </div>
+            <div class="x-post-card">
+              <div style="display:flex;justify-content:space-between;font-weight:700">
+                <span>MenuBar 原生代理与 Spotlight</span>
+                <span style="color:#64748b;font-weight:500">6h</span>
+              </div>
+              <div>无需缩小整个屏幕去戳顶部 24px 菜单，从快控盘直达当前应用树状菜单与快捷键搜索。</div>
+            </div>
+            <div class="x-post-card">
+              <div style="display:flex;justify-content:space-between;font-weight:700">
+                <span>零抖动帧步调 · Ponte 诊断</span>
+                <span style="color:#64748b;font-weight:500">1d</span>
+              </div>
+              <div>端到端渲染帧间隔维持在 16.6ms，触控事件从指尖落点到 Mac NSEvent 发送稳定在 2.4ms 内。</div>
+            </div>
+          </div>
+        </div>`;
+      const trig = document.getElementById('safariComposeTrigger');
+      if (trig) {
+        trig.addEventListener('click', () => {
+          openImeFor('Safari · X发帖框');
+          updateInspector('safari');
+        });
+      }
+    } else {
+      const vscodeStyle = isIpad ? `style="width:${vpW}px;height:${vpH}px"` : '';
+      el.macWindowSurface.innerHTML = `
+        <div class="vscode-window" ${vscodeStyle}>
+          <div class="vscode-titlebar">
+            <div class="traffic-lights">
+              <button type="button" class="tl tl-red" data-mac-act="关闭编辑器"></button>
+              <button type="button" class="tl tl-yel" data-mac-act="最小化"></button>
+              <button type="button" class="tl tl-grn" data-mac-act="全屏"></button>
+            </div>
+            <span>KKRemote — ViewportGeometry.swift ${isIpad ? `(${vpW}×${vpH} 整屏)` : ''}</span>
+            <span style="color:#38bdf8">10-bit Dark EDR</span>
+          </div>
+          <div class="vscode-tabs">
+            <div class="vscode-tab active">ViewportGeometry.swift</div>
+            <div class="vscode-tab">MobileTouchSurface.swift</div>
+            <div class="vscode-tab">MenuBarSheet.swift</div>
+          </div>
+          <div class="vscode-code">
+<div><span class="tok-k">public struct</span> <span class="tok-t">ViewportGeometry</span> {</div>
+<div>&nbsp;&nbsp;<span class="tok-c">// iPhone 固定宽窗（如 WPS 672pt）保持左上角可读铺满；iPad 直接 ResizeRequest 整屏完整显示</span></div>
+<div>&nbsp;&nbsp;<span class="tok-k">public static func</span> fitForDevice(_ idiom: <span class="tok-t">UIUserInterfaceIdiom</span>, window: <span class="tok-t">CGSize</span>, screen: <span class="tok-t">CGSize</span>) -&gt; <span class="tok-t">Transform</span> {</div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="tok-k">if</span> idiom == .pad { <span class="tok-k">return</span> .containFullWindow(screen) }</div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="tok-k">let</span> scaleX = screen.width / window.width</div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="tok-k">let</span> scaleY = screen.height / window.height</div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="tok-k">return</span> .aspectFill(max(scaleX, scaleY), anchor: .topLeading)</div>
+<div>&nbsp;&nbsp;}</div>
+<div>&nbsp;</div>
+<div>&nbsp;&nbsp;<span class="tok-k">public static func</span> scrollTarget(idiom: <span class="tok-t">UIUserInterfaceIdiom</span>) -&gt; <span class="tok-t">ScrollRoute</span> {</div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="tok-c">// iPad 滑动手势直接透传 Mac 窗口内部滚动，不平移客户侧外框</span></div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;idiom == .pad ? .forwardToRemoteContent : .clientPanOrRemoteScroll</div>
+<div>&nbsp;&nbsp;}</div>
+<div>&nbsp;</div>
+<div>&nbsp;&nbsp;<span class="tok-k">public static func</span> topEdgeSwatch(from p010Frame: <span class="tok-t">CVPixelBuffer</span>) -&gt; <span class="tok-t">EdgeAppearance</span> {</div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="tok-k">return</span> <span class="tok-t">EdgeAppearance</span>(color: sampleRow0(p010Frame), prefersLightStatusBar: isDark)</div>
+<div>&nbsp;&nbsp;}</div>
+<div>&nbsp;</div>
+<div>&nbsp;&nbsp;<span class="tok-k">public static func</span> applyWheelMomentum(_ event: <span class="tok-t">ScrollDelta</span>, in windowID: <span class="tok-t">CGWindowID</span>) {</div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="tok-c">// Keep Mac window frame locked on iPad; forward CGEvent scroll phases inside target app</span></div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="tok-k">let</span> scaled = <span class="tok-t">CGVector</span>(dx: event.dx * <span class="tok-s">1.0</span>, dy: event.dy * <span class="tok-s">1.0</span>)</div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;ipc.sendScroll(windowID: windowID, delta: scaled, phase: event.phase)</div>
+<div>&nbsp;&nbsp;}</div>
+<div>&nbsp;</div>
+<div>&nbsp;&nbsp;<span class="tok-k">public static func</span> clampedLoupePoint(_ touch: <span class="tok-t">CGPoint</span>, bounds: <span class="tok-t">CGRect</span>) -&gt; <span class="tok-t">CGPoint</span> {</div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="tok-k">let</span> offset = <span class="tok-t">CGPoint</span>(x: touch.x - <span class="tok-s">28</span>, y: touch.y - <span class="tok-s">76</span>)</div>
+<div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="tok-k">return</span> offset.clamped(to: bounds.insetBy(dx: <span class="tok-s">12</span>, dy: <span class="tok-s">12</span>))</div>
+<div>&nbsp;&nbsp;}</div>
+<div>}</div>
+          </div>
+          <div class="vscode-terminal" id="vscodeTerminalArea">
+            <div style="color:#94a3b8;margin-bottom:4px">TERMINAL · zsh — 点击此区域呼出 60% 键盘与修饰键栏</div>
+            <div><span style="color:#4ade80">dev@MacBook-Pro</span> ~/Projects/KKRemote % <span id="vscodeCmdEcho">${escapeHtml(state.vscodeInput)}</span><span style="background:#38bdf8;color:#000"> </span></div>
+            <div style="color:#a1a1aa;margin-top:4px">✔ 24 tests passed in 0.18s (iPadFullWindowFit, GestureArbitration, CJKBuffer)</div>
+          </div>
+        </div>`;
+      const term = document.getElementById('vscodeTerminalArea');
+      if (term) {
+        term.addEventListener('click', () => {
+          openImeFor('VS Code · Terminal');
+          state.kbd60Open = true;
+          el.softKbd60.hidden = false;
+          updateInspector('vscode');
+        });
+      }
+    }
+
+    // Bind interactive cells & toolbar buttons inside rendered Mac window
+    el.macWindowSurface.querySelectorAll('[data-cell]').forEach((td) => {
+      td.addEventListener('click', (e) => {
+        if (state.mode !== 'direct' || scrollDragged) return;
+        e.stopPropagation();
+        selectWpsCell(td.dataset.cell);
+      });
+    });
+
+    el.macWindowSurface.querySelectorAll('[data-mac-act]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showToast(`Mac 端执行: ${btn.dataset.macAct}`);
+      });
+    });
+
+    applyViewportTransform();
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function selectWpsCell(cell) {
+    state.selectedCell = cell;
+    renderMacWindow();
+    showToast(`选中单元格 ${cell}`);
+  }
+
+  /* ================= 3-Tier Viewport Engine & Mini-Map ================= */
+  function getWindowDimensions() {
+    if (state.device === 'ipad-pro') {
+      return {
+        w: Math.max(350, el.remoteCanvasViewport.clientWidth || 820),
+        h: Math.max(320, el.remoteCanvasViewport.clientHeight || 580)
+      };
+    }
+    if (state.activeApp === 'wps') return { w: 672, h: 1084 };
+    if (state.activeApp === 'vscode') return { w: 620, h: 820 };
+    return {
+      w: Math.max(350, el.remoteCanvasViewport.clientWidth || 360),
+      h: Math.max(320, el.remoteCanvasViewport.clientHeight || 680)
+    };
+  }
+
+  function applyViewportTransform() {
+    const vpW = el.remoteCanvasViewport.clientWidth || 360;
+    const vpH = el.remoteCanvasViewport.clientHeight || 680;
+    const { w, h } = getWindowDimensions();
+
+    let scale = 1;
+    if (state.device === 'ipad-pro') {
+      // iPad 永远整屏完整显示整个 Mac 窗口，无视口裁剪或客户端平移
+      scale = 1;
+      state.panX = 0;
+      state.panY = 0;
+    } else if (state.viewportMode === 'fit') {
+      scale = Math.min(vpW / w, vpH / h);
+      state.panX = Math.max(0, (vpW - w * scale) / 2);
+      state.panY = Math.max(0, (vpH - h * scale) / 2);
+    } else {
+      // Smart Fill on iPhone: prioritize crisp readable scale
+      if (state.activeApp === 'wps') {
+        scale = state.device === 'iphone-portrait' ? 0.92 : Math.max(vpW / w, 0.96);
+      } else if (state.activeApp === 'vscode') {
+        scale = state.device === 'iphone-portrait' ? 0.88 : Math.min(1.05, vpW / w);
+      } else {
+        scale = 1;
+      }
+      const scaledW = w * scale;
+      const scaledH = h * scale;
+      const minX = Math.min(0, vpW - scaledW);
+      const minY = Math.min(0, vpH - scaledH);
+      state.panX = Math.min(0, Math.max(minX, state.panX));
+      state.panY = Math.min(0, Math.max(minY, state.panY));
+    }
+
+    state.scale = scale;
+    el.macWindowSurface.style.transform = `translate3d(${state.panX}px, ${state.panY}px, 0) scale(${scale})`;
+    syncMinimapBox();
+  }
+
+  function syncMinimapBox() {
+    if (el.minimapPeek.hidden) return;
+    const surfW = el.minimapSurface.clientWidth || 90;
+    const surfH = el.minimapSurface.clientHeight || 126;
+    const vpW = el.remoteCanvasViewport.clientWidth || 360;
+    const vpH = el.remoteCanvasViewport.clientHeight || 680;
+    const { w, h } = getWindowDimensions();
+
+    const fracW = Math.min(1, vpW / (w * state.scale));
+    const fracH = Math.min(1, vpH / (h * state.scale));
+    const fracX = Math.max(0, Math.min(1 - fracW, -state.panX / (w * state.scale)));
+    const fracY = Math.max(0, Math.min(1 - fracH, -state.panY / (h * state.scale)));
+
+    el.minimapViewportBox.style.width = `${Math.max(18, fracW * surfW)}px`;
+    el.minimapViewportBox.style.height = `${Math.max(18, fracH * surfH)}px`;
+    el.minimapViewportBox.style.left = `${fracX * surfW}px`;
+    el.minimapViewportBox.style.top = `${fracY * surfH}px`;
+  }
+
+  function jumpViewportAnchor(anchor) {
+    state.viewportMode = 'smart';
+    syncViewportChips();
+    const vpW = el.remoteCanvasViewport.clientWidth || 360;
+    const vpH = el.remoteCanvasViewport.clientHeight || 680;
+    const { w, h } = getWindowDimensions();
+    const s = state.activeApp === 'wps' && state.device === 'iphone-portrait' ? 0.92 : state.scale;
+    if (anchor === 'topleft') { state.panX = 0; state.panY = -72; }
+    if (anchor === 'ribbon') { state.panX = 0; state.panY = 0; }
+    if (anchor === 'right') { state.panX = vpW - w * s; state.panY = -72; }
+    if (anchor === 'bottom') { state.panX = 0; state.panY = vpH - h * s; }
+    applyViewportTransform();
+    showToast(`视口锚点已定位: ${anchor === 'right' ? '右侧统计列' : anchor === 'ribbon' ? '顶部工具栏' : anchor === 'bottom' ? '底部标签' : '主工作区'}`);
+  }
+
+  /* ================= Floating Control Pill (Drag + Corner Snap + Idle Fade) ================= */
+  let idleFadeTimer = null;
+  function bumpPillActivity() {
+    el.floatingPill.classList.remove('is-idle');
+    clearTimeout(idleFadeTimer);
+    idleFadeTimer = setTimeout(() => {
+      if (!state.quickDeckOpen) el.floatingPill.classList.add('is-idle');
+    }, 2600);
+  }
+
+  function clampAndMovePill(x, y, updateCornerLabel = false) {
+    const vpW = el.remoteCanvasViewport.clientWidth || 360;
+    const vpH = el.remoteCanvasViewport.clientHeight || 640;
+    const pw = el.floatingPill.offsetWidth || 180;
+    const ph = el.floatingPill.offsetHeight || 40;
+    const pad = 10;
+    const cx = Math.max(pad, Math.min(x, Math.max(pad, vpW - pw - pad)));
+    const cy = Math.max(pad, Math.min(y, Math.max(pad, vpH - ph - pad)));
+    state.pillFreePos = { x: cx, y: cy };
+    el.floatingPill.style.transform = `translate3d(${cx}px, ${cy}px, 0)`;
+
+    if (updateCornerLabel) {
+      const nearRightMid = (cx + pw > vpW - 28) && (cy + ph / 2 > vpH * 0.28) && (cy + ph / 2 < vpH * 0.74);
+      if (nearRightMid) {
+        state.pillCorner = 'side-right';
+      } else {
+        const rightHalf = cx + pw / 2 > vpW / 2;
+        const bottomHalf = cy + ph / 2 > vpH / 2;
+        state.pillCorner = (bottomHalf ? 'b' : 't') + (rightHalf ? 'r' : 'l');
+      }
+    }
+  }
+
+  function snapPillToCorner(corner, announce = false, instant = true) {
+    state.pillCorner = corner;
+    const isSide = corner === 'side-right';
+    el.floatingPill.classList.toggle('is-side-rail', isSide);
+    if (instant) el.floatingPill.classList.add('no-transition');
+    const vpW = el.remoteCanvasViewport.clientWidth || 360;
+    const vpH = el.remoteCanvasViewport.clientHeight || 640;
+    const pw = el.floatingPill.offsetWidth || (isSide ? 46 : 180);
+    const ph = el.floatingPill.offsetHeight || (isSide ? 168 : 42);
+    const padX = isSide ? 7 : 12;
+    const padTop = 10;
+    const padBottom = state.mode === 'thumb' || state.imeOpen ? 10 : 20;
+    const x = isSide ? (vpW - pw - padX) : (corner.endsWith('r') ? vpW - pw - padX : padX);
+    const y = isSide ? Math.round((vpH - ph) * 0.52) : (corner.startsWith('b') ? vpH - ph - padBottom : padTop);
+    clampAndMovePill(x, y, false);
+    if (instant) {
+      void el.floatingPill.offsetWidth;
+      el.floatingPill.classList.remove('no-transition');
+    }
+
+    el.quickDeck.classList.toggle('is-top-anchored', corner.startsWith('t'));
+
+    document.querySelectorAll('#qdCornerRow [data-corner]').forEach((b) => {
+      b.classList.toggle('is-active', b.dataset.corner === corner);
+    });
+
+    if (announce) {
+      const names = { tl: '左上角', tr: '右上角', bl: '左下角', br: '右下角', 'side-right': '右侧竖排 Duo 模式' };
+      announceA11y(`悬浮控制胶囊已切换至${names[corner] || '右下角'}`);
+    }
+  }
+
+  // Dedicated drag handle implementation per modern-web-guidance: drag
+  (() => {
+    let startX = 0, startY = 0, origX = 0, origY = 0, moved = false;
+
+    el.pillGrip.addEventListener('pointerdown', (event) => {
+      if (event.button !== 0) return;
+      bumpPillActivity();
+      const vpRect = el.remoteCanvasViewport.getBoundingClientRect();
+      const pillRect = el.floatingPill.getBoundingClientRect();
+      origX = pillRect.left - vpRect.left;
+      origY = pillRect.top - vpRect.top;
+      startX = event.clientX;
+      startY = event.clientY;
+      moved = false;
+      el.pillGrip.setPointerCapture(event.pointerId);
+    });
+
+    el.pillGrip.addEventListener('pointermove', (event) => {
+      if (!el.pillGrip.hasPointerCapture(event.pointerId)) return;
+      const dx = event.clientX - startX;
+      const dy = event.clientY - startY;
+      if (!moved && Math.hypot(dx, dy) > 4) {
+        moved = true;
+        el.pillGrip.classList.add('dragging');
+        el.floatingPill.classList.add('is-dragging');
+      }
+      if (moved) {
+        clampAndMovePill(origX + dx, origY + dy, true);
+      }
+    });
+
+    const endDrag = () => {
+      el.pillGrip.classList.remove('dragging');
+      el.floatingPill.classList.remove('is-dragging');
+      if (moved) {
+        snapPillToCorner(state.pillCorner, true, false);
+        moved = false;
+      }
+      bumpPillActivity();
+    };
+
+    el.pillGrip.addEventListener('lostpointercapture', endDrag);
+
+    // Keyboard arrow movement (15px step, clamped through shared helper)
+    el.pillGrip.addEventListener('keydown', (event) => {
+      const step = 15;
+      const pos = state.pillFreePos || { x: 100, y: 100 };
+      if (event.key === 'ArrowLeft') { event.preventDefault(); clampAndMovePill(pos.x - step, pos.y, true); }
+      if (event.key === 'ArrowRight') { event.preventDefault(); clampAndMovePill(pos.x + step, pos.y, true); }
+      if (event.key === 'ArrowUp') { event.preventDefault(); clampAndMovePill(pos.x, pos.y - step, true); }
+      if (event.key === 'ArrowDown') { event.preventDefault(); clampAndMovePill(pos.x, pos.y + step, true); }
+    });
+  })();
+
+  /* ================= Interactive Canvas: Pan, Trackpad, Loupe & Cursor ================= */
+  (() => {
+    let pointerDown = false;
+    let lastX = 0, lastY = 0;
+
+    function scrollDesktopContent(dx, dy) {
+      const inner = el.macWindowSurface.querySelector('.wps-grid-wrap, .x-feed, .vscode-code');
+      if (!inner) return false;
+      inner.scrollLeft += dx;
+      inner.scrollTop += dy;
+      return true;
+    }
+
+    function moveCursor(nx, ny) {
+      const vpW = el.remoteCanvasViewport.clientWidth || 360;
+      const vpH = el.remoteCanvasViewport.clientHeight || 640;
+      state.cursorX = Math.max(6, Math.min(vpW - 14, nx));
+      state.cursorY = Math.max(6, Math.min(vpH - 14, ny));
+      el.macCursor.style.transform = `translate3d(${state.cursorX}px, ${state.cursorY}px, 0)`;
+    }
+
+    el.remoteCanvasViewport.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('.floating-pill, .quick-deck, .minimap-peek, .mac-context-menu')) return;
+      el.macContextMenu.hidden = true;
+      bumpPillActivity();
+      pointerDown = true;
+      scrollDragged = false;
+      lastX = e.clientX;
+      lastY = e.clientY;
+
+      const rect = el.remoteCanvasViewport.getBoundingClientRect();
+      const localX = e.clientX - rect.left;
+      const localY = e.clientY - rect.top;
+
+      if (state.loupeActive && state.mode === 'direct') {
+        updateLoupeAt(localX, localY, e.target);
+        el.precisionLoupe.hidden = false;
+      }
+
+      if (state.mode === 'direct') {
+        moveCursor(localX, localY);
+      }
+    });
+
+    el.remoteCanvasViewport.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      if (state.device === 'ipad-pro') {
+        scrollDesktopContent(e.deltaX, e.deltaY);
+        return;
+      }
+      if (state.viewportMode !== 'smart') return;
+      state.panX -= e.deltaX;
+      state.panY -= e.deltaY;
+      applyViewportTransform();
+    }, { passive: false });
+
+    el.remoteCanvasViewport.addEventListener('pointermove', (e) => {
+      const rect = el.remoteCanvasViewport.getBoundingClientRect();
+      const localX = e.clientX - rect.left;
+      const localY = e.clientY - rect.top;
+
+      if (state.loupeActive && state.mode === 'direct' && pointerDown) {
+        updateLoupeAt(localX, localY, e.target);
+      }
+
+      if (!pointerDown) return;
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      lastX = e.clientX;
+      lastY = e.clientY;
+
+      if (state.device === 'ipad-pro' && state.mode === 'direct') {
+        if (Math.hypot(dx, dy) > 2) scrollDragged = true;
+        scrollDesktopContent(-dx, -dy);
+      } else if (state.mode === 'pan') {
+        state.panX += dx;
+        state.panY += dy;
+        applyViewportTransform();
+      } else if (state.mode === 'trackpad') {
+        moveCursor(state.cursorX + dx * 1.4, state.cursorY + dy * 1.4);
+      }
+    });
+
+    window.addEventListener('pointerup', () => {
+      if (pointerDown && state.loupeActive) {
+        setTimeout(() => { el.precisionLoupe.hidden = true; }, 220);
+      }
+      pointerDown = false;
+      setTimeout(() => { scrollDragged = false; }, 0);
+    });
+
+    // Thumb-Zone Trackpad Surface drag -> drives Mac Cursor over top toolbar/traffic lights!
+    let tpActive = false, tpLastX = 0, tpLastY = 0;
+    el.thumbPadSurface.addEventListener('pointerdown', (e) => {
+      tpActive = true;
+      tpLastX = e.clientX;
+      tpLastY = e.clientY;
+      el.thumbPadSurface.setPointerCapture(e.pointerId);
+      el.macCursor.classList.remove('is-hidden');
+    });
+
+    el.thumbPadSurface.addEventListener('pointermove', (e) => {
+      if (!tpActive) return;
+      const dx = e.clientX - tpLastX;
+      const dy = e.clientY - tpLastY;
+      tpLastX = e.clientX;
+      tpLastY = e.clientY;
+      moveCursor(state.cursorX + dx * 1.85, state.cursorY + dy * 1.85);
+    });
+
+    el.thumbPadSurface.addEventListener('lostpointercapture', () => { tpActive = false; });
+
+    function updateLoupeAt(x, y, target) {
+      const vpW = el.remoteCanvasViewport.clientWidth || 360;
+      const lx = Math.max(8, Math.min(vpW - 104, x - 48));
+      const ly = Math.max(8, y - 116); // Always offset above finger/cursor!
+      el.precisionLoupe.style.transform = `translate3d(${lx}px, ${ly}px, 0)`;
+
+      const td = target && target.closest ? target.closest('[data-cell]') : null;
+      if (td) {
+        el.loupeTargetText.textContent = td.textContent;
+        el.loupeCoordText.textContent = `2.2× · ${td.dataset.cell}`;
+      } else if (target && target.closest && target.closest('.wps-tool-btn')) {
+        el.loupeTargetText.textContent = target.closest('.wps-tool-btn').textContent;
+        el.loupeCoordText.textContent = '2.2× · 工具栏';
+      } else {
+        el.loupeTargetText.textContent = `(${Math.round(x)}, ${Math.round(y)})`;
+        el.loupeCoordText.textContent = '2.2× · 精准准星';
+      }
+    }
+
+    // Mini-Map Peek click/drag jump
+    el.minimapSurface.addEventListener('pointerdown', (e) => {
+      const jump = (ev) => {
+        const rect = el.minimapSurface.getBoundingClientRect();
+        const fx = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
+        const fy = Math.max(0, Math.min(1, (ev.clientY - rect.top) / rect.height));
+        const vpW = el.remoteCanvasViewport.clientWidth || 360;
+        const vpH = el.remoteCanvasViewport.clientHeight || 680;
+        const { w, h } = getWindowDimensions();
+        state.viewportMode = 'smart';
+        syncViewportChips();
+        state.panX = -(fx * w * state.scale - vpW / 2);
+        state.panY = -(fy * h * state.scale - vpH / 2);
+        applyViewportTransform();
+      };
+      jump(e);
+      const onMove = (ev) => jump(ev);
+      const onUp = () => {
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+      };
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+    });
+  })();
+
+  /* ================= Scenario, Device & Lifecycle Switching ================= */
+  function setScenario(next) {
+    state.scenario = next;
+    el.scenarioSelect.value = next;
+    document.querySelectorAll('#scenePillBar [data-scene-pill]').forEach((b) => {
+      b.setAttribute('aria-pressed', String(b.dataset.scenePill === next));
+    });
+    state.sheet = null;
+    el.deviceSheetBackdrop.hidden = true;
+    state.quickDeckOpen = false;
+    el.quickDeck.hidden = true;
+    state.imeOpen = false;
+    el.imeDockDrawer.hidden = true;
+    state.kbd60Open = false;
+    el.softKbd60.hidden = true;
+    state.loupeActive = false;
+    el.precisionLoupe.hidden = true;
+    document.getElementById('toggleLoupeBtn').classList.remove('is-active');
+    state.minimapOpen = false;
+    el.minimapPeek.hidden = true;
+    document.getElementById('toggleMinimapBtn').classList.remove('is-active');
+    el.imeInputField.value = '';
+    el.pinyinStrip.hidden = true;
+
+    el.viewHome.hidden = next !== 'home';
+    el.viewLauncher.hidden = next !== 'launcher';
+    el.viewWorkspace.hidden = (next === 'home' || next === 'launcher');
+
+    if (next === 'wps' || next === 'safari' || next === 'vscode') {
+      state.activeApp = next;
+      state.panX = 0;
+      state.panY = 0;
+      setManipulationMode('direct');
+      renderMacWindow();
+      updateInspector(next);
+    } else if (next === 'launcher') {
+      renderLauncher();
+      updateInspector('launcher');
+    }
+
+    syncIpadRailStates();
+    syncStatusBarTheme();
+    snapPillToCorner(state.pillCorner, false, true);
+  }
+
+  function syncStageHintStrip() {
+    if (!el.stageHintStrip) return;
+    if (state.device === 'ipad-pro') {
+      el.stageHintStrip.innerHTML =
+        '<span class="hint-pill"><span class="hint-dot"></span>物理单窗满宽呈窗（红绿灯无遮挡，不打乱本机排布）</span>' +
+        '<span class="hint-pill">滑动/滚轮 <b>直接滚动桌面窗口内部内容</b></span>' +
+        '<span class="hint-pill">右侧 <b>Liquid Glass 竖排胶囊</b>（参考 iPhone Duo，自适应亮暗）</span>';
+    } else {
+      el.stageHintStrip.innerHTML =
+        '<span class="hint-pill"><span class="hint-dot"></span>胶囊随画面亮暗自动切换 <b>Liquid Glass</b></span>' +
+        '<span class="hint-pill">支持 <b>底部水平胶囊 ↔ 右侧竖排 Duo 胶囊</b> 与右缘收纳</span>' +
+        '<span class="hint-pill">一键秒切 <b>可读铺满 1:1 ↔ 完整窗口全貌</b></span>';
+    }
+  }
+
+  function setDevice(dev) {
+    const prev = state.device;
+    state.device = dev;
+    state.pillTucked = false;
+    el.floatingPill.classList.remove('is-tucked');
+    el.deviceBezel.className = `device-bezel mode-${dev}` + (state.railCollapsed ? ' rail-collapsed' : '');
+    if (dev === 'iphone-landscape' && prev !== 'iphone-landscape') {
+      state.pillCorner = 'side-right';
+    } else if (dev === 'iphone-portrait' && prev === 'iphone-landscape' && state.pillCorner === 'side-right') {
+      state.pillCorner = 'br';
+    }
+    if (dev === 'ipad-pro') updateInspector('ipad');
+    syncStageHintStrip();
+    syncStatusBarTheme();
+    syncIpadRailStates();
+    renderMacWindow();
+    snapPillToCorner(state.pillCorner, false, true);
+  }
+
+  function setLifecycle(lc) {
+    state.lifecycle = lc;
+    el.lifecycleSelect.value = lc;
+    el.lifecycleBanner.hidden = true;
+    el.lifecycleCover.hidden = true;
+    el.lifecycleActionBtn.hidden = true;
+
+    if (lc === 'resizing') {
+      el.lifecycleBanner.hidden = false;
+      el.lifecycleBannerText.textContent = '⏳ 正在协商 Mac 窗口布局 (ResizeRequest)...';
+    } else if (lc === 'readonly') {
+      el.lifecycleBanner.hidden = false;
+      el.lifecycleBannerText.textContent = '👁 只读锁定 · 另一终端持有控制权';
+      el.lifecycleActionBtn.hidden = false;
+      el.lifecycleActionBtn.textContent = '抢占控制';
+    } else if (lc === 'minimized') {
+      el.lifecycleCover.hidden = false;
+      el.lifecycleCoverIcon.textContent = '🟡';
+      el.lifecycleCoverTitle.textContent = 'Mac 窗口已被最小化';
+      el.lifecycleCoverDesc.textContent = 'ScreenCaptureKit 已智能挂起编码，零功耗等待唤醒';
+      el.lifecycleRecoverBtn.textContent = '一键唤醒并恢复前台';
+    } else if (lc === 'reconnecting') {
+      el.lifecycleCover.hidden = false;
+      el.lifecycleCoverIcon.textContent = '🔄';
+      el.lifecycleCoverTitle.textContent = '网络波动重连中 (Wi-Fi → 5G)';
+      el.lifecycleCoverDesc.textContent = '会话租约进入 3 分钟宽限期，保持最后一帧画面';
+      el.lifecycleRecoverBtn.textContent = '模拟立即重连成功';
+    }
+  }
+
+  function setManipulationMode(mode) {
+    state.mode = mode;
+    document.querySelectorAll('#qdModeGrid [data-mode]').forEach((b) => {
+      b.classList.toggle('is-active', b.dataset.mode === mode);
+    });
+    el.thumbTrackpadDrawer.hidden = mode !== 'thumb';
+    if (mode === 'thumb') {
+      el.imeDockDrawer.hidden = true;
+      state.imeOpen = false;
+      el.macCursor.classList.remove('is-hidden');
+      updateInspector('thumb');
+    } else if (mode === 'trackpad') {
+      el.macCursor.classList.remove('is-hidden');
+    }
+    const padIcon = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="3" width="12" height="10" rx="2"/><line x1="2" y1="9.5" x2="14" y2="9.5"/></svg>';
+    const keyIcon = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="1.5" y="4" width="13" height="8" rx="1.5"/><line x1="4" y1="7" x2="12" y2="7"/><line x1="5" y1="9.5" x2="11" y2="9.5"/></svg>';
+    el.pillContextBtn.innerHTML = mode === 'thumb'
+      ? `${padIcon}<span>收起垫</span>`
+      : (state.activeApp === 'wps' ? `${padIcon}<span>触控垫</span>` : `${keyIcon}<span>输入</span>`);
+    el.pillContextBtn.classList.toggle('is-active', mode === 'thumb' || state.imeOpen);
+    applyViewportTransform();
+    snapPillToCorner(state.pillCorner, false, true);
+  }
+
+  function syncViewportChips() {
+    document.getElementById('vpSmartBtn').classList.toggle('is-active', state.viewportMode === 'smart');
+    document.getElementById('vpFitBtn').classList.toggle('is-active', state.viewportMode === 'fit');
+  }
+
+  function openImeFor(badgeText) {
+    setManipulationMode('direct');
+    state.imeOpen = true;
+    el.imeTargetBadge.textContent = badgeText;
+    el.imeDockDrawer.hidden = false;
+    el.imeInputField.focus();
+    el.pillContextBtn.classList.add('is-active');
+    syncIpadRailStates();
+    snapPillToCorner(state.pillCorner, false, true);
+  }
+
+  /* ================= Launcher Rendering v2 (Space Filter + Visual Mini Wireframes) ================= */
+  function renderLauncher() {
+    const q = (el.launcherSearchInput.value || '').trim().toLowerCase();
+    const sf = state.spaceFilter || 'all';
+    const filteredWins = state.windows.filter((w) => {
+      const matchQ = !q || w.title.toLowerCase().includes(q) || w.app.toLowerCase().includes(q) || w.space.toLowerCase().includes(q);
+      const matchS = sf === 'all' || w.space.includes(sf);
+      return matchQ && matchS;
+    });
+
+    const thumbGraphic = (w) => {
+      if (w.id.startsWith('wps')) {
+        return `<div style="display:flex;gap:2px;margin-bottom:3px"><span style="width:4px;height:4px;border-radius:50%;background:#ef4444"></span><span style="width:4px;height:4px;border-radius:50%;background:#f59e0b"></span><span style="width:4px;height:4px;border-radius:50%;background:#22c55e"></span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px"><div style="height:8px;background:#fff;border-radius:2px"></div><div style="height:8px;background:#dcfce7;border-radius:2px"></div><div style="height:8px;background:#fff;border-radius:2px"></div><div style="height:8px;background:#e0f2fe;border-radius:2px"></div></div>`;
+      }
+      if (w.id === 'safari') {
+        return `<div style="height:6px;background:#e2e8f0;border-radius:3px;margin-bottom:3px"></div>
+          <div style="height:10px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:3px;margin-bottom:2px"></div>
+          <div style="height:10px;background:#f8fafc;border-radius:3px"></div>`;
+      }
+      return `<div style="height:5px;background:#27272a;border-radius:2px;margin-bottom:3px"></div>
+        <div style="height:4px;width:72%;background:#38bdf8;border-radius:2px;margin-bottom:2px"></div>
+        <div style="height:4px;width:54%;background:#f472b6;border-radius:2px;margin-bottom:3px"></div>
+        <div style="height:8px;background:#09090b;border-radius:2px"></div>`;
+    };
+
+    el.launcherWindowList.innerHTML = filteredWins.map((w) => {
+      const target = w.target || w.id;
+      const isCur = target === state.activeApp;
+      return `
+        <div class="window-card ${isCur ? 'is-current' : ''}" data-launch-target="${target}">
+          <div class="win-mini-thumb" style="background:${w.bg};color:${w.fg}">
+            ${thumbGraphic(w)}
+          </div>
+          <div class="win-meta">
+            <div class="win-title">${w.title}</div>
+            <div class="win-sub">
+              <span>${w.spec}</span>
+              ${w.space.includes('其他') ? `<span class="space-chip">${w.space}</span>` : `<span style="color:#6ee7b7">● ${w.space}</span>`}
+            </div>
+          </div>
+          <div class="win-quick-actions">
+            ${state.device === 'ipad-pro' ? `<button type="button" class="mini-icon-act" data-win-split="${w.title}" aria-label="iPad 分屏新开窗口" title="iPad 分屏新开 UIScene">⧉</button>` : ''}
+            <button type="button" class="mini-icon-act" data-win-hide="${w.id}" aria-label="隐藏窗口" title="隐藏窗口">–</button>
+            <button type="button" class="mini-icon-act" data-win-close="${w.id}" aria-label="关闭窗口" title="关闭">✕</button>
+          </div>
+        </div>`;
+    }).join('') + `
+      <div class="window-card" data-launch-target="wps" style="border-style:dashed">
+        <div class="win-mini-thumb" style="background:#0f172a;color:#38bdf8;justify-content:center;align-items:center;font-weight:700">2560×1440</div>
+        <div class="win-meta">
+          <div class="win-title">Mac 物理显示器整屏兜底</div>
+          <div class="win-sub"><span>仅在无独立窗口时按需查看整屏</span></div>
+        </div>
+      </div>`;
+
+    el.launcherWindowList.querySelectorAll('[data-launch-target]').forEach((card) => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('[data-win-hide],[data-win-close],[data-win-split]')) return;
+        setScenario(card.dataset.launchTarget);
+        showToast(`已接入物理窗口: ${card.querySelector('.win-title').textContent}`);
+      });
+    });
+
+    el.launcherWindowList.querySelectorAll('[data-win-split]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showToast(`已在 iPadOS 新建分屏 UIScene: ${btn.dataset.winSplit}`);
+      });
+    });
+
+    el.launcherWindowList.querySelectorAll('[data-win-hide]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showToast('已在 Mac 隐藏该窗口');
+      });
+    });
+
+    el.launcherWindowList.querySelectorAll('[data-win-close]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showToast('已发送窗口关闭请求');
+      });
+    });
+
+    el.launcherDockShelf.innerHTML = state.dockApps.map((d) => `
+      <button type="button" class="dock-app-btn" data-dock-app="${d.id}" data-dock-target="${d.target}">
+        <span class="dock-icon" style="background:${d.bg};color:#fff">${d.icon}</span>
+        <span class="dock-label">${d.name}</span>
+        <span class="dock-dot" style="opacity:${d.running ? 1 : 0}"></span>
+      </button>
+    `).join('');
+
+    el.launcherDockShelf.querySelectorAll('[data-dock-app]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const app = state.dockApps.find((x) => x.id === btn.dataset.dockApp);
+        if (app && !app.running) {
+          app.running = true;
+          showToast(`正在冷启动 ${app.name} 并等待首帧...`);
+          setTimeout(() => setScenario(app.target), 480);
+        } else {
+          setScenario(btn.dataset.dockTarget);
+        }
+      });
+    });
+  }
+
+  /* ================= In-Device Sheets (MenuBar / U01 Diagnostics / Settings) ================= */
+  const MAC_MENUS_BY_APP = {
+    wps: [
+      { cat: '高频钉选', name: '保存工作簿', key: '⌘S', pinned: true },
+      { cat: '文件', name: '导出为 PDF...', key: '⇧⌘E', pinned: true },
+      { cat: '编辑', name: '撤销', key: '⌘Z', pinned: true },
+      { cat: '编辑', name: '重做', key: '⇧⌘Z', disabled: true },
+      { cat: '编辑', name: '选择性粘贴 (仅数值)', key: '⇧⌘V' },
+      { cat: '视图', name: '显示网格线', key: '⌘G', checked: true },
+      { cat: '视图', name: '冻结首行窗格', key: '⌥⌘F', pinned: true },
+      { cat: '数据', name: '自动筛选', key: '⇧⌘L' },
+      { cat: '窗口', name: '最小化到 Dock', key: '⌘M' }
+    ],
+    safari: [
+      { cat: '高频钉选', name: '重新加载页面', key: '⌘R', pinned: true },
+      { cat: '高频钉选', name: '新建标签页', key: '⌘T', pinned: true },
+      { cat: '编辑', name: '页内查找...', key: '⌘F', pinned: true },
+      { cat: '显示', name: '阅读器视图', key: '⇧⌘R', pinned: true },
+      { cat: '编辑', name: '重做输入', key: '⇧⌘Z', disabled: true },
+      { cat: '历史', name: '最近关闭的标签页', key: '⇧⌘T' },
+      { cat: '窗口', name: '移至 iPad 分屏', key: '⌃⌘F' }
+    ],
+    vscode: [
+      { cat: '高频钉选', name: '命令面板...', key: '⇧⌘P', pinned: true },
+      { cat: '高频钉选', name: '保存当前文件', key: '⌘S', pinned: true },
+      { cat: '视图', name: '切换集成终端', key: '⌃`', pinned: true },
+      { cat: '运行', name: '运行全部测试', key: '⌘U', pinned: true },
+      { cat: '编辑', name: '全局搜索替换', key: '⇧⌘H' },
+      { cat: '选择', name: '多光标向上扩展', key: '⌥⌘↑', disabled: true },
+      { cat: '窗口', name: '暗色高动态范围预览', key: '⌘K', checked: true }
+    ]
+  };
+
+  function openDeviceSheet(kind) {
+    state.sheet = kind;
+    state.quickDeckOpen = false;
+    el.quickDeck.hidden = true;
+    el.deviceSheetBackdrop.hidden = false;
+    syncIpadRailStates();
+
+    if (kind === 'menubar') {
+      updateInspector('menubar');
+      renderMenuBarSheet();
+    } else if (kind === 'diag') {
+      updateInspector('diag');
+      const bw = state.quality === 'hdr' ? '11.83 Mbps' : state.quality === 'll' ? '7.40 Mbps' : '3.85 Mbps';
+      const fmt = state.hdrOn ? 'HEVC Main10 (10-bit PQ)' : 'HEVC Main (8-bit sRGB)';
+      el.deviceSheetBody.innerHTML = `
+        <div class="sheet-grabber"></div>
+        <div class="sheet-header">
+          <div class="sheet-title">U01 性能与画质实时诊断</div>
+          <button type="button" class="studio-btn" id="closeSheetBtn">完成</button>
+        </div>
+        <div style="font-size:11.5px;color:#94a3b8">底层继续保持渲染与音频流不中断 · 参考 Build 12 实测基准</div>
+        <div class="u01-grid">
+          <div class="u01-card"><div class="u01-label">解码帧率 FPS</div><div class="u01-val" style="color:#6ee7b7">59.99 fps</div></div>
+          <div class="u01-card"><div class="u01-label">实时视频码率</div><div class="u01-val">${bw}</div></div>
+          <div class="u01-card"><div class="u01-label">控制端到端 RTT</div><div class="u01-val">14.2 ms</div></div>
+          <div class="u01-card"><div class="u01-label">Jitter 缓冲</div><div class="u01-val">4.8 ms</div></div>
+          <div class="u01-card"><div class="u01-label">卡顿 / 丢帧 / 丢包</div><div class="u01-val">0 / 0 / 0%</div></div>
+          <div class="u01-card"><div class="u01-label">EDR HDR 余量</div><div class="u01-val" style="color:#7dd3fc">${state.hdrOn ? '1.60× 激活' : '1.00× SDR'}</div></div>
+        </div>
+        <div class="u01-card">
+          <div class="u01-label">解码像素管线</div>
+          <div class="u01-val" style="font-size:13px">2560×1440 · ${fmt}</div>
+        </div>`;
+    } else if (kind === 'settings') {
+      el.deviceSheetBody.innerHTML = `
+        <div class="sheet-grabber"></div>
+        <div class="sheet-header">
+          <div class="sheet-title">连接与编码设置</div>
+          <button type="button" class="studio-btn" id="closeSheetBtn">完成</button>
+        </div>
+        <div class="u01-card" style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:650">10-bit PQ HDR + 顶部颜色融合</div>
+            <div style="font-size:11px;color:#94a3b8">突破 Casement 8-bit sRGB 限制</div>
+          </div>
+          <button type="button" class="studio-btn ${state.hdrOn ? 'is-primary' : ''}" id="toggleHdrBtn">${state.hdrOn ? '已开启' : '已关闭'}</button>
+        </div>
+        <div class="u01-card" style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:650">单手模式首选触控方案</div>
+            <div style="font-size:11px;color:#94a3b8">拇指玻璃垫驱动上方光标</div>
+          </div>
+          <button type="button" class="studio-btn" id="preferThumbBtn">立即打开拇指垫</button>
+        </div>`;
+      document.getElementById('toggleHdrBtn').addEventListener('click', () => {
+        state.hdrOn = !state.hdrOn;
+        el.deviceScreen.classList.toggle('hdr-enabled', state.hdrOn);
+        syncStatusBarTheme();
+        openDeviceSheet('settings');
+      });
+      document.getElementById('preferThumbBtn').addEventListener('click', () => {
+        closeDeviceSheet();
+        setManipulationMode('thumb');
+      });
+    }
+
+    const closeBtn = document.getElementById('closeSheetBtn');
+    if (closeBtn) closeBtn.addEventListener('click', closeDeviceSheet);
+  }
+
+  function renderMenuBarSheet() {
+    const appMenus = MAC_MENUS_BY_APP[state.activeApp] || MAC_MENUS_BY_APP.wps;
+    const q = state.menuFilter.trim().toLowerCase();
+    const list = appMenus.filter((m) => !q || m.name.toLowerCase().includes(q) || m.cat.toLowerCase().includes(q));
+    el.deviceSheetBody.innerHTML = `
+      <div class="sheet-grabber"></div>
+      <div class="sheet-header">
+        <div>
+          <div class="sheet-title">Mac 原生菜单栏 · ${state.activeApp.toUpperCase()}</div>
+          <div style="font-size:10.5px;color:#94a3b8">置顶高频 Bento 磁贴 + AX 菜单命令速搜</div>
+        </div>
+        <button type="button" class="studio-btn" id="closeSheetBtn">关闭</button>
+      </div>
+      <div class="menu-pinned-bento" role="group" aria-label="置顶高频命令">
+        ${appMenus.filter((m) => m.pinned).map((m) => `
+          <button type="button" class="menu-pinned-tile" data-exec-menu="${m.name}">
+            <span>${m.name.replace('...', '')}</span>
+            <span class="shortcut-kbd">${m.key}</span>
+          </button>`).join('')}
+      </div>
+      <div class="search-box">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#94a3b8" stroke-width="1.8" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3 3"/></svg>
+        <input type="search" id="menuSpotlightInput" aria-label="搜索 Mac 菜单命令" value="${escapeHtml(state.menuFilter)}" placeholder="Spotlight 搜菜单命令 (如: 导出、冻结)…" />
+      </div>
+      <div>
+        ${list.map((m) => `
+          <button type="button" class="menu-item-btn" data-exec-menu="${m.name}" ${m.disabled ? 'aria-disabled="true"' : ''}>
+            <span><span style="color:#7dd3fc;font-size:11px;margin-right:6px">[${m.cat}]</span>${m.checked ? '✓ ' : ''}${m.name}</span>
+            <span class="shortcut-kbd">${m.key}</span>
+          </button>`).join('')}
+      </div>`;
+
+    document.getElementById('closeSheetBtn').addEventListener('click', closeDeviceSheet);
+    const inp = document.getElementById('menuSpotlightInput');
+    inp.focus();
+    inp.setSelectionRange(inp.value.length, inp.value.length);
+    inp.addEventListener('input', () => {
+      state.menuFilter = inp.value;
+      renderMenuBarSheet();
+    });
+    el.deviceSheetBody.querySelectorAll('[data-exec-menu]').forEach((b) => {
+      b.addEventListener('click', () => {
+        if (b.getAttribute('aria-disabled') === 'true') return;
+        closeDeviceSheet();
+        showToast(`Mac MenuBar 已触发: ${b.dataset.execMenu}`);
+      });
+    });
+  }
+
+  function closeDeviceSheet() {
+    state.sheet = null;
+    el.deviceSheetBackdrop.hidden = true;
+    syncIpadRailStates();
+  }
+
+  el.deviceSheetBackdrop.addEventListener('click', (e) => {
+    if (e.target === el.deviceSheetBackdrop) closeDeviceSheet();
+  });
+
+  /* ================= Sticky Modifier Keys & Pinyin Mock IME ================= */
+  const PINYIN_DICT = {
+    zh: ['中', '中国', '重点', '增长'],
+    zhong: ['中国', '中台', '重要', '中心'],
+    ni: ['你好', '拟定', '你'],
+    nihao: ['你好', '你好世界'],
+    yu: ['预算', '预期', '阈值'],
+    yusuan: ['预算', '预算汇总'],
+    kaifa: ['开发', '开发进度']
+  };
+
+  el.imeInputField.addEventListener('input', () => {
+    const val = el.imeInputField.value.trim().toLowerCase();
+    const match = PINYIN_DICT[val];
+    if (match) {
+      el.pinyinStrip.hidden = false;
+      el.pinyinCandidates.innerHTML = match.map((w, idx) =>
+        `<button type="button" class="pinyin-cand" data-cand="${w}">${idx + 1}. ${w}</button>`
+      ).join('');
+      el.pinyinCandidates.querySelectorAll('[data-cand]').forEach((b) => {
+        b.addEventListener('click', () => {
+          commitTextToActiveApp(b.dataset.cand);
+        });
+      });
+    } else {
+      el.pinyinStrip.hidden = true;
+    }
+  });
+
+  function commitTextToActiveApp(text) {
+    if (!text) return;
+    if (state.activeApp === 'wps') {
+      state.cellValues[state.selectedCell] = text;
+      renderMacWindow();
+    } else if (state.activeApp === 'safari') {
+      state.safariDraft = (state.safariDraft ? state.safariDraft + ' ' : '') + text;
+      renderMacWindow();
+    } else {
+      state.vscodeInput = text;
+      renderMacWindow();
+    }
+    el.imeInputField.value = '';
+    el.pinyinStrip.hidden = true;
+    showToast(`原子提交上屏: "${text}"`);
+  }
+
+  document.getElementById('imeCommitBtn').addEventListener('click', () => {
+    commitTextToActiveApp(el.imeInputField.value.trim() || '你好 KKRemote');
+  });
+
+  document.getElementById('imeCloseBtn').addEventListener('click', () => {
+    state.imeOpen = false;
+    el.imeDockDrawer.hidden = true;
+    el.pillContextBtn.classList.remove('is-active');
+    syncIpadRailStates();
+    requestAnimationFrame(() => snapPillToCorner(state.pillCorner, false));
+  });
+
+  document.querySelectorAll('#modifierRibbon [data-mod]').forEach((btn) => {
+    let lastTap = 0;
+    btn.addEventListener('click', () => {
+      const now = Date.now();
+      const mod = btn.dataset.mod;
+      if (now - lastTap < 300) {
+        state.modifiers[mod] = 2;
+      } else {
+        state.modifiers[mod] = state.modifiers[mod] === 0 ? 1 : 0;
+      }
+      lastTap = now;
+      btn.classList.toggle('is-armed', state.modifiers[mod] === 1);
+      btn.classList.toggle('is-locked', state.modifiers[mod] === 2);
+      const label = state.modifiers[mod] === 2 ? '锁定 Hold' : state.modifiers[mod] === 1 ? '单次待发 Armed' : '已释放';
+      showToast(`修饰键 ${mod} ${label}`);
+    });
+  });
+
+  document.querySelectorAll('#modifierRibbon [data-sendkey]').forEach((btn) => {
+    btn.addEventListener('click', () => showToast(`已发送组合键 ${btn.dataset.sendkey}`));
+  });
+
+  document.getElementById('smartClipboardChip').addEventListener('click', () => {
+    commitTextToActiveApp('+18.4%');
+  });
+
+  document.getElementById('toggle60KbdBtn').addEventListener('click', () => {
+    state.kbd60Open = !state.kbd60Open;
+    el.softKbd60.hidden = !state.kbd60Open;
+    requestAnimationFrame(() => snapPillToCorner(state.pillCorner, false));
+  });
+
+  document.querySelectorAll('.kbd-cap').forEach((cap) => {
+    cap.addEventListener('click', () => {
+      const ch = cap.textContent;
+      if (ch === '⌫') el.imeInputField.value = el.imeInputField.value.slice(0, -1);
+      else if (ch === '↵') commitTextToActiveApp(el.imeInputField.value || '回车确认');
+      else if (ch === 'Space') el.imeInputField.value += ' ';
+      else if (ch.length === 1) el.imeInputField.value += ch.toLowerCase();
+      el.imeInputField.dispatchEvent(new Event('input'));
+    });
+  });
+
+  /* ================= Control Wiring ================= */
+  // Studio ARIA Tabs with Left/Right/Home/End keyboard contract
+  const tabs = Array.from(document.querySelectorAll('#deviceTablist [role="tab"]'));
+  tabs.forEach((tab, idx) => {
+    tab.addEventListener('click', () => activateDeviceTab(tab));
+    if (!('focusGroup' in HTMLElement.prototype)) {
+      tab.addEventListener('keydown', (e) => {
+        let next = null;
+        if (e.key === 'ArrowRight') next = tabs[(idx + 1) % tabs.length];
+        else if (e.key === 'ArrowLeft') next = tabs[(idx - 1 + tabs.length) % tabs.length];
+        else if (e.key === 'Home') next = tabs[0];
+        else if (e.key === 'End') next = tabs[tabs.length - 1];
+        if (next) {
+          e.preventDefault();
+          activateDeviceTab(next);
+          next.focus();
+        }
+      });
+    } else {
+      tab.addEventListener('focus', () => {
+        if (tab.getAttribute('aria-selected') !== 'true') activateDeviceTab(tab);
+      });
+    }
+  });
+
+  function activateDeviceTab(tab) {
+    tabs.forEach((t) => {
+      const sel = t === tab;
+      t.setAttribute('aria-selected', sel ? 'true' : 'false');
+      t.toggleAttribute('focusgroupstart', sel);
+      if (!('focusGroup' in HTMLElement.prototype)) {
+        t.tabIndex = sel ? 0 : -1;
+      }
+    });
+    setDevice(tab.dataset.device);
+  }
+
+  document.querySelectorAll('#scenePillBar [data-scene-pill]').forEach((btn) => {
+    btn.addEventListener('click', () => setScenario(btn.dataset.scenePill));
+  });
+
+  el.scenarioSelect.addEventListener('change', () => setScenario(el.scenarioSelect.value));
+  el.lifecycleSelect.addEventListener('change', () => setLifecycle(el.lifecycleSelect.value));
+
+  document.getElementById('lifecycleActionBtn').addEventListener('click', () => {
+    setLifecycle('live');
+    showToast('已接管 Mac 控制租约');
+  });
+
+  document.getElementById('lifecycleRecoverBtn').addEventListener('click', () => {
+    setLifecycle('live');
+    showToast('窗口已恢复至前台实时流');
+  });
+
+  document.getElementById('toggleInspectorBtn').addEventListener('click', (e) => {
+    const collapsed = el.studioMain.classList.toggle('inspector-collapsed');
+    e.target.textContent = collapsed ? '展开讲解栏' : '收起讲解栏';
+    requestAnimationFrame(() => snapPillToCorner(state.pillCorner, false));
+  });
+
+  // Floating pill segment actions
+  el.pillSwitchBtn.addEventListener('click', () => {
+    bumpPillActivity();
+    setScenario('launcher');
+  });
+
+  el.pillContextBtn.addEventListener('click', () => {
+    bumpPillActivity();
+    if (state.activeApp === 'wps') {
+      setManipulationMode(state.mode === 'thumb' ? 'direct' : 'thumb');
+    } else {
+      if (state.imeOpen) {
+        state.imeOpen = false;
+        el.imeDockDrawer.hidden = true;
+        el.pillContextBtn.classList.remove('is-active');
+      } else {
+        openImeFor(state.activeApp === 'safari' ? 'Safari · X发帖框' : 'VS Code · Terminal');
+      }
+    }
+  });
+
+  el.pillDeckBtn.addEventListener('click', () => {
+    bumpPillActivity();
+    state.quickDeckOpen = !state.quickDeckOpen;
+    el.quickDeck.hidden = !state.quickDeckOpen;
+    if (state.quickDeckOpen) el.floatingPill.classList.remove('is-idle');
+  });
+
+  document.getElementById('closeQuickDeckBtn').addEventListener('click', () => {
+    state.quickDeckOpen = false;
+    el.quickDeck.hidden = true;
+    bumpPillActivity();
+  });
+
+  // Quick-Deck handlers
+  document.querySelectorAll('#qdModeGrid [data-mode]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      setManipulationMode(btn.dataset.mode);
+      state.quickDeckOpen = false;
+      el.quickDeck.hidden = true;
+    });
+  });
+
+  document.getElementById('vpSmartBtn').addEventListener('click', () => {
+    state.viewportMode = 'smart';
+    syncViewportChips();
+    applyViewportTransform();
+  });
+
+  document.getElementById('vpFitBtn').addEventListener('click', () => {
+    state.viewportMode = 'fit';
+    syncViewportChips();
+    applyViewportTransform();
+  });
+
+  document.getElementById('toggleLoupeBtn').addEventListener('click', (e) => {
+    state.loupeActive = !state.loupeActive;
+    e.target.classList.toggle('is-active', state.loupeActive);
+    if (state.loupeActive) {
+      setManipulationMode('direct');
+      updateInspector('loupe');
+      el.precisionLoupe.hidden = false;
+      el.precisionLoupe.style.transform = 'translate3d(118px, 118px, 0)';
+      showToast('2.2× 放大镜已就绪：按住单元格即瞄准');
+    } else {
+      el.precisionLoupe.hidden = true;
+    }
+  });
+
+  document.getElementById('toggleMinimapBtn').addEventListener('click', (e) => {
+    state.minimapOpen = !state.minimapOpen;
+    el.minimapPeek.hidden = !state.minimapOpen;
+    e.target.classList.toggle('is-active', state.minimapOpen);
+    if (state.minimapOpen) {
+      updateInspector('minimap');
+      syncMinimapBox();
+    }
+  });
+
+  document.getElementById('minimapCloseBtn').addEventListener('click', () => {
+    state.minimapOpen = false;
+    el.minimapPeek.hidden = true;
+    document.getElementById('toggleMinimapBtn').classList.remove('is-active');
+  });
+
+  document.querySelectorAll('[data-anchor]').forEach((btn) => {
+    btn.addEventListener('click', () => jumpViewportAnchor(btn.dataset.anchor));
+  });
+
+  document.getElementById('qdMenuBarBtn').addEventListener('click', () => openDeviceSheet('menubar'));
+  document.getElementById('qdImeBtn').addEventListener('click', () => {
+    state.quickDeckOpen = false;
+    el.quickDeck.hidden = true;
+    openImeFor(state.activeApp === 'wps' ? `WPS · ${state.selectedCell}` : state.activeApp);
+  });
+  document.getElementById('qdClipboardBtn').addEventListener('click', () => {
+    commitTextToActiveApp('Q4营收同比增长 18.4%');
+  });
+  document.getElementById('qdAudioBtn').addEventListener('click', (e) => {
+    state.audioOn = !state.audioOn;
+    e.target.textContent = state.audioOn ? '🔊 音频已开' : '🔇 应用音频';
+    e.target.classList.toggle('is-active', state.audioOn);
+    syncStatusBarTheme();
+    showToast(state.audioOn ? '已订阅当前应用独立音频流' : '应用音频已静音');
+  });
+
+  document.querySelectorAll('#qdQualityRow [data-quality]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      state.quality = btn.dataset.quality;
+      document.querySelectorAll('#qdQualityRow [data-quality]').forEach((b) => b.classList.toggle('is-active', b === btn));
+      state.hdrOn = state.quality === 'hdr';
+      el.deviceScreen.classList.toggle('hdr-enabled', state.hdrOn);
+      syncStatusBarTheme();
+      showToast(`已切换画质: ${btn.textContent}`);
+    });
+  });
+
+    document.querySelectorAll('#qdCornerRow [data-corner]').forEach((btn) => {
+    btn.addEventListener('click', () => snapPillToCorner(btn.dataset.corner, true, false));
+  });
+
+  document.getElementById('qdDiagBtn').addEventListener('click', () => openDeviceSheet('diag'));
+  document.getElementById('qdSettingsBtn').addEventListener('click', () => openDeviceSheet('settings'));
+  document.getElementById('qdStopBtn').addEventListener('click', () => setScenario('home'));
+
+  // Thumb trackpad action buttons
+  document.getElementById('closeThumbPadBtn').addEventListener('click', () => setManipulationMode('direct'));
+  document.getElementById('tpLeftClickBtn').addEventListener('click', () => {
+    showToast(`拇指触控垫左键点击 (${Math.round(state.cursorX)}, ${Math.round(state.cursorY)})`);
+  });
+  document.getElementById('tpDragLockBtn').addEventListener('click', (e) => {
+    state.dragLock = !state.dragLock;
+    e.target.textContent = state.dragLock ? '🔒 拖选中' : '🔓 拖选锁';
+    e.target.classList.toggle('is-active', state.dragLock);
+  });
+  document.getElementById('tpRightClickBtn').addEventListener('click', () => {
+    const vpW = el.remoteCanvasViewport.clientWidth || 360;
+    const x = Math.min(vpW - 180, Math.max(10, state.cursorX));
+    const y = Math.max(12, state.cursorY + 12);
+    el.macContextMenu.style.left = `${x}px`;
+    el.macContextMenu.style.top = `${y}px`;
+    el.macContextMenu.hidden = false;
+  });
+  el.macContextMenu.querySelectorAll('[data-ctx]').forEach((item) => {
+    item.addEventListener('click', () => {
+      el.macContextMenu.hidden = true;
+      showToast(`已执行 Mac 右键菜单: ${item.dataset.ctx}`);
+    });
+  });
+  document.getElementById('tpScrollDownBtn').addEventListener('click', () => {
+    state.panY -= 90;
+    applyViewportTransform();
+    showToast('已向 Mac 发送高精度滚轮事件');
+  });
+
+  // iPhone Pill Tuck / Restore & Home/Launcher v2 actions
+  document.getElementById('pillTuckBtn').addEventListener('click', () => {
+    state.pillTucked = true;
+    state.quickDeckOpen = false;
+    el.quickDeck.hidden = true;
+    el.floatingPill.classList.add('is-tucked');
+    el.deviceBezel.classList.add('phone-pill-tucked');
+    showToast('控制胶囊已收拢至右缘，点击拉手即可展开');
+    announceA11y('控制胶囊已收拢至右缘');
+    document.getElementById('phonePillRestoreBtn').focus();
+  });
+  document.getElementById('phonePillRestoreBtn').addEventListener('click', () => {
+    state.pillTucked = false;
+    el.floatingPill.classList.remove('is-tucked');
+    el.deviceBezel.classList.remove('phone-pill-tucked');
+    bumpPillActivity();
+    announceA11y('控制胶囊已展开');
+    el.pillDeckBtn.focus();
+  });
+
+  document.querySelectorAll('[data-home-jump]').forEach((tile) => {
+    tile.addEventListener('click', () => {
+      setScenario(tile.dataset.homeJump);
+      showToast('已直连目标物理窗口');
+    });
+  });
+
+  document.querySelectorAll('#launcherSpaceFilter [data-space-filter]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      state.spaceFilter = btn.dataset.spaceFilter;
+      document.querySelectorAll('#launcherSpaceFilter [data-space-filter]').forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === btn));
+      });
+      renderLauncher();
+    });
+  });
+
+  // Home & Launcher buttons
+  document.getElementById('homeResumeBtn').addEventListener('click', () => setScenario('wps'));
+  document.getElementById('homeOpenLauncherBtn').addEventListener('click', () => setScenario('launcher'));
+  document.getElementById('homeDiagBtn').addEventListener('click', () => openDeviceSheet('diag'));
+  document.getElementById('homeSettingsBtn').addEventListener('click', () => openDeviceSheet('settings'));
+  document.getElementById('switchSecondHostBtn').addEventListener('click', () => showToast('Studio-Mac-M4 唤醒预览（多主机 X01）'));
+  document.getElementById('addHostDemoBtn').addEventListener('click', () => showToast('输入 Mac 端 6 位配对码即可建立 Ponte 通道'));
+  document.getElementById('launcherBackBtn').addEventListener('click', () => setScenario(state.activeApp));
+  el.launcherSearchInput.addEventListener('input', renderLauncher);
+
+  // iPad Right-Side Floating Liquid Glass Rail (iPhone Duo style + toolbar roving-tabindex fallback)
+  const ipadRailBar = document.getElementById('ipadRail');
+  if (ipadRailBar && !('focusGroup' in HTMLElement.prototype)) {
+    const railItems = Array.from(ipadRailBar.querySelectorAll('button'));
+    railItems.forEach((b, idx) => { b.tabIndex = idx === 0 ? 0 : -1; });
+    ipadRailBar.addEventListener('focusin', ({ target }) => {
+      const btn = target.closest('button');
+      if (!btn || !railItems.includes(btn)) return;
+      railItems.forEach((b) => { b.tabIndex = b === btn ? 0 : -1; });
+    });
+    ipadRailBar.addEventListener('keydown', (e) => {
+      const current = e.target.closest('button');
+      const idx = railItems.indexOf(current);
+      if (idx === -1) return;
+      let nextIdx = -1;
+      if (e.key === 'ArrowDown') nextIdx = (idx + 1) % railItems.length;
+      else if (e.key === 'ArrowUp') nextIdx = (idx - 1 + railItems.length) % railItems.length;
+      else if (e.key === 'Home') nextIdx = 0;
+      else if (e.key === 'End') nextIdx = railItems.length - 1;
+      if (nextIdx >= 0) {
+        e.preventDefault();
+        railItems[nextIdx].focus();
+      }
+    });
+  }
+
+  document.getElementById('railLauncherBtn').addEventListener('click', () => {
+    setScenario('launcher');
+    if (el.srLive) el.srLive.textContent = '已打开窗口与 Dock 启动台';
+  });
+  document.getElementById('railMenuBarBtn').addEventListener('click', () => {
+    if (state.scenario === 'home' || state.scenario === 'launcher') setScenario('wps');
+    openDeviceSheet('menubar');
+  });
+  document.getElementById('railImeBtn').addEventListener('click', () => {
+    if (state.scenario === 'home' || state.scenario === 'launcher') setScenario('wps');
+    if (state.imeOpen) {
+      state.imeOpen = false;
+      el.imeDockDrawer.hidden = true;
+      syncIpadRailStates();
+    } else {
+      openImeFor(`iPad · ${state.activeApp.toUpperCase()}`);
+    }
+  });
+  document.getElementById('railOverviewBtn').addEventListener('click', () => {
+    renderMacWindow();
+    const inner = el.macWindowSurface.querySelector('.wps-grid-wrap, .x-feed, .vscode-code');
+    if (inner) inner.scrollTop = 0;
+    showToast('已对齐 Mac 窗口整屏尺寸 (ResizeRequest)');
+    if (el.srLive) el.srLive.textContent = '已重置 Mac 窗口整屏对齐';
+  });
+  document.getElementById('ipadCmdRouteBtn').addEventListener('click', () => {
+    state.ipadCmdToMac = !state.ipadCmdToMac;
+    syncIpadRailStates();
+    showToast(state.ipadCmdToMac ? '外接键盘 ⌘ 组合键全部透传给 Mac' : '⌘Tab/⌘H 由 iPadOS 优先响应');
+  });
+  document.getElementById('railDiagBtn').addEventListener('click', () => {
+    if (state.sheet === 'diag') closeDeviceSheet();
+    else openDeviceSheet('diag');
+  });
+  document.getElementById('railCollapseBtn').addEventListener('click', () => {
+    state.railCollapsed = true;
+    el.deviceBezel.classList.add('rail-collapsed');
+    showToast('右侧悬浮胶囊已收起，点击右缘拉手可恢复');
+    if (el.srLive) el.srLive.textContent = '右侧快控轨已收起';
+    document.getElementById('railRestoreBtn').focus();
+  });
+  document.getElementById('railRestoreBtn').addEventListener('click', () => {
+    state.railCollapsed = false;
+    el.deviceBezel.classList.remove('rail-collapsed');
+    showToast('右侧 Liquid Glass 快控轨已展开');
+    if (el.srLive) el.srLive.textContent = '右侧快控轨已展开';
+    document.getElementById('railCollapseBtn').focus();
+  });
+  syncIpadRailStates();
+
+  // Guided "One-click Try" buttons in Inspector v2
+  document.querySelectorAll('[data-try]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const k = btn.dataset.try;
+      if (k === 'duo-pill') {
+        if (state.device === 'ipad-pro') activateDeviceTab(document.getElementById('tab-iphone-p'));
+        setScenario('wps');
+        const nextMode = state.pillCorner === 'side-right' ? 'br' : 'side-right';
+        snapPillToCorner(nextMode, true, false);
+        updateInspector('duoPill');
+        showToast(nextMode === 'side-right' ? '已切换为右侧竖排 Duo 胶囊 · 底栏 100% 无遮挡' : '已切回右下角水平胶囊');
+      } else if (k === 'whole-fit') {
+        if (state.device === 'ipad-pro') activateDeviceTab(document.getElementById('tab-iphone-p'));
+        setScenario('wps');
+        state.viewportMode = state.viewportMode === 'fit' ? 'smart' : 'fit';
+        syncViewportChips();
+        applyViewportTransform();
+        updateInspector('wholeFit');
+        showToast(state.viewportMode === 'fit' ? '完整窗口全貌（零裁剪 · 不改乱本机布局）' : '可读铺满 1:1（保持桌面字号清晰）');
+      } else if (k === 'ipad-glass') {
+        activateDeviceTab(document.getElementById('tab-ipad'));
+        setScenario('wps');
+        showToast('iPad 右侧 Liquid Glass 胶囊轨 + 内部滚动已激活');
+      } else if (k === 'thumb') {
+        if (state.device === 'ipad-pro') activateDeviceTab(document.getElementById('tab-iphone-p'));
+        setScenario('wps');
+        setManipulationMode('thumb');
+        showToast('请滑动底部透明触控垫移动上方光标');
+      } else if (k === 'loupe') {
+        if (state.device === 'ipad-pro') activateDeviceTab(document.getElementById('tab-iphone-p'));
+        setScenario('wps');
+        state.loupeActive = true;
+        document.getElementById('toggleLoupeBtn').classList.add('is-active');
+        setManipulationMode('direct');
+        el.precisionLoupe.hidden = false;
+        el.precisionLoupe.style.transform = 'translate3d(124px, 128px, 0)';
+        updateInspector('loupe');
+      } else if (k === 'minimap') {
+        if (state.device === 'ipad-pro') activateDeviceTab(document.getElementById('tab-iphone-p'));
+        setScenario('wps');
+        state.minimapOpen = true;
+        el.minimapPeek.hidden = false;
+        document.getElementById('toggleMinimapBtn').classList.add('is-active');
+        jumpViewportAnchor('right');
+        updateInspector('minimap');
+      } else if (k === 'menubar') {
+        if (state.scenario === 'home' || state.scenario === 'launcher') setScenario('wps');
+        openDeviceSheet('menubar');
+      } else if (k === 'safari-ime') {
+        setScenario('safari');
+        openImeFor('Safari · X发帖框');
+        el.imeInputField.value = 'zhong';
+        el.imeInputField.dispatchEvent(new Event('input'));
+      } else if (k === 'vscode-hdr') {
+        setScenario('vscode');
+        openImeFor('VS Code · Terminal');
+        state.kbd60Open = true;
+        el.softKbd60.hidden = false;
+      } else if (k === 'diag') {
+        if (state.scenario === 'home') setScenario('wps');
+        openDeviceSheet('diag');
+      }
+    });
+  });
+
+  /* ================= Native Modal Dialog Wiring (modern-web-guidance: dialog) ================= */
+  if (!('commandForElement' in HTMLButtonElement.prototype)) {
+    document.getElementById('openSpecModalBtn').addEventListener('click', () => {
+      if (!el.specModalDialog.open) el.specModalDialog.showModal();
+    });
+  }
+
+  // Light-dismiss fallback when closedby is unsupported: test pointerdown + pointerup rect bounds
+  if (!('closedBy' in HTMLDialogElement.prototype)) {
+    let downOutside = false;
+    el.specModalDialog.addEventListener('pointerdown', (e) => {
+      const r = el.specModalDialog.getBoundingClientRect();
+      downOutside = e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+    });
+    el.specModalDialog.addEventListener('pointerup', (e) => {
+      if (!downOutside) return;
+      const r = el.specModalDialog.getBoundingClientRect();
+      const upOutside = e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+      if (upOutside) el.specModalDialog.close('backdrop');
+      downOutside = false;
+    });
+  }
+
+  el.specModalDialog.addEventListener('close', () => {
+    el.specModalDialog.returnValue = '';
+  });
+
+  /* ================= Initialize ================= */
+  el.deviceScreen.classList.add('hdr-enabled');
+  syncStageHintStrip();
+  setScenario('wps');
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(() => {
+      if (state.device === 'ipad-pro' && state.scenario !== 'home' && state.scenario !== 'launcher') {
+        renderMacWindow();
+      } else {
+        applyViewportTransform();
+      }
+      snapPillToCorner(state.pillCorner, false, true);
+    }).observe(el.remoteCanvasViewport);
+  }
+  window.addEventListener('resize', () => {
+    if (state.device === 'ipad-pro' && state.scenario !== 'home' && state.scenario !== 'launcher') {
+      renderMacWindow();
+    } else {
+      applyViewportTransform();
+    }
+    snapPillToCorner(state.pillCorner, false, true);
+  });
+})();
+</script>
+</body>
+</html>
