@@ -19,8 +19,10 @@ case "$mode" in
       -clonedSourcePackagesDirPath .build/SourcePackages CODE_SIGN_IDENTITY="$identity" build
     if [[ "$mode" == mac-release ]]; then
       app=.build/DerivedData/Build/Products/Release/KKRemoteLabMac.app
-      codesign --force --sign "$identity" --timestamp=none "$app/Contents/Frameworks/WebRTC.framework"
-      codesign --force --sign "$identity" --timestamp=none --options runtime \
+      resolved_authority="$(codesign -dvv "$app" 2>&1 | sed -n 's/^Authority=//p' | head -n 1 || true)"
+      sign_identity="${MAC_SIGN_IDENTITY:-${resolved_authority:-$identity}}"
+      codesign --force --sign "$sign_identity" --timestamp=none "$app/Contents/Frameworks/WebRTC.framework"
+      codesign --force --sign "$sign_identity" --timestamp=none --options runtime \
         --entitlements Config/TransportLabMac.entitlements "$app"
       codesign --verify --deep --strict "$app"
     fi

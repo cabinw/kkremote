@@ -125,8 +125,9 @@ final class HostWindowCatalog {
             entries.removeValue(forKey: handle)
             throw LabError.message("窗口已关闭或不可捕获，请刷新列表")
         }
+        let liveTitle = String((window.title ?? entry.title).prefix(128))
         return RemoteWindow(id:entry.id,number:entry.number,processID:entry.processID,
-            application:entry.application,title:entry.title,widthPoints:window.frame.width,heightPoints:window.frame.height)
+            application:entry.application,title:liveTitle,widthPoints:window.frame.width,heightPoints:window.frame.height)
     }
 
     func current(_ entry: RemoteWindow) async throws -> RemoteWindow {
@@ -136,8 +137,9 @@ final class HostWindowCatalog {
             $0.owningApplication?.processID == entry.processID && $0.windowLayer == 0 }) else {
             throw LabError.message("窗口已关闭或不可捕获")
         }
+        let liveTitle = String((window.title ?? entry.title).prefix(128))
         return RemoteWindow(id:entry.id,number:entry.number,processID:entry.processID,
-            application:entry.application,title:entry.title,widthPoints:window.frame.width,heightPoints:window.frame.height)
+            application:entry.application,title:liveTitle,widthPoints:window.frame.width,heightPoints:window.frame.height)
     }
 }
 
@@ -249,14 +251,46 @@ final class HostWindowCatalog {
                 let frame=CGRect(dictionaryRepresentation:bounds) else { throw LabError.message("窗口身份已失效") }
             let app=AXUIElementCreateApplication(target.processID)
             AXUIElementSetMessagingTimeout(app,1)
-            let matches=(attribute(app,kAXWindowsAttribute) as? [AXUIElement] ?? []).filter {
-                guard let r=rect($0),let title=attribute($0,kAXTitleAttribute) as? String else { return false }
-                guard WindowTitleIdentity.matches(title,captureTitle:target.title,application:target.application) else { return false }
+            let axWindows = attribute(app,kAXWindowsAttribute) as? [AXUIElement] ?? []
+            var matches = axWindows.filter {
                 // During AppKit resize animation, CG reports the presentation frame
                 // while AX reports the destination frame. Retain the exact AX object
                 // resolved before mutation, verifying it still belongs to this app.
                 if let known { return CFEqual($0,known) }
-                return abs(r.minX-frame.minX)<2 && abs(r.minY-frame.minY)<2 && abs(r.width-frame.width)<2 && abs(r.height-frame.height)<2
+                guard let r=rect($0) else { return false }
+                let title = attribute($0,kAXTitleAttribute) as? String ?? ""
+                guard WindowTitleIdentity.matches(title,captureTitle:target.title,application:target.application) else { return false }
+                return abs(r.minX-frame.minX)<3 && abs(r.minY-frame.minY)<3 && abs(r.width-frame.width)<3 && abs(r.height-frame.height)<3
+            }
+            if matches.isEmpty, known == nil, !target.title.isEmpty {
+                matches = axWindows.filter {
+                    guard let r=rect($0) else { return false }
+                    let title = attribute($0,kAXTitleAttribute) as? String ?? ""
+                    let fuzzy = !title.isEmpty && (title.localizedCaseInsensitiveContains(target.title) || target.title.localizedCaseInsensitiveContains(title))
+                    return fuzzy && abs(r.minX-frame.minX)<3 && abs(r.minY-frame.minY)<3 && abs(r.width-frame.width)<3 && abs(r.height-frame.height)<3
+                }
+            }
+            if matches.isEmpty, known == nil {
+                matches = axWindows.filter {
+                    guard let r=rect($0) else { return false }
+                    return abs(r.minX-frame.minX)<3 && abs(r.minY-frame.minY)<3 && abs(r.width-frame.width)<3 && abs(r.height-frame.height)<3
+                }
+            }
+            if matches.count > 1, known == nil {
+                let onScreen = CGWindowListCopyWindowInfo(.optionOnScreenOnly, kCGNullWindowID) as? [[String: Any]] ?? []
+                let sameRectCG = onScreen.filter { info in
+                    guard info[kCGWindowOwnerPID as String] as? Int32 == target.processID,
+                          (info[kCGWindowLayer as String] as? Int ?? 0) == 0,
+                          let b = info[kCGWindowBounds as String] as? NSDictionary,
+                          let r = CGRect(dictionaryRepresentation: b) else { return false }
+                    return abs(r.minX-frame.minX)<3 && abs(r.minY-frame.minY)<3 && abs(r.width-frame.width)<3 && abs(r.height-frame.height)<3
+                }
+                if let rank = sameRectCG.firstIndex(where: { $0[kCGWindowNumber as String] as? UInt32 == target.number }),
+                   rank < matches.count {
+                    matches = [matches[rank]]
+                } else {
+                    matches = [matches[0]]
+                }
             }
             guard matches.count == 1 else {
                 let candidates=(attribute(app,kAXWindowsAttribute) as? [AXUIElement] ?? []).map {
@@ -407,6 +441,15 @@ final class HostWindowCatalog {
             let title = t as? String ?? ""
             return WindowTitleIdentity.matches(title, captureTitle: target.title, application: target.application) &&
                 abs(pt.x - frame.minX) < 3 && abs(pt.y - frame.minY) < 3 &&
+                abs(sz.width - frame.width) < 3 && abs(sz.height - frame.height) < 3
+        } ?? axWindows.first { elem in
+            var p: CFTypeRef?, s: CFTypeRef?
+            guard AXUIElementCopyAttributeValue(elem, kAXPositionAttribute as CFString, &p) == .success,
+                  AXUIElementCopyAttributeValue(elem, kAXSizeAttribute as CFString, &s) == .success,
+                  let p, let s, CFGetTypeID(p) == AXValueGetTypeID(), CFGetTypeID(s) == AXValueGetTypeID() else { return false }
+            var pt = CGPoint.zero, sz = CGSize.zero
+            guard AXValueGetValue(p as! AXValue, .cgPoint, &pt), AXValueGetValue(s as! AXValue, .cgSize, &sz) else { return false }
+            return abs(pt.x - frame.minX) < 3 && abs(pt.y - frame.minY) < 3 &&
                 abs(sz.width - frame.width) < 3 && abs(sz.height - frame.height) < 3
         }
         AXUIElementSetAttributeValue(app, kAXFrontmostAttribute as CFString, kCFBooleanTrue)

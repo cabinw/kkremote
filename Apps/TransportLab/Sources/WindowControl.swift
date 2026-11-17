@@ -58,10 +58,40 @@ final class HostWindowControl {
         AXUIElementSetMessagingTimeout(application,0.3)
         let frame=try Self.cgFrame(target)
         let windows=Self.attribute(application,kAXWindowsAttribute) as? [AXUIElement] ?? []
-        let matches=windows.filter {
+        var matches=windows.filter {
             guard let r=Self.rect($0) else { return false }
             return WindowTitleIdentity.matches(Self.attribute($0,kAXTitleAttribute) as? String ?? "",captureTitle:target.title,application:target.application) &&
-                abs(r.minX-frame.minX)<2 && abs(r.minY-frame.minY)<2 && abs(r.width-frame.width)<2 && abs(r.height-frame.height)<2
+                abs(r.minX-frame.minX)<3 && abs(r.minY-frame.minY)<3 && abs(r.width-frame.width)<3 && abs(r.height-frame.height)<3
+        }
+        if matches.isEmpty, !target.title.isEmpty {
+            matches=windows.filter {
+                guard let r=Self.rect($0) else { return false }
+                let title = Self.attribute($0,kAXTitleAttribute) as? String ?? ""
+                let fuzzy = !title.isEmpty && (title.localizedCaseInsensitiveContains(target.title) || target.title.localizedCaseInsensitiveContains(title))
+                return fuzzy && abs(r.minX-frame.minX)<3 && abs(r.minY-frame.minY)<3 && abs(r.width-frame.width)<3 && abs(r.height-frame.height)<3
+            }
+        }
+        if matches.isEmpty {
+            matches=windows.filter {
+                guard let r=Self.rect($0) else { return false }
+                return abs(r.minX-frame.minX)<3 && abs(r.minY-frame.minY)<3 && abs(r.width-frame.width)<3 && abs(r.height-frame.height)<3
+            }
+        }
+        if matches.count > 1 {
+            let onScreen = CGWindowListCopyWindowInfo(.optionOnScreenOnly, kCGNullWindowID) as? [[String: Any]] ?? []
+            let sameRectCG = onScreen.filter { info in
+                guard info[kCGWindowOwnerPID as String] as? Int32 == target.processID,
+                      (info[kCGWindowLayer as String] as? Int ?? 0) == 0,
+                      let b = info[kCGWindowBounds as String] as? NSDictionary,
+                      let r = CGRect(dictionaryRepresentation: b) else { return false }
+                return abs(r.minX-frame.minX)<3 && abs(r.minY-frame.minY)<3 && abs(r.width-frame.width)<3 && abs(r.height-frame.height)<3
+            }
+            if let rank = sameRectCG.firstIndex(where: { $0[kCGWindowNumber as String] as? UInt32 == target.number }),
+               rank < matches.count {
+                matches = [matches[rank]]
+            } else {
+                matches = [matches[0]]
+            }
         }
         guard matches.count == 1 else { throw LabError.message("无法确认输入目标窗口") }
         window=matches[0]

@@ -15,12 +15,12 @@ enum LabCLI {
         var terminationSource: DispatchSourceSignal?
         do {
             let args = Array(CommandLine.arguments.dropFirst())
-            let known: Set<String> = ["--lab-role", "--route", "--host", "--port", "--media-port", "--key-file", "--duration", "--resolution", "--fps", "--mbps", "--pattern", "--report", "--host-report", "--pacing", "--playout", "--receive-depth", "--capture-depth", "--bridge-transport", "--window-id", "--frame-preview", "--window-cycle", "--frame-trace-dir", "--hevc-keyframe-seconds", "--simulate-outage-ms", "--diagnostic-impairment", "--report-history-limit", "--coord-url", "--identity-file", "--pairing-url-file", "--pairing-url-fd", "--autoselect-app"]
+            let known: Set<String> = ["--lab-role", "--route", "--host", "--port", "--media-port", "--key-file", "--duration", "--resolution", "--fps", "--mbps", "--pattern", "--report", "--host-report", "--pacing", "--playout", "--receive-depth", "--capture-depth", "--bridge-transport", "--window-id", "--frame-preview", "--window-cycle", "--frame-trace-dir", "--hevc-keyframe-seconds", "--simulate-outage-ms", "--diagnostic-impairment", "--report-history-limit", "--coord-url", "--identity-file", "--pairing-url-file", "--pairing-url-fd", "--autoselect-app", "--overlay-style"]
             let qualityOptions: Set<String> = ["--hevc-max-qp", "--native-workspace-display-id"]
             var flags = Set<String>()
             var options: [String: String] = [:], i = 0
             while i < args.count {
-                if ["--window-text-quality", "--mobile-window-control", "--mobile-window-layout", "--self-test", "--persistent-host", "--list-windows", "--hdr", "--simulate-loss", "--sdr-receiver", "--sdk-drop-diagnostics", "--disable-frame-dropper", "--sample-journal"].contains(args[i]) {
+                if ["--window-text-quality", "--mobile-window-control", "--mobile-window-layout", "--self-test", "--persistent-host", "--list-windows", "--hdr", "--simulate-loss", "--sdr-receiver", "--sdk-drop-diagnostics", "--disable-frame-dropper", "--sample-journal", "--overlay-off"].contains(args[i]) {
                     guard flags.insert(args[i]).inserted else { throw LabError.message("重复参数") }
                     i += 1; continue
                 }
@@ -48,6 +48,15 @@ enum LabCLI {
             model.enablesWindowLayout = flags.contains("--mobile-window-layout")
             model.enablesWindowControl = flags.contains("--mobile-window-control")
             model.hdr = flags.contains("--hdr")
+            if let rawTheme = options["--overlay-style"] {
+                guard let theme = ControlledOverlayTheme.fromCLI(rawTheme) else {
+                    throw LabError.message("未知 overlay-style：可选 aurora / prism / matrix / ambilight / silk")
+                }
+                MainActor.assumeIsolated { ControlledWindowOverlay.shared.setTheme(theme) }
+            }
+            if flags.contains("--overlay-off") {
+                MainActor.assumeIsolated { ControlledWindowOverlay.shared.setOverlayEnabled(false) }
+            }
             if let value=options["--native-workspace-display-id"] {
                 guard let id=UInt32(value),id>0,model.enablesWindowLayout,
                       !flags.contains("--window-text-quality") else {throw LabError.message("原生像素工作区需要有效显示 ID 和窗口布局；不能与插值画质路径混用")}

@@ -46,10 +46,10 @@ struct MobileWindowSizing {
               usable.width.isFinite, usable.height.isFinite, usable.width >= 300, usable.height >= 200 else {
             return nil
         }
-        let baseScale = max(1.0, 960.0 / max(viewport.width, viewport.height))
+        let baseScale = max(1.0, 1160.0 / max(viewport.width, viewport.height))
         let rawW = viewport.width * baseScale
         let rawH = viewport.height * baseScale
-        let fit = min(1.0, usable.width / rawW, usable.height / rawH)
+        let fit = min(1.0, (usable.width * 0.98) / rawW, (usable.height * 0.98) / rawH)
         return CGSize(width: max(300, (rawW * fit).rounded()), height: max(200, (rawH * fit).rounded()))
     }
     /// Preserve the window's native pixels within the existing encoder pixel budget.

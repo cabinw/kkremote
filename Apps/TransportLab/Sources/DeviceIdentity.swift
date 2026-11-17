@@ -186,7 +186,27 @@ final class DeviceIdentity {
         let base = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
             .appendingPathComponent("KKRemote", isDirectory: true)
         try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-        return try loadOrCreate(atFile: base.appendingPathComponent("host-identity-v1.json").path)
+        let targetPath = base.appendingPathComponent("host-identity-v1.json").path
+        if !FileManager.default.fileExists(atPath: targetPath) {
+            let legacyPath = FileManager.default.homeDirectoryForCurrentUser
+                .appendingPathComponent("Library/Containers/com.cabinw.kkremote.lab.mac/Data/Library/Application Support/KKRemote/host-identity-v1.json").path
+            if let migrated = try? loadOrCreate(atFile: legacyPath) {
+                let stored = StoredDeviceKeys(
+                    signPrivateRaw: migrated.signKey.rawRepresentation.base64EncodedString(),
+                    kexPrivateRaw: migrated.kexKey.rawRepresentation.base64EncodedString()
+                )
+                if let encoded = try? JSONEncoder().encode(stored) {
+                    let fd = open(targetPath, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, S_IRUSR | S_IWUSR)
+                    if fd >= 0 {
+                        let handle = FileHandle(fileDescriptor: fd, closeOnDealloc: true)
+                        try? handle.write(contentsOf: encoded)
+                        try? handle.close()
+                    }
+                }
+                return migrated
+            }
+        }
+        return try loadOrCreate(atFile: targetPath)
     }
 
     static func loadOrCreate(atFile path: String) throws -> DeviceIdentity {
