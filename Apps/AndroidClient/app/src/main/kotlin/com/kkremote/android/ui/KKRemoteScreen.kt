@@ -79,6 +79,7 @@ import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Mouse
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.StopCircle
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Window
@@ -87,6 +88,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
@@ -217,14 +220,17 @@ fun KKRemoteScreen(viewModel: WorkspaceViewModel) {
         }
     }
 
-    // Report physical/logical window viewport (excluding transient soft IME) so Mac Host auto-fits window aspect ratio
+    // Report exact full-screen physical window viewport (outside .imePadding() so soft keyboard never triggers Mac resize)
     val configuration = LocalConfiguration.current
     val density = LocalDensity.current
-    val statusTopDp = WindowInsets.statusBars.asPaddingValues().calculateTopPadding().value.toDouble()
-    val navBottomDp = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding().value.toDouble()
-    val viewportWidthDp = configuration.screenWidthDp.toDouble()
-    val viewportHeightDp = if (state.scaleMode == CanvasScaleMode.FIT) {
-        max(150.0, configuration.screenHeightDp.toDouble() - statusTopDp - navBottomDp * 0.6 - 6.0)
+    var fullWindowSizePx by remember { mutableStateOf(IntSize.Zero) }
+    val viewportWidthDp = if (fullWindowSizePx.width > 0) {
+        fullWindowSizePx.width.toDouble() / density.density.toDouble()
+    } else {
+        configuration.screenWidthDp.toDouble()
+    }
+    val viewportHeightDp = if (fullWindowSizePx.height > 0) {
+        fullWindowSizePx.height.toDouble() / density.density.toDouble()
     } else {
         configuration.screenHeightDp.toDouble()
     }
@@ -257,6 +263,11 @@ fun KKRemoteScreen(viewModel: WorkspaceViewModel) {
     )
 
     // Full-screen workspace in both folded and unfolded states — no sidebar!
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .onSizeChanged { fullWindowSizePx = it }
+    ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -395,6 +406,9 @@ fun KKRemoteScreen(viewModel: WorkspaceViewModel) {
                         showOverflowMenu = false
                         viewModel.togglePreferHdr()
                     },
+                    onToggleLinkQualityBar = {
+                        viewModel.toggleLinkQualityBar()
+                    },
                     onSendQuickKey = { key ->
                         showOverflowMenu = false
                         viewModel.sendRemoteKey(key)
@@ -431,6 +445,7 @@ fun KKRemoteScreen(viewModel: WorkspaceViewModel) {
             )
         }
     }
+    }
 
     // Remaining Frosted Glass Modal Sheets (Settings & Diagnostics only)
     if (state.showPairingSheet) {
@@ -442,6 +457,7 @@ fun KKRemoteScreen(viewModel: WorkspaceViewModel) {
             FrostedSettingsAndHostsSheet(
                 state = state,
                 palette = palette,
+                onToggleLinkQualityBar = viewModel::setShowLinkQualityBar,
                 onImportLink = { link, coord -> viewModel.importPairingLink(link, coord) },
                 onConnectSaved = viewModel::connectToHost,
                 onRemoveSaved = viewModel::removeHost,
@@ -520,18 +536,29 @@ private fun RemoteWindowStage(
     val vidH = max(1, state.videoHeightPx)
     val stW = stageSize.width.toFloat()
     val stH = stageSize.height.toFloat()
-    val safeTop = if (state.scaleMode == CanvasScaleMode.FIT) statusBarTopPx + 8f else 0f
-    val safeBottom = if (state.scaleMode == CanvasScaleMode.FIT) navBarBottomPx * 0.6f + 8f else 0f
+    val stageAspect = if (stH > 1f) stW / stH else 1f
+    val videoAspect = vidW.toFloat() / vidH.toFloat()
+    val aspectRelDiff = kotlin.math.abs(videoAspect - stageAspect) / max(0.1f, stageAspect)
+    val isAspectMatchedFullScreen = state.hasLiveVideo && aspectRelDiff <= 0.08f
+    val useEdgeToEdgeFullScreen = state.scaleMode == CanvasScaleMode.FILL ||
+        (state.scaleMode == CanvasScaleMode.FIT && isAspectMatchedFullScreen)
+    val safeTop = if (state.scaleMode == CanvasScaleMode.FIT && !isAspectMatchedFullScreen) statusBarTopPx + 8f else 0f
+    val safeBottom = if (state.scaleMode == CanvasScaleMode.FIT && !isAspectMatchedFullScreen) navBarBottomPx * 0.6f + 8f else 0f
     val availH = max(1f, stH - safeTop - safeBottom)
 
-    val (drawW, drawH) = remember(stW, availH, vidW, vidH, state.scaleMode) {
+    val (drawW, drawH) = remember(stW, stH, availH, vidW, vidH, state.scaleMode, isAspectMatchedFullScreen, aspectRelDiff) {
         if (stW <= 1f || availH <= 1f) {
             0f to 0f
         } else {
             when (state.scaleMode) {
                 CanvasScaleMode.FIT -> {
-                    val s = min(stW / vidW, availH / vidH)
-                    (vidW * s) to (vidH * s)
+                    if (isAspectMatchedFullScreen && aspectRelDiff <= 0.03f) {
+                        val s = max(stW / vidW, stH / vidH)
+                        (vidW * s) to (vidH * s)
+                    } else {
+                        val s = min(stW / vidW, availH / vidH)
+                        (vidW * s) to (vidH * s)
+                    }
                 }
                 CanvasScaleMode.FILL -> {
                     val s = max(stW / vidW, stH / vidH)
@@ -689,16 +716,18 @@ private fun RemoteWindowStage(
         if (videoTrack != null && drawW > 1f && drawH > 1f) {
             val drawWDp = with(density) { drawW.toDp() }
             val drawHDp = with(density) { drawH.toDp() }
-            val cornerRadius = if (state.scaleMode == CanvasScaleMode.FIT) 12.dp else 0.dp
+            val cornerRadius = if (useEdgeToEdgeFullScreen || state.scaleMode != CanvasScaleMode.FIT) 0.dp else 12.dp
             AndroidView(
                 factory = { ctx ->
                     WebRtcTextureView(ctx).also { v ->
+                        v.setHdrPqMode(state.negotiatedHdrPq)
                         v.onVideoDimensionsChanged = onVideoSizeChanged
                         v.onBackdropSampled = onBackdropSampled
                         v.bindTrack(videoTrack)
                     }
                 },
                 update = { view ->
+                    view.setHdrPqMode(state.negotiatedHdrPq)
                     view.onVideoDimensionsChanged = onVideoSizeChanged
                     view.onBackdropSampled = onBackdropSampled
                     view.bindTrack(videoTrack)
@@ -718,7 +747,7 @@ private fun RemoteWindowStage(
                         onVideoRectChanged(coords.boundsInRoot())
                     }
                     .shadow(
-                        elevation = if (state.hasLiveVideo && state.scaleMode == CanvasScaleMode.FIT) 18.dp else 0.dp,
+                        elevation = if (state.hasLiveVideo && !useEdgeToEdgeFullScreen && state.scaleMode == CanvasScaleMode.FIT) 18.dp else 0.dp,
                         shape = RoundedCornerShape(cornerRadius),
                         ambientColor = Color.Black.copy(alpha = 0.22f),
                         spotColor = Color.Black.copy(alpha = 0.24f),
@@ -968,6 +997,7 @@ private fun FloatingIosCapsuleDock(
     onSetScaleMode: (CanvasScaleMode) -> Unit,
     onZoomIn: () -> Unit,
     onToggleHdr: () -> Unit,
+    onToggleLinkQualityBar: () -> Unit,
     onSendQuickKey: (String) -> Unit,
     onOpenSettings: () -> Unit,
     onOpenDiagnostics: () -> Unit,
@@ -976,6 +1006,7 @@ private fun FloatingIosCapsuleDock(
     modifier: Modifier = Modifier,
 ) {
     val navPad = WindowInsets.navigationBars.asPaddingValues()
+    val configuration = LocalConfiguration.current
     val view = LocalView.current
     var offsetX by remember { mutableFloatStateOf(0f) }
     var offsetY by remember { mutableFloatStateOf(0f) }
@@ -986,11 +1017,22 @@ private fun FloatingIosCapsuleDock(
         offsetY = 0f
     }
 
+    val dragModifier = Modifier.pointerInput(Unit) {
+        detectDragGestures { change, dragAmount ->
+            change.consume()
+            val maxLeft = -max(0f, view.width.toFloat() - 220f)
+            val maxUp = -max(0f, view.height.toFloat() - 180f)
+            offsetX = (offsetX + dragAmount.x).coerceIn(maxLeft, 0f)
+            offsetY = (offsetY + dragAmount.y).coerceIn(maxUp, 0f)
+        }
+    }
+
     Column(
         horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = modifier
             .padding(
+                start = 14.dp,
                 end = 14.dp,
                 bottom = if (state.showKeyboardBar) 14.dp else navPad.calculateBottomPadding() + 14.dp,
             )
@@ -1019,6 +1061,7 @@ private fun FloatingIosCapsuleDock(
                 onZoomIn = onZoomIn,
                 onTogglePointerMode = onTogglePointerMode,
                 onToggleHdr = onToggleHdr,
+                onToggleLinkQualityBar = onToggleLinkQualityBar,
                 onSendQuickKey = onSendQuickKey,
                 onOpenSettings = onOpenSettings,
                 onOpenDiagnostics = onOpenDiagnostics,
@@ -1027,66 +1070,204 @@ private fun FloatingIosCapsuleDock(
             )
         }
 
-        // Exact iPhone 3-button Draggable Frosted Glass Capsule: [⌨️ | 🪟 | ⋯]
-        FrostedGlassBox(
-            palette = palette,
-            backdrop = backdrop,
-            shape = CircleShape,
-            blurRadius = 26.dp,
-            shadowElevation = 14.dp,
-            modifier = Modifier.pointerInput(Unit) {
-                detectDragGestures { change, dragAmount ->
-                    change.consume()
-                    val maxLeft = -max(0f, view.width.toFloat() - 220f)
-                    val maxUp = -max(0f, view.height.toFloat() - 180f)
-                    offsetX = (offsetX + dragAmount.x).coerceIn(maxLeft, 0f)
-                    offsetY = (offsetY + dragAmount.y).coerceIn(maxUp, 0f)
-                }
-            },
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (state.hasLiveVideo) {
+            // Matching Frosted Glass Link Quality Mini-Toolbar right to the left of the tool capsule
+            AnimatedVisibility(
+                visible = state.showLinkQualityBar,
+                enter = fadeIn(tween(160)) + scaleIn(initialScale = 0.94f, animationSpec = tween(160)),
+                exit = fadeOut(tween(130)) + scaleOut(targetScale = 0.94f, animationSpec = tween(130)),
+            ) {
+                FrostedLinkQualityPill(
+                    state = state,
+                    palette = palette,
+                    backdrop = backdrop,
+                    compact = configuration.screenWidthDp < 520,
+                    onClick = onOpenDiagnostics,
+                    modifier = dragModifier,
+                )
+            }
+
+            // Exact iPhone 3-button Draggable Frosted Glass Capsule: [⌨️ | 🪟 | ⋯]
+            FrostedGlassBox(
+                palette = palette,
+                backdrop = backdrop,
+                shape = CircleShape,
+                blurRadius = 26.dp,
+                shadowElevation = 14.dp,
+                modifier = dragModifier,
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (state.hasLiveVideo) {
+                        IconButton(
+                            onClick = onToggleKeyboard,
+                            modifier = Modifier.size(width = 52.dp, height = 48.dp).testTag("phoneKeyboard"),
+                        ) {
+                            Icon(
+                                imageVector = if (state.showKeyboardBar) Icons.Default.KeyboardHide else Icons.Default.Keyboard,
+                                contentDescription = if (state.showKeyboardBar) "隐藏键盘" else "键盘",
+                                tint = if (state.showKeyboardBar) palette.accentBlue else palette.primaryText,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        }
+                        VerticalDivider(modifier = Modifier.height(22.dp), thickness = 0.6.dp, color = palette.dividerColor)
+                    }
+
                     IconButton(
-                        onClick = onToggleKeyboard,
-                        modifier = Modifier.size(width = 52.dp, height = 48.dp).testTag("phoneKeyboard"),
+                        onClick = onOpenWindows,
+                        enabled = state.dataChannelOpen,
+                        modifier = Modifier.size(width = 52.dp, height = 48.dp).testTag("phoneChooseWindow"),
                     ) {
                         Icon(
-                            imageVector = if (state.showKeyboardBar) Icons.Default.KeyboardHide else Icons.Default.Keyboard,
-                            contentDescription = if (state.showKeyboardBar) "隐藏键盘" else "键盘",
-                            tint = if (state.showKeyboardBar) palette.accentBlue else palette.primaryText,
+                            imageVector = Icons.Default.Window,
+                            contentDescription = "选择窗口",
+                            tint = if (state.dataChannelOpen) palette.primaryText else palette.secondaryText.copy(alpha = 0.42f),
                             modifier = Modifier.size(20.dp),
                         )
                     }
                     VerticalDivider(modifier = Modifier.height(22.dp), thickness = 0.6.dp, color = palette.dividerColor)
-                }
 
-                IconButton(
-                    onClick = onOpenWindows,
-                    enabled = state.dataChannelOpen,
-                    modifier = Modifier.size(width = 52.dp, height = 48.dp).testTag("phoneChooseWindow"),
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Window,
-                        contentDescription = "选择窗口",
-                        tint = if (state.dataChannelOpen) palette.primaryText else palette.secondaryText.copy(alpha = 0.42f),
-                        modifier = Modifier.size(20.dp),
-                    )
-                }
-                VerticalDivider(modifier = Modifier.height(22.dp), thickness = 0.6.dp, color = palette.dividerColor)
-
-                IconButton(
-                    onClick = onToggleMenu,
-                    modifier = Modifier.size(width = 52.dp, height = 48.dp).testTag("phoneMenu"),
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MoreHoriz,
-                        contentDescription = "窗口工具",
-                        tint = if (showMenu) palette.accentBlue else palette.primaryText,
-                        modifier = Modifier.size(21.dp),
-                    )
+                    IconButton(
+                        onClick = onToggleMenu,
+                        modifier = Modifier.size(width = 52.dp, height = 48.dp).testTag("phoneMenu"),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreHoriz,
+                            contentDescription = "窗口工具",
+                            tint = if (showMenu) palette.accentBlue else palette.primaryText,
+                            modifier = Modifier.size(21.dp),
+                        )
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun FrostedLinkQualityPill(
+    state: WorkspaceUiState,
+    palette: GlassPalette,
+    backdrop: LiveVideoBackdrop,
+    compact: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val t = state.telemetry
+    val isConnected = state.phase == ConnectionPhase.CONNECTED || state.dataChannelOpen || state.hasLiveVideo
+    val rtt = t.rttMs
+    val ledColor = when {
+        !isConnected -> palette.secondaryText.copy(alpha = 0.45f)
+        rtt == null -> Color(0xFF30D158)
+        rtt < 45.0 -> Color(0xFF30D158)
+        rtt < 110.0 -> Color(0xFFFF9F0A)
+        else -> Color(0xFFFF453A)
+    }
+
+    val bytesPerSec = if (t.rxBytesPerSec > 0.0) t.rxBytesPerSec else (t.videoMbps * 125_000.0)
+    val speedStr = when {
+        !isConnected -> "—"
+        bytesPerSec >= 1_000_000.0 -> String.format("%.1f MB/s", bytesPerSec / 1_000_000.0)
+        bytesPerSec >= 1_000.0 -> String.format("%d KB/s", (bytesPerSec / 1_000.0).roundToInt())
+        else -> "0 KB/s"
+    }
+    val rttStr = rtt?.let { "${it.roundToInt()} ms" } ?: "—"
+    val fpsStr = if (state.hasLiveVideo) "${t.fps.roundToInt()} fps" else "—"
+    val bitrateStr = if (state.hasLiveVideo || t.videoMbps > 0.01) {
+        String.format("%.1f Mbps", t.videoMbps)
+    } else {
+        "—"
+    }
+
+    FrostedGlassBox(
+        palette = palette,
+        backdrop = backdrop,
+        shape = CircleShape,
+        blurRadius = 26.dp,
+        shadowElevation = 14.dp,
+        modifier = modifier
+            .height(48.dp)
+            .clickable(onClick = onClick)
+            .testTag("linkQualityToolbar"),
+    ) {
+        if (compact) {
+            Row(
+                modifier = Modifier
+                    .height(48.dp)
+                    .padding(horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(7.dp)
+                        .clip(CircleShape)
+                        .background(ledColor),
+                )
+                Text(
+                    text = if (isConnected) "$rttStr · $fpsStr · $speedStr" else "待连接",
+                    fontSize = 11.5.sp,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Medium,
+                    color = palette.primaryText,
+                    maxLines = 1,
+                )
+            }
+        } else {
+            Row(
+                modifier = Modifier
+                    .height(48.dp)
+                    .padding(horizontal = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(7.5.dp)
+                        .clip(CircleShape)
+                        .background(ledColor),
+                )
+                QualityMetricCell(label = "速度", value = speedStr, palette = palette)
+                VerticalDivider(modifier = Modifier.height(18.dp), thickness = 0.6.dp, color = palette.dividerColor)
+                QualityMetricCell(label = "延迟", value = rttStr, palette = palette)
+                VerticalDivider(modifier = Modifier.height(18.dp), thickness = 0.6.dp, color = palette.dividerColor)
+                QualityMetricCell(label = "帧率", value = fpsStr, palette = palette)
+                VerticalDivider(modifier = Modifier.height(18.dp), thickness = 0.6.dp, color = palette.dividerColor)
+                QualityMetricCell(label = "码率", value = bitrateStr, palette = palette)
+            }
+        }
+    }
+}
+
+@Composable
+private fun QualityMetricCell(
+    label: String,
+    value: String,
+    palette: GlassPalette,
+) {
+    Column(
+        horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            text = label,
+            fontSize = 9.sp,
+            lineHeight = 10.sp,
+            fontWeight = FontWeight.Medium,
+            color = palette.secondaryText,
+            maxLines = 1,
+        )
+        Text(
+            text = value,
+            fontSize = 11.5.sp,
+            lineHeight = 13.sp,
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.SemiBold,
+            color = palette.primaryText,
+            maxLines = 1,
+        )
     }
 }
 
@@ -1100,6 +1281,7 @@ private fun FrostedIosContextMenu(
     onZoomIn: () -> Unit,
     onTogglePointerMode: () -> Unit,
     onToggleHdr: () -> Unit,
+    onToggleLinkQualityBar: () -> Unit,
     onSendQuickKey: (String) -> Unit,
     onOpenSettings: () -> Unit,
     onOpenDiagnostics: () -> Unit,
@@ -1218,6 +1400,14 @@ private fun FrostedIosContextMenu(
                 IosMenuRow("取消编辑", Icons.Default.Close, palette, onClick = { onSendQuickKey("escape") })
                 HorizontalDivider(thickness = 0.6.dp, color = palette.dividerColor)
             }
+
+            IosMenuRow(
+                label = if (state.showLinkQualityBar) "✓ 连接质量栏" else "连接质量栏",
+                icon = Icons.Default.Speed,
+                palette = palette,
+                onClick = onToggleLinkQualityBar,
+            )
+            HorizontalDivider(thickness = 0.6.dp, color = palette.dividerColor)
 
             IosMenuRow(
                 label = "连接设置",
@@ -1869,6 +2059,7 @@ private fun MacDockAppTile(
 private fun FrostedSettingsAndHostsSheet(
     state: WorkspaceUiState,
     palette: GlassPalette,
+    onToggleLinkQualityBar: (Boolean) -> Unit,
     onImportLink: (String, String) -> Boolean,
     onConnectSaved: (TrustedHostProfile) -> Unit,
     onRemoveSaved: (TrustedHostProfile) -> Unit,
@@ -1899,6 +2090,42 @@ private fun FrostedSettingsAndHostsSheet(
                     .clip(RoundedCornerShape(8.dp))
                     .clickable(onClick = onDismiss)
                     .padding(horizontal = 8.dp, vertical = 4.dp),
+            )
+        }
+
+        Text("界面与监控", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = palette.secondaryText, modifier = Modifier.padding(start = 6.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(14.dp))
+                .background(palette.elevatedCardTint)
+                .border(0.6.dp, palette.hairlineBorder, RoundedCornerShape(14.dp))
+                .clickable { onToggleLinkQualityBar(!state.showLinkQualityBar) }
+                .padding(horizontal = 14.dp, vertical = 10.dp)
+                .testTag("rowToggleLinkQualityBar"),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Column(modifier = Modifier.weight(1f).padding(end = 10.dp)) {
+                Text("显示连接质量工具栏", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = palette.primaryText)
+                Text(
+                    text = "在工具按钮左侧实时显示速度、延迟、FPS 与码率",
+                    fontSize = 11.5.sp,
+                    color = palette.secondaryText,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Switch(
+                checked = state.showLinkQualityBar,
+                onCheckedChange = { onToggleLinkQualityBar(it) },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = palette.accentBlue,
+                    uncheckedThumbColor = Color.White,
+                    uncheckedTrackColor = palette.dividerColor,
+                ),
+                modifier = Modifier.testTag("switchLinkQualityBar"),
             )
         }
 

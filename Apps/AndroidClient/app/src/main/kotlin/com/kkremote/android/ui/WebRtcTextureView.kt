@@ -10,7 +10,6 @@ import androidx.compose.ui.graphics.asImageBitmap
 import com.kkremote.android.webrtc.WebRtcRuntime
 import org.webrtc.EglBase
 import org.webrtc.EglRenderer
-import org.webrtc.GlRectDrawer
 import org.webrtc.VideoFrame
 import org.webrtc.VideoSink
 import org.webrtc.VideoTrack
@@ -27,6 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class WebRtcTextureView(context: Context) : TextureView(context), TextureView.SurfaceTextureListener, VideoSink {
 
     private val eglRenderer = EglRenderer("KKRemoteTextureRenderer")
+    private val glDrawer = HdrAwareGlDrawer()
     private val initialized = AtomicBoolean(false)
     private var boundTrack: VideoTrack? = null
 
@@ -59,8 +59,12 @@ class WebRtcTextureView(context: Context) : TextureView(context), TextureView.Su
 
     private fun ensureRendererInitialized() {
         if (initialized.compareAndSet(false, true)) {
-            eglRenderer.init(WebRtcRuntime.eglBase.eglBaseContext, EglBase.CONFIG_PLAIN, GlRectDrawer())
+            eglRenderer.init(WebRtcRuntime.eglBase.eglBaseContext, EglBase.CONFIG_PLAIN, glDrawer)
         }
+    }
+
+    fun setHdrPqMode(enabled: Boolean) {
+        glDrawer.setHdrPqEnabled(enabled)
     }
 
     fun bindTrack(track: VideoTrack?) {

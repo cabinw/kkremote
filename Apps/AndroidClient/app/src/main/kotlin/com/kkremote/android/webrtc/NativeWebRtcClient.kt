@@ -195,6 +195,8 @@ class NativeWebRtcClient(
 
     private var prevBytesReceived: Long = 0L
     private var prevStatsTimestampUs: Double = 0.0
+    private var prevPairBytesReceived: Long = 0L
+    private var prevPairTimestampUs: Double = 0.0
     private var prevFramesDecoded: Long = 0L
     private var prevDecodeSec: Double = 0.0
     private var prevJitterDelaySec: Double = 0.0
@@ -484,6 +486,7 @@ class NativeWebRtcClient(
 
         var rttMs: Double? = null
         var candidatePairLabel = "—"
+        var pairBytesPerSec = 0.0
         for ((_, st) in statsMap) {
             if (st.type == "candidate-pair") {
                 val state = st.members["state"]?.toString()
@@ -493,10 +496,21 @@ class NativeWebRtcClient(
                     val lId = st.members["localCandidateId"]?.toString()
                     val rId = st.members["remoteCandidateId"]?.toString()
                     candidatePairLabel = "${localTypes[lId] ?: "local"} → ${remoteTypes[rId] ?: "remote"}"
+                    val pairBytes = st.members["bytesReceived"].asLong() ?: 0L
+                    val pairTsUs = st.timestampUs
+                    if (prevPairTimestampUs > 0.0 && pairTsUs > prevPairTimestampUs && pairBytes >= prevPairBytesReceived) {
+                        val dt = (pairTsUs - prevPairTimestampUs) / 1_000_000.0
+                        pairBytesPerSec = (pairBytes - prevPairBytesReceived) / dt
+                    }
+                    if (nominated) {
+                        prevPairTimestampUs = pairTsUs
+                        prevPairBytesReceived = pairBytes
+                    }
                 }
             }
         }
 
+        var emittedVideoStats = false
         for ((_, st) in statsMap) {
             if (st.type == "inbound-rtp" && st.members["kind"] == "video") {
                 val width = st.members["frameWidth"].asLong()?.toInt() ?: 0
@@ -517,14 +531,24 @@ class NativeWebRtcClient(
 
                 val nowUs = st.timestampUs
                 var mbps = 0.0
+                var rtpBytesPerSec = 0.0
+                var deltaSec = 0.0
                 if (prevStatsTimestampUs > 0.0 && nowUs > prevStatsTimestampUs && bytesRecv >= prevBytesReceived) {
-                    val deltaSec = (nowUs - prevStatsTimestampUs) / 1_000_000.0
-                    mbps = ((bytesRecv - prevBytesReceived) * 8.0) / (deltaSec * 1_000_000.0)
+                    deltaSec = (nowUs - prevStatsTimestampUs) / 1_000_000.0
+                    rtpBytesPerSec = (bytesRecv - prevBytesReceived) / deltaSec
+                    mbps = (rtpBytesPerSec * 8.0) / 1_000_000.0
                 }
                 prevStatsTimestampUs = nowUs
                 prevBytesReceived = bytesRecv
 
                 val deltaFrames = framesDecoded - prevFramesDecoded
+                val effectiveFps = if (fps > 0.1) {
+                    fps
+                } else if (deltaSec > 0.0 && deltaFrames >= 0L) {
+                    deltaFrames / deltaSec
+                } else {
+                    0.0
+                }
                 val decodeMs = if (deltaFrames > 0 && totalDecodeTime >= prevDecodeSec) {
                     ((totalDecodeTime - prevDecodeSec) / deltaFrames) * 1000.0
                 } else null
@@ -543,10 +567,11 @@ class NativeWebRtcClient(
                     StreamTelemetry(
                         width = width,
                         height = height,
-                        fps = fps,
+                        fps = effectiveFps,
                         framesDecoded = framesDecoded,
                         keyFramesDecoded = keyFrames,
                         videoMbps = mbps,
+                        rxBytesPerSec = if (pairBytesPerSec > 0.0) pairBytesPerSec else rtpBytesPerSec,
                         rttMs = rttMs,
                         packetsLost = packetsLost,
                         nackCount = nackCount,
@@ -558,8 +583,20 @@ class NativeWebRtcClient(
                         decoderName = decoderImpl,
                     )
                 )
+                emittedVideoStats = true
                 break
             }
+        }
+
+        if (!emittedVideoStats && rttMs != null) {
+            callbacks.onTelemetry(
+                sessionId,
+                StreamTelemetry(
+                    rxBytesPerSec = pairBytesPerSec,
+                    rttMs = rttMs,
+                    candidatePair = candidatePairLabel,
+                )
+            )
         }
     }
 

@@ -155,6 +155,7 @@ data class StreamTelemetry(
     val framesDecoded: Long = 0L,
     val keyFramesDecoded: Long = 0L,
     val videoMbps: Double = 0.0,
+    val rxBytesPerSec: Double = 0.0,
     val rttMs: Double? = null,
     val packetsLost: Int = 0,
     val nackCount: Long = 0L,

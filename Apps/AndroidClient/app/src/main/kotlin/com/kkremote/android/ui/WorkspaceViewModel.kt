@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.webrtc.PeerConnection
@@ -86,6 +87,8 @@ data class WorkspaceUiState(
     val scaleMode: CanvasScaleMode = CanvasScaleMode.FIT,
     val inputMode: PointerInputMode = PointerInputMode.DIRECT_TOUCH,
     val preferHdr: Boolean = false,
+    val negotiatedHdrPq: Boolean = false,
+    val showLinkQualityBar: Boolean = true,
     val zoom: Float = 1.0f,
     val panX: Float = 0f,
     val panY: Float = 0f,
@@ -104,6 +107,11 @@ data class WorkspaceUiState(
         get() = videoWidthPx > 0 && videoHeightPx > 0
 }
 
+@Serializable
+private data class ClientUiPrefs(
+    val showLinkQualityBar: Boolean = true,
+)
+
 class WorkspaceViewModel(application: Application) : AndroidViewModel(application) {
 
     private val storageJson = Json {
@@ -114,6 +122,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
     private val baseDir = File(application.noBackupFilesDir, "kkremote").apply { mkdirs() }
     private val identity = DeviceIdentity.loadOrCreate(File(baseDir, "client-identity-v1.json"))
     private val hostsFile = File(baseDir, "trusted-hosts-v1.json")
+    private val uiPrefsFile = File(baseDir, "ui-prefs-v1.json")
 
     private val _uiState = MutableStateFlow(
         WorkspaceUiState(
@@ -152,11 +161,13 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
 
     init {
         val loaded = loadSavedHosts()
+        val uiPrefs = loadUiPrefs()
         val mostRecent = loaded.maxByOrNull { it.lastConnectedEpochMs }
         _uiState.update {
             it.copy(
                 savedHosts = loaded,
                 activeHost = mostRecent,
+                showLinkQualityBar = uiPrefs.showLinkQualityBar,
                 showPairingSheet = false,
             )
         }
@@ -580,6 +591,13 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         if (visible) refreshWindows()
     }
     fun setShowTelemetrySheet(visible: Boolean) = _uiState.update { it.copy(showTelemetrySheet = visible) }
+    fun setShowLinkQualityBar(enabled: Boolean) {
+        _uiState.update { it.copy(showLinkQualityBar = enabled) }
+        persistUiPrefs(ClientUiPrefs(showLinkQualityBar = enabled))
+    }
+    fun toggleLinkQualityBar() {
+        setShowLinkQualityBar(!_uiState.value.showLinkQualityBar)
+    }
     fun setShowKeyboardBar(visible: Boolean) {
         _uiState.update { it.copy(showKeyboardBar = visible) }
         if (visible && _uiState.value.canControl) {
@@ -618,6 +636,11 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
             preferHdr = _uiState.value.preferHdr,
             callbacks = object : NativeWebRtcClient.Callbacks {
                 override fun onLocalAnswer(sessionId: String, sdp: String, dtlsFingerprint: String, videoFormat: String) {
+                    viewModelScope.launch {
+                        if (sessionId == activeSessionId) {
+                            _uiState.update { it.copy(negotiatedHdrPq = videoFormat == "hevc-main10-pq") }
+                        }
+                    }
                     coordClient?.sendAnswer(sessionId, sdp, dtlsFingerprint, videoFormat)
                 }
 
@@ -705,8 +728,14 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                     viewModelScope.launch {
                         if (sessionId == activeSessionId) {
                             _uiState.update { st ->
+                                val isHdrStream = when {
+                                    telemetry.codec.contains("H265", ignoreCase = true) -> true
+                                    telemetry.codec.contains("H264", ignoreCase = true) -> false
+                                    else -> st.negotiatedHdrPq
+                                }
                                 st.copy(
                                     telemetry = telemetry,
+                                    negotiatedHdrPq = isHdrStream,
                                     videoWidthPx = if (telemetry.width > 0) telemetry.width else st.videoWidthPx,
                                     videoHeightPx = if (telemetry.height > 0) telemetry.height else st.videoHeightPx,
                                 )
@@ -971,6 +1000,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                 dataChannelOpen = false,
                 selectedWindow = null,
                 controlLease = null,
+                negotiatedHdrPq = false,
                 videoWidthPx = 0,
                 videoHeightPx = 0,
                 edgeColor = WindowEdgeColor.Initial,
@@ -1018,6 +1048,23 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
             hostsFile.setReadable(true, true)
             hostsFile.setWritable(false, false)
             hostsFile.setWritable(true, true)
+        }
+    }
+
+    private fun loadUiPrefs(): ClientUiPrefs {
+        if (!uiPrefsFile.exists()) return ClientUiPrefs()
+        return runCatching {
+            storageJson.decodeFromString<ClientUiPrefs>(uiPrefsFile.readText())
+        }.getOrDefault(ClientUiPrefs())
+    }
+
+    private fun persistUiPrefs(prefs: ClientUiPrefs) {
+        runCatching {
+            uiPrefsFile.writeText(storageJson.encodeToString(prefs))
+            uiPrefsFile.setReadable(false, false)
+            uiPrefsFile.setReadable(true, true)
+            uiPrefsFile.setWritable(false, false)
+            uiPrefsFile.setWritable(true, true)
         }
     }
 
