@@ -1,0 +1,699 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-14",
+  "scope": "Read existing build 35 artifacts and current source only; no active media test or device operation",
+  "targetClientBuildAsReported": "35",
+  "sourceProvenance": "Current working tree read for path inspection; hashes do not prove exact source of build 35",
+  "evidence": [
+    {
+      "codec": "video/H265",
+      "transfer": "SMPTE_ST_2084_PQ",
+      "sourceWidth": 500,
+      "sourceHeight": 1015,
+      "width": 1000,
+      "height": 2030,
+      "contentWidth": 430,
+      "contentHeight": 872.9,
+      "viewportWidth": 430,
+      "viewportHeight": 409.33333333333337,
+      "displayPixelWidth": 1290,
+      "displayPixelHeight": 2619,
+      "displayFailures": 0,
+      "desktopColors": true,
+      "keyboardFocused": true,
+      "keyboardWidthLocked": true,
+      "frames": 461,
+      "displayEnqueued": 432,
+      "scene": "excel-keyboard-keeps-full-width-metadata",
+      "evidence": ".build/ios-text-quality-review/evidence35/2C142C83-CD3A-483C-ABD2-C2AC29850BB5.txt",
+      "sha256": "4d317a9c7cb3114305a44a452c626c454e4a573e3f5af5a5924674b55209080e",
+      "decodedToDisplayScaleX": 1.29,
+      "decodedToDisplayScaleY": 1.2901477832512316,
+      "sourcePixels": 2030000,
+      "displayPixels": 3378510,
+      "sameFrameCaptureOrDecodeImageAvailable": false
+    },
+    {
+      "codec": "video/H265",
+      "transfer": "SMPTE_ST_2084_PQ",
+      "sourceWidth": 500,
+      "sourceHeight": 1015,
+      "width": 1000,
+      "height": 2030,
+      "contentWidth": 430,
+      "contentHeight": 872.9,
+      "viewportWidth": 430,
+      "viewportHeight": 873,
+      "displayPixelWidth": 1290,
+      "displayPixelHeight": 2619,
+      "displayFailures": 0,
+      "desktopColors": true,
+      "keyboardFocused": false,
+      "keyboardWidthLocked": false,
+      "frames": 1235,
+      "displayEnqueued": 1163,
+      "scene": "excel-real-scroll-and-tap-metadata",
+      "evidence": ".build/ios-text-quality-review/evidence35/59862E29-6112-44F2-A8FE-79D2F9EE5E1F.txt",
+      "sha256": "d261c552e77748bca76a00684a5467bae391241e5839798e93659ed5ae87f4c2",
+      "decodedToDisplayScaleX": 1.29,
+      "decodedToDisplayScaleY": 1.2901477832512316,
+      "sourcePixels": 2030000,
+      "displayPixels": 3378510,
+      "sameFrameCaptureOrDecodeImageAvailable": false
+    },
+    {
+      "codec": "video/H265",
+      "transfer": "SMPTE_ST_2084_PQ",
+      "sourceWidth": 500,
+      "sourceHeight": 1015,
+      "width": 1000,
+      "height": 2030,
+      "contentWidth": 430,
+      "contentHeight": 872.9,
+      "viewportWidth": 430,
+      "viewportHeight": 409.33333333333337,
+      "displayPixelWidth": 1290,
+      "displayPixelHeight": 2619,
+      "displayFailures": 0,
+      "desktopColors": true,
+      "keyboardFocused": true,
+      "keyboardWidthLocked": true,
+      "frames": 815,
+      "displayEnqueued": 759,
+      "scene": "excel-chinese-host-readback-metadata",
+      "evidence": ".build/ios-text-quality-review/evidence35/5A5CFF0E-132E-4916-9F3D-2A7E7A042C34.txt",
+      "sha256": "9b005fd13dc2cf9293c30a3228e332157b3b7b2426aed00dfbda19ab6996acf0",
+      "decodedToDisplayScaleX": 1.29,
+      "decodedToDisplayScaleY": 1.2901477832512316,
+      "sourcePixels": 2030000,
+      "displayPixels": 3378510,
+      "sameFrameCaptureOrDecodeImageAvailable": false
+    },
+    {
+      "codec": "video/H265",
+      "transfer": "SMPTE_ST_2084_PQ",
+      "sourceWidth": 500,
+      "sourceHeight": 1015,
+      "width": 1000,
+      "height": 2030,
+      "contentWidth": 430,
+      "contentHeight": 872.9,
+      "viewportWidth": 430,
+      "viewportHeight": 873,
+      "displayPixelWidth": 1290,
+      "displayPixelHeight": 2619,
+      "displayFailures": 0,
+      "desktopColors": true,
+      "keyboardFocused": false,
+      "keyboardWidthLocked": false,
+      "frames": 998,
+      "displayEnqueued": 933,
+      "scene": "excel-screen-pixel-presentation-metadata",
+      "evidence": ".build/ios-text-quality-review/evidence35/61E30FC4-6BD5-4EE7-94BB-5FF94568A4C3.txt",
+      "sha256": "eac87a943dc42242a7aeb1b3c022a6a1f582ffd7ab0d34c1c78cc7eabd1d31dc",
+      "decodedToDisplayScaleX": 1.29,
+      "decodedToDisplayScaleY": 1.2901477832512316,
+      "sourcePixels": 2030000,
+      "displayPixels": 3378510,
+      "sameFrameCaptureOrDecodeImageAvailable": false
+    },
+    {
+      "codec": "video/H265",
+      "transfer": "SMPTE_ST_2084_PQ",
+      "sourceWidth": 500,
+      "sourceHeight": 1015,
+      "width": 1000,
+      "height": 2030,
+      "contentWidth": 430,
+      "contentHeight": 872.9,
+      "viewportWidth": 430,
+      "viewportHeight": 873,
+      "displayPixelWidth": 1290,
+      "displayPixelHeight": 2619,
+      "displayFailures": 0,
+      "desktopColors": true,
+      "keyboardFocused": false,
+      "keyboardWidthLocked": false,
+      "frames": 281,
+      "displayEnqueued": 269,
+      "scene": "excel-real-touch-selected-cell-metadata",
+      "evidence": ".build/ios-text-quality-review/evidence35/6B3940DE-8375-486C-8320-9D813B70AF9A.txt",
+      "sha256": "ef861b6a79f833e4c2ea5d8f9a965cf31ee4afb0e136f49337e87b64ebacaf1f",
+      "decodedToDisplayScaleX": 1.29,
+      "decodedToDisplayScaleY": 1.2901477832512316,
+      "sourcePixels": 2030000,
+      "displayPixels": 3378510,
+      "sameFrameCaptureOrDecodeImageAvailable": false
+    },
+    {
+      "codec": "video/H265",
+      "transfer": "SMPTE_ST_2084_PQ",
+      "sourceWidth": 814,
+      "sourceHeight": 430,
+      "width": 1628,
+      "height": 860,
+      "contentWidth": 814,
+      "contentHeight": 430,
+      "viewportWidth": 814,
+      "viewportHeight": 430,
+      "displayPixelWidth": 2442,
+      "displayPixelHeight": 1290,
+      "displayFailures": 0,
+      "desktopColors": true,
+      "keyboardFocused": false,
+      "keyboardWidthLocked": false,
+      "frames": 159,
+      "displayEnqueued": 154,
+      "scene": "excel-rotated-input-geometry-metadata",
+      "evidence": ".build/ios-text-quality-review/evidence35/C89D6A24-6493-4592-A261-13E82BFD827C.txt",
+      "sha256": "71f839793657fa01ae841d6ea112294cb73b1c9580d0f0d2ed9d6e5fe0f9cf1c",
+      "decodedToDisplayScaleX": 1.5,
+      "decodedToDisplayScaleY": 1.5,
+      "sourcePixels": 1400080,
+      "displayPixels": 3150180,
+      "sameFrameCaptureOrDecodeImageAvailable": false
+    }
+  ],
+  "inspectedFiles": [
+    {
+      "path": "Apps/TransportLab/Sources/WindowCaptureSource.swift",
+      "sha256": "39c67fad9897f4fe2537eadfb9dca11f5925d711c967b20a968e3d238ef4e55d"
+    },
+    {
+      "path": "Apps/TransportLab/Sources/HEVCCodec.swift",
+      "sha256": "96be207eed3338c9b67cfd40fa5ea13b91e35d7bd5dea47d4315e352f03889f1"
+    },
+    {
+      "path": "Apps/TransportLab/Sources/PeerEngine.swift",
+      "sha256": "4f048faee0650bd54d1babca0d7db3450caa865f7047f0a427c71449e921273d"
+    },
+    {
+      "path": "Apps/TransportLab/Sources/HDRVideoView.swift",
+      "sha256": "35eca18c5d4bfdd7f61c56b4040ea6ab48b890d05d8906942e344202a265a98c"
+    },
+    {
+      "path": "Apps/TransportLab/Sources/MobileInteraction/MobileWindowSizing.swift",
+      "sha256": "d93e4d98b38f057774f7c5953647aca95022dc85105542dc293cd431b3ed831c"
+    },
+    {
+      "path": "Apps/TransportLab/Sources/MobileInteraction/WindowEdgeColor.swift",
+      "sha256": "56359085a10c9f39f4dafee32bb08c59946f77290d857431ea7986aca3411aaf"
+    },
+    {
+      "path": "Apps/IOSInteractionLab/DeviceTests/DeviceViewerTests.swift",
+      "sha256": "5fae2b756336380fc4b2ade4705bac6f39966b4d129c80d4b60dd7ef13982e8d"
+    },
+    {
+      "path": "docs/testing/iPhone-Excel清晰度.md",
+      "sha256": "2531eaad228d8322795173e95395e929b76e84ca2123b67016c796ea2b26d44e"
+    },
+    {
+      "path": "docs/testing/iPhone-键盘宽度与文字采样.md",
+      "sha256": "2b533cd5dab50bc79af2cb9f24e676593a6d43698bbbd3f61bfd2848eebb63a7"
+    }
+  ],
+  "confirmed": [
+    "portrait decoded 1000x2030 to presentation buffer 1290x2619",
+    "landscape decoded 1628x860 to presentation buffer 2442x1290",
+    "keyboard reduces visible height while preserving width and presentation-buffer dimensions",
+    "all six metadata snapshots report displayFailures=0"
+  ],
+  "notEstablished": [
+    "paired raw capture versus decoded image quality",
+    "codec quality or QP during build 35",
+    "network as blur cause",
+    "pixel losslessness or zero presentation drops",
+    "exact physical panel output or input-to-photon latency"
+  ],
+  "pixelBudgetCalculation": {
+    "referenceBudgetPixels": 3686400,
+    "portraitHypotheticalEvenDisplayMatchedPixels": [
+      1290,
+      2620
+    ],
+    "portraitHypotheticalTotalPixels": 3379800,
+    "landscapeDisplayMatchedPixels": [
+      2442,
+      1290
+    ],
+    "landscapeTotalPixels": 3150180,
+    "note": "Arithmetic only; sufficient encoder area does not establish higher native source rasterization."
+  },
+  "externalReferences": [
+    "https://developer.apple.com/documentation/screencapturekit/sccaptureresolutiontype/best",
+    "https://developer.apple.com/documentation/screencapturekit/sccontentfilter/pointpixelscale",
+    "https://developer.apple.com/documentation/coreimage/cilanczosscaletransform",
+    "https://devstreaming-cdn.apple.com/videos/wwdc/2017/511tj33587vdhds/511/511_working_with_heif_and_hevc.pdf"
+  ],
+  "nextTestState": "not started; coordinate with user before acquiring paired frames; leave both hosts and phone untouched",
+  "supplementalEvidence": {
+    "source": "iOS development handoff; evidence36 and pinyin-evidence",
+    "buildLabel": "36 per handoff/artifact directory; no device inspection performed",
+    "observations": [
+      {
+        "codec": "video/H265",
+        "transfer": "SMPTE_ST_2084_PQ",
+        "sourceWidth": 430,
+        "sourceHeight": 873,
+        "width": 860,
+        "height": 1746,
+        "contentWidth": 430,
+        "contentHeight": 873,
+        "viewportWidth": 430,
+        "viewportHeight": 873,
+        "displayPixelWidth": 1290,
+        "displayPixelHeight": 2619,
+        "displayFailures": 0,
+        "desktopColors": true,
+        "keyboardFocused": false,
+        "keyboardWidthLocked": false,
+        "scene": "textedit-direct-keyboard-hidden-metadata",
+        "evidenceGroup": "evidence36",
+        "evidence": ".build/ios-direct-keyboard-review/evidence36/3B57E0F4-91CF-4817-AED9-B8E0CC907B74.txt",
+        "sha256": "e6952ae61b0be36abf10f22ad015860ceee3b55fc22ce2daeab6c36bab8c037c",
+        "decodedToDisplayScaleX": 1.5,
+        "decodedToDisplayScaleY": 1.5,
+        "sourcePixels": 1501560,
+        "displayPixels": 3378510,
+        "purpose": "dimension evidence only, not input or transport acceptance",
+        "failedWaitScene": false
+      },
+      {
+        "codec": "video/H265",
+        "transfer": "SMPTE_ST_2084_PQ",
+        "sourceWidth": 430,
+        "sourceHeight": 873,
+        "width": 860,
+        "height": 1746,
+        "contentWidth": 430,
+        "contentHeight": 873,
+        "viewportWidth": 430,
+        "viewportHeight": 518,
+        "displayPixelWidth": 1290,
+        "displayPixelHeight": 2619,
+        "displayFailures": 0,
+        "desktopColors": true,
+        "keyboardFocused": true,
+        "keyboardWidthLocked": true,
+        "scene": "textedit-direct-keyboard-dispatched-metadata",
+        "evidenceGroup": "evidence36",
+        "evidence": ".build/ios-direct-keyboard-review/evidence36/529794B4-FFC5-4154-A42F-FCBD1A2313F5.txt",
+        "sha256": "eb4f160544b27cad5854513de749b2e1816520a48fb5fa1804aca9d0ad2db61a",
+        "decodedToDisplayScaleX": 1.5,
+        "decodedToDisplayScaleY": 1.5,
+        "sourcePixels": 1501560,
+        "displayPixels": 3378510,
+        "purpose": "dimension evidence only, not input or transport acceptance",
+        "failedWaitScene": false
+      },
+      {
+        "codec": "video/H265",
+        "transfer": "SMPTE_ST_2084_PQ",
+        "sourceWidth": 500,
+        "sourceHeight": 1015,
+        "width": 1000,
+        "height": 2030,
+        "contentWidth": 430,
+        "contentHeight": 872.9,
+        "viewportWidth": 430,
+        "viewportHeight": 873,
+        "displayPixelWidth": 1290,
+        "displayPixelHeight": 2619,
+        "displayFailures": 0,
+        "desktopColors": true,
+        "keyboardFocused": false,
+        "keyboardWidthLocked": false,
+        "scene": "excel-direct-keyboard-hidden-metadata",
+        "evidenceGroup": "evidence36",
+        "evidence": ".build/ios-direct-keyboard-review/evidence36/5B93A36C-E62D-488B-83F1-9E29C67D61DF.txt",
+        "sha256": "140ccfdcf40c51d88fec639b67098dd624868c486cb68e6049f46bc6221ee91f",
+        "decodedToDisplayScaleX": 1.29,
+        "decodedToDisplayScaleY": 1.2901477832512316,
+        "sourcePixels": 2030000,
+        "displayPixels": 3378510,
+        "purpose": "dimension evidence only, not input or transport acceptance",
+        "failedWaitScene": false
+      },
+      {
+        "codec": "video/H265",
+        "transfer": "SMPTE_ST_2084_PQ",
+        "sourceWidth": 500,
+        "sourceHeight": 1015,
+        "width": 1000,
+        "height": 2030,
+        "contentWidth": 430,
+        "contentHeight": 872.9,
+        "viewportWidth": 430,
+        "viewportHeight": 518,
+        "displayPixelWidth": 1290,
+        "displayPixelHeight": 2619,
+        "displayFailures": 0,
+        "desktopColors": true,
+        "keyboardFocused": true,
+        "keyboardWidthLocked": true,
+        "scene": "excel-direct-keyboard-dispatched-metadata",
+        "evidenceGroup": "evidence36",
+        "evidence": ".build/ios-direct-keyboard-review/evidence36/62AF3CFC-D6E1-4F76-AE7A-AA7752767312.txt",
+        "sha256": "f0b38a68243ea374f5eb682fa4ac72e84d7b0632b6bf4c8d33a00fcde35140e4",
+        "decodedToDisplayScaleX": 1.29,
+        "decodedToDisplayScaleY": 1.2901477832512316,
+        "sourcePixels": 2030000,
+        "displayPixels": 3378510,
+        "purpose": "dimension evidence only, not input or transport acceptance",
+        "failedWaitScene": false
+      },
+      {
+        "codec": "video/H265",
+        "transfer": "SMPTE_ST_2084_PQ",
+        "sourceWidth": 430,
+        "sourceHeight": 873,
+        "width": 860,
+        "height": 1746,
+        "contentWidth": 430,
+        "contentHeight": 873,
+        "viewportWidth": 430,
+        "viewportHeight": 518,
+        "displayPixelWidth": 1290,
+        "displayPixelHeight": 2619,
+        "displayFailures": 0,
+        "desktopColors": true,
+        "keyboardFocused": true,
+        "keyboardWidthLocked": true,
+        "scene": "pinyin-keyboard-start-metadata",
+        "evidenceGroup": "pinyin-evidence",
+        "evidence": ".build/ios-direct-keyboard-review/pinyin-evidence/EEF98CD2-1842-4EFA-8D05-00BA4149DD46.txt",
+        "sha256": "b1096ac3abc425817eedae2598580cf85870537d567568cd08db56f5f089fefc",
+        "decodedToDisplayScaleX": 1.5,
+        "decodedToDisplayScaleY": 1.5,
+        "sourcePixels": 1501560,
+        "displayPixels": 3378510,
+        "purpose": "dimension evidence only, not input or transport acceptance",
+        "failedWaitScene": false
+      },
+      {
+        "codec": "video/H265",
+        "transfer": "SMPTE_ST_2084_PQ",
+        "sourceWidth": 430,
+        "sourceHeight": 873,
+        "width": 860,
+        "height": 1746,
+        "contentWidth": 430,
+        "contentHeight": 873,
+        "viewportWidth": 430,
+        "viewportHeight": 873,
+        "displayPixelWidth": 1290,
+        "displayPixelHeight": 2619,
+        "displayFailures": 0,
+        "desktopColors": true,
+        "keyboardFocused": false,
+        "keyboardWidthLocked": false,
+        "scene": "failed-wait-metadata",
+        "evidenceGroup": "pinyin-evidence",
+        "evidence": ".build/ios-direct-keyboard-review/pinyin-evidence/F2D6C5AA-A289-40B9-9B0D-B3825E70438E.txt",
+        "sha256": "997fb3794b4f461141967a5d05d21c52e1de0ed7355cf13616c277fc436e0d5e",
+        "decodedToDisplayScaleX": 1.5,
+        "decodedToDisplayScaleY": 1.5,
+        "sourcePixels": 1501560,
+        "displayPixels": 3378510,
+        "purpose": "dimension evidence only, not input or transport acceptance",
+        "failedWaitScene": true
+      },
+      {
+        "codec": "video/H265",
+        "transfer": "SMPTE_ST_2084_PQ",
+        "sourceWidth": 430,
+        "sourceHeight": 873,
+        "width": 860,
+        "height": 1746,
+        "contentWidth": 430,
+        "contentHeight": 873,
+        "viewportWidth": 430,
+        "viewportHeight": 518,
+        "displayPixelWidth": 1290,
+        "displayPixelHeight": 2619,
+        "displayFailures": 0,
+        "desktopColors": true,
+        "keyboardFocused": true,
+        "keyboardWidthLocked": true,
+        "scene": "pinyin-composing-metadata",
+        "evidenceGroup": "pinyin-evidence",
+        "evidence": ".build/ios-direct-keyboard-review/pinyin-evidence/FAB841F7-9800-4599-96C3-796DA824A7A1.txt",
+        "sha256": "489dafef4d3cd3a7362d7571995b4fa8a610cb98ee44481de2fdebda63a3a62f",
+        "decodedToDisplayScaleX": 1.5,
+        "decodedToDisplayScaleY": 1.5,
+        "sourcePixels": 1501560,
+        "displayPixels": 3378510,
+        "purpose": "dimension evidence only, not input or transport acceptance",
+        "failedWaitScene": false
+      }
+    ],
+    "conclusion": "TextEdit portrait also upscales 860x1746 to 1290x2619 (1.5x); pixel-density mismatch is not specific to Excel. This does not isolate codec or network blur contribution.",
+    "limitations": [
+      "Supplement includes failed-wait metadata; retained as size evidence only, not successful keyboard acceptance.",
+      "No paired capture/decode/native presentation buffers added.",
+      "No device/host operations or tests executed."
+    ]
+  },
+  "smallFrameRootCause": {
+    "observedAtUTC": "2026-11-14T14:40:07.430797+00:00",
+    "method": "read-only system_profiler, current source and existing host log; no screen capture or live device test",
+    "displays": [
+      {
+        "_name": "Color LCD",
+        "_spdisplays_pixels": "3456 x 2234",
+        "_spdisplays_resolution": "1728 x 1117 @ 60.00Hz",
+        "spdisplays_pixelresolution": "spdisplays_3456x2234Retina",
+        "spdisplays_mirror": "spdisplays_off"
+      }
+    ],
+    "windowViewportFields": [
+      "width",
+      "height"
+    ],
+    "clientPixelTargetInWindowViewport": false,
+    "conclusion": "The client sends logical viewport dimensions; the Host resizes the Mac window to those dimensions subject to app/screen constraints, then captures at its actual 2x pixel scale. Client 3x presentation is not jointly negotiated.",
+    "qualification": "Root cause of small stream dimensions, not a complete attribution of all perceived blur.",
+    "existingHostLog": {
+      "path": ".build/ios-excel-review/host-current.log",
+      "sha256": "7341a951c0bced16a24cfdf5692e203e9d29908ef8a8979889d639b9f673ba8c",
+      "dimensionEvents": [
+        {
+          "stage": "window-layout",
+          "requestedPoints": [
+            430.0,
+            873.0
+          ],
+          "acceptedPoints": [
+            500.0,
+            1015.0
+          ]
+        },
+        {
+          "stage": "window-capture",
+          "sourcePoints": [
+            500.0,
+            1015.0
+          ],
+          "pointPixelScale": 2.0,
+          "canvasPixels": [
+            1000,
+            2030
+          ]
+        },
+        {
+          "stage": "window-capture",
+          "sourcePoints": [
+            500.0,
+            1015.0
+          ],
+          "pointPixelScale": 2.0,
+          "canvasPixels": [
+            1000,
+            2030
+          ]
+        },
+        {
+          "stage": "window-layout",
+          "requestedPoints": [
+            430.0,
+            873.0
+          ],
+          "acceptedPoints": [
+            430.0,
+            873.0
+          ]
+        },
+        {
+          "stage": "window-capture",
+          "sourcePoints": [
+            430.0,
+            873.0
+          ],
+          "pointPixelScale": 2.0,
+          "canvasPixels": [
+            860,
+            1746
+          ]
+        },
+        {
+          "stage": "window-capture",
+          "sourcePoints": [
+            430.0,
+            873.0
+          ],
+          "pointPixelScale": 2.0,
+          "canvasPixels": [
+            860,
+            1746
+          ]
+        },
+        {
+          "stage": "window-layout",
+          "requestedPoints": [
+            430.0,
+            873.0
+          ],
+          "acceptedPoints": [
+            430.0,
+            873.0
+          ]
+        },
+        {
+          "stage": "window-capture",
+          "sourcePoints": [
+            430.0,
+            873.0
+          ],
+          "pointPixelScale": 2.0,
+          "canvasPixels": [
+            860,
+            1746
+          ]
+        },
+        {
+          "stage": "window-capture",
+          "sourcePoints": [
+            430.0,
+            873.0
+          ],
+          "pointPixelScale": 2.0,
+          "canvasPixels": [
+            860,
+            1746
+          ]
+        },
+        {
+          "stage": "window-layout",
+          "requestedPoints": [
+            430.0,
+            873.0
+          ],
+          "acceptedPoints": [
+            500.0,
+            1015.0
+          ]
+        },
+        {
+          "stage": "window-capture",
+          "sourcePoints": [
+            500.0,
+            1015.0
+          ],
+          "pointPixelScale": 2.0,
+          "canvasPixels": [
+            1000,
+            2030
+          ]
+        },
+        {
+          "stage": "window-capture",
+          "sourcePoints": [
+            500.0,
+            1015.0
+          ],
+          "pointPixelScale": 2.0,
+          "canvasPixels": [
+            1000,
+            2030
+          ]
+        },
+        {
+          "stage": "window-layout",
+          "requestedPoints": [
+            430.0,
+            873.0
+          ],
+          "acceptedPoints": [
+            430.0,
+            873.0
+          ]
+        },
+        {
+          "stage": "window-capture",
+          "sourcePoints": [
+            430.0,
+            873.0
+          ],
+          "pointPixelScale": 2.0,
+          "canvasPixels": [
+            860,
+            1746
+          ]
+        },
+        {
+          "stage": "window-capture",
+          "sourcePoints": [
+            430.0,
+            873.0
+          ],
+          "pointPixelScale": 2.0,
+          "canvasPixels": [
+            860,
+            1746
+          ]
+        },
+        {
+          "stage": "window-layout",
+          "requestedPoints": [
+            430.0,
+            873.0
+          ],
+          "acceptedPoints": [
+            500.0,
+            1015.0
+          ]
+        },
+        {
+          "stage": "window-capture",
+          "sourcePoints": [
+            500.0,
+            1015.0
+          ],
+          "pointPixelScale": 2.0,
+          "canvasPixels": [
+            1000,
+            2030
+          ]
+        }
+      ]
+    },
+    "sourceSnapshot": [
+      {
+        "path": "Apps/TransportLab/Sources/IOSLabView.swift",
+        "sha256": "0822de4d9d30d5a1397241da445072bc65cdb18c38abd31ef197da42614f6648"
+      },
+      {
+        "path": "Apps/TransportLab/Sources/LabModel.swift",
+        "sha256": "d35a7a36e5f584829c920aee6aa29ad415f546051f53755cbcd76843a0ba97d5"
+      },
+      {
+        "path": "Apps/TransportLab/Sources/WindowSession.swift",
+        "sha256": "a52a8312fc2c47126b7414b858755f226ef173e1ac06a99a6fac94b8bc2b8282"
+      },
+      {
+        "path": "Apps/TransportLab/Sources/WindowCaptureSource.swift",
+        "sha256": "39c67fad9897f4fe2537eadfb9dca11f5925d711c967b20a968e3d238ef4e55d"
+      }
+    ]
+  }
+}

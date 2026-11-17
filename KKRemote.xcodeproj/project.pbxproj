@@ -7,59 +7,170 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		049354F3809CB89AABDC5175 /* WindowEdgeColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99BFC8CF147E0C4CA37B357E /* WindowEdgeColor.swift */; };
+		0B337A48E8777725F7447CF8 /* ConnectionPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66FCE124D94C1537B8C757FD /* ConnectionPreferences.swift */; };
 		0BB119551A97BC66FAA982A9 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B803EFD91995BFC401600592 /* PrivacyInfo.xcprivacy */; };
+		11FA5A81ABBB2E4C8D15B334 /* RTPTrace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24D442A5AFD1A6EF4A3560C4 /* RTPTrace.swift */; };
+		18601150B83D55735A4CE474 /* ResourceTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 471571BF3DBA878589225EA8 /* ResourceTelemetry.swift */; };
+		1A172D0ECD53B92EC82E6228 /* IPhoneWindowWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30D087D23A0255F49EA2EB67 /* IPhoneWindowWorkspace.swift */; };
+		1FA2D500E19B3C107327CA6F /* WindowEdgeAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E507D884965CCFA4F7EAD8F /* WindowEdgeAppearance.swift */; };
+		223EA9477A2846D558C9CF68 /* RemoteWindowsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D843251B2FFB189F7A4A156 /* RemoteWindowsView.swift */; };
+		242608263EC9AF29EA19E88A /* Main10Probe.md in Resources */ = {isa = PBXBuildFile; fileRef = 7ADB77F867006A8A7FF9151B /* Main10Probe.md */; };
+		24C0DB100F476E243B328208 /* UDPSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = A73AC09084EC4DCACFC2F256 /* UDPSocket.swift */; };
 		257AF460DF6AECD8A4E76D36 /* LabCLI.swift in Sources */ = {isa = PBXBuildFile; fileRef = E121061760F554354AB40CB3 /* LabCLI.swift */; };
 		258DE7A444B1795E86915D56 /* LabModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78AC53B2E4A155687286D160 /* LabModel.swift */; };
+		289ADB7E983124E3C11C9E41 /* IPhoneOfflineWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B0F11A057B752F425A08104 /* IPhoneOfflineWorkspace.swift */; };
 		29F1B2AF35A98D6C86B94325 /* WebRTCRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48CAAFAAFE8C6DE9642FA41E /* WebRTCRuntime.swift */; };
 		2A431F9CE0FCA0277BAB2B41 /* LoopbackDatagramPort.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3906527D06061792D69CD87 /* LoopbackDatagramPort.swift */; };
+		3069F5E960B9C0674240B4A9 /* RemoteWindowsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D843251B2FFB189F7A4A156 /* RemoteWindowsView.swift */; };
+		331E69A877B874E328F56943 /* HEVCCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B0487CBCFF552EDC6775EE2 /* HEVCCodec.swift */; };
+		33E6D7F0F4D8F831E38D1530 /* IPhoneXPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F68DBB215CA2E661521E21F /* IPhoneXPreview.swift */; };
+		343B7799436C4783E56EE9D8 /* InteractionGestureMachine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9823A2605FEB6A28EA214A /* InteractionGestureMachine.swift */; };
+		35984F90D97242498D1964EA /* LabVideoSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 885BD861B6356258EFDDAB1F /* LabVideoSource.swift */; };
+		35A6403B2271DF9E5DCB8E99 /* MobileTouchSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE3CB6B8A51EA386AD3D08DC /* MobileTouchSurface.swift */; };
+		370B537AED09A476052AE752 /* LabVideoSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 885BD861B6356258EFDDAB1F /* LabVideoSource.swift */; };
 		3AE10936D18826B96F4B66DA /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B803EFD91995BFC401600592 /* PrivacyInfo.xcprivacy */; };
 		43047BF2507DB56BB0705268 /* LabCLI.swift in Sources */ = {isa = PBXBuildFile; fileRef = E121061760F554354AB40CB3 /* LabCLI.swift */; };
+		43ED559B591E819B18100A02 /* IOSLabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A879DD5A3D870A874DF66A27 /* IOSLabView.swift */; };
 		49E7ED9DDC03729340AD423E /* LabApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36D6D3B59DA9FC7C09A7BC10 /* LabApp.swift */; };
+		4A9D3E7931F35752CB5040CA /* ReceiverTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEBF5167580FAEF75E548F37 /* ReceiverTelemetry.swift */; };
+		4DCC704645F99E9DE72B8814 /* HDRVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA7F65C1CD67680D7D1597B2 /* HDRVideoView.swift */; };
+		4E1FF87AAF5319CD7503BEB5 /* ViewportGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = F939DB04B50EA673CF061E71 /* ViewportGeometry.swift */; };
 		599E7A20147063F36EC69E09 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1C2A62821BC3AED598E9CDDC /* Assets.xcassets */; };
+		5DA5361FE88642D2245FFD0B /* MobileInputPracticeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F729F0580D7C03A3282EC02 /* MobileInputPracticeView.swift */; };
+		5F0F87C8CB3293E68452D7B4 /* MobileWindowSizing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37E3C84CE20CC7A40ADF7752 /* MobileWindowSizing.swift */; };
+		5F161A6446A399A95CB3E96F /* TransportImpairment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34C93B3564E3CB5A3783A885 /* TransportImpairment.swift */; };
 		65840EB514A8D75DC2191938 /* MediaDatagram.swift in Sources */ = {isa = PBXBuildFile; fileRef = D006CB48F875AE64D3F8C885 /* MediaDatagram.swift */; };
+		6634475ABA384F983C9AB7D8 /* UDPSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = A73AC09084EC4DCACFC2F256 /* UDPSocket.swift */; };
 		6809030F037C05F47B15C25D /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = BB1049C67A799A922ACA398C /* WebRTC */; };
+		6B43F1C9E7088CBD4D744991 /* ReceiverTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEBF5167580FAEF75E548F37 /* ReceiverTelemetry.swift */; };
+		6BE4D561358578FC2E086B20 /* MobileViewport.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7712604EAB8A0894CBC38D7 /* MobileViewport.swift */; };
 		6BED5CD0438D54D2A2057F42 /* SignalTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9294C4C27F90B30E8333335 /* SignalTransport.swift */; };
+		6CD393A69D5856A46EC791A1 /* Main10Probe.hevc in Resources */ = {isa = PBXBuildFile; fileRef = 89F771D78894959C8594411B /* Main10Probe.hevc */; };
+		6F295D9D8BC8DE203261DFBA /* WindowSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = D807576E725D697F6EDB9D11 /* WindowSession.swift */; };
 		704737AB04D63DF4DEF6A5D6 /* SignalTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9294C4C27F90B30E8333335 /* SignalTransport.swift */; };
+		723E87B0BD329EEE9CFF5706 /* SDKDropDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = C017CA04EF0234BC6F74E044 /* SDKDropDiagnostics.swift */; };
+		74D8047E121DC9CC9B0ACDC3 /* HDRTestPattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E5E1B9B9465A540A5A60935 /* HDRTestPattern.swift */; };
+		7548621DF487D8F93C08AC97 /* ResourceTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 471571BF3DBA878589225EA8 /* ResourceTelemetry.swift */; };
+		77BB3EA817A6083420991247 /* IPhoneWindowWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30D087D23A0255F49EA2EB67 /* IPhoneWindowWorkspace.swift */; };
 		7B7FA50F7D6A5379E4EFF624 /* DatagramBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E611FAAC103A193A4412063 /* DatagramBridge.swift */; };
+		7B8AB044CA0B6FB927D02B39 /* WindowEdgeColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99BFC8CF147E0C4CA37B357E /* WindowEdgeColor.swift */; };
 		828074CE7B133EC6E14E9124 /* LabH264Factory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A10C974E08842CA72688791 /* LabH264Factory.swift */; };
 		849B04AAFA0C8FC665FCF5D6 /* EncoderTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF48D0FE7946D410215DE8F /* EncoderTelemetry.swift */; };
 		87A08A22309AC30DA1D278BA /* LoopbackDatagramPort.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3906527D06061792D69CD87 /* LoopbackDatagramPort.swift */; };
+		8A1F65E20B4D2E405CEDC195 /* MobileInputPracticeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F729F0580D7C03A3282EC02 /* MobileInputPracticeView.swift */; };
 		8EC1114DC3C4309DCF6E8A3E /* EncoderTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF48D0FE7946D410215DE8F /* EncoderTelemetry.swift */; };
 		9102BDD6B600260E89F9281C /* LabModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78AC53B2E4A155687286D160 /* LabModel.swift */; };
+		92A01AD0018EA8CCE033A8AA /* InteractionGestureMachine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9823A2605FEB6A28EA214A /* InteractionGestureMachine.swift */; };
+		9AA41253EE6E79F3F4FF7CBA /* MobileTextComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90196243A5CD287A875E5900 /* MobileTextComposer.swift */; };
+		9ACC95ECED63D9F1F43AC40B /* RTPTrace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24D442A5AFD1A6EF4A3560C4 /* RTPTrace.swift */; };
+		9FF74D0582256A2A4594E222 /* ConnectionPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66FCE124D94C1537B8C757FD /* ConnectionPreferences.swift */; };
+		A37525DFF512EC4E20170793 /* MobileTouchSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE3CB6B8A51EA386AD3D08DC /* MobileTouchSurface.swift */; };
+		A63B7959EF3B0F68A555480D /* WindowSwitchProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 905CC2E935A1FD1D6EC3721D /* WindowSwitchProbe.swift */; };
+		A65BAB909E3C4D35C4859ABB /* LabHostKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC89DE1484D683E8F558EC2E /* LabHostKey.swift */; };
+		ADAFE808C17D826E33A79A57 /* IPhoneXPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F68DBB215CA2E661521E21F /* IPhoneXPreview.swift */; };
+		AE51986B61730D5E56612616 /* WindowColorSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7CC684604E466FA6E074FB8 /* WindowColorSampler.swift */; };
+		AFD9F57D8807FA30D65CB9AA /* LabHostKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC89DE1484D683E8F558EC2E /* LabHostKey.swift */; };
+		B3222B47B8C9FBCE933345CE /* MobileInteractionSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80D9E9325DE89BCE622B6AB /* MobileInteractionSession.swift */; };
+		B449AD90ED4C74B58DAFB353 /* DesktopPattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = 685AE22A1ABE008C10BB9776 /* DesktopPattern.swift */; };
+		B48F9D8FFA296C8B632DA495 /* IOSLabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A879DD5A3D870A874DF66A27 /* IOSLabView.swift */; };
+		B6A71850F2794C09F38BC897 /* MobileViewport.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7712604EAB8A0894CBC38D7 /* MobileViewport.swift */; };
 		B8829874F7AC99761E0D114D /* WebRTC-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = F8AAC35B8C3A874444E7BAE4 /* WebRTC-LICENSE.txt */; };
 		BB365B5972D060AA8FCB76C5 /* LabApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36D6D3B59DA9FC7C09A7BC10 /* LabApp.swift */; };
 		BC64FA3DC65AA15DB4B0A274 /* MediaDatagram.swift in Sources */ = {isa = PBXBuildFile; fileRef = D006CB48F875AE64D3F8C885 /* MediaDatagram.swift */; };
 		C5BC78878B86590AA5D5C031 /* PeerEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41FBBE491584DE1A643FDD12 /* PeerEngine.swift */; };
+		C68518CCE6160E76050A1874 /* WindowSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = D807576E725D697F6EDB9D11 /* WindowSession.swift */; };
 		CDDBD389EF90B760503E9AED /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1C2A62821BC3AED598E9CDDC /* Assets.xcassets */; };
 		CF26473C2028205C29AF3014 /* LabH264Factory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A10C974E08842CA72688791 /* LabH264Factory.swift */; };
+		CF8D7DD73AE460A2F85C6EA2 /* MobileWindowSizing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37E3C84CE20CC7A40ADF7752 /* MobileWindowSizing.swift */; };
+		D16D1374A1317B48446E105B /* HDRVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA7F65C1CD67680D7D1597B2 /* HDRVideoView.swift */; };
 		D94A691C7924525A2CFDF7F3 /* TestPattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D315A4735594B08A7C94F94 /* TestPattern.swift */; };
 		DB1F20B2B65F40161CAC10B7 /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = 4EDA93A13EA3315BB904C42D /* WebRTC */; };
+		DBBB2E3B8DE57D010F5EB1E3 /* WindowTitleIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 452F407AFD8D85CD5EDED942 /* WindowTitleIdentity.swift */; };
+		DBBB84A52C7B768565A2C399 /* WindowControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F2AAF630056CFA52DD9771 /* WindowControl.swift */; };
+		DCBA75A17C389A1FFC7937CF /* WindowColorSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7CC684604E466FA6E074FB8 /* WindowColorSampler.swift */; };
+		DF5BC1E91CDACFEEA843504F /* DesktopPattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = 685AE22A1ABE008C10BB9776 /* DesktopPattern.swift */; };
+		E1ACCD636FC7FE7BABBAA469 /* HEVCCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B0487CBCFF552EDC6775EE2 /* HEVCCodec.swift */; };
+		E25E845782DDE6AAEA9EFE6F /* Main10Probe.hevc in Resources */ = {isa = PBXBuildFile; fileRef = 89F771D78894959C8594411B /* Main10Probe.hevc */; };
 		E29F093B5951967BB63DBB43 /* TestPattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D315A4735594B08A7C94F94 /* TestPattern.swift */; };
+		E36AE0383FC870CE8BE5C3FB /* ViewportGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = F939DB04B50EA673CF061E71 /* ViewportGeometry.swift */; };
+		E5F068C79D3EB3C6F81F23C5 /* IPhoneOfflineWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B0F11A057B752F425A08104 /* IPhoneOfflineWorkspace.swift */; };
+		E60C4E6D7D08FB31DDA9B65D /* WindowEdgeAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E507D884965CCFA4F7EAD8F /* WindowEdgeAppearance.swift */; };
 		E9E3D391311379AA13355AB1 /* PeerEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41FBBE491584DE1A643FDD12 /* PeerEngine.swift */; };
+		EC2B6E6F336598EA2FD8B464 /* WindowTitleIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 452F407AFD8D85CD5EDED942 /* WindowTitleIdentity.swift */; };
+		EC963F12A49A9FE6B44C8F73 /* FrameTrace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138E9383CAAA1F9E9CF4FC31 /* FrameTrace.swift */; };
+		EE1F7DD80AD35E77FD8C307D /* MobileTextComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90196243A5CD287A875E5900 /* MobileTextComposer.swift */; };
+		EE91B696FAD67B3A7A6B0669 /* WindowCaptureSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86AFCBC1B64C3DDF9CEDD11 /* WindowCaptureSource.swift */; };
+		F10D682727CEFC0C1D81E714 /* Main10Probe.md in Resources */ = {isa = PBXBuildFile; fileRef = 7ADB77F867006A8A7FF9151B /* Main10Probe.md */; };
+		F1DCC9B68ECC00C33F206B2C /* WindowControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F2AAF630056CFA52DD9771 /* WindowControl.swift */; };
+		F568FF11A59BDDFD26772286 /* SDKDropDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = C017CA04EF0234BC6F74E044 /* SDKDropDiagnostics.swift */; };
+		F5DF8AE699917081CCC5D828 /* TransportImpairment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34C93B3564E3CB5A3783A885 /* TransportImpairment.swift */; };
 		F632A9CE96534DD5CC5DD34F /* DatagramBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E611FAAC103A193A4412063 /* DatagramBridge.swift */; };
+		FA1908E75AFFF43A41FDA663 /* WindowSwitchProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 905CC2E935A1FD1D6EC3721D /* WindowSwitchProbe.swift */; };
+		FAD01FBBC86863FD8BF9813D /* FrameTrace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138E9383CAAA1F9E9CF4FC31 /* FrameTrace.swift */; };
 		FBD13332303D66068EC64CF9 /* WebRTCRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48CAAFAAFE8C6DE9642FA41E /* WebRTCRuntime.swift */; };
+		FBF822BE084D9143EC9912D7 /* MobileInteractionSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80D9E9325DE89BCE622B6AB /* MobileInteractionSession.swift */; };
+		FE80C38FC3A575DE6BBDF3FD /* WindowCaptureSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86AFCBC1B64C3DDF9CEDD11 /* WindowCaptureSource.swift */; };
+		FE910C59DF7176D71EF4DA32 /* HDRTestPattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E5E1B9B9465A540A5A60935 /* HDRTestPattern.swift */; };
 		FFA878629E3F70E6F51C469A /* WebRTC-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = F8AAC35B8C3A874444E7BAE4 /* WebRTC-LICENSE.txt */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		0E611FAAC103A193A4412063 /* DatagramBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatagramBridge.swift; sourceTree = "<group>"; };
+		138E9383CAAA1F9E9CF4FC31 /* FrameTrace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameTrace.swift; sourceTree = "<group>"; };
 		1C2A62821BC3AED598E9CDDC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		1F9823A2605FEB6A28EA214A /* InteractionGestureMachine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractionGestureMachine.swift; sourceTree = "<group>"; };
 		201C970C6C92C5CE6B2798B4 /* KKRemoteLabMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KKRemoteLabMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		24D442A5AFD1A6EF4A3560C4 /* RTPTrace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTPTrace.swift; sourceTree = "<group>"; };
+		2E5E1B9B9465A540A5A60935 /* HDRTestPattern.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HDRTestPattern.swift; sourceTree = "<group>"; };
+		30D087D23A0255F49EA2EB67 /* IPhoneWindowWorkspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPhoneWindowWorkspace.swift; sourceTree = "<group>"; };
+		34C93B3564E3CB5A3783A885 /* TransportImpairment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransportImpairment.swift; sourceTree = "<group>"; };
 		36D6D3B59DA9FC7C09A7BC10 /* LabApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabApp.swift; sourceTree = "<group>"; };
+		37E3C84CE20CC7A40ADF7752 /* MobileWindowSizing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileWindowSizing.swift; sourceTree = "<group>"; };
 		3C547F1880EFAB4D73276855 /* KKRemoteLab.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = KKRemoteLab.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3E507D884965CCFA4F7EAD8F /* WindowEdgeAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowEdgeAppearance.swift; sourceTree = "<group>"; };
 		41FBBE491584DE1A643FDD12 /* PeerEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerEngine.swift; sourceTree = "<group>"; };
+		452F407AFD8D85CD5EDED942 /* WindowTitleIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowTitleIdentity.swift; sourceTree = "<group>"; };
+		471571BF3DBA878589225EA8 /* ResourceTelemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceTelemetry.swift; sourceTree = "<group>"; };
 		48CAAFAAFE8C6DE9642FA41E /* WebRTCRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebRTCRuntime.swift; sourceTree = "<group>"; };
+		4F68DBB215CA2E661521E21F /* IPhoneXPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPhoneXPreview.swift; sourceTree = "<group>"; };
+		5B0F11A057B752F425A08104 /* IPhoneOfflineWorkspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPhoneOfflineWorkspace.swift; sourceTree = "<group>"; };
+		66FCE124D94C1537B8C757FD /* ConnectionPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionPreferences.swift; sourceTree = "<group>"; };
+		685AE22A1ABE008C10BB9776 /* DesktopPattern.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopPattern.swift; sourceTree = "<group>"; };
 		6D315A4735594B08A7C94F94 /* TestPattern.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestPattern.swift; sourceTree = "<group>"; };
+		6F729F0580D7C03A3282EC02 /* MobileInputPracticeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileInputPracticeView.swift; sourceTree = "<group>"; };
 		78AC53B2E4A155687286D160 /* LabModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabModel.swift; sourceTree = "<group>"; };
 		7A10C974E08842CA72688791 /* LabH264Factory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabH264Factory.swift; sourceTree = "<group>"; };
+		7ADB77F867006A8A7FF9151B /* Main10Probe.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Main10Probe.md; sourceTree = "<group>"; };
 		7BF48D0FE7946D410215DE8F /* EncoderTelemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncoderTelemetry.swift; sourceTree = "<group>"; };
+		7D843251B2FFB189F7A4A156 /* RemoteWindowsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteWindowsView.swift; sourceTree = "<group>"; };
+		885BD861B6356258EFDDAB1F /* LabVideoSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabVideoSource.swift; sourceTree = "<group>"; };
+		89F771D78894959C8594411B /* Main10Probe.hevc */ = {isa = PBXFileReference; path = Main10Probe.hevc; sourceTree = "<group>"; };
+		90196243A5CD287A875E5900 /* MobileTextComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileTextComposer.swift; sourceTree = "<group>"; };
+		905CC2E935A1FD1D6EC3721D /* WindowSwitchProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowSwitchProbe.swift; sourceTree = "<group>"; };
+		99BFC8CF147E0C4CA37B357E /* WindowEdgeColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowEdgeColor.swift; sourceTree = "<group>"; };
+		9B0487CBCFF552EDC6775EE2 /* HEVCCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEVCCodec.swift; sourceTree = "<group>"; };
+		A73AC09084EC4DCACFC2F256 /* UDPSocket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UDPSocket.swift; sourceTree = "<group>"; };
+		A7F2AAF630056CFA52DD9771 /* WindowControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowControl.swift; sourceTree = "<group>"; };
+		A879DD5A3D870A874DF66A27 /* IOSLabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOSLabView.swift; sourceTree = "<group>"; };
 		A9294C4C27F90B30E8333335 /* SignalTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalTransport.swift; sourceTree = "<group>"; };
+		AA7F65C1CD67680D7D1597B2 /* HDRVideoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HDRVideoView.swift; sourceTree = "<group>"; };
+		AC89DE1484D683E8F558EC2E /* LabHostKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabHostKey.swift; sourceTree = "<group>"; };
 		B803EFD91995BFC401600592 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		B80D9E9325DE89BCE622B6AB /* MobileInteractionSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileInteractionSession.swift; sourceTree = "<group>"; };
+		BEBF5167580FAEF75E548F37 /* ReceiverTelemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiverTelemetry.swift; sourceTree = "<group>"; };
+		C017CA04EF0234BC6F74E044 /* SDKDropDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SDKDropDiagnostics.swift; sourceTree = "<group>"; };
 		C96F80F391E8B6D4404F9E7F /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Shared.xcconfig; sourceTree = "<group>"; };
 		D006CB48F875AE64D3F8C885 /* MediaDatagram.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaDatagram.swift; sourceTree = "<group>"; };
+		D7712604EAB8A0894CBC38D7 /* MobileViewport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileViewport.swift; sourceTree = "<group>"; };
+		D807576E725D697F6EDB9D11 /* WindowSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowSession.swift; sourceTree = "<group>"; };
 		E121061760F554354AB40CB3 /* LabCLI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabCLI.swift; sourceTree = "<group>"; };
+		E86AFCBC1B64C3DDF9CEDD11 /* WindowCaptureSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowCaptureSource.swift; sourceTree = "<group>"; };
 		F3906527D06061792D69CD87 /* LoopbackDatagramPort.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopbackDatagramPort.swift; sourceTree = "<group>"; };
+		F7CC684604E466FA6E074FB8 /* WindowColorSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowColorSampler.swift; sourceTree = "<group>"; };
 		F8AAC35B8C3A874444E7BAE4 /* WebRTC-LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "WebRTC-LICENSE.txt"; sourceTree = "<group>"; };
+		F939DB04B50EA673CF061E71 /* ViewportGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewportGeometry.swift; sourceTree = "<group>"; };
+		FE3CB6B8A51EA386AD3D08DC /* MobileTouchSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileTouchSurface.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -93,18 +204,40 @@
 		2C3B0AD9F2B0D6CF4FB1B3C5 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				66FCE124D94C1537B8C757FD /* ConnectionPreferences.swift */,
 				0E611FAAC103A193A4412063 /* DatagramBridge.swift */,
+				685AE22A1ABE008C10BB9776 /* DesktopPattern.swift */,
 				7BF48D0FE7946D410215DE8F /* EncoderTelemetry.swift */,
+				138E9383CAAA1F9E9CF4FC31 /* FrameTrace.swift */,
+				2E5E1B9B9465A540A5A60935 /* HDRTestPattern.swift */,
+				AA7F65C1CD67680D7D1597B2 /* HDRVideoView.swift */,
+				9B0487CBCFF552EDC6775EE2 /* HEVCCodec.swift */,
+				A879DD5A3D870A874DF66A27 /* IOSLabView.swift */,
 				36D6D3B59DA9FC7C09A7BC10 /* LabApp.swift */,
 				E121061760F554354AB40CB3 /* LabCLI.swift */,
 				7A10C974E08842CA72688791 /* LabH264Factory.swift */,
+				AC89DE1484D683E8F558EC2E /* LabHostKey.swift */,
 				78AC53B2E4A155687286D160 /* LabModel.swift */,
+				885BD861B6356258EFDDAB1F /* LabVideoSource.swift */,
 				F3906527D06061792D69CD87 /* LoopbackDatagramPort.swift */,
 				D006CB48F875AE64D3F8C885 /* MediaDatagram.swift */,
 				41FBBE491584DE1A643FDD12 /* PeerEngine.swift */,
+				BEBF5167580FAEF75E548F37 /* ReceiverTelemetry.swift */,
+				7D843251B2FFB189F7A4A156 /* RemoteWindowsView.swift */,
+				471571BF3DBA878589225EA8 /* ResourceTelemetry.swift */,
+				24D442A5AFD1A6EF4A3560C4 /* RTPTrace.swift */,
+				C017CA04EF0234BC6F74E044 /* SDKDropDiagnostics.swift */,
 				A9294C4C27F90B30E8333335 /* SignalTransport.swift */,
 				6D315A4735594B08A7C94F94 /* TestPattern.swift */,
+				34C93B3564E3CB5A3783A885 /* TransportImpairment.swift */,
+				A73AC09084EC4DCACFC2F256 /* UDPSocket.swift */,
 				48CAAFAAFE8C6DE9642FA41E /* WebRTCRuntime.swift */,
+				E86AFCBC1B64C3DDF9CEDD11 /* WindowCaptureSource.swift */,
+				A7F2AAF630056CFA52DD9771 /* WindowControl.swift */,
+				D807576E725D697F6EDB9D11 /* WindowSession.swift */,
+				905CC2E935A1FD1D6EC3721D /* WindowSwitchProbe.swift */,
+				452F407AFD8D85CD5EDED942 /* WindowTitleIdentity.swift */,
+				B301869F1E25290F8A85F8B4 /* MobileInteraction */,
 			);
 			name = Sources;
 			path = Apps/TransportLab/Sources;
@@ -133,11 +266,34 @@
 			isa = PBXGroup;
 			children = (
 				1C2A62821BC3AED598E9CDDC /* Assets.xcassets */,
+				89F771D78894959C8594411B /* Main10Probe.hevc */,
+				7ADB77F867006A8A7FF9151B /* Main10Probe.md */,
 				B803EFD91995BFC401600592 /* PrivacyInfo.xcprivacy */,
 				F8AAC35B8C3A874444E7BAE4 /* WebRTC-LICENSE.txt */,
 			);
 			name = Resources;
 			path = Apps/TransportLab/Resources;
+			sourceTree = "<group>";
+		};
+		B301869F1E25290F8A85F8B4 /* MobileInteraction */ = {
+			isa = PBXGroup;
+			children = (
+				1F9823A2605FEB6A28EA214A /* InteractionGestureMachine.swift */,
+				5B0F11A057B752F425A08104 /* IPhoneOfflineWorkspace.swift */,
+				30D087D23A0255F49EA2EB67 /* IPhoneWindowWorkspace.swift */,
+				4F68DBB215CA2E661521E21F /* IPhoneXPreview.swift */,
+				6F729F0580D7C03A3282EC02 /* MobileInputPracticeView.swift */,
+				B80D9E9325DE89BCE622B6AB /* MobileInteractionSession.swift */,
+				90196243A5CD287A875E5900 /* MobileTextComposer.swift */,
+				FE3CB6B8A51EA386AD3D08DC /* MobileTouchSurface.swift */,
+				D7712604EAB8A0894CBC38D7 /* MobileViewport.swift */,
+				37E3C84CE20CC7A40ADF7752 /* MobileWindowSizing.swift */,
+				F939DB04B50EA673CF061E71 /* ViewportGeometry.swift */,
+				F7CC684604E466FA6E074FB8 /* WindowColorSampler.swift */,
+				3E507D884965CCFA4F7EAD8F /* WindowEdgeAppearance.swift */,
+				99BFC8CF147E0C4CA37B357E /* WindowEdgeColor.swift */,
+			);
+			path = MobileInteraction;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -229,6 +385,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				599E7A20147063F36EC69E09 /* Assets.xcassets in Resources */,
+				E25E845782DDE6AAEA9EFE6F /* Main10Probe.hevc in Resources */,
+				242608263EC9AF29EA19E88A /* Main10Probe.md in Resources */,
 				0BB119551A97BC66FAA982A9 /* PrivacyInfo.xcprivacy in Resources */,
 				FFA878629E3F70E6F51C469A /* WebRTC-LICENSE.txt in Resources */,
 			);
@@ -239,6 +397,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				CDDBD389EF90B760503E9AED /* Assets.xcassets in Resources */,
+				6CD393A69D5856A46EC791A1 /* Main10Probe.hevc in Resources */,
+				F10D682727CEFC0C1D81E714 /* Main10Probe.md in Resources */,
 				3AE10936D18826B96F4B66DA /* PrivacyInfo.xcprivacy in Resources */,
 				B8829874F7AC99761E0D114D /* WebRTC-LICENSE.txt in Resources */,
 			);
@@ -251,18 +411,53 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9FF74D0582256A2A4594E222 /* ConnectionPreferences.swift in Sources */,
 				F632A9CE96534DD5CC5DD34F /* DatagramBridge.swift in Sources */,
+				DF5BC1E91CDACFEEA843504F /* DesktopPattern.swift in Sources */,
 				849B04AAFA0C8FC665FCF5D6 /* EncoderTelemetry.swift in Sources */,
+				EC963F12A49A9FE6B44C8F73 /* FrameTrace.swift in Sources */,
+				FE910C59DF7176D71EF4DA32 /* HDRTestPattern.swift in Sources */,
+				D16D1374A1317B48446E105B /* HDRVideoView.swift in Sources */,
+				E1ACCD636FC7FE7BABBAA469 /* HEVCCodec.swift in Sources */,
+				43ED559B591E819B18100A02 /* IOSLabView.swift in Sources */,
+				289ADB7E983124E3C11C9E41 /* IPhoneOfflineWorkspace.swift in Sources */,
+				1A172D0ECD53B92EC82E6228 /* IPhoneWindowWorkspace.swift in Sources */,
+				33E6D7F0F4D8F831E38D1530 /* IPhoneXPreview.swift in Sources */,
+				92A01AD0018EA8CCE033A8AA /* InteractionGestureMachine.swift in Sources */,
 				49E7ED9DDC03729340AD423E /* LabApp.swift in Sources */,
 				257AF460DF6AECD8A4E76D36 /* LabCLI.swift in Sources */,
 				828074CE7B133EC6E14E9124 /* LabH264Factory.swift in Sources */,
+				AFD9F57D8807FA30D65CB9AA /* LabHostKey.swift in Sources */,
 				258DE7A444B1795E86915D56 /* LabModel.swift in Sources */,
+				35984F90D97242498D1964EA /* LabVideoSource.swift in Sources */,
 				2A431F9CE0FCA0277BAB2B41 /* LoopbackDatagramPort.swift in Sources */,
 				65840EB514A8D75DC2191938 /* MediaDatagram.swift in Sources */,
+				5DA5361FE88642D2245FFD0B /* MobileInputPracticeView.swift in Sources */,
+				FBF822BE084D9143EC9912D7 /* MobileInteractionSession.swift in Sources */,
+				EE1F7DD80AD35E77FD8C307D /* MobileTextComposer.swift in Sources */,
+				35A6403B2271DF9E5DCB8E99 /* MobileTouchSurface.swift in Sources */,
+				B6A71850F2794C09F38BC897 /* MobileViewport.swift in Sources */,
+				5F0F87C8CB3293E68452D7B4 /* MobileWindowSizing.swift in Sources */,
 				E9E3D391311379AA13355AB1 /* PeerEngine.swift in Sources */,
+				11FA5A81ABBB2E4C8D15B334 /* RTPTrace.swift in Sources */,
+				4A9D3E7931F35752CB5040CA /* ReceiverTelemetry.swift in Sources */,
+				223EA9477A2846D558C9CF68 /* RemoteWindowsView.swift in Sources */,
+				7548621DF487D8F93C08AC97 /* ResourceTelemetry.swift in Sources */,
+				723E87B0BD329EEE9CFF5706 /* SDKDropDiagnostics.swift in Sources */,
 				704737AB04D63DF4DEF6A5D6 /* SignalTransport.swift in Sources */,
 				D94A691C7924525A2CFDF7F3 /* TestPattern.swift in Sources */,
+				F5DF8AE699917081CCC5D828 /* TransportImpairment.swift in Sources */,
+				24C0DB100F476E243B328208 /* UDPSocket.swift in Sources */,
+				4E1FF87AAF5319CD7503BEB5 /* ViewportGeometry.swift in Sources */,
 				FBD13332303D66068EC64CF9 /* WebRTCRuntime.swift in Sources */,
+				FE80C38FC3A575DE6BBDF3FD /* WindowCaptureSource.swift in Sources */,
+				DCBA75A17C389A1FFC7937CF /* WindowColorSampler.swift in Sources */,
+				DBBB84A52C7B768565A2C399 /* WindowControl.swift in Sources */,
+				1FA2D500E19B3C107327CA6F /* WindowEdgeAppearance.swift in Sources */,
+				049354F3809CB89AABDC5175 /* WindowEdgeColor.swift in Sources */,
+				6F295D9D8BC8DE203261DFBA /* WindowSession.swift in Sources */,
+				A63B7959EF3B0F68A555480D /* WindowSwitchProbe.swift in Sources */,
+				DBBB2E3B8DE57D010F5EB1E3 /* WindowTitleIdentity.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -270,18 +465,53 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0B337A48E8777725F7447CF8 /* ConnectionPreferences.swift in Sources */,
 				7B7FA50F7D6A5379E4EFF624 /* DatagramBridge.swift in Sources */,
+				B449AD90ED4C74B58DAFB353 /* DesktopPattern.swift in Sources */,
 				8EC1114DC3C4309DCF6E8A3E /* EncoderTelemetry.swift in Sources */,
+				FAD01FBBC86863FD8BF9813D /* FrameTrace.swift in Sources */,
+				74D8047E121DC9CC9B0ACDC3 /* HDRTestPattern.swift in Sources */,
+				4DCC704645F99E9DE72B8814 /* HDRVideoView.swift in Sources */,
+				331E69A877B874E328F56943 /* HEVCCodec.swift in Sources */,
+				B48F9D8FFA296C8B632DA495 /* IOSLabView.swift in Sources */,
+				E5F068C79D3EB3C6F81F23C5 /* IPhoneOfflineWorkspace.swift in Sources */,
+				77BB3EA817A6083420991247 /* IPhoneWindowWorkspace.swift in Sources */,
+				ADAFE808C17D826E33A79A57 /* IPhoneXPreview.swift in Sources */,
+				343B7799436C4783E56EE9D8 /* InteractionGestureMachine.swift in Sources */,
 				BB365B5972D060AA8FCB76C5 /* LabApp.swift in Sources */,
 				43047BF2507DB56BB0705268 /* LabCLI.swift in Sources */,
 				CF26473C2028205C29AF3014 /* LabH264Factory.swift in Sources */,
+				A65BAB909E3C4D35C4859ABB /* LabHostKey.swift in Sources */,
 				9102BDD6B600260E89F9281C /* LabModel.swift in Sources */,
+				370B537AED09A476052AE752 /* LabVideoSource.swift in Sources */,
 				87A08A22309AC30DA1D278BA /* LoopbackDatagramPort.swift in Sources */,
 				BC64FA3DC65AA15DB4B0A274 /* MediaDatagram.swift in Sources */,
+				8A1F65E20B4D2E405CEDC195 /* MobileInputPracticeView.swift in Sources */,
+				B3222B47B8C9FBCE933345CE /* MobileInteractionSession.swift in Sources */,
+				9AA41253EE6E79F3F4FF7CBA /* MobileTextComposer.swift in Sources */,
+				A37525DFF512EC4E20170793 /* MobileTouchSurface.swift in Sources */,
+				6BE4D561358578FC2E086B20 /* MobileViewport.swift in Sources */,
+				CF8D7DD73AE460A2F85C6EA2 /* MobileWindowSizing.swift in Sources */,
 				C5BC78878B86590AA5D5C031 /* PeerEngine.swift in Sources */,
+				9ACC95ECED63D9F1F43AC40B /* RTPTrace.swift in Sources */,
+				6B43F1C9E7088CBD4D744991 /* ReceiverTelemetry.swift in Sources */,
+				3069F5E960B9C0674240B4A9 /* RemoteWindowsView.swift in Sources */,
+				18601150B83D55735A4CE474 /* ResourceTelemetry.swift in Sources */,
+				F568FF11A59BDDFD26772286 /* SDKDropDiagnostics.swift in Sources */,
 				6BED5CD0438D54D2A2057F42 /* SignalTransport.swift in Sources */,
 				E29F093B5951967BB63DBB43 /* TestPattern.swift in Sources */,
+				5F161A6446A399A95CB3E96F /* TransportImpairment.swift in Sources */,
+				6634475ABA384F983C9AB7D8 /* UDPSocket.swift in Sources */,
+				E36AE0383FC870CE8BE5C3FB /* ViewportGeometry.swift in Sources */,
 				29F1B2AF35A98D6C86B94325 /* WebRTCRuntime.swift in Sources */,
+				EE91B696FAD67B3A7A6B0669 /* WindowCaptureSource.swift in Sources */,
+				AE51986B61730D5E56612616 /* WindowColorSampler.swift in Sources */,
+				F1DCC9B68ECC00C33F206B2C /* WindowControl.swift in Sources */,
+				E60C4E6D7D08FB31DDA9B65D /* WindowEdgeAppearance.swift in Sources */,
+				7B8AB044CA0B6FB927D02B39 /* WindowEdgeColor.swift in Sources */,
+				C68518CCE6160E76050A1874 /* WindowSession.swift in Sources */,
+				FA1908E75AFFF43A41FDA663 /* WindowSwitchProbe.swift in Sources */,
+				EC2B6E6F336598EA2FD8B464 /* WindowTitleIdentity.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -292,7 +522,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Config/TransportLabIOS.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = "Config/TransportLabIOS-Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "WebRTC 组件包含摄像头接口；当前传输实验只使用合成画面，不会启用摄像头。";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "WebRTC 组件包含麦克风接口；当前传输实验没有音频轨道，不会启用麦克风。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -412,7 +644,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Config/TransportLabIOS.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = "Config/TransportLabIOS-Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "WebRTC 组件包含摄像头接口；当前传输实验只使用合成画面，不会启用摄像头。";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "WebRTC 组件包含麦克风接口；当前传输实验没有音频轨道，不会启用麦克风。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

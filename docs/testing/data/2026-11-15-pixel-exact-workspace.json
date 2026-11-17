@@ -1,0 +1,442 @@
+{
+  "date": "2026-11-15",
+  "build": 42,
+  "endpointChanged": false,
+  "budget": {
+    "maximumPixels": 3686400,
+    "fps": 60,
+    "Mbps": 20
+  },
+  "portrait": {
+    "sourcePoints": [
+      645,
+      1309
+    ],
+    "encodedPixels": [
+      1290,
+      2618
+    ],
+    "surfacePixels": [
+      1290,
+      2618
+    ],
+    "surfaceOriginPixels": [
+      0,
+      177
+    ],
+    "unusedBottomPixels": 1
+  },
+  "workspace": {
+    "placement": "right-of-existing-displays",
+    "origin": [
+      1728,
+      0
+    ],
+    "logicalSize": [
+      1280,
+      1440
+    ],
+    "pixelSize": [
+      2560,
+      2880
+    ],
+    "scale": 2,
+    "Hz": 60,
+    "EDR": 5,
+    "experimentalPrivateAPI": true
+  },
+  "sourcePQGray": [
+    365,
+    431,
+    487,
+    544,
+    602,
+    655,
+    697,
+    724
+  ],
+  "gratingContrast": {
+    "unit": "8-bit screenshot luma difference, not HDR luminance or lossless quality",
+    "source": 254,
+    "phoneBuild41": 178.059,
+    "phoneBuild42": 239.18689655172415,
+    "phoneROI": [
+      165,
+      1777,
+      290,
+      10
+    ],
+    "sourceROI": [
+      165,
+      1600,
+      290,
+      10
+    ]
+  },
+  "tests": {
+    "browser": {
+      "sampleCount": 43,
+      "seconds": [
+        10.008274416657514,
+        52.00686924999172
+      ],
+      "fps": {
+        "min": 57,
+        "median": 60,
+        "max": 63
+      },
+      "videoMbps": {
+        "min": 0.3469218419890362,
+        "median": 0.37066052470210875,
+        "max": 1.370617083868412
+      },
+      "decodeMilliseconds": {
+        "min": 3.2148870967741887,
+        "median": 3.886133333333334,
+        "max": 3.979524590163937
+      },
+      "networkRTTMilliseconds": {
+        "min": 8,
+        "median": 10,
+        "max": 82
+      },
+      "jitterBufferMilliseconds": {
+        "min": 2.85956140350878,
+        "median": 5.078716666666683,
+        "max": 6.810433333333332
+      },
+      "framesDropped": {
+        "min": 0,
+        "median": 0,
+        "max": 0
+      },
+      "freezeCount": {
+        "min": 0,
+        "median": 0,
+        "max": 0
+      },
+      "presentation": {
+        "active": true,
+        "backpressureDrops": 0,
+        "cancelled": 0,
+        "enqueued": 3091,
+        "failures": 0,
+        "mainQueueWaitMillisecondsMax": 16.143208,
+        "mainQueueWaitMillisecondsP95": 0.142334,
+        "observerID": "3AD09799-9A8D-4130-85BB-3AB679616576",
+        "outputHeight": 2618,
+        "outputWidth": 1290,
+        "pending": 0,
+        "pixelOneToOne": true,
+        "received": 3101,
+        "replaced": 10,
+        "staleCallbacks": 0,
+        "surfacePixelHeight": 2618,
+        "surfacePixelWidth": 1290,
+        "surfacePixelX": 0,
+        "surfacePixelY": 177
+      },
+      "decodedFormat": {
+        "height": "2618",
+        "matrix": "ITU_R_2020",
+        "pixelFormat": "2016686640",
+        "primaries": "ITU_R_2020",
+        "transfer": "SMPTE_ST_2084_PQ",
+        "width": "1290"
+      },
+      "restoreObservation": [
+        {
+          "bounds": {
+            "Height": 1084,
+            "Width": 1688,
+            "X": 40,
+            "Y": 33
+          },
+          "id": 10284,
+          "pid": 2022,
+          "title": "KKRemote-Office-Native-HDR-20261115"
+        },
+        {
+          "bounds": {
+            "Height": 1084,
+            "Width": 645,
+            "X": 148,
+            "Y": 33
+          },
+          "id": 10471,
+          "pid": 73493,
+          "title": "KKRemote HDR Workspace Browser"
+        }
+      ]
+    },
+    "office": {
+      "sampleCount": 43,
+      "seconds": [
+        10.00477404166304,
+        52.01002833333041
+      ],
+      "fps": {
+        "min": 57,
+        "median": 60,
+        "max": 64
+      },
+      "videoMbps": {
+        "min": 0.23355625136357705,
+        "median": 0.2709183571875515,
+        "max": 2.5860952314627372
+      },
+      "decodeMilliseconds": {
+        "min": 3.2414590163934545,
+        "median": 3.8344333333333314,
+        "max": 4.046271186440683
+      },
+      "networkRTTMilliseconds": {
+        "min": 8,
+        "median": 10,
+        "max": 55
+      },
+      "jitterBufferMilliseconds": {
+        "min": 2.225807017543851,
+        "median": 5.008559322033874,
+        "max": 9.27389999999999
+      },
+      "framesDropped": {
+        "min": 0,
+        "median": 0,
+        "max": 0
+      },
+      "freezeCount": {
+        "min": 0,
+        "median": 0,
+        "max": 0
+      },
+      "presentation": {
+        "active": true,
+        "backpressureDrops": 0,
+        "cancelled": 0,
+        "enqueued": 3094,
+        "failures": 0,
+        "mainQueueWaitMillisecondsMax": 29.403166,
+        "mainQueueWaitMillisecondsP95": 0.122875,
+        "observerID": "F0524503-A9A3-4E2B-9908-B36BFA371FC0",
+        "outputHeight": 2618,
+        "outputWidth": 1290,
+        "pending": 0,
+        "pixelOneToOne": true,
+        "received": 3103,
+        "replaced": 9,
+        "staleCallbacks": 0,
+        "surfacePixelHeight": 2618,
+        "surfacePixelWidth": 1290,
+        "surfacePixelX": 0,
+        "surfacePixelY": 177
+      },
+      "decodedFormat": {
+        "height": "2618",
+        "matrix": "ITU_R_2020",
+        "pixelFormat": "2016686640",
+        "primaries": "ITU_R_2020",
+        "transfer": "SMPTE_ST_2084_PQ",
+        "width": "1290"
+      },
+      "restoreObservation": [
+        {
+          "bounds": {
+            "Height": 1084,
+            "Width": 1688,
+            "X": 40,
+            "Y": 33
+          },
+          "id": 10284,
+          "pid": 2022,
+          "title": "KKRemote-Office-Native-HDR-20261115"
+        },
+        {
+          "bounds": {
+            "Height": 1084,
+            "Width": 645,
+            "X": 148,
+            "Y": 33
+          },
+          "id": 10471,
+          "pid": 73493,
+          "title": "KKRemote HDR Workspace Browser"
+        }
+      ]
+    }
+  },
+  "finalObservation": {
+    "displays": [
+      {
+        "hz": 60,
+        "id": 1,
+        "origin": [
+          0,
+          0
+        ],
+        "pixels": [
+          3456,
+          2234
+        ],
+        "points": [
+          1728,
+          1117
+        ]
+      },
+      {
+        "hz": 60,
+        "id": 13,
+        "origin": [
+          1728,
+          0
+        ],
+        "pixels": [
+          2560,
+          2880
+        ],
+        "points": [
+          1280,
+          1440
+        ]
+      }
+    ],
+    "dockWindows": [
+      {
+        "bounds": {
+          "Height": 1117,
+          "Width": 1728,
+          "X": 0,
+          "Y": 0
+        },
+        "onScreen": true
+      }
+    ],
+    "windows": [
+      {
+        "bounds": {
+          "Height": 1084,
+          "Width": 1688,
+          "X": 40,
+          "Y": 33
+        },
+        "id": 10284,
+        "pid": 2022,
+        "title": "KKRemote-Office-Native-HDR-20261115"
+      },
+      {
+        "bounds": {
+          "Height": 1084,
+          "Width": 645,
+          "X": 148,
+          "Y": 33
+        },
+        "id": 10471,
+        "pid": 73493,
+        "title": "KKRemote HDR Workspace Browser"
+      }
+    ]
+  },
+  "lifecycleTests": {
+    "result": "passed",
+    "source": "motion-final.xcresult",
+    "initialFailure": "motion.xcresult: old native entry inferred intermediate Excel dimensions; fixed exact shrink/move/grow",
+    "states": [
+      {
+        "stage": "reconnected",
+        "width": 1290,
+        "height": 2618,
+        "sourceWidth": 645,
+        "sourceHeight": 1309,
+        "pixelExact": true,
+        "displayOneToOne": true,
+        "surfacePixelWidth": 1290,
+        "surfacePixelHeight": 2618,
+        "surfacePixelX": 0,
+        "surfacePixelY": 177,
+        "displayFailures": 0,
+        "inputAcknowledged": 0,
+        "transfer": "SMPTE_ST_2084_PQ"
+      },
+      {
+        "stage": "switch-browser",
+        "width": 1290,
+        "height": 2618,
+        "sourceWidth": 645,
+        "sourceHeight": 1309,
+        "pixelExact": true,
+        "displayOneToOne": true,
+        "surfacePixelWidth": 1290,
+        "surfacePixelHeight": 2618,
+        "surfacePixelX": 0,
+        "surfacePixelY": 177,
+        "displayFailures": 0,
+        "inputAcknowledged": 3,
+        "transfer": "SMPTE_ST_2084_PQ"
+      },
+      {
+        "stage": "switch-office",
+        "width": 1290,
+        "height": 2618,
+        "sourceWidth": 645,
+        "sourceHeight": 1309,
+        "pixelExact": true,
+        "displayOneToOne": true,
+        "surfacePixelWidth": 1290,
+        "surfacePixelHeight": 2618,
+        "surfacePixelX": 0,
+        "surfacePixelY": 177,
+        "displayFailures": 0,
+        "inputAcknowledged": 3,
+        "transfer": "SMPTE_ST_2084_PQ"
+      },
+      {
+        "stage": "motion-portrait-return",
+        "width": 1290,
+        "height": 2618,
+        "sourceWidth": 645,
+        "sourceHeight": 1309,
+        "pixelExact": true,
+        "displayOneToOne": true,
+        "surfacePixelWidth": 1290,
+        "surfacePixelHeight": 2618,
+        "surfacePixelX": 0,
+        "surfacePixelY": 177,
+        "displayFailures": 0,
+        "inputAcknowledged": 3,
+        "transfer": "SMPTE_ST_2084_PQ"
+      },
+      {
+        "stage": "motion-landscape",
+        "width": 2442,
+        "height": 1290,
+        "sourceWidth": 1221,
+        "sourceHeight": 645,
+        "pixelExact": true,
+        "displayOneToOne": true,
+        "surfacePixelWidth": 2442,
+        "surfacePixelHeight": 1290,
+        "surfacePixelX": 177,
+        "surfacePixelY": 0,
+        "displayFailures": 0,
+        "inputAcknowledged": 3,
+        "transfer": "SMPTE_ST_2084_PQ"
+      },
+      {
+        "stage": "motion-portrait",
+        "width": 1290,
+        "height": 2618,
+        "sourceWidth": 645,
+        "sourceHeight": 1309,
+        "pixelExact": true,
+        "displayOneToOne": true,
+        "surfacePixelWidth": 1290,
+        "surfacePixelHeight": 2618,
+        "surfacePixelX": 0,
+        "surfacePixelY": 177,
+        "displayFailures": 0,
+        "inputAcknowledged": 3,
+        "transfer": "SMPTE_ST_2084_PQ"
+      }
+    ]
+  }
+}

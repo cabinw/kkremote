@@ -1,0 +1,271 @@
+{
+  "date": "2026-11-13",
+  "scope": "user-reported remote iPhone/Ponte with host-side measurements",
+  "clientBuild": "0.1.0 (6)",
+  "streamPreset": {
+    "width": 2560,
+    "height": 1440,
+    "fps": 60,
+    "videoBudgetMbps": 20
+  },
+  "pairingAndEndpointChanged": false,
+  "phases": {
+    "film": {
+      "rawReportSHA256": "37b0952755452f34b7e3d4b4de084ed4b8afb8162d9afbff30161146cbce99bf",
+      "activeSamples": 44,
+      "counterWindowSeconds": 43.00039874998038,
+      "encodedFPS": 59.92967681494293,
+      "fpsMinimum": 60,
+      "videoMbpsMean": 3.609717692547001,
+      "controlRTTMeanMs": 17.306364372093025,
+      "sendDelayIntervalMeanMs": 0.3641331451454183,
+      "codec": "video/H265",
+      "codecParameters": "level-id=150;profile-id=2;tier-flag=0;tx-mode=SRST",
+      "nackCount": 0,
+      "pliCount": 0,
+      "retransmittedPacketsSent": 0,
+      "bridgeQueueDrops": 0,
+      "capture": {
+        "callbackGapMillisecondsMax": 18.336749984882772,
+        "callbackGapMillisecondsP95": 18.24408333050087,
+        "completeFrames": 2606,
+        "height": 1440,
+        "idleFrames": 0,
+        "invalidFrames": 0,
+        "luma10BitSamples": {
+          "maximum": 686,
+          "minimum": 64,
+          "non8BitSamples": 1010,
+          "sampleCount": 2048
+        },
+        "otherFrames": 0,
+        "pixelFormat": {
+          "height": "1440",
+          "matrix": "ITU_R_2020",
+          "pixelFormat": "2016686640",
+          "primaries": "ITU_R_2020",
+          "transfer": "SMPTE_ST_2084_PQ",
+          "width": "2560"
+        },
+        "pointPixelScale": 2,
+        "sourceHeightPoints": 720,
+        "sourceWidthPoints": 1280,
+        "width": 2560,
+        "windowServerAgeMillisecondsMax": 2.131166693288833,
+        "windowServerAgeMillisecondsP95": 0.8021666726563126
+      },
+      "userFeedback": "影片流畅，明暗细节正常"
+    },
+    "gray": {
+      "rawReportSHA256": "edd57173d3f46b52c92bceb8fed1fd97a2c2c1f36b875e525abf4da9e5500324",
+      "activeSamples": 16,
+      "counterWindowSeconds": 15.000013125012629,
+      "encodedFPS": 59.93328089166209,
+      "fpsMinimum": 60,
+      "videoMbpsMean": 0.48984834563216756,
+      "controlRTTMeanMs": 17.803039,
+      "sendDelayIntervalMeanMs": 0.0004622788558958772,
+      "codec": "video/H265",
+      "codecParameters": "level-id=150;profile-id=2;tier-flag=0;tx-mode=SRST",
+      "nackCount": 0,
+      "pliCount": 0,
+      "retransmittedPacketsSent": 0,
+      "bridgeQueueDrops": 0,
+      "capture": {
+        "callbackGapMillisecondsMax": 18.023000011453405,
+        "callbackGapMillisecondsP95": 17.589416645932943,
+        "completeFrames": 925,
+        "height": 1440,
+        "idleFrames": 0,
+        "invalidFrames": 0,
+        "luma10BitSamples": {
+          "maximum": 790,
+          "minimum": 64,
+          "non8BitSamples": 1192,
+          "sampleCount": 2048
+        },
+        "otherFrames": 0,
+        "pixelFormat": {
+          "height": "1440",
+          "matrix": "ITU_R_2020",
+          "pixelFormat": "2016686640",
+          "primaries": "ITU_R_2020",
+          "transfer": "SMPTE_ST_2084_PQ",
+          "width": "2560"
+        },
+        "pointPixelScale": 2,
+        "sourceHeightPoints": 720,
+        "sourceWidthPoints": 1280,
+        "width": 2560,
+        "windowServerAgeMillisecondsMax": 0.5839583463966846,
+        "windowServerAgeMillisecondsP95": 0.49316667718812823
+      },
+      "userFeedback": "高光有层次，渐变平滑无偏色"
+    },
+    "gray-reconnect": {
+      "rawReportSHA256": "b39ffa598a6219bff20f83cc27b11f8402cc4039e17c4a666081bf206859aff7",
+      "activeSamples": 9,
+      "counterWindowSeconds": 8.000177916663233,
+      "encodedFPS": 59.873668434587074,
+      "fpsMinimum": 60,
+      "videoMbpsMean": 0.47076378704071764,
+      "controlRTTMeanMs": 16.440312374999998,
+      "sendDelayIntervalMeanMs": 0.000433379120879119,
+      "codec": "video/H265",
+      "codecParameters": "level-id=150;profile-id=2;tier-flag=0;tx-mode=SRST",
+      "nackCount": 0,
+      "pliCount": 0,
+      "retransmittedPacketsSent": 0,
+      "bridgeQueueDrops": 0,
+      "capture": {
+        "callbackGapMillisecondsMax": 17.595666664419696,
+        "callbackGapMillisecondsP95": 17.218624998349696,
+        "completeFrames": 495,
+        "height": 1440,
+        "idleFrames": 0,
+        "invalidFrames": 0,
+        "luma10BitSamples": {
+          "maximum": 790,
+          "minimum": 64,
+          "non8BitSamples": 1192,
+          "sampleCount": 2048
+        },
+        "otherFrames": 0,
+        "pixelFormat": {
+          "height": "1440",
+          "matrix": "ITU_R_2020",
+          "pixelFormat": "2016686640",
+          "primaries": "ITU_R_2020",
+          "transfer": "SMPTE_ST_2084_PQ",
+          "width": "2560"
+        },
+        "pointPixelScale": 2,
+        "sourceHeightPoints": 720,
+        "sourceWidthPoints": 1280,
+        "width": 2560,
+        "windowServerAgeMillisecondsMax": 0.5728750256821513,
+        "windowServerAgeMillisecondsP95": 0.49483333714306355
+      },
+      "userFeedback": "same gray fixture; separate short connection"
+    }
+  },
+  "filmSource": {
+    "codec": "HEVC Main10",
+    "width": 3840,
+    "height": 2160,
+    "fps": 23.976023976023978,
+    "primaries": "BT.2020",
+    "transfer": "PQ",
+    "source": "Apple developer Advanced Stream, hvc1 PQ variant; locally stored silent excerpt"
+  },
+  "graySource": {
+    "width": 2560,
+    "height": 1440,
+    "fps": 60,
+    "durationSeconds": 10,
+    "pixelFormat": "yuv420p10le",
+    "primaries": "bt2020",
+    "transfer": "smpte2084",
+    "matrix": "bt2020nc",
+    "range": "tv",
+    "neutralChroma": 512,
+    "nearBlackNits": [
+      0,
+      0.01,
+      0.03,
+      0.1,
+      0.3,
+      1,
+      3,
+      10
+    ],
+    "nearBlackCodes": [
+      64,
+      83,
+      96,
+      119,
+      149,
+      195,
+      251,
+      327
+    ],
+    "whiteStepNits": [
+      10,
+      25,
+      50,
+      100,
+      203,
+      400,
+      700,
+      1000
+    ],
+    "whiteStepCodes": [
+      327,
+      394,
+      450,
+      509,
+      573,
+      636,
+      689,
+      723
+    ],
+    "rampCodes": [
+      64,
+      723
+    ],
+    "note": "Nominal authored PQ signal levels; no mastering/peak-display certification. Static chart in a 60fps video container; lossless fixture encoding, independent of the live VT encoder."
+  },
+  "grayFileValidation": {
+    "firstFrameBitExact": true,
+    "stream": {
+      "profile": "Main 10",
+      "pix_fmt": "yuv420p10le",
+      "color_range": "tv",
+      "color_space": "bt2020nc",
+      "color_transfer": "smpte2084",
+      "color_primaries": "bt2020",
+      "avg_frame_rate": "60/1",
+      "nb_frames": "600"
+    }
+  },
+  "limitations": [
+    "Film has 23.976 unique source frames per second; the browser clock can update the window at 60 Hz.",
+    "The grayscale is static in a 60fps container; it does not stress video motion or throughput.",
+    "PQ labels specify authored source signal levels, not measured phone luminance.",
+    "Short host windows and subjective feedback do not certify color accuracy, input-to-photon latency or sustained thermal stability.",
+    "No receiver JSON or current phone EDR headroom reading was supplied."
+  ],
+  "separateGrayLocalLoopback": {
+    "totalSeconds": 25,
+    "excludedWarmupSeconds": 10,
+    "scope": "single-Mac local loopback, not remote receiver measurements",
+    "host": {
+      "fps": 59.94841768742835,
+      "meanMbps": 0.5473477228456809,
+      "freezeCount": 0,
+      "nackCount": 0,
+      "actualFormat": {
+        "height": "1440",
+        "matrix": "ITU_R_2020",
+        "pixelFormat": "2016686640",
+        "primaries": "ITU_R_2020",
+        "transfer": "SMPTE_ST_2084_PQ",
+        "width": "2560"
+      }
+    },
+    "viewer": {
+      "fps": 59.94518266429737,
+      "meanMbps": 0.5473932842153013,
+      "freezeCount": 0,
+      "nackCount": 0,
+      "actualFormat": {
+        "height": "1440",
+        "matrix": "ITU_R_2020",
+        "pixelFormat": "2016686640",
+        "primaries": "ITU_R_2020",
+        "transfer": "SMPTE_ST_2084_PQ",
+        "width": "2560"
+      }
+    }
+  }
+}
