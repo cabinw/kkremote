@@ -284,6 +284,7 @@ final class HostWindowCatalog {
             return (x.isNull ? 0:x.width*x.height) < (y.isNull ? 0:y.width*y.height)
         }!}
         let usable=destination.1
+        if nativeLeases[key(target)]==nil {nativeLeases[key(target)]=NativeLease(target:target,element:window,original:frame)}
         let requested:CGSize
         if workspaceDisplayID != nil {
             guard let scale=viewport.displayScale,
@@ -291,7 +292,6 @@ final class HostWindowCatalog {
                 throw LabError.message("工作区或像素预算不足以原生覆盖客户端；未使用插值替代")
             }
             requested=points
-            if nativeLeases[key(target)]==nil {nativeLeases[key(target)]=NativeLease(target:target,element:window,original:frame)}
             func settle(_ expected:CGRect,phase:String) async throws {
                 try await Task.sleep(for:.milliseconds(200))
                 for _ in 0..<40 {
@@ -326,9 +326,16 @@ final class HostWindowCatalog {
             try await settle(CGRect(origin:point,size:exact),phase:"调整")
             print("WINDOW_LAYOUT_APPLIED target=\(target.number) requested=\(viewport.width)x\(viewport.height) accepted=\(exact.width)x\(exact.height) nativeExact=true");fflush(stdout)
             return
-        } else {requested=CGSize(width:viewport.width,height:viewport.height)}
+        } else {
+            guard let fitted = MobileWindowSizing.physicalAspectPoints(
+                viewport: CGSize(width: viewport.width, height: viewport.height),
+                usable: usable.size
+            ) else {
+                throw LabError.message("无效的物理桌面窗口目标尺寸")
+            }
+            requested = fitted
+        }
         guard isCurrent() else {throw LabError.message("窗口请求已取消")}
-        var position=usable.origin
         var size=CGSize(width:min(usable.width,requested.width),height:min(usable.height,requested.height))
         guard AXUIElementSetAttributeValue(window,kAXSizeAttribute as CFString,AXValueCreate(.cgSize,&size)!) == .success else {
             throw LabError.message("应用不允许调整窗口尺寸，当前完整缩放显示")
@@ -339,8 +346,12 @@ final class HostWindowCatalog {
         let accepted=rect(try resolve(known:window)) ?? frame
         // Respect application minimum width AND screen height. Never crop the client
         // to conceal a minimum-size constraint or place controls beyond the desktop.
-        size=CGSize(width:min(usable.width,max(accepted.width,accepted.height*requested.width/requested.height)),
-            height:min(usable.height,max(accepted.height,accepted.width*requested.height/requested.width)))
+        size=CGSize(width:min(usable.width,max(accepted.width,(accepted.height*requested.width/requested.height).rounded())),
+            height:min(usable.height,max(accepted.height,(accepted.width*requested.height/requested.width).rounded())))
+        var position=CGPoint(
+            x:min(max(usable.minX,(frame.midX-size.width*0.5).rounded()),max(usable.minX,usable.maxX-size.width)),
+            y:min(max(usable.minY,(frame.midY-size.height*0.5).rounded()),max(usable.minY,usable.maxY-size.height))
+        )
         let current=try resolve(known:window)
         // Moving an animating window can restore its old size. Finish the move
         // first, then make the final size request the last frame mutation.
@@ -366,12 +377,43 @@ final class HostWindowCatalog {
                let bounds=info[kCGWindowBounds as String] as? NSDictionary,
                let actual=CGRect(dictionaryRepresentation:bounds),let accepted,
                abs(actual.width-accepted.width)<1,abs(actual.height-accepted.height)<1 {
-                if workspaceDisplayID != nil {nativeLeases[key(target)]?.applied=actual}
+                nativeLeases[key(target)]?.applied=actual
                 print("WINDOW_LAYOUT_APPLIED target=\(target.number) requested=\(viewport.width)x\(viewport.height) accepted=\(actual.width)x\(actual.height)");fflush(stdout)
                 return
             }
         }
         throw LabError.message("窗口尺寸尚未稳定，当前完整缩放显示")
+    }
+
+    static func raise(_ target: RemoteWindow) {
+        guard AXIsProcessTrusted(),
+              let info = (CGWindowListCopyWindowInfo(.optionIncludingWindow, target.number) as? [[String: Any]])?.first,
+              info[kCGWindowOwnerPID as String] as? Int32 == target.processID,
+              let bounds = info[kCGWindowBounds as String] as? NSDictionary,
+              let frame = CGRect(dictionaryRepresentation: bounds) else { return }
+        let app = AXUIElementCreateApplication(target.processID)
+        AXUIElementSetMessagingTimeout(app, 0.3)
+        var rawWindows: CFTypeRef?
+        AXUIElementCopyAttributeValue(app, kAXWindowsAttribute as CFString, &rawWindows)
+        let axWindows = rawWindows as? [AXUIElement] ?? []
+        let matched = axWindows.first { elem in
+            var p: CFTypeRef?, s: CFTypeRef?, t: CFTypeRef?
+            guard AXUIElementCopyAttributeValue(elem, kAXPositionAttribute as CFString, &p) == .success,
+                  AXUIElementCopyAttributeValue(elem, kAXSizeAttribute as CFString, &s) == .success,
+                  let p, let s, CFGetTypeID(p) == AXValueGetTypeID(), CFGetTypeID(s) == AXValueGetTypeID() else { return false }
+            var pt = CGPoint.zero, sz = CGSize.zero
+            guard AXValueGetValue(p as! AXValue, .cgPoint, &pt), AXValueGetValue(s as! AXValue, .cgSize, &sz) else { return false }
+            _ = AXUIElementCopyAttributeValue(elem, kAXTitleAttribute as CFString, &t)
+            let title = t as? String ?? ""
+            return WindowTitleIdentity.matches(title, captureTitle: target.title, application: target.application) &&
+                abs(pt.x - frame.minX) < 3 && abs(pt.y - frame.minY) < 3 &&
+                abs(sz.width - frame.width) < 3 && abs(sz.height - frame.height) < 3
+        }
+        AXUIElementSetAttributeValue(app, kAXFrontmostAttribute as CFString, kCFBooleanTrue)
+        NSRunningApplication(processIdentifier: target.processID)?.activate(options: [.activateIgnoringOtherApps])
+        if let matched {
+            AXUIElementPerformAction(matched, kAXRaiseAction as CFString)
+        }
     }
 }
 #endif

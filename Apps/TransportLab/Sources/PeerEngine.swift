@@ -475,7 +475,7 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
         }
         let trace = encoderTelemetry.trace
         makeSource = { [weak self] hdr in
-            WindowCaptureSource(source: videoSource, preset: windowPreset, windowID: windowID, expectedProcessID: expectedProcessID, hdr: hdr, nativeWindowPixels: false, viewport: nil, requiresNativeClientPixels: false, trace: trace) { [weak self] message in
+            WindowCaptureSource(source: videoSource, preset: windowPreset, windowID: windowID, expectedProcessID: expectedProcessID, hdr: hdr, nativeWindowPixels: true, viewport: nil, requiresNativeClientPixels: false, trace: trace) { [weak self] message in
                 guard let self, !self.stopped else { return }
                 if let onSourceFailure = self.onSourceFailure { onSourceFailure(message) }
                 else { self.onFailure?(message) }

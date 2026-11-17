@@ -86,6 +86,12 @@ enum SignalTransportTests {
         require(decodedResize.viewport == viewport,"layout viewport round trip")
         require(viewport.isValid && !WindowViewport(width:0,height:873).isValid &&
             !WindowViewport(width:Double.nan,height:873).isValid && !WindowViewport(width:430,height:2001).isValid,"reject invalid viewport dimensions")
+        let unfoldedFit = MobileWindowSizing.physicalAspectPoints(viewport: CGSize(width: 902, height: 766), usable: CGSize(width: 1712, height: 1045))
+        require(unfoldedFit != nil && abs((unfoldedFit!.width / unfoldedFit!.height) - (902.0 / 766.0)) < 0.01, "unfolded foldable preserves aspect ratio on physical display")
+        let foldedFit = MobileWindowSizing.physicalAspectPoints(viewport: CGSize(width: 393, height: 852), usable: CGSize(width: 1712, height: 1045))
+        require(foldedFit != nil && abs((foldedFit!.width / foldedFit!.height) - (393.0 / 852.0)) < 0.01, "folded portrait preserves aspect ratio on physical display")
+        let clampedFit = MobileWindowSizing.physicalAspectPoints(viewport: CGSize(width: 1200, height: 1100), usable: CGSize(width: 1440, height: 840))
+        require(clampedFit != nil && clampedFit!.height <= 840 && abs((clampedFit!.width / clampedFit!.height) - (1200.0 / 1100.0)) < 0.01, "height-constrained desktop scales uniformly without distorting aspect ratio")
         print("PASS: versioned window signaling and legacy compatibility")
         require(oldAnswer.windowControl == nil && oldAnswer.windowKeyboard == nil,"legacy peer cannot control or type")
         require(!WindowInput(lease:"lease",sequence:1,kind:"text",text:"legacy",focus:"focus").valid(width:500,height:1000),"legacy replacement operation is not interpreted as direct text")

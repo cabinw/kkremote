@@ -38,6 +38,20 @@ struct MobileWindowSizing {
         let height = min(2400, max(160, (viewport.height * scale).rounded()))
         return CGSize(width: width, height: height)
     }
+
+    /// Compute a physical-screen Mac window size in points matching the client's viewport aspect ratio,
+    /// uniformly fitted inside the destination display's usable frame.
+    static func physicalAspectPoints(viewport: CGSize, usable: CGSize) -> CGSize? {
+        guard viewport.width.isFinite, viewport.height.isFinite, viewport.width > 0, viewport.height > 0,
+              usable.width.isFinite, usable.height.isFinite, usable.width >= 300, usable.height >= 200 else {
+            return nil
+        }
+        let baseScale = max(1.0, 960.0 / max(viewport.width, viewport.height))
+        let rawW = viewport.width * baseScale
+        let rawH = viewport.height * baseScale
+        let fit = min(1.0, usable.width / rawW, usable.height / rawH)
+        return CGSize(width: max(300, (rawW * fit).rounded()), height: max(200, (rawH * fit).rounded()))
+    }
     /// Preserve the window's native pixels within the existing encoder pixel budget.
     /// Even dimensions are required by the 4:2:0 encoder; never upscale beyond capture scale.
     static func capturePixels(for source: CGSize, pointPixelScale: CGFloat, maximumPixels: CGFloat) -> CGSize? {

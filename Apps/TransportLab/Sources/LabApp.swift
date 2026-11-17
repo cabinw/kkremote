@@ -113,6 +113,7 @@ struct LabView: View {
                         VStack {
                             #if os(macOS)
                             Toggle("HDR 优先（HEVC Main10 / PQ）", isOn: $model.hdr)
+                            Toggle("根据客户端分辨率自动调整窗口比例", isOn: $model.enablesWindowLayout)
                             HStack {
                                 Picker("捕获来源", selection: $model.captureWindowID) {
                                     Text("合成测试图").tag(nil as UInt32?)

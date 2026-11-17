@@ -128,7 +128,7 @@ final class LabModel: ObservableObject {
     private var inputPending: [String:(String,String?,TimeInterval)] = [:]
     private var inputTimers: [String:DispatchWorkItem] = [:]
     var canControl: Bool { windowControlSupported && controlLease != nil && !windowBusy && running && sample.framesDecoded > 0 && selectedRemoteWindow != nil }
-    var enablesWindowLayout = false
+    @Published var enablesWindowLayout = false
     @Published private(set) var windowLayoutSupported = false
     private var desiredWindowViewport: WindowViewport?
     private var appliedWindowViewport: WindowViewport?
@@ -247,6 +247,12 @@ final class LabModel: ObservableObject {
             self.windowTimeout?.cancel(); self.pendingWindowRequest = nil
             self.windowBusy = false; self.selectedRemoteWindow = nil; self.captureWindowID = nil
             self.activeVideoSource = "none"
+            #if os(macOS)
+            MainActor.assumeIsolated {
+                ControlledWindowOverlay.shared.detach()
+                _ = HostWindowLayout.restoreNativeWindows()
+            }
+            #endif
             self.stopMedia { [weak self] in
                 guard let self, self.generation == token else { return }
                 self.sendWindow(WindowMessage(action: "unavailable", requestID: UUID().uuidString,
@@ -307,6 +313,7 @@ final class LabModel: ObservableObject {
         do {
             let identity = try DeviceIdentity.loadOrCreateDefault()
             enablesWindowControl = true
+            enablesWindowLayout = true
             startCoordHost(identity: identity, coordURL: trimmed)
         } catch {
             self.error = error.localizedDescription
@@ -367,10 +374,56 @@ final class LabModel: ObservableObject {
         resetControl()
         windowTimeout?.cancel(); pendingWindowRequest = nil; pendingWindowTarget = nil
         windowBusy = false; catalogLoading = false; catalogRequestID = nil
-        selectedRemoteWindow = nil
+        selectedRemoteWindow = nil; captureWindowID = nil
+        #if os(macOS)
+        if Thread.isMainThread {
+            MainActor.assumeIsolated {
+                ControlledWindowOverlay.shared.detach()
+                _ = HostWindowLayout.restoreNativeWindows()
+            }
+        } else {
+            Task { @MainActor in
+                ControlledWindowOverlay.shared.detach()
+                await HostWindowLayout.restoreNativeWindows().value
+            }
+        }
+        #endif
         engineGeneration = UUID()
         engine?.stop(); engine = nil
     }
+
+    #if os(macOS)
+    @MainActor
+    private func syncControlledWindowOverlay() {
+        if running, mode == "host", let selected = selectedRemoteWindow {
+            ControlledWindowOverlay.shared.attach(target: selected) { [weak self] in
+                self?.stopHostWindowFromLocalOverlay()
+            }
+        } else {
+            ControlledWindowOverlay.shared.detach()
+        }
+    }
+
+    @MainActor
+    private func stopHostWindowFromLocalOverlay() {
+        guard running, mode == "host", selectedRemoteWindow != nil else { return }
+        resetControl()
+        windowTimeout?.cancel(); pendingWindowRequest = nil; pendingWindowTarget = nil
+        windowBusy = false; selectedRemoteWindow = nil; captureWindowID = nil
+        activeVideoSource = "none"
+        ControlledWindowOverlay.shared.detach()
+        _ = HostWindowLayout.restoreNativeWindows()
+        if usesCoordSignaling {
+            engine?.switchWindowCapture(windowID: nil, expectedProcessID: nil)
+            sendWindow(WindowMessage(action: "unavailable", requestID: UUID().uuidString, error: "本机已结束该窗口的远程控制，可重新选择窗口"))
+        } else {
+            stopMedia { [weak self] in
+                guard let self else { return }
+                self.sendWindow(WindowMessage(action: "unavailable", requestID: UUID().uuidString, error: "本机已结束该窗口的远程控制，可重新选择窗口"))
+            }
+        }
+    }
+    #endif
 
     private func makeCoordHostEngine(sessionID: String, stunServers: [String]) throws {
         let token = generation, mediaToken = UUID()
@@ -397,7 +450,7 @@ final class LabModel: ObservableObject {
             if message.type == "offer" {
                 message.windowProtocol = WindowMessage.version
                 message.windowSession = self.windowSession
-                message.windowLayout = false
+                message.windowLayout = self.enablesWindowLayout
                 message.windowControl = self.enablesWindowControl
                 message.windowKeyboard = self.enablesWindowControl
             }
@@ -413,16 +466,22 @@ final class LabModel: ObservableObject {
         }
         engine.onFailure = { [weak self] value in
             guard let self, self.generation == token, self.engineGeneration == mediaToken else { return }
+            print("COORD_PEER_ENDED reason=\(value)"); fflush(stdout)
             self.detachCoordPeerSession()
             self.status = "上一客户端连接已结束（\(value)），等待新连接"
         }
-        engine.onSourceFailure = { [weak self] _ in
+        engine.onSourceFailure = { [weak self] msg in
             guard let self, self.generation == token, self.engineGeneration == mediaToken else { return }
+            print("COORD_SOURCE_FAILURE reason=\(msg)"); fflush(stdout)
             self.resetControl()
             self.windowTimeout?.cancel(); self.pendingWindowRequest = nil
             self.windowBusy = false; self.selectedRemoteWindow = nil; self.captureWindowID = nil
             self.activeVideoSource = "none"
             #if os(macOS)
+            MainActor.assumeIsolated {
+                ControlledWindowOverlay.shared.detach()
+                _ = HostWindowLayout.restoreNativeWindows()
+            }
             self.engine?.switchWindowCapture(windowID: nil, expectedProcessID: nil)
             #endif
             self.sendWindow(WindowMessage(action: "unavailable", requestID: UUID().uuidString,
@@ -681,12 +740,33 @@ final class LabModel: ObservableObject {
                     guard self.generation == token, self.pendingWindowRequest == command.requestID else { return }
                     if let viewport=command.viewport,!viewport.isValid { throw LabError.message("无效的窗口尺寸") }
                     if self.usesCoordSignaling {
+                        let reqID = command.requestID
                         self.resetControl()
-                        self.windowTimeout?.cancel(); self.pendingWindowRequest = nil; self.windowBusy = false
+                        await HostWindowLayout.restoreNativeWindows(except: target).value
+                        guard self.generation == token, self.pendingWindowRequest == reqID else { return }
                         var accepted = target, warning: String?
                         if let target {
+                            HostWindowLayout.raise(target)
+                            if let viewport = command.viewport, self.enablesWindowLayout {
+                                do {
+                                    try await HostWindowLayout.resize(
+                                        target,
+                                        viewport: viewport,
+                                        workspaceDisplayID: self.nativeWorkspaceDisplayID,
+                                        maximumPixels: CGFloat(self.activePreset.width * self.activePreset.height),
+                                        isCurrent: { self.generation == token && self.pendingWindowRequest == reqID }
+                                    )
+                                } catch {
+                                    guard self.generation == token, self.pendingWindowRequest == reqID else { return }
+                                    print("WINDOW_LAYOUT_WARNING target=\(target.number) reason=\(error.localizedDescription)"); fflush(stdout)
+                                    warning = error.localizedDescription
+                                }
+                            }
+                            guard self.generation == token, self.pendingWindowRequest == reqID else { return }
                             accepted = try await self.windowCatalog.current(target)
                         }
+                        guard self.generation == token, self.pendingWindowRequest == reqID else { return }
+                        self.windowTimeout?.cancel(); self.pendingWindowRequest = nil; self.windowBusy = false
                         self.captureWindowID = accepted?.number
                         self.selectedRemoteWindow = accepted
                         self.activeVideoSource = accepted == nil ? "none" : "window"
@@ -694,12 +774,13 @@ final class LabModel: ObservableObject {
                         self.engine?.switchWindowCapture(windowID: accepted?.number, expectedProcessID: accepted?.processID, windowSizePoints: winSize)
                         if self.enablesWindowControl, let accepted {
                             do { self.hostControl = try HostWindowControl(target: accepted) }
-                            catch { warning = error.localizedDescription }
+                            catch { warning = warning ?? error.localizedDescription }
                             self.controlLease = self.hostControl?.lease
                         }
+                        self.syncControlledWindowOverlay()
                         self.sendWindow(WindowMessage(
                             action: "selected",
-                            requestID: command.requestID,
+                            requestID: reqID,
                             selected: accepted,
                             mediaSession: self.engine?.sessionID,
                             error: warning,
@@ -741,6 +822,7 @@ final class LabModel: ObservableObject {
             #if os(macOS)
             await HostWindowLayout.restoreNativeWindows(except:target).value
             guard self.generation == token,self.pendingWindowRequest == request else {return}
+            if let target { HostWindowLayout.raise(target) }
             if let target,let viewport,self.enablesWindowLayout {
                 do { try await HostWindowLayout.resize(target,viewport:viewport,workspaceDisplayID:self.nativeWorkspaceDisplayID,maximumPixels:CGFloat(self.activePreset.width*self.activePreset.height),isCurrent:{self.generation==token && self.pendingWindowRequest==request}) }
                 catch {
@@ -768,6 +850,7 @@ final class LabModel: ObservableObject {
                     catch { warning=error.localizedDescription }
                     self.controlLease=self.hostControl?.lease
                 }
+                self.syncControlledWindowOverlay()
                 #endif
                 self.sendWindow(WindowMessage(action:"selected",requestID:request,selected:accepted,
                     mediaSession:self.expectedMediaSession,error:warning,controlLease:self.controlLease))
@@ -808,9 +891,16 @@ final class LabModel: ObservableObject {
 
     func stop() {
         #if os(macOS)
-        if nativeWorkspaceDisplayID != nil {
-            if Thread.isMainThread { MainActor.assumeIsolated { _=HostWindowLayout.restoreNativeWindows() } }
-            else {Task { @MainActor in await HostWindowLayout.restoreNativeWindows().value }}
+        if Thread.isMainThread {
+            MainActor.assumeIsolated {
+                ControlledWindowOverlay.shared.detach()
+                _ = HostWindowLayout.restoreNativeWindows()
+            }
+        } else {
+            Task { @MainActor in
+                ControlledWindowOverlay.shared.detach()
+                await HostWindowLayout.restoreNativeWindows().value
+            }
         }
         #endif
         resetControl();windowControlSupported=false;directKeyboardSupported=false

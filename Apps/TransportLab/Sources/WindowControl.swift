@@ -36,6 +36,8 @@ import ApplicationServices
 
 /// An optional test-Host executor. No mouse button is held across wire messages.
 final class HostWindowControl {
+    static var ignoredOverlayWindowIDs: Set<UInt32> = []
+    static var onRemotePointerActivity: ((Bool) -> Void)? = nil
     let lease = UUID().uuidString
     let target: RemoteWindow
     private let application: AXUIElement
@@ -139,11 +141,17 @@ final class HostWindowControl {
         AXUIElementSetAttributeValue(application,kAXFrontmostAttribute as CFString,kCFBooleanTrue)
         NSRunningApplication(processIdentifier:target.processID)?.activate(options:[.activateIgnoringOtherApps])
         AXUIElementPerformAction(window,kAXRaiseAction as CFString)
+        let selfPID = ProcessInfo.processInfo.processIdentifier
         for _ in 0..<20 {
             let frame=try validate(focused:false)
             let center=CGPoint(x:frame.midX,y:frame.midY)
             let windows=CGWindowListCopyWindowInfo(.optionOnScreenOnly,kCGNullWindowID) as? [[String:Any]] ?? []
             let top=windows.first { info in
+                if let winID = info[kCGWindowNumber as String] as? UInt32,
+                   info[kCGWindowOwnerPID as String] as? Int32 == selfPID,
+                   Self.ignoredOverlayWindowIDs.contains(winID) {
+                    return false
+                }
                 guard (info[kCGWindowLayer as String] as? Int) == 0,
                       (info[kCGWindowAlpha as String] as? Double ?? 1)>0,
                       let bounds=info[kCGWindowBounds as String] as? NSDictionary,
@@ -166,8 +174,14 @@ final class HostWindowControl {
         event.post(tap:.cghidEventTap)
     }
     private func requireUncovered(_ point:CGPoint) throws {
+        let selfPID = ProcessInfo.processInfo.processIdentifier
         guard let windows=CGWindowListCopyWindowInfo(.optionOnScreenOnly,kCGNullWindowID) as? [[String:Any]],
               let top=windows.first(where: { info in
+                  if let winID = info[kCGWindowNumber as String] as? UInt32,
+                     info[kCGWindowOwnerPID as String] as? Int32 == selfPID,
+                     Self.ignoredOverlayWindowIDs.contains(winID) {
+                      return false
+                  }
                   guard (info[kCGWindowLayer as String] as? Int) == 0,
                         (info[kCGWindowAlpha as String] as? Double ?? 1) > 0,
                         let bounds=info[kCGWindowBounds as String] as? NSDictionary,
@@ -255,12 +269,16 @@ final class HostWindowControl {
         case "focus":
             try await focus();return renewKeyboardFocus()
         case "click", "secondary":
+            Self.onRemotePointerActivity?(true)
+            defer { Self.onRemotePointerActivity?(false) }
             try await focus()
             let frame=try validate()
             try await click(CGPoint(x:frame.minX+input.x!,y:frame.minY+input.y!),right:input.kind == "secondary")
             try await Task.sleep(for:.milliseconds(30))
             return renewKeyboardFocus()
         case "scroll":
+            Self.onRemotePointerActivity?(true)
+            defer { Self.onRemotePointerActivity?(false) }
             try await focus()
             let frame=try validate()
             guard let event=CGEvent(scrollWheelEvent2Source:nil,units:.pixel,wheelCount:2,wheel1:Int32(input.dy!.rounded()),wheel2:Int32(input.dx!.rounded()),wheel3:0) else { throw LabError.message("无法创建滚动事件") }

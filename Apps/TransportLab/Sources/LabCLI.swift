@@ -1,6 +1,7 @@
 #if os(macOS)
 import Foundation
 import AppKit
+import ApplicationServices
 
 /// Uses the same model as the app. Keys are passed in private files, never argv or reports.
 enum LabCLI {
@@ -189,7 +190,15 @@ enum LabCLI {
             var sessionNumber = 1, completedVideoSessions = 0
             var nextSnapshot = Date().addingTimeInterval(5)
             var retryAt: Date?
-            if persistentHost { print("LAB_HOST_LISTENING session=1"); fflush(stdout) }
+            if persistentHost {
+                let axTrusted = AXIsProcessTrusted()
+                if !axTrusted && (model.enablesWindowLayout || model.enablesWindowControl) {
+                    let opts = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+                    _ = AXIsProcessTrustedWithOptions(opts)
+                }
+                print("LAB_HOST_CAPABILITIES axTrusted=\(axTrusted) layout=\(model.enablesWindowLayout) control=\(model.enablesWindowControl)")
+                print("LAB_HOST_LISTENING session=1"); fflush(stdout)
+            }
             while Date() < deadline {
                 RunLoop.main.run(until: Date().addingTimeInterval(0.05))
                 if interrupted { throw LabError.message("测试被终止；保留诊断，不计为完成") }
