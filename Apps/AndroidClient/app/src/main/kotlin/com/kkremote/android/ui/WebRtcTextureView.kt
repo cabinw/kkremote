@@ -1,8 +1,12 @@
 package com.kkremote.android.ui
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.SurfaceTexture
+import android.os.SystemClock
 import android.view.TextureView
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import com.kkremote.android.webrtc.WebRtcRuntime
 import org.webrtc.EglBase
 import org.webrtc.EglRenderer
@@ -16,8 +20,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Hardware-accelerated OpenGL ES TextureView backed by WebRTC's EglRenderer.
- * Unlike SurfaceViewRenderer, TextureView participates cleanly in Compose graphicsLayer
- * zoom/pan transforms, rounded clip masks, floating glass controls, and ADB screenshots.
+ * Also performs zero-GC double-buffered 160x120 GPU readback at ~7 Hz to drive:
+ *   1. Real-time frosted glass (.regularMaterial) backdrop blur beneath floating UI
+ *   2. Dynamic WindowEdgeColor ambient canvas & status-bar tinting (matching iPhone)
  */
 class WebRtcTextureView(context: Context) : TextureView(context), TextureView.SurfaceTextureListener, VideoSink {
 
@@ -31,7 +36,20 @@ class WebRtcTextureView(context: Context) : TextureView(context), TextureView.Su
     @Volatile
     private var lastHeight = 0
 
+    private val sampleW = 160
+    private val sampleH = 120
+    private val sampleBuffers = arrayOf(
+        Bitmap.createBitmap(sampleW, sampleH, Bitmap.Config.ARGB_8888),
+        Bitmap.createBitmap(sampleW, sampleH, Bitmap.Config.ARGB_8888),
+    )
+    private var bufferToggle = 0
+    private var sampleGeneration = 0L
+    private var lastSampleUptimeMs = 0L
+    private val edgeStripPixels = IntArray(136)
+    private val edgeEstimator = WindowEdgeColorEstimator()
+
     var onVideoDimensionsChanged: ((Int, Int) -> Unit)? = null
+    var onBackdropSampled: ((ImageBitmap, WindowEdgeColor?, Long) -> Unit)? = null
 
     init {
         isOpaque = false
@@ -74,9 +92,7 @@ class WebRtcTextureView(context: Context) : TextureView(context), TextureView.Su
         eglRenderer.createEglSurface(surface)
     }
 
-    override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {
-        // EglRenderer queries current EGL surface dimensions dynamically on each rendered frame.
-    }
+    override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {}
 
     override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean {
         if (initialized.get()) {
@@ -87,7 +103,22 @@ class WebRtcTextureView(context: Context) : TextureView(context), TextureView.Su
         return true
     }
 
-    override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {}
+    override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {
+        val listener = onBackdropSampled ?: return
+        val now = SystemClock.uptimeMillis()
+        if (now - lastSampleUptimeMs < 140L || !isAvailable || width <= 0 || height <= 0) return
+        lastSampleUptimeMs = now
+
+        val targetBitmap = sampleBuffers[bufferToggle]
+        bufferToggle = 1 - bufferToggle
+        val captured = runCatching { getBitmap(targetBitmap) }.getOrNull() ?: return
+
+        // Sample inside the Mac window's top titlebar fill (skipping the 1-2px bright rim)
+        targetBitmap.getPixels(edgeStripPixels, 0, edgeStripPixels.size, 12, 3, edgeStripPixels.size, 1)
+        val newEdgeColor = edgeEstimator.consumeArgbPixels(edgeStripPixels)
+        sampleGeneration += 1L
+        listener(captured.asImageBitmap(), newEdgeColor, sampleGeneration)
+    }
 
     override fun onDetachedFromWindow() {
         runCatching { boundTrack?.removeSink(this) }

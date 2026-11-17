@@ -9,6 +9,7 @@ import com.kkremote.android.gesture.TouchPoint
 import com.kkremote.android.protocol.CoordConnectRequest
 import com.kkremote.android.protocol.DataChannelSignalEnvelope
 import com.kkremote.android.protocol.WindowMessage
+import com.kkremote.android.ui.WindowEdgeColorEstimator
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -156,5 +157,24 @@ class CryptoAndGestureTest {
         assertTrue(dcJson.contains("\"type\":\"window\""))
         assertTrue(dcJson.contains("\"version\":1"))
         assertFalse(dcJson.contains("\"windows\""))
+    }
+
+    @Test
+    fun windowEdgeColorEstimatorRejectsOutliersAndDetectsLuminance() {
+        val estimator = WindowEdgeColorEstimator()
+        val lightTitlebar = IntArray(40) { idx ->
+            if (idx < 4) (0xFF shl 24) or (0xFF shl 16) or (0x5F shl 8) or 0x57 // red traffic-light outlier
+            else (0xFF shl 24) or (0xF2 shl 16) or (0xF3 shl 8) or 0xF7
+        }
+        val sampledLight = estimator.consumeArgbPixels(lightTitlebar)
+        assertNotNull(sampledLight)
+        assertFalse(sampledLight!!.prefersLightContent)
+
+        val darkTitlebar = IntArray(40) { (0xFF shl 24) or (0x18 shl 16) or (0x1A shl 8) or 0x22 }
+        // First frame arms pending debounce, second frame confirms transition
+        assertNull(estimator.consumeArgbPixels(darkTitlebar))
+        val sampledDark = estimator.consumeArgbPixels(darkTitlebar)
+        assertNotNull(sampledDark)
+        assertTrue(sampledDark!!.prefersLightContent)
     }
 }

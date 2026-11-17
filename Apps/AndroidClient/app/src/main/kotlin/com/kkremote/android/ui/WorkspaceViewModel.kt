@@ -71,6 +71,7 @@ data class WorkspaceUiState(
     val windowControlSupported: Boolean = false,
     val directKeyboardSupported: Boolean = false,
     val windows: List<RemoteWindow> = emptyList(),
+    val appIcons: Map<Int, String> = emptyMap(),
     val catalogLoading: Boolean = false,
     val selectedWindow: RemoteWindow? = null,
     val controlLease: String? = null,
@@ -86,11 +87,11 @@ data class WorkspaceUiState(
     val panY: Float = 0f,
     val trackpadCursorPt: TouchPoint? = null,
     val lastRipple: ClickRipple? = null,
-    val showPairingSheet: Boolean = true,
+    val edgeColor: WindowEdgeColor = WindowEdgeColor.Initial,
+    val showPairingSheet: Boolean = false,
     val showWindowSheet: Boolean = false,
     val showTelemetrySheet: Boolean = false,
     val showKeyboardBar: Boolean = false,
-    val sidebarExpandedOnLargeScreen: Boolean = true,
 ) {
     val canControl: Boolean
         get() = dataChannelOpen && selectedWindow != null && !controlLease.isNullOrBlank()
@@ -137,6 +138,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
     private var pendingScrollDx: Double = 0.0
     private var pendingScrollDy: Double = 0.0
     private var scrollFlushJob: Job? = null
+    private var warningDismissJob: Job? = null
     private var rippleCounter: Long = 0L
 
     init {
@@ -146,12 +148,23 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
             it.copy(
                 savedHosts = loaded,
                 activeHost = mostRecent,
-                showPairingSheet = mostRecent == null,
+                showPairingSheet = false,
             )
         }
         // Automatically connect to the most recently trusted host on launch if it already holds an AccessGrant!
         if (mostRecent != null && (!mostRecent.accessGrant.isNullOrBlank() || !mostRecent.pendingPairToken.isNullOrBlank())) {
             connectToHost(mostRecent)
+        }
+    }
+
+    private fun postTransientWarning(message: String?) {
+        warningDismissJob?.cancel()
+        _uiState.update { it.copy(bannerWarning = message) }
+        if (!message.isNullOrBlank()) {
+            warningDismissJob = viewModelScope.launch {
+                delay(3600L)
+                _uiState.update { if (it.bannerWarning == message) it.copy(bannerWarning = null) else it }
+            }
         }
     }
 
@@ -257,11 +270,10 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
 
                 override fun onError(message: String) {
                     viewModelScope.launch {
-                        _uiState.update { st ->
-                            if (st.phase == ConnectionPhase.CONNECTED) {
-                                // Keep existing direct WebRTC media session alive even if coord WSS blips!
-                                st.copy(bannerWarning = message)
-                            } else {
+                        if (_uiState.value.phase == ConnectionPhase.CONNECTED) {
+                            postTransientWarning(message)
+                        } else {
+                            _uiState.update { st ->
                                 st.copy(
                                     phase = ConnectionPhase.FAILED,
                                     statusText = "连接受阻",
@@ -324,7 +336,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         resetInputQueue()
         _uiState.update {
             it.copy(
-                statusText = "正在切换至 ${window.application}…",
+                statusText = "正在切换窗口…",
                 showWindowSheet = false,
             )
         }
@@ -335,6 +347,41 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                 windowID = window.id,
             )
         )
+    }
+
+    fun stopViewingKeepConnection() {
+        val rtc = rtcClient ?: return
+        resetInputQueue()
+        _uiState.update {
+            it.copy(
+                selectedWindow = null,
+                controlLease = null,
+                videoWidthPx = 0,
+                videoHeightPx = 0,
+                edgeColor = WindowEdgeColor.Initial,
+                showWindowSheet = true,
+                showKeyboardBar = false,
+                statusText = "请选择远端窗口",
+            )
+        }
+        rtc.sendWindowCommand(
+            WindowMessage(
+                action = "unsubscribe",
+                requestID = DeviceIdentity.randomHex(8),
+            )
+        )
+    }
+
+    fun onEdgeColorSampled(color: WindowEdgeColor?) {
+        if (color != null) {
+            _uiState.update { it.copy(edgeColor = color) }
+        }
+    }
+
+    fun zoomInStep() {
+        _uiState.update { st ->
+            st.copy(zoom = (st.zoom + 0.5f).coerceIn(1.0f, 4.0f))
+        }
     }
 
     fun onVideoSizeChanged(widthPx: Int, heightPx: Int) {
@@ -474,7 +521,6 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
             enqueueInput(kind = "focus")
         }
     }
-    fun toggleLargeScreenSidebar() = _uiState.update { it.copy(sidebarExpandedOnLargeScreen = !it.sidebarExpandedOnLargeScreen) }
 
     private fun startRtcForOffer(
         sessionId: String,
@@ -535,7 +581,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                             }
 
                             PeerConnection.IceConnectionState.DISCONNECTED -> {
-                                _uiState.update { it.copy(bannerWarning = "无线链路短暂波动，正在等待恢复…") }
+                                postTransientWarning("无线链路短暂波动，正在等待恢复…")
                             }
 
                             PeerConnection.IceConnectionState.FAILED -> {
@@ -614,9 +660,13 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         when (cmd.action) {
             "catalog" -> {
                 val list = cmd.windows.orEmpty()
+                val newIcons = cmd.appIcons?.mapNotNull { (k, v) ->
+                    k.toIntOrNull()?.let { pid -> pid to v }
+                }?.toMap().orEmpty()
                 _uiState.update {
                     it.copy(
                         windows = list,
+                        appIcons = if (newIcons.isEmpty()) it.appIcons else (it.appIcons + newIcons),
                         catalogLoading = false,
                         bannerWarning = cmd.error ?: it.bannerWarning,
                     )
@@ -646,21 +696,28 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                 }
                 _uiState.update { st ->
                     val controlNote = if (!cmd.controlLease.isNullOrBlank()) {
-                        "可触控/键鼠操控"
+                        "轻点操作 · 滑动滚动"
                     } else {
-                        cmd.error ?: "只读观看"
+                        cmd.error ?: "接收中 · 当前仅支持观看"
                     }
                     st.copy(
                         selectedWindow = win,
                         controlLease = cmd.controlLease,
                         controlFocus = cmd.controlState?.focus ?: if (!cmd.controlLease.isNullOrBlank()) "window" else null,
                         trackpadCursorPt = initialCursor,
+                        videoWidthPx = if (win == null) 0 else st.videoWidthPx,
+                        videoHeightPx = if (win == null) 0 else st.videoHeightPx,
+                        edgeColor = if (win == null) WindowEdgeColor.Initial else st.edgeColor,
                         zoom = 1.0f,
                         panX = 0f,
                         panY = 0f,
-                        statusText = if (win != null) "${win.application} · $controlNote" else st.statusText,
-                        bannerWarning = if (cmd.controlLease.isNullOrBlank()) cmd.error else null,
+                        statusText = if (win != null) "${win.application} · $controlNote" else "请选择远端窗口",
                     )
+                }
+                if (win != null && cmd.controlLease.isNullOrBlank() && !cmd.error.isNullOrBlank()) {
+                    postTransientWarning(cmd.error)
+                } else {
+                    postTransientWarning(null)
                 }
                 if (win != null) {
                     _uiState.value.activeHost?.let { active ->
@@ -676,9 +733,9 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                     inFlightInputId = null
                 }
                 if (!cmd.error.isNullOrBlank()) {
-                    _uiState.update { it.copy(bannerWarning = cmd.error) }
+                    postTransientWarning(cmd.error)
                 } else if (cmd.controlState?.focus != null) {
-                    _uiState.update { it.copy(controlFocus = cmd.controlState.focus, bannerWarning = null) }
+                    _uiState.update { it.copy(controlFocus = cmd.controlState.focus) }
                 }
                 drainNextInput()
             }
@@ -784,6 +841,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                 controlLease = null,
                 videoWidthPx = 0,
                 videoHeightPx = 0,
+                edgeColor = WindowEdgeColor.Initial,
                 telemetry = StreamTelemetry(),
             )
         }

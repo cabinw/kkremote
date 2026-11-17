@@ -114,6 +114,7 @@ data class WindowMessage(
     val controlLease: String? = null,
     val input: WindowInput? = null,
     val controlState: WindowControlState? = null,
+    val appIcons: Map<String, String>? = null,
 )
 
 @Serializable

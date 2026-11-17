@@ -1,32 +1,48 @@
 package com.kkremote.android.ui
 
+import android.app.Activity
 import android.content.ClipboardManager
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.graphics.Rect as AndroidRect
+import android.util.Base64
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
@@ -34,72 +50,85 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Backspace
+import androidx.compose.material.icons.automirrored.filled.KeyboardReturn
 import androidx.compose.material.icons.filled.AddLink
 import androidx.compose.material.icons.filled.Analytics
-import androidx.compose.material.icons.filled.AspectRatio
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.DesktopMac
+import androidx.compose.material.icons.filled.DesktopWindows
+import androidx.compose.material.icons.filled.FitScreen
+import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.KeyboardHide
-import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Mouse
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.StopCircle
 import androidx.compose.material.icons.filled.TouchApp
-import androidx.compose.material.icons.automirrored.filled.ViewSidebar
 import androidx.compose.material.icons.filled.Window
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.filled.ZoomIn
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -107,28 +136,20 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.WindowCompat
 import com.kkremote.android.gesture.GestureAction
 import com.kkremote.android.gesture.InteractionGestureMachine
 import com.kkremote.android.gesture.TouchContact
 import com.kkremote.android.gesture.TouchPoint
 import com.kkremote.android.protocol.RemoteWindow
 import com.kkremote.android.protocol.TrustedHostProfile
-import com.kkremote.android.ui.theme.AmberWait
-import com.kkremote.android.ui.theme.CoralAlert
-import com.kkremote.android.ui.theme.ElectricAccent
-import com.kkremote.android.ui.theme.EmeraldLive
-import com.kkremote.android.ui.theme.StudioBorder
-import com.kkremote.android.ui.theme.StudioCanvas
-import com.kkremote.android.ui.theme.StudioSurface
-import com.kkremote.android.ui.theme.StudioSurfaceElevated
-import com.kkremote.android.ui.theme.TextPrimary
-import com.kkremote.android.ui.theme.TextSecondary
 import org.webrtc.VideoTrack
 import kotlin.math.max
 import kotlin.math.min
@@ -170,133 +191,259 @@ private data class StageTransform(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun KKRemoteScreen(viewModel: WorkspaceViewModel) {
     val state by viewModel.uiState.collectAsState()
     val videoTrack by viewModel.videoTrack.collectAsState()
 
-    BoxWithConstraints(
+    val isDarkMaterial = state.edgeColor.prefersLightContent
+    val palette = remember(isDarkMaterial) { GlassPalette.forDarkMode(isDarkMaterial) }
+    val ambientBg by animateColorAsState(
+        targetValue = state.edgeColor.composeColor,
+        animationSpec = tween(durationMillis = 380),
+        label = "ambientEdgeColor",
+    )
+
+    // Synchronize system status-bar & navigation-bar icon appearance with sampled window edge luminance (just like iPhone)
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as? Activity)?.window ?: return@SideEffect
+            val insetsController = WindowCompat.getInsetsController(window, view)
+            insetsController.isAppearanceLightStatusBars = !isDarkMaterial
+            insetsController.isAppearanceLightNavigationBars = !isDarkMaterial
+        }
+    }
+
+    var liveVideoBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
+    var liveVideoRectInRoot by remember { mutableStateOf(Rect.Zero) }
+    var liveGeneration by remember { mutableLongStateOf(0L) }
+    var showOverflowMenu by remember { mutableStateOf(false) }
+
+    LaunchedEffect(state.hasLiveVideo) {
+        if (!state.hasLiveVideo) {
+            liveVideoBitmap = null
+            liveVideoRectInRoot = Rect.Zero
+            liveGeneration += 1L
+        }
+    }
+
+    val backdrop = LiveVideoBackdrop(
+        videoBitmap = if (state.hasLiveVideo) liveVideoBitmap else null,
+        videoRectInRoot = liveVideoRectInRoot,
+        ambientColor = ambientBg,
+        generation = liveGeneration,
+    )
+
+    // Full-screen workspace in both folded and unfolded states — no sidebar!
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(StudioCanvas)
+            .background(ambientBg)
             .semantics { testTagsAsResourceId = true }
             .imePadding()
     ) {
-        val isLargeFoldableScreen = maxWidth >= 600.dp
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            RemoteWindowStage(
+                state = state,
+                palette = palette,
+                backdrop = backdrop,
+                videoTrack = videoTrack,
+                onVideoSizeChanged = viewModel::onVideoSizeChanged,
+                onBackdropSampled = { bmp, edge, gen ->
+                    liveVideoBitmap = bmp
+                    liveGeneration = gen
+                    viewModel.onEdgeColorSampled(edge)
+                },
+                onVideoRectChanged = { rect -> liveVideoRectInRoot = rect },
+                onZoomAndPan = viewModel::updateZoomAndPan,
+                onResetViewport = viewModel::resetViewport,
+                onMoveTrackpadCursor = viewModel::moveTrackpadCursor,
+                onRemoteClick = viewModel::sendRemoteClick,
+                onRemoteScroll = viewModel::queueRemoteScroll,
+                onConnectOrOpenSettings = {
+                    if (state.activeHost != null) viewModel.reconnectActiveHost()
+                    else viewModel.setShowPairingSheet(true)
+                },
+                onOpenSettings = { viewModel.setShowPairingSheet(true) },
+                onOpenWindows = { viewModel.setShowWindowSheet(true) },
+            )
 
-        Row(modifier = Modifier.fillMaxSize()) {
-            // Adaptive Foldable Left Rail for OPPO Find N6 Unfolded Display
-            if (isLargeFoldableScreen && state.sidebarExpandedOnLargeScreen) {
-                FoldableWindowSidebar(
-                    state = state,
-                    onSelectWindow = viewModel::selectWindow,
-                    onRefreshWindows = viewModel::refreshWindows,
-                    onOpenPairing = { viewModel.setShowPairingSheet(true) },
-                    onOpenTelemetry = { viewModel.setShowTelemetrySheet(true) },
-                )
-                VerticalDivider(color = StudioBorder, thickness = 1.dp)
-            }
-
-            // Main Interactive Mac Window Stage
-            Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
-                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                    RemoteWindowStage(
-                        state = state,
-                        videoTrack = videoTrack,
-                        onVideoSizeChanged = viewModel::onVideoSizeChanged,
-                        onZoomAndPan = viewModel::updateZoomAndPan,
-                        onMoveTrackpadCursor = viewModel::moveTrackpadCursor,
-                        onRemoteClick = viewModel::sendRemoteClick,
-                        onRemoteScroll = viewModel::queueRemoteScroll,
-                        onOpenPairing = { viewModel.setShowPairingSheet(true) },
-                        onOpenWindows = { viewModel.setShowWindowSheet(true) },
-                        onReconnect = viewModel::reconnectActiveHost,
-                    )
-
-                    // Top Floating Telemetry & Host Status Capsule
-                    TopStatusOverlay(
-                        state = state,
-                        isLargeScreen = isLargeFoldableScreen,
-                        onToggleSidebar = viewModel::toggleLargeScreenSidebar,
-                        onOpenTelemetry = { viewModel.setShowTelemetrySheet(true) },
-                        onOpenPairing = { viewModel.setShowPairingSheet(true) },
-                    )
-
-                    // Draggable Bottom-Right Floating Capsule Dock (mirrors iOS IPhoneWindowWorkspace)
-                    FloatingControlDock(
-                        state = state,
-                        isLargeScreen = isLargeFoldableScreen,
-                        onToggleKeyboard = { viewModel.setShowKeyboardBar(!state.showKeyboardBar) },
-                        onOpenWindows = { viewModel.setShowWindowSheet(true) },
-                        onTogglePointerMode = viewModel::togglePointerMode,
-                        onSetScaleMode = viewModel::setScaleMode,
-                        onResetViewport = viewModel::resetViewport,
-                        onOpenTelemetry = { viewModel.setShowTelemetrySheet(true) },
-                        onOpenPairing = { viewModel.setShowPairingSheet(true) },
-                        onDisconnect = viewModel::disconnect,
-                        modifier = Modifier.align(Alignment.BottomEnd),
-                    )
-                }
-
-                // Collapsible Direct CJK/English IME & macOS Function Key Bar
-                AnimatedVisibility(visible = state.showKeyboardBar) {
-                    MacKeyboardComposerBar(
-                        canControl = state.canControl,
-                        onSendText = viewModel::sendRemoteText,
-                        onSendKey = viewModel::sendRemoteKey,
-                        onClose = { viewModel.setShowKeyboardBar(false) },
+            // Subtle auto-dismissing top frosted notice (matches IOSLabView controlError banner)
+            val statusBarPad = WindowInsets.statusBars.asPaddingValues()
+            androidx.compose.animation.AnimatedVisibility(
+                visible = !state.bannerWarning.isNullOrBlank(),
+                enter = fadeIn(tween(180)),
+                exit = fadeOut(tween(220)),
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = statusBarPad.calculateTopPadding() + 10.dp, start = 16.dp, end = 16.dp),
+            ) {
+                FrostedGlassBox(
+                    palette = palette,
+                    backdrop = backdrop,
+                    shape = CircleShape,
+                    blurRadius = 22.dp,
+                    shadowElevation = 8.dp,
+                ) {
+                    Text(
+                        text = state.bannerWarning.orEmpty(),
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                        fontSize = 12.sp,
+                        color = palette.primaryText,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
             }
-        }
 
-        if (state.showPairingSheet) {
-            ModalBottomSheet(
-                onDismissRequest = { viewModel.setShowPairingSheet(false) },
-                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-                containerColor = StudioSurface,
-                contentColor = TextPrimary,
-            ) {
-                PairingAndHostsSheet(
-                    state = state,
-                    onImportLink = { link, coord -> viewModel.importPairingLink(link, coord) },
-                    onConnectSaved = viewModel::connectToHost,
-                    onRemoveSaved = viewModel::removeHost,
-                    onClose = { viewModel.setShowPairingSheet(false) },
+            // Transparent outside-tap dismiss scrim when iOS popover menu OR horizontal macOS Dock is open
+            if (showOverflowMenu || state.showWindowSheet) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = {
+                                showOverflowMenu = false
+                                if (state.showWindowSheet) viewModel.setShowWindowSheet(false)
+                            },
+                        )
                 )
             }
-        }
 
-        if (state.showWindowSheet) {
-            ModalBottomSheet(
-                onDismissRequest = { viewModel.setShowWindowSheet(false) },
-                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-                containerColor = StudioSurface,
-                contentColor = TextPrimary,
+            // Horizontal macOS Dock Window Switcher (replaces modal window!)
+            androidx.compose.animation.AnimatedVisibility(
+                visible = state.showWindowSheet && state.dataChannelOpen,
+                enter = slideInVertically(
+                    initialOffsetY = { it + 64 },
+                    animationSpec = spring(dampingRatio = 0.78f, stiffness = Spring.StiffnessMediumLow),
+                ) + fadeIn(tween(160)),
+                exit = slideOutVertically(
+                    targetOffsetY = { it + 64 },
+                    animationSpec = tween(180),
+                ) + fadeOut(tween(150)),
+                modifier = Modifier.align(Alignment.BottomCenter),
             ) {
-                WindowCatalogSheet(
+                MacHorizontalWindowDock(
                     state = state,
-                    onRefresh = viewModel::refreshWindows,
+                    palette = palette,
+                    backdrop = backdrop,
                     onSelect = viewModel::selectWindow,
+                    onRefresh = viewModel::refreshWindows,
+                    onCollapse = { viewModel.setShowWindowSheet(false) },
+                )
+            }
+
+            // Bottom-Right Draggable Frosted Glass Capsule Dock + iOS Popover Menu (hidden while horizontal macOS Dock is expanded)
+            androidx.compose.animation.AnimatedVisibility(
+                visible = !(state.showWindowSheet && state.dataChannelOpen),
+                enter = fadeIn(tween(160)),
+                exit = fadeOut(tween(120)),
+                modifier = Modifier.align(Alignment.BottomEnd),
+            ) {
+                FloatingIosCapsuleDock(
+                    state = state,
+                    palette = palette,
+                    backdrop = backdrop,
+                    showMenu = showOverflowMenu,
+                    onToggleMenu = { showOverflowMenu = !showOverflowMenu },
+                    onDismissMenu = { showOverflowMenu = false },
+                    onToggleKeyboard = {
+                        showOverflowMenu = false
+                        viewModel.setShowKeyboardBar(!state.showKeyboardBar)
+                    },
+                    onOpenWindows = {
+                        showOverflowMenu = false
+                        viewModel.setShowWindowSheet(true)
+                    },
+                    onTogglePointerMode = {
+                        showOverflowMenu = false
+                        viewModel.togglePointerMode()
+                    },
+                    onSetScaleMode = { mode ->
+                        showOverflowMenu = false
+                        viewModel.setScaleMode(mode)
+                    },
+                    onZoomIn = {
+                        showOverflowMenu = false
+                        viewModel.zoomInStep()
+                    },
+                    onToggleHdr = {
+                        showOverflowMenu = false
+                        viewModel.togglePreferHdr()
+                    },
+                    onSendQuickKey = { key ->
+                        showOverflowMenu = false
+                        viewModel.sendRemoteKey(key)
+                    },
+                    onOpenSettings = {
+                        showOverflowMenu = false
+                        viewModel.setShowPairingSheet(true)
+                    },
+                    onOpenDiagnostics = {
+                        showOverflowMenu = false
+                        viewModel.setShowTelemetrySheet(true)
+                    },
+                    onStopViewingKeepConn = {
+                        showOverflowMenu = false
+                        viewModel.stopViewingKeepConnection()
+                    },
+                    onDisconnect = {
+                        showOverflowMenu = false
+                        viewModel.disconnect()
+                    },
                 )
             }
         }
 
-        if (state.showTelemetrySheet) {
-            ModalBottomSheet(
-                onDismissRequest = { viewModel.setShowTelemetrySheet(false) },
-                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-                containerColor = StudioSurface,
-                contentColor = TextPrimary,
-            ) {
-                TelemetryDiagnosticsSheet(
-                    state = state,
-                    onSetScaleMode = viewModel::setScaleMode,
-                    onTogglePreferHdr = viewModel::togglePreferHdr,
-                    onReconnect = viewModel::reconnectActiveHost,
-                )
-            }
+        // Frosted Glass Bottom Keyboard & IME Composer (matches iOS MobileTextComposer)
+        AnimatedVisibility(visible = state.showKeyboardBar) {
+            FrostedKeyboardComposerBar(
+                palette = palette,
+                backdrop = backdrop,
+                canControl = state.canControl,
+                onSendText = viewModel::sendRemoteText,
+                onSendKey = viewModel::sendRemoteKey,
+                onClose = { viewModel.setShowKeyboardBar(false) },
+            )
+        }
+    }
+
+    // Remaining Frosted Glass Modal Sheets (Settings & Diagnostics only)
+    if (state.showPairingSheet) {
+        FrostedModalSheet(
+            palette = palette,
+            backdrop = backdrop,
+            onDismiss = { viewModel.setShowPairingSheet(false) },
+        ) {
+            FrostedSettingsAndHostsSheet(
+                state = state,
+                palette = palette,
+                onImportLink = { link, coord -> viewModel.importPairingLink(link, coord) },
+                onConnectSaved = viewModel::connectToHost,
+                onRemoveSaved = viewModel::removeHost,
+                onDismiss = { viewModel.setShowPairingSheet(false) },
+            )
+        }
+    }
+
+    if (state.showTelemetrySheet) {
+        FrostedModalSheet(
+            palette = palette,
+            backdrop = backdrop,
+            onDismiss = { viewModel.setShowTelemetrySheet(false) },
+        ) {
+            FrostedDiagnosticsSheet(
+                state = state,
+                palette = palette,
+                onSetScaleMode = viewModel::setScaleMode,
+                onTogglePreferHdr = viewModel::togglePreferHdr,
+                onReconnect = viewModel::reconnectActiveHost,
+                onDismiss = { viewModel.setShowTelemetrySheet(false) },
+            )
         }
     }
 }
@@ -304,15 +451,20 @@ fun KKRemoteScreen(viewModel: WorkspaceViewModel) {
 @Composable
 private fun RemoteWindowStage(
     state: WorkspaceUiState,
+    palette: GlassPalette,
+    backdrop: LiveVideoBackdrop,
     videoTrack: VideoTrack?,
     onVideoSizeChanged: (Int, Int) -> Unit,
+    onBackdropSampled: (ImageBitmap, WindowEdgeColor?, Long) -> Unit,
+    onVideoRectChanged: (Rect) -> Unit,
     onZoomAndPan: (Float, Float, Float) -> Unit,
+    onResetViewport: () -> Unit,
     onMoveTrackpadCursor: (Float, Float) -> Unit,
     onRemoteClick: (Double, Double, Boolean, Float, Float) -> Unit,
     onRemoteScroll: (Double, Double, Double, Double) -> Unit,
-    onOpenPairing: () -> Unit,
+    onConnectOrOpenSettings: () -> Unit,
+    onOpenSettings: () -> Unit,
     onOpenWindows: () -> Unit,
-    onReconnect: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
     val hostView = LocalView.current
@@ -325,7 +477,6 @@ private fun RemoteWindowStage(
         gestureMachine.reset()
     }
 
-    // Prevent Android edge back-swipe from stealing remote trackpad / touch gestures when controlling a window
     LaunchedEffect(stageSize, state.hasLiveVideo, state.canControl) {
         if (stageSize.width > 0 && stageSize.height > 0 && state.hasLiveVideo && state.canControl) {
             val edgePx = 64
@@ -338,18 +489,28 @@ private fun RemoteWindowStage(
         }
     }
 
+    val statusBarTopPx = with(LocalDensity.current) {
+        WindowInsets.statusBars.asPaddingValues().calculateTopPadding().toPx()
+    }
+    val navBarBottomPx = with(LocalDensity.current) {
+        WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding().toPx()
+    }
+
     val vidW = max(1, state.videoWidthPx)
     val vidH = max(1, state.videoHeightPx)
     val stW = stageSize.width.toFloat()
     val stH = stageSize.height.toFloat()
+    val safeTop = if (state.scaleMode == CanvasScaleMode.FIT) statusBarTopPx + 8f else 0f
+    val safeBottom = if (state.scaleMode == CanvasScaleMode.FIT) navBarBottomPx * 0.6f + 8f else 0f
+    val availH = max(1f, stH - safeTop - safeBottom)
 
-    val (drawW, drawH) = remember(stW, stH, vidW, vidH, state.scaleMode) {
-        if (stW <= 1f || stH <= 1f) {
+    val (drawW, drawH) = remember(stW, availH, vidW, vidH, state.scaleMode) {
+        if (stW <= 1f || availH <= 1f) {
             0f to 0f
         } else {
             when (state.scaleMode) {
                 CanvasScaleMode.FIT -> {
-                    val s = min(stW / vidW, stH / vidH)
+                    val s = min(stW / vidW, availH / vidH)
                     (vidW * s) to (vidH * s)
                 }
                 CanvasScaleMode.FILL -> {
@@ -361,13 +522,15 @@ private fun RemoteWindowStage(
         }
     }
 
+    val verticalBiasPx = (safeTop - safeBottom) * 0.5f
+
     val transform = StageTransform(
         left0 = (stW - drawW) * 0.5f,
-        top0 = (stH - drawH) * 0.5f,
+        top0 = (stH - drawH) * 0.5f + verticalBiasPx,
         drawW = drawW,
         drawH = drawH,
         centerX = stW * 0.5f,
-        centerY = stH * 0.5f,
+        centerY = stH * 0.5f + verticalBiasPx,
         zoom = state.zoom,
         panX = state.panX,
         panY = state.panY,
@@ -506,52 +669,98 @@ private fun RemoteWindowStage(
         if (videoTrack != null && drawW > 1f && drawH > 1f) {
             val drawWDp = with(density) { drawW.toDp() }
             val drawHDp = with(density) { drawH.toDp() }
+            val cornerRadius = if (state.scaleMode == CanvasScaleMode.FIT) 12.dp else 0.dp
             AndroidView(
                 factory = { ctx ->
-                    WebRtcTextureView(ctx).apply {
-                        onVideoDimensionsChanged = onVideoSizeChanged
-                        bindTrack(videoTrack)
+                    WebRtcTextureView(ctx).also { v ->
+                        v.onVideoDimensionsChanged = onVideoSizeChanged
+                        v.onBackdropSampled = onBackdropSampled
+                        v.bindTrack(videoTrack)
                     }
                 },
                 update = { view ->
                     view.onVideoDimensionsChanged = onVideoSizeChanged
+                    view.onBackdropSampled = onBackdropSampled
                     view.bindTrack(videoTrack)
                 },
                 modifier = Modifier
                     .align(Alignment.Center)
+                    .offset { IntOffset(0, verticalBiasPx.roundToInt()) }
                     .size(drawWDp, drawHDp)
                     .graphicsLayer {
                         scaleX = state.zoom
                         scaleY = state.zoom
                         translationX = state.panX
                         translationY = state.panY
+                        alpha = if (state.hasLiveVideo) 1f else 0f
                     }
-                    .clip(RoundedCornerShape(if (state.scaleMode == CanvasScaleMode.FIT) 6.dp else 0.dp)),
+                    .onGloballyPositioned { coords ->
+                        onVideoRectChanged(coords.boundsInRoot())
+                    }
+                    .shadow(
+                        elevation = if (state.hasLiveVideo && state.scaleMode == CanvasScaleMode.FIT) 18.dp else 0.dp,
+                        shape = RoundedCornerShape(cornerRadius),
+                        ambientColor = Color.Black.copy(alpha = 0.22f),
+                        spotColor = Color.Black.copy(alpha = 0.24f),
+                    )
+                    .clip(RoundedCornerShape(cornerRadius)),
             )
         }
 
-        // Empty / Connecting / Select-Window Placeholder State
+        // Idle / Connecting / Choose-Window Presentation (matches iOS IOSLabView)
         if (!state.hasLiveVideo) {
-            EmptyStageOverlay(
+            IosStyleIdleWorkspace(
                 state = state,
-                onOpenPairing = onOpenPairing,
+                palette = palette,
+                backdrop = backdrop,
+                onConnectOrOpenSettings = onConnectOrOpenSettings,
+                onOpenSettings = onOpenSettings,
                 onOpenWindows = onOpenWindows,
-                onReconnect = onReconnect,
-                modifier = Modifier.align(Alignment.Center),
             )
         }
 
-        // Virtual macOS Trackpad Cursor + Click Ripple Overlay
+        // iOS-style Bottom-Left "完整显示" Frosted Reset Pill when zoomed in
+        val navPad = WindowInsets.navigationBars.asPaddingValues()
+        if (state.hasLiveVideo && state.zoom > 1.02f) {
+            FrostedGlassBox(
+                palette = palette,
+                backdrop = backdrop,
+                shape = CircleShape,
+                blurRadius = 22.dp,
+                shadowElevation = 10.dp,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = 16.dp, bottom = navPad.calculateBottomPadding() + 18.dp)
+                    .clickable { onResetViewport() }
+                    .testTag("btnResetZoom"),
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.FitScreen,
+                        contentDescription = null,
+                        tint = palette.primaryText,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Text("完整显示", fontSize = 13.sp, fontWeight = FontWeight.Medium, color = palette.primaryText)
+                }
+            }
+        }
+
+        // Virtual macOS Cursor & Touch Ripple Overlay
         Canvas(modifier = Modifier.fillMaxSize()) {
             val ripple = state.lastRipple
             if (ripple != null && rippleAnim.value < 0.99f) {
                 val p = rippleAnim.value
-                val color = if (ripple.isSecondary) AmberWait else ElectricAccent
+                val color = if (ripple.isSecondary) Color(0xFFFF9F0A) else palette.accentBlue
                 drawCircle(
-                    color = color.copy(alpha = (1f - p) * 0.75f),
-                    radius = 12.dp.toPx() + p * 24.dp.toPx(),
+                    color = color.copy(alpha = (1f - p) * 0.65f),
+                    radius = 10.dp.toPx() + p * 22.dp.toPx(),
                     center = Offset(ripple.viewX, ripple.viewY),
-                    style = Stroke(width = 2.2.dp.toPx()),
+                    style = Stroke(width = 2.dp.toPx()),
                 )
             }
 
@@ -580,343 +789,281 @@ private fun RemoteWindowStage(
 }
 
 @Composable
-private fun EmptyStageOverlay(
+private fun IosStyleIdleWorkspace(
     state: WorkspaceUiState,
-    onOpenPairing: () -> Unit,
+    palette: GlassPalette,
+    backdrop: LiveVideoBackdrop,
+    onConnectOrOpenSettings: () -> Unit,
+    onOpenSettings: () -> Unit,
     onOpenWindows: () -> Unit,
-    onReconnect: () -> Unit,
-    modifier: Modifier = Modifier,
 ) {
-    Surface(
-        modifier = modifier
-            .padding(24.dp)
-            .width(380.dp),
-        shape = RoundedCornerShape(22.dp),
-        color = StudioSurface.copy(alpha = 0.94f),
-        border = BorderStroke(1.dp, StudioBorder),
-    ) {
-        Column(
-            modifier = Modifier.padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Icon(
-                imageVector = Icons.Default.DesktopMac,
-                contentDescription = null,
-                tint = ElectricAccent,
-                modifier = Modifier.size(40.dp),
-            )
-            Text(
-                text = state.activeHost?.name ?: "KKRemote 原生工作台",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = TextPrimary,
-            )
-            Text(
-                text = state.statusText,
-                fontSize = 13.sp,
-                color = TextSecondary,
-            )
-            if (state.phase == ConnectionPhase.CONNECTING_COORD ||
-                state.phase == ConnectionPhase.HANDSHAKING ||
-                state.phase == ConnectionPhase.ICE_CHECKING
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(26.dp),
-                    strokeWidth = 2.5.dp,
-                    color = ElectricAccent,
-                )
-            }
-            state.errorText?.let { err ->
-                Text(text = err, fontSize = 12.sp, color = CoralAlert)
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (state.dataChannelOpen) {
-                    Button(
-                        onClick = onOpenWindows,
-                        modifier = Modifier.testTag("btnEmptyChooseWindow"),
-                    ) {
-                        Icon(Icons.Default.Window, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text("选择 Mac 窗口")
-                    }
-                } else if (state.activeHost != null) {
-                    Button(
-                        onClick = onReconnect,
-                        modifier = Modifier.testTag("btnEmptyReconnect"),
-                    ) {
-                        Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text("立即重连")
-                    }
-                }
-                OutlinedButton(
-                    onClick = onOpenPairing,
-                    modifier = Modifier.testTag("btnEmptyPairing"),
-                ) {
-                    Icon(Icons.Default.AddLink, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text(if (state.activeHost == null) "配对 Mac 主机" else "切换主机")
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun TopStatusOverlay(
-    state: WorkspaceUiState,
-    isLargeScreen: Boolean,
-    onToggleSidebar: () -> Unit,
-    onOpenTelemetry: () -> Unit,
-    onOpenPairing: () -> Unit,
-) {
-    val statusBarPad = WindowInsets.statusBars.asPaddingValues()
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = statusBarPad.calculateTopPadding() + 8.dp, start = 12.dp, end = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            if (isLargeScreen) {
-                Surface(
-                    shape = CircleShape,
-                    color = StudioSurface.copy(alpha = 0.88f),
-                    border = BorderStroke(1.dp, StudioBorder),
-                ) {
-                    IconButton(
-                        onClick = onToggleSidebar,
-                        modifier = Modifier.size(36.dp).testTag("btnToggleSidebar"),
-                    ) {
-                        Icon(Icons.AutoMirrored.Filled.ViewSidebar, contentDescription = "切换窗口侧栏", tint = TextPrimary, modifier = Modifier.size(18.dp))
-                    }
-                }
-            }
-
-            // Host Pill
-            Surface(
+    val navPad = WindowInsets.navigationBars.asPaddingValues()
+    if (state.phase == ConnectionPhase.CONNECTED && state.dataChannelOpen && state.selectedWindow != null) {
+        // Connected and window chosen, waiting for first decoded frame ("等待首帧…" frosted capsule)
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            FrostedGlassBox(
+                palette = palette,
+                backdrop = backdrop,
                 shape = CircleShape,
-                color = StudioSurface.copy(alpha = 0.88f),
-                border = BorderStroke(1.dp, StudioBorder),
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .clickable(onClick = onOpenPairing)
-                    .testTag("pillHostStatus"),
+                blurRadius = 24.dp,
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(7.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    val dotColor = when {
-                        state.phase == ConnectionPhase.CONNECTED -> EmeraldLive
-                        state.hostOnline -> AmberWait
-                        else -> TextSecondary
-                    }
-                    Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(dotColor))
-                    Text(
-                        text = state.activeHost?.name ?: "未配对主机",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = TextPrimary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                        color = palette.accentBlue,
                     )
-                }
-            }
-
-            // Live Telemetry Pill
-            if (state.phase == ConnectionPhase.CONNECTED) {
-                Surface(
-                    shape = CircleShape,
-                    color = StudioSurface.copy(alpha = 0.88f),
-                    border = BorderStroke(1.dp, StudioBorder),
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .clickable(onClick = onOpenTelemetry)
-                        .testTag("pillTelemetry"),
-                ) {
-                    val t = state.telemetry
-                    val metricText = if (state.hasLiveVideo) {
-                        val rttStr = t.rttMs?.let { "${it.roundToInt()}ms" } ?: "—"
-                        "${state.videoWidthPx}×${state.videoHeightPx} · ${t.fps.roundToInt()}fps · $rttStr"
-                    } else {
-                        "P2P 已连通 · 等待选窗"
-                    }
-                    Text(
-                        text = metricText,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
-                        style = TextStyle(
-                            fontSize = 12.sp,
-                            fontFamily = FontFamily.Monospace,
-                            color = TextSecondary,
-                        ),
-                        maxLines = 1,
-                    )
+                    Text("等待首帧…", fontSize = 14.sp, color = palette.primaryText)
                 }
             }
         }
+        return
+    }
 
-        state.bannerWarning?.let { warn ->
-            Surface(
-                shape = RoundedCornerShape(10.dp),
-                color = StudioSurfaceElevated.copy(alpha = 0.92f),
-                border = BorderStroke(1.dp, AmberWait.copy(alpha = 0.45f)),
-            ) {
-                Text(
-                    text = warn,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                    fontSize = 12.sp,
-                    color = AmberWait,
-                )
-            }
+    // Exact iPhone centered hero workspace ("把桌面窗口，带到手边")
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 28.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Spacer(Modifier.weight(1f))
+
+        Icon(
+            imageVector = Icons.Default.DesktopWindows,
+            contentDescription = null,
+            tint = palette.accentBlue,
+            modifier = Modifier.size(48.dp),
+        )
+        Spacer(Modifier.height(18.dp))
+
+        Text(
+            text = if (state.dataChannelOpen) "请选择远端窗口" else "把桌面窗口，带到手边",
+            fontSize = 23.sp,
+            fontWeight = FontWeight.Bold,
+            color = palette.primaryText,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(8.dp))
+
+        Text(
+            text = when {
+                state.dataChannelOpen -> "${state.activeHost?.name ?: "Mac"} 已直连，点击下方选择应用窗口开始。"
+                state.phase == ConnectionPhase.IDLE -> "连接 Mac，选择一个应用窗口开始。"
+                else -> state.statusText
+            },
+            fontSize = 15.sp,
+            color = palette.secondaryText,
+            textAlign = TextAlign.Center,
+        )
+
+        if (state.phase == ConnectionPhase.CONNECTING_COORD ||
+            state.phase == ConnectionPhase.HANDSHAKING ||
+            state.phase == ConnectionPhase.ICE_CHECKING
+        ) {
+            Spacer(Modifier.height(16.dp))
+            CircularProgressIndicator(
+                modifier = Modifier.size(22.dp),
+                strokeWidth = 2.2.dp,
+                color = palette.accentBlue,
+            )
         }
+
+        Spacer(Modifier.height(22.dp))
+
+        // Primary Apple Blue Pill Button
+        val primaryLabel = when {
+            state.dataChannelOpen -> "选择远端窗口"
+            state.activeHost != null -> "连接 ${state.activeHost.name}"
+            else -> "连接主机"
+        }
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(14.dp))
+                .background(palette.accentBlue)
+                .clickable {
+                    if (state.dataChannelOpen) onOpenWindows() else onConnectOrOpenSettings()
+                }
+                .padding(horizontal = 26.dp, vertical = 13.dp)
+                .testTag("phoneConnect"),
+        ) {
+            Text(
+                text = primaryLabel,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.White,
+            )
+        }
+
+        Spacer(Modifier.height(14.dp))
+
+        Text(
+            text = "连接设置",
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Medium,
+            color = palette.accentBlue,
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .clickable(onClick = onOpenSettings)
+                .padding(horizontal = 12.dp, vertical = 6.dp)
+                .testTag("btnOpenSettingsHero"),
+        )
+
+        state.errorText?.let { err ->
+            Spacer(Modifier.height(10.dp))
+            Text(
+                text = err,
+                fontSize = 12.sp,
+                color = palette.destructiveRed,
+                textAlign = TextAlign.Center,
+            )
+        }
+
+        Spacer(Modifier.weight(1f))
+
+        Text(
+            text = if (state.dataChannelOpen) "已连接 · ${state.activeHost?.name.orEmpty()}" else state.statusText,
+            fontSize = 12.sp,
+            color = palette.secondaryText,
+            modifier = Modifier.padding(bottom = navPad.calculateBottomPadding() + 18.dp),
+        )
     }
 }
 
 @Composable
-private fun FloatingControlDock(
+private fun FloatingIosCapsuleDock(
     state: WorkspaceUiState,
-    isLargeScreen: Boolean,
+    palette: GlassPalette,
+    backdrop: LiveVideoBackdrop,
+    showMenu: Boolean,
+    onToggleMenu: () -> Unit,
+    onDismissMenu: () -> Unit,
     onToggleKeyboard: () -> Unit,
     onOpenWindows: () -> Unit,
     onTogglePointerMode: () -> Unit,
     onSetScaleMode: (CanvasScaleMode) -> Unit,
-    onResetViewport: () -> Unit,
-    onOpenTelemetry: () -> Unit,
-    onOpenPairing: () -> Unit,
+    onZoomIn: () -> Unit,
+    onToggleHdr: () -> Unit,
+    onSendQuickKey: (String) -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenDiagnostics: () -> Unit,
+    onStopViewingKeepConn: () -> Unit,
     onDisconnect: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val navPad = WindowInsets.navigationBars.asPaddingValues()
+    val view = LocalView.current
     var offsetX by remember { mutableFloatStateOf(0f) }
     var offsetY by remember { mutableFloatStateOf(0f) }
-    var showOverflow by remember { mutableStateOf(false) }
 
-    Box(
+    // Reset dock offset cleanly when folding / unfolding changes window dimensions (matches IPhoneWindowWorkspace)
+    LaunchedEffect(view.width, view.height) {
+        offsetX = 0f
+        offsetY = 0f
+    }
+
+    Column(
+        horizontalAlignment = Alignment.End,
+        verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = modifier
-            .padding(end = 14.dp, bottom = navPad.calculateBottomPadding() + 14.dp)
-            .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }
-            .pointerInput(Unit) {
+            .padding(
+                end = 14.dp,
+                bottom = if (state.showKeyboardBar) 14.dp else navPad.calculateBottomPadding() + 14.dp,
+            )
+            .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) },
+    ) {
+        // iOS-style Frosted Glass Context Menu anchored right above the capsule
+        AnimatedVisibility(
+            visible = showMenu,
+            enter = fadeIn(tween(150)) + scaleIn(
+                initialScale = 0.90f,
+                transformOrigin = TransformOrigin(0.92f, 1.0f),
+                animationSpec = tween(170),
+            ),
+            exit = fadeOut(tween(120)) + scaleOut(
+                targetScale = 0.92f,
+                transformOrigin = TransformOrigin(0.92f, 1.0f),
+                animationSpec = tween(130),
+            ),
+        ) {
+            FrostedIosContextMenu(
+                state = state,
+                palette = palette,
+                backdrop = backdrop,
+                onOpenWindows = onOpenWindows,
+                onSetScaleMode = onSetScaleMode,
+                onZoomIn = onZoomIn,
+                onTogglePointerMode = onTogglePointerMode,
+                onToggleHdr = onToggleHdr,
+                onSendQuickKey = onSendQuickKey,
+                onOpenSettings = onOpenSettings,
+                onOpenDiagnostics = onOpenDiagnostics,
+                onStopViewingKeepConn = onStopViewingKeepConn,
+                onDisconnect = onDisconnect,
+            )
+        }
+
+        // Exact iPhone 3-button Draggable Frosted Glass Capsule: [⌨️ | 🪟 | ⋯]
+        FrostedGlassBox(
+            palette = palette,
+            backdrop = backdrop,
+            shape = CircleShape,
+            blurRadius = 26.dp,
+            shadowElevation = 14.dp,
+            modifier = Modifier.pointerInput(Unit) {
                 detectDragGestures { change, dragAmount ->
                     change.consume()
-                    offsetX = (offsetX + dragAmount.x).coerceIn(-900f, 60f)
-                    offsetY = (offsetY + dragAmount.y).coerceIn(-1200f, 60f)
+                    val maxLeft = -max(0f, view.width.toFloat() - 220f)
+                    val maxUp = -max(0f, view.height.toFloat() - 180f)
+                    offsetX = (offsetX + dragAmount.x).coerceIn(maxLeft, 0f)
+                    offsetY = (offsetY + dragAmount.y).coerceIn(maxUp, 0f)
                 }
-            }
-    ) {
-        Surface(
-            shape = CircleShape,
-            color = StudioSurface.copy(alpha = 0.92f),
-            border = BorderStroke(1.dp, StudioBorder),
-            shadowElevation = 10.dp,
+            },
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(
-                    onClick = onToggleKeyboard,
-                    enabled = state.hasLiveVideo,
-                    modifier = Modifier.size(48.dp).testTag("dockBtnKeyboard"),
-                ) {
-                    Icon(
-                        imageVector = if (state.showKeyboardBar) Icons.Default.KeyboardHide else Icons.Default.Keyboard,
-                        contentDescription = if (state.showKeyboardBar) "隐藏键盘栏" else "打开键盘栏",
-                        tint = if (state.showKeyboardBar) ElectricAccent else TextPrimary,
-                    )
-                }
-                VerticalDivider(modifier = Modifier.height(22.dp), color = StudioBorder)
-
-                if (!isLargeScreen || !state.sidebarExpandedOnLargeScreen) {
+                if (state.hasLiveVideo) {
                     IconButton(
-                        onClick = onOpenWindows,
-                        enabled = state.dataChannelOpen,
-                        modifier = Modifier.size(48.dp).testTag("dockBtnWindows"),
+                        onClick = onToggleKeyboard,
+                        modifier = Modifier.size(width = 52.dp, height = 48.dp).testTag("phoneKeyboard"),
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Window,
-                            contentDescription = "选择远端窗口",
-                            tint = if (state.dataChannelOpen) TextPrimary else TextSecondary.copy(alpha = 0.4f),
+                            imageVector = if (state.showKeyboardBar) Icons.Default.KeyboardHide else Icons.Default.Keyboard,
+                            contentDescription = if (state.showKeyboardBar) "隐藏键盘" else "键盘",
+                            tint = if (state.showKeyboardBar) palette.accentBlue else palette.primaryText,
+                            modifier = Modifier.size(20.dp),
                         )
                     }
-                    VerticalDivider(modifier = Modifier.height(22.dp), color = StudioBorder)
+                    VerticalDivider(modifier = Modifier.height(22.dp), thickness = 0.6.dp, color = palette.dividerColor)
                 }
 
                 IconButton(
-                    onClick = onTogglePointerMode,
-                    enabled = state.hasLiveVideo,
-                    modifier = Modifier.size(48.dp).testTag("dockBtnPointerMode"),
+                    onClick = onOpenWindows,
+                    enabled = state.dataChannelOpen,
+                    modifier = Modifier.size(width = 52.dp, height = 48.dp).testTag("phoneChooseWindow"),
                 ) {
                     Icon(
-                        imageVector = if (state.inputMode == PointerInputMode.TRACKPAD) Icons.Default.Mouse else Icons.Default.TouchApp,
-                        contentDescription = "切换直点与触控板模式",
-                        tint = if (state.inputMode == PointerInputMode.TRACKPAD) ElectricAccent else TextPrimary,
+                        imageVector = Icons.Default.Window,
+                        contentDescription = "选择窗口",
+                        tint = if (state.dataChannelOpen) palette.primaryText else palette.secondaryText.copy(alpha = 0.42f),
+                        modifier = Modifier.size(20.dp),
                     )
                 }
-                VerticalDivider(modifier = Modifier.height(22.dp), color = StudioBorder)
+                VerticalDivider(modifier = Modifier.height(22.dp), thickness = 0.6.dp, color = palette.dividerColor)
 
-                Box {
-                    IconButton(
-                        onClick = { showOverflow = true },
-                        modifier = Modifier.size(48.dp).testTag("dockBtnMore"),
-                    ) {
-                        Icon(Icons.Default.MoreHoriz, contentDescription = "更多操作", tint = TextPrimary)
-                    }
-
-                    DropdownMenu(
-                        expanded = showOverflow,
-                        onDismissRequest = { showOverflow = false },
-                        containerColor = StudioSurfaceElevated,
-                    ) {
-                        CanvasScaleMode.entries.forEach { mode ->
-                            DropdownMenuItem(
-                                text = { Text("画面：${mode.label} ${if (state.scaleMode == mode) "✓" else ""}") },
-                                leadingIcon = { Icon(Icons.Default.AspectRatio, contentDescription = null) },
-                                onClick = {
-                                    onSetScaleMode(mode)
-                                    showOverflow = false
-                                },
-                            )
-                        }
-                        if (state.zoom > 1.01f) {
-                            DropdownMenuItem(
-                                text = { Text("重置缩放 (${String.format("%.1f×", state.zoom)})") },
-                                onClick = {
-                                    onResetViewport()
-                                    showOverflow = false
-                                },
-                            )
-                        }
-                        HorizontalDivider(color = StudioBorder)
-                        DropdownMenuItem(
-                            text = { Text("传输与解码诊断") },
-                            leadingIcon = { Icon(Icons.Default.Analytics, contentDescription = null) },
-                            onClick = {
-                                showOverflow = false
-                                onOpenTelemetry()
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text("配对与主机列表") },
-                            leadingIcon = { Icon(Icons.Default.AddLink, contentDescription = null) },
-                            onClick = {
-                                showOverflow = false
-                                onOpenPairing()
-                            },
-                        )
-                        if (state.phase != ConnectionPhase.IDLE) {
-                            DropdownMenuItem(
-                                text = { Text("断开当前连接", color = CoralAlert) },
-                                leadingIcon = { Icon(Icons.Default.LinkOff, contentDescription = null, tint = CoralAlert) },
-                                onClick = {
-                                    showOverflow = false
-                                    onDisconnect()
-                                },
-                            )
-                        }
-                    }
+                IconButton(
+                    onClick = onToggleMenu,
+                    modifier = Modifier.size(width = 52.dp, height = 48.dp).testTag("phoneMenu"),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreHoriz,
+                        contentDescription = "窗口工具",
+                        tint = if (showMenu) palette.accentBlue else palette.primaryText,
+                        modifier = Modifier.size(21.dp),
+                    )
                 }
             }
         }
@@ -924,122 +1071,204 @@ private fun FloatingControlDock(
 }
 
 @Composable
-private fun FoldableWindowSidebar(
+private fun FrostedIosContextMenu(
     state: WorkspaceUiState,
-    onSelectWindow: (RemoteWindow) -> Unit,
-    onRefreshWindows: () -> Unit,
-    onOpenPairing: () -> Unit,
-    onOpenTelemetry: () -> Unit,
+    palette: GlassPalette,
+    backdrop: LiveVideoBackdrop,
+    onOpenWindows: () -> Unit,
+    onSetScaleMode: (CanvasScaleMode) -> Unit,
+    onZoomIn: () -> Unit,
+    onTogglePointerMode: () -> Unit,
+    onToggleHdr: () -> Unit,
+    onSendQuickKey: (String) -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenDiagnostics: () -> Unit,
+    onStopViewingKeepConn: () -> Unit,
+    onDisconnect: () -> Unit,
 ) {
-    val statusBarPad = WindowInsets.statusBars.asPaddingValues()
-    val navPad = WindowInsets.navigationBars.asPaddingValues()
-    Column(
-        modifier = Modifier
-            .width(256.dp)
-            .fillMaxHeight()
-            .background(StudioSurface)
-            .padding(
-                top = statusBarPad.calculateTopPadding() + 10.dp,
-                bottom = navPad.calculateBottomPadding() + 10.dp,
-                start = 12.dp,
-                end = 12.dp,
-            )
-            .testTag("foldableWindowSidebar"),
+    FrostedGlassBox(
+        palette = palette,
+        backdrop = backdrop,
+        shape = RoundedCornerShape(18.dp),
+        blurRadius = 30.dp,
+        shadowElevation = 20.dp,
+        modifier = Modifier.width(250.dp).testTag("iosContextMenu"),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text("Mac 窗口工作区", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
-            IconButton(
-                onClick = onRefreshWindows,
-                enabled = state.dataChannelOpen,
-                modifier = Modifier.size(32.dp).testTag("btnSidebarRefresh"),
-            ) {
-                Icon(Icons.Default.Refresh, contentDescription = "刷新窗口列表", tint = TextSecondary, modifier = Modifier.size(18.dp))
-            }
-        }
-        Spacer(Modifier.height(8.dp))
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // Header: Current Window Title (matches IPhoneWindowWorkspace Menu Section header)
+            val headerTitle = state.selectedWindow?.displayLabel ?: (state.activeHost?.name ?: "KKRemote")
+            Text(
+                text = headerTitle,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = palette.secondaryText,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+            )
+            HorizontalDivider(thickness = 0.6.dp, color = palette.dividerColor)
 
-        if (!state.dataChannelOpen) {
-            Text(
-                text = if (state.activeHost == null) "请先导入配对链接" else state.statusText,
-                fontSize = 12.sp,
-                color = TextSecondary,
-                modifier = Modifier.padding(vertical = 8.dp),
+            IosMenuRow(
+                label = "切换窗口",
+                icon = Icons.Default.Window,
+                palette = palette,
+                enabled = state.dataChannelOpen,
+                onClick = onOpenWindows,
             )
-        } else if (state.windows.isEmpty()) {
-            Text(
-                text = if (state.catalogLoading) "正在读取 Mac 桌面窗口…" else "暂无可捕获窗口",
-                fontSize = 12.sp,
-                color = TextSecondary,
-                modifier = Modifier.padding(vertical = 8.dp),
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+            HorizontalDivider(thickness = 0.6.dp, color = palette.dividerColor)
+
+            if (state.hasLiveVideo) {
+                IosMenuRow(
+                    label = if (state.scaleMode == CanvasScaleMode.FILL) "✓ 自动铺满" else "自动铺满",
+                    icon = Icons.Default.Fullscreen,
+                    palette = palette,
+                    onClick = { onSetScaleMode(CanvasScaleMode.FILL) },
+                )
+                HorizontalDivider(thickness = 0.6.dp, color = palette.dividerColor)
+
+                IosMenuRow(
+                    label = if (state.scaleMode == CanvasScaleMode.FIT) "✓ 显示完整窗口" else "显示完整窗口",
+                    icon = Icons.Default.FitScreen,
+                    palette = palette,
+                    onClick = { onSetScaleMode(CanvasScaleMode.FIT) },
+                )
+                HorizontalDivider(thickness = 0.6.dp, color = palette.dividerColor)
+
+                IosMenuRow(
+                    label = "放大画面",
+                    icon = Icons.Default.ZoomIn,
+                    palette = palette,
+                    onClick = onZoomIn,
+                )
+                HorizontalDivider(thickness = 0.6.dp, color = palette.dividerColor)
+
+                IosMenuRow(
+                    label = if (state.inputMode == PointerInputMode.TRACKPAD) "切换为触摸" else "切换为触控板",
+                    icon = if (state.inputMode == PointerInputMode.TRACKPAD) Icons.Default.TouchApp else Icons.Default.Mouse,
+                    palette = palette,
+                    onClick = onTogglePointerMode,
+                )
+                HorizontalDivider(thickness = 0.6.dp, color = palette.dividerColor)
+            }
+
+            // Segmented Display Mode Row ("画面显示：桌面 / HDR")
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 9.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                items(state.windows, key = { it.id }) { win ->
-                    val active = state.selectedWindow?.id == win.id
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = if (active) ElectricAccent.copy(alpha = 0.16f) else StudioSurfaceElevated,
-                        border = BorderStroke(1.dp, if (active) ElectricAccent else StudioBorder),
+                Text("画面显示", fontSize = 14.sp, color = palette.primaryText)
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(palette.dividerColor)
+                        .padding(2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    val sdrSelected = !state.preferHdr
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable { onSelectWindow(win) }
-                            .semantics { contentDescription = "窗口 ${win.displayLabel}" },
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(if (sdrSelected) palette.elevatedCardTint else Color.Transparent)
+                            .clickable { if (state.preferHdr) onToggleHdr() }
+                            .padding(horizontal = 10.dp, vertical = 4.dp),
                     ) {
-                        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
-                            Text(
-                                text = win.application,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = if (active) ElectricAccent else TextPrimary,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                            if (win.title.isNotBlank()) {
-                                Text(
-                                    text = win.title,
-                                    fontSize = 12.sp,
-                                    color = TextSecondary,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            }
-                            Text(
-                                text = "${win.widthPoints.roundToInt()}×${win.heightPoints.roundToInt()} pt",
-                                fontSize = 11.sp,
-                                fontFamily = FontFamily.Monospace,
-                                color = TextSecondary.copy(alpha = 0.75f),
-                            )
-                        }
+                        Text("桌面", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = palette.primaryText)
+                    }
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(if (!sdrSelected) palette.elevatedCardTint else Color.Transparent)
+                            .clickable { if (!state.preferHdr) onToggleHdr() }
+                            .padding(horizontal = 10.dp, vertical = 4.dp),
+                    ) {
+                        Text("HDR", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = palette.primaryText)
                     }
                 }
             }
-        }
+            HorizontalDivider(thickness = 0.6.dp, color = palette.dividerColor)
 
-        if (!state.dataChannelOpen || state.windows.isEmpty()) {
-            Spacer(Modifier.weight(1f))
-        }
+            if (state.canControl) {
+                IosMenuRow("回车", Icons.AutoMirrored.Filled.KeyboardReturn, palette, onClick = { onSendQuickKey("return") })
+                HorizontalDivider(thickness = 0.6.dp, color = palette.dividerColor)
+                IosMenuRow("退格", Icons.AutoMirrored.Filled.Backspace, palette, onClick = { onSendQuickKey("backspace") })
+                HorizontalDivider(thickness = 0.6.dp, color = palette.dividerColor)
+                IosMenuRow("取消编辑", Icons.Default.Close, palette, onClick = { onSendQuickKey("escape") })
+                HorizontalDivider(thickness = 0.6.dp, color = palette.dividerColor)
+            }
 
-        HorizontalDivider(color = StudioBorder, modifier = Modifier.padding(vertical = 8.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            TextButton(onClick = onOpenPairing) { Text("主机管理", fontSize = 12.sp) }
-            TextButton(onClick = onOpenTelemetry) { Text("传输诊断", fontSize = 12.sp) }
+            IosMenuRow(
+                label = "连接设置",
+                icon = Icons.Default.Settings,
+                palette = palette,
+                onClick = onOpenSettings,
+            )
+            HorizontalDivider(thickness = 0.6.dp, color = palette.dividerColor)
+
+            IosMenuRow(
+                label = "详细数据",
+                icon = Icons.Default.Analytics,
+                palette = palette,
+                onClick = onOpenDiagnostics,
+            )
+
+            if (state.selectedWindow != null && state.dataChannelOpen) {
+                HorizontalDivider(thickness = 0.6.dp, color = palette.dividerColor)
+                IosMenuRow(
+                    label = "停止观看，保留连接",
+                    icon = Icons.Default.StopCircle,
+                    palette = palette,
+                    onClick = onStopViewingKeepConn,
+                )
+            }
+
+            if (state.phase != ConnectionPhase.IDLE) {
+                HorizontalDivider(thickness = 0.6.dp, color = palette.dividerColor)
+                IosMenuRow(
+                    label = "断开连接",
+                    icon = Icons.Default.Close,
+                    palette = palette,
+                    isDestructive = true,
+                    onClick = onDisconnect,
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun MacKeyboardComposerBar(
+private fun IosMenuRow(
+    label: String,
+    icon: ImageVector,
+    palette: GlassPalette,
+    enabled: Boolean = true,
+    isDestructive: Boolean = false,
+    onClick: () -> Unit,
+) {
+    val contentColor = when {
+        !enabled -> palette.secondaryText.copy(alpha = 0.4f)
+        isDestructive -> palette.destructiveRed
+        else -> palette.primaryText
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(label, fontSize = 15.sp, color = contentColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Icon(icon, contentDescription = null, tint = contentColor, modifier = Modifier.size(18.dp))
+    }
+}
+
+@Composable
+private fun FrostedKeyboardComposerBar(
+    palette: GlassPalette,
+    backdrop: LiveVideoBackdrop,
     canControl: Boolean,
     onSendText: (String) -> Unit,
     onSendKey: (String) -> Unit,
@@ -1048,22 +1277,25 @@ private fun MacKeyboardComposerBar(
     val navPad = WindowInsets.navigationBars.asPaddingValues()
     var draft by remember { mutableStateOf("") }
 
-    Surface(
-        color = StudioSurface,
-        border = BorderStroke(1.dp, StudioBorder),
+    FrostedGlassBox(
+        palette = palette,
+        backdrop = backdrop,
+        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+        blurRadius = 28.dp,
+        shadowElevation = 16.dp,
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(
             modifier = Modifier
+                .fillMaxWidth()
                 .padding(
-                    start = 12.dp,
-                    end = 12.dp,
-                    top = 8.dp,
-                    bottom = maxOf(8.dp, navPad.calculateBottomPadding()),
+                    start = 14.dp,
+                    end = 14.dp,
+                    top = 10.dp,
+                    bottom = maxOf(10.dp, navPad.calculateBottomPadding()),
                 ),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            // macOS Special Keys Row
             val keys = listOf(
                 "Esc" to "escape",
                 "Tab" to "tab",
@@ -1073,79 +1305,554 @@ private fun MacKeyboardComposerBar(
                 "↑" to "up",
                 "↓" to "down",
                 "→" to "right",
-                "Home" to "home",
-                "End" to "end",
             )
             Row(
                 modifier = Modifier.horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 for ((label, code) in keys) {
-                    OutlinedButton(
-                        onClick = { onSendKey(code) },
-                        enabled = canControl,
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                        modifier = Modifier.height(34.dp).testTag("keyBtn_$code"),
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(9.dp))
+                            .background(palette.elevatedCardTint)
+                            .border(0.6.dp, palette.hairlineBorder, RoundedCornerShape(9.dp))
+                            .clickable(enabled = canControl) { onSendKey(code) }
+                            .padding(horizontal = 13.dp, vertical = 6.dp)
+                            .testTag("keyBtn_$code"),
                     ) {
-                        Text(label, fontSize = 12.sp)
+                        Text(
+                            text = label,
+                            fontSize = 13.sp,
+                            color = if (canControl) palette.primaryText else palette.secondaryText.copy(alpha = 0.45f),
+                        )
                     }
                 }
             }
 
-            // CJK / English Text Composer
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                OutlinedTextField(
-                    value = draft,
-                    onValueChange = { draft = it },
-                    enabled = canControl,
-                    placeholder = {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(42.dp)
+                        .clip(RoundedCornerShape(11.dp))
+                        .background(palette.elevatedCardTint)
+                        .border(0.6.dp, palette.hairlineBorder, RoundedCornerShape(11.dp))
+                        .padding(horizontal = 12.dp),
+                    contentAlignment = Alignment.CenterStart,
+                ) {
+                    if (draft.isEmpty()) {
                         Text(
-                            if (canControl) "输入中英文后发送至 Mac 焦点窗口…" else "当前为只读观看（需在 Mac 开启辅助功能权限）",
-                            fontSize = 13.sp,
+                            text = if (canControl) "输入中英文后发送" else "当前只读（需开启 Mac 辅助功能）",
+                            fontSize = 14.sp,
+                            color = palette.secondaryText,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                         )
-                    },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                    keyboardActions = KeyboardActions(
-                        onSend = {
-                            if (draft.isNotEmpty()) {
-                                onSendText(draft)
-                                draft = ""
+                    }
+                    BasicTextField(
+                        value = draft,
+                        onValueChange = { draft = it },
+                        enabled = canControl,
+                        singleLine = true,
+                        textStyle = TextStyle(fontSize = 15.sp, color = palette.primaryText),
+                        cursorBrush = SolidColor(palette.accentBlue),
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                        keyboardActions = KeyboardActions(
+                            onSend = {
+                                if (draft.isNotEmpty()) {
+                                    onSendText(draft)
+                                    draft = ""
+                                }
                             }
-                        }
-                    ),
-                    modifier = Modifier.weight(1f).testTag("inputRemoteText"),
-                )
-                Button(
-                    onClick = {
-                        if (draft.isNotEmpty()) {
+                        ),
+                        modifier = Modifier.fillMaxWidth().testTag("inputRemoteText"),
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(
+                            if (canControl && draft.isNotEmpty()) palette.accentBlue
+                            else palette.dividerColor
+                        )
+                        .clickable(enabled = canControl && draft.isNotEmpty()) {
                             onSendText(draft)
                             draft = ""
                         }
-                    },
-                    enabled = canControl && draft.isNotEmpty(),
-                    modifier = Modifier.testTag("btnCommitText"),
+                        .padding(horizontal = 16.dp, vertical = 10.dp)
+                        .testTag("btnCommitText"),
                 ) {
-                    Text("发送")
+                    Text(
+                        text = "发送",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (canControl && draft.isNotEmpty()) Color.White else palette.secondaryText,
+                    )
                 }
-                IconButton(onClick = onClose) {
-                    Icon(Icons.Default.KeyboardHide, contentDescription = "收起键盘栏", tint = TextSecondary)
+
+                IconButton(onClick = onClose, modifier = Modifier.size(38.dp)) {
+                    Icon(Icons.Default.KeyboardHide, contentDescription = "取消", tint = palette.secondaryText)
                 }
             }
         }
     }
 }
 
+private data class DockAppGroup(
+    val processID: Int,
+    val application: String,
+    val windows: List<RemoteWindow>,
+    val iconBase64: String?,
+    val hasSelectedWindow: Boolean,
+)
+
 @Composable
-private fun PairingAndHostsSheet(
+private fun MacHorizontalWindowDock(
     state: WorkspaceUiState,
+    palette: GlassPalette,
+    backdrop: LiveVideoBackdrop,
+    onSelect: (RemoteWindow) -> Unit,
+    onRefresh: () -> Unit,
+    onCollapse: () -> Unit,
+) {
+    val navPad = WindowInsets.navigationBars.asPaddingValues()
+    val haptics = LocalHapticFeedback.current
+
+    val appGroups = remember(state.windows, state.selectedWindow, state.appIcons) {
+        state.windows
+            .groupBy { it.processID }
+            .map { (pid, wins) ->
+                DockAppGroup(
+                    processID = pid,
+                    application = wins.first().application,
+                    windows = wins,
+                    iconBase64 = state.appIcons[pid],
+                    hasSelectedWindow = wins.any {
+                        it.number == state.selectedWindow?.number && it.processID == state.selectedWindow.processID
+                    },
+                )
+            }
+    }
+
+    var expandedPid by remember { mutableStateOf<Int?>(null) }
+    var tooltipLabel by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(tooltipLabel) {
+        if (tooltipLabel != null) {
+            kotlinx.coroutines.delay(1600L)
+            tooltipLabel = null
+        }
+    }
+
+    val expandedGroup = appGroups.firstOrNull { it.processID == expandedPid }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(
+            start = 16.dp,
+            end = 16.dp,
+            bottom = if (state.showKeyboardBar) 10.dp else navPad.calculateBottomPadding() + 10.dp,
+        ),
+    ) {
+        // Authentic macOS Dock App-Window Popover (for apps with 2+ open windows)
+        AnimatedVisibility(
+            visible = expandedGroup != null,
+            enter = fadeIn(tween(130)) + scaleIn(
+                initialScale = 0.92f,
+                transformOrigin = TransformOrigin(0.5f, 1.0f),
+                animationSpec = tween(150),
+            ),
+            exit = fadeOut(tween(100)) + scaleOut(
+                targetScale = 0.94f,
+                transformOrigin = TransformOrigin(0.5f, 1.0f),
+                animationSpec = tween(110),
+            ),
+        ) {
+            val group = expandedGroup
+            if (group != null) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    FrostedGlassBox(
+                        palette = palette,
+                        backdrop = backdrop,
+                        shape = RoundedCornerShape(14.dp),
+                        blurRadius = 30.dp,
+                        shadowElevation = 16.dp,
+                        modifier = Modifier
+                            .widthIn(min = 190.dp, max = 300.dp)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = {},
+                            ),
+                    ) {
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                text = group.application,
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = palette.secondaryText,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+                            )
+                            HorizontalDivider(thickness = 0.5.dp, color = palette.dividerColor)
+                            group.windows.forEachIndexed { index, win ->
+                                val isCurrent = state.selectedWindow?.number == win.number &&
+                                    state.selectedWindow.processID == win.processID
+                                val winTitle = win.title.trim().ifEmpty {
+                                    "${win.application} (${win.widthPoints.roundToInt()}×${win.heightPoints.roundToInt()})"
+                                }
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            expandedPid = null
+                                            if (isCurrent) onCollapse() else onSelect(win)
+                                        }
+                                        .padding(horizontal = 14.dp, vertical = 9.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    Text(
+                                        text = winTitle,
+                                        fontSize = 13.5.sp,
+                                        fontWeight = if (isCurrent) FontWeight.SemiBold else FontWeight.Normal,
+                                        color = palette.primaryText,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                    Icon(
+                                        imageVector = if (isCurrent) Icons.Default.Check else Icons.Default.Window,
+                                        contentDescription = null,
+                                        tint = if (isCurrent) palette.accentBlue else palette.secondaryText.copy(alpha = 0.55f),
+                                        modifier = Modifier.size(15.dp),
+                                    )
+                                }
+                                if (index < group.windows.lastIndex) {
+                                    HorizontalDivider(thickness = 0.5.dp, color = palette.dividerColor)
+                                }
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                }
+            }
+        }
+
+        // Single-line macOS Dock floating tooltip pill on long-press preview
+        AnimatedVisibility(
+            visible = expandedGroup == null && !tooltipLabel.isNullOrBlank(),
+            enter = fadeIn(tween(110)),
+            exit = fadeOut(tween(140)),
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                FrostedGlassBox(
+                    palette = palette,
+                    backdrop = backdrop,
+                    shape = RoundedCornerShape(8.dp),
+                    blurRadius = 22.dp,
+                    shadowElevation = 8.dp,
+                ) {
+                    Text(
+                        text = tooltipLabel.orEmpty(),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = palette.primaryText,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .widthIn(max = 240.dp)
+                            .padding(horizontal = 10.dp, vertical = 4.dp),
+                    )
+                }
+                Spacer(Modifier.height(6.dp))
+            }
+        }
+
+        // Slim, Authentic macOS Sequoia Frosted Glass Dock Shelf (icon-only, ~57dp tall)
+        FrostedGlassBox(
+            palette = palette,
+            backdrop = backdrop,
+            shape = RoundedCornerShape(18.dp),
+            blurRadius = 34.dp,
+            shadowElevation = 18.dp,
+            modifier = Modifier
+                .widthIn(max = 600.dp)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = {},
+                )
+                .testTag("macHorizontalDock"),
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                if (state.catalogLoading && appGroups.isEmpty()) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 1.8.dp, color = palette.accentBlue)
+                        Text("正在读取窗口…", fontSize = 12.5.sp, color = palette.secondaryText, maxLines = 1)
+                    }
+                } else if (appGroups.isEmpty()) {
+                    Text(
+                        text = "暂无可捕获窗口",
+                        fontSize = 12.5.sp,
+                        color = palette.secondaryText,
+                        maxLines = 1,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                    )
+                } else {
+                    val listState = rememberLazyListState()
+                    LaunchedEffect(appGroups.size, state.selectedWindow?.processID) {
+                        val idx = appGroups.indexOfFirst { it.hasSelectedWindow }
+                        if (idx > 4) {
+                            runCatching { listState.scrollToItem(max(0, idx - 4)) }
+                        }
+                    }
+                    val fadeLeft = listState.canScrollBackward
+                    val fadeRight = listState.canScrollForward
+                    LazyRow(
+                        state = listState,
+                        modifier = Modifier
+                            .weight(1f, fill = false)
+                            .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                            .drawWithContent {
+                                drawContent()
+                                val w = size.width
+                                if (w > 24f && (fadeLeft || fadeRight)) {
+                                    val edgeFrac = (12.dp.toPx() / w).coerceIn(0.01f, 0.15f)
+                                    drawRect(
+                                        brush = Brush.horizontalGradient(
+                                            0.0f to if (fadeLeft) Color.Transparent else Color.Black,
+                                            edgeFrac to Color.Black,
+                                            (1f - edgeFrac) to Color.Black,
+                                            1.0f to if (fadeRight) Color.Transparent else Color.Black,
+                                        ),
+                                        blendMode = BlendMode.DstIn,
+                                    )
+                                }
+                            },
+                        horizontalArrangement = Arrangement.spacedBy(3.dp),
+                        contentPadding = PaddingValues(horizontal = 2.dp),
+                    ) {
+                        items(appGroups, key = { it.processID }) { group ->
+                            MacDockAppTile(
+                                group = group,
+                                isExpanded = expandedPid == group.processID,
+                                palette = palette,
+                                onClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    tooltipLabel = null
+                                    if (group.windows.size == 1) {
+                                        expandedPid = null
+                                        val win = group.windows.first()
+                                        val alreadyActive = state.selectedWindow?.number == win.number &&
+                                            state.selectedWindow.processID == win.processID
+                                        if (alreadyActive && state.hasLiveVideo) onCollapse() else onSelect(win)
+                                    } else {
+                                        expandedPid = if (expandedPid == group.processID) null else group.processID
+                                    }
+                                },
+                                onLongPress = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    val firstTitle = group.windows.first().title.trim()
+                                    tooltipLabel = when {
+                                        group.windows.size > 1 -> "${group.application}（${group.windows.size} 个窗口）"
+                                        firstTitle.isEmpty() || firstTitle.equals(group.application, ignoreCase = true) -> group.application
+                                        else -> "${group.application} · $firstTitle"
+                                    }
+                                },
+                            )
+                        }
+                    }
+                }
+
+                // Classic macOS Dock Vertical Hairline Separator
+                VerticalDivider(
+                    modifier = Modifier
+                        .height(30.dp)
+                        .padding(horizontal = 4.dp),
+                    thickness = 0.8.dp,
+                    color = palette.dividerColor,
+                )
+
+                // Single Icon-Only Refresh Tile (optically aligned with 41dp app icons)
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .width(42.dp)
+                        .clip(RoundedCornerShape(11.dp))
+                        .clickable {
+                            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            expandedPid = null
+                            onRefresh()
+                        }
+                        .testTag("dockUtilRefresh"),
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.size(41.dp),
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(34.dp)
+                                .clip(RoundedCornerShape(9.dp))
+                                .background(palette.elevatedCardTint)
+                                .border(0.6.dp, palette.hairlineBorder, RoundedCornerShape(9.dp)),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "刷新窗口",
+                                tint = palette.primaryText.copy(alpha = 0.82f),
+                                modifier = Modifier.size(17.dp),
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(6.dp))
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun MacDockAppTile(
+    group: DockAppGroup,
+    isExpanded: Boolean,
+    palette: GlassPalette,
+    onClick: () -> Unit,
+    onLongPress: () -> Unit,
+) {
+    val decodedIcon = remember(group.iconBase64) {
+        if (group.iconBase64.isNullOrBlank()) null
+        else runCatching {
+            val bytes = Base64.decode(group.iconBase64, Base64.DEFAULT)
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.asImageBitmap()
+        }.getOrNull()
+    }
+
+    val scale by animateFloatAsState(
+        targetValue = if (isExpanded) 1.14f else 1.0f,
+        animationSpec = spring(dampingRatio = 0.68f, stiffness = Spring.StiffnessMedium),
+        label = "dockAppScale",
+    )
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .width(45.dp)
+            .clip(RoundedCornerShape(11.dp))
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongPress,
+            )
+            .semantics { contentDescription = "选择窗口 ${group.application}" },
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(41.dp)
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                    translationY = if (isExpanded) -4f else 0f
+                },
+        ) {
+            if (decodedIcon != null) {
+                Image(
+                    bitmap = decodedIcon,
+                    contentDescription = group.application,
+                    modifier = Modifier.size(40.dp),
+                )
+            } else {
+                val hueSeed = (group.application.hashCode() and 0x7fffffff) % 5
+                val gradColors = when (hueSeed) {
+                    0 -> listOf(Color(0xFF4CA6FF), Color(0xFF0066CC))
+                    1 -> listOf(Color(0xFFFF9F0A), Color(0xFFFF5E3A))
+                    2 -> listOf(Color(0xFF32D74B), Color(0xFF1E9E38))
+                    3 -> listOf(Color(0xFFBF5AF2), Color(0xFF6E38C9))
+                    else -> listOf(Color(0xFF64D2FF), Color(0xFF2D7CF6))
+                }
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(34.dp)
+                        .shadow(3.dp, RoundedCornerShape(9.dp))
+                        .clip(RoundedCornerShape(9.dp))
+                        .background(Brush.verticalGradient(gradColors))
+                        .border(0.5.dp, Color.White.copy(alpha = 0.28f), RoundedCornerShape(9.dp)),
+                ) {
+                    Text(
+                        text = group.application.take(1).uppercase(),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                    )
+                }
+            }
+
+            // Subtle multi-window count pill only when an app owns 2+ open windows
+            if (group.windows.size > 1) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .offset(x = (-1).dp, y = (-1).dp)
+                        .height(13.dp)
+                        .widthIn(min = 13.dp)
+                        .clip(CircleShape)
+                        .background(palette.elevatedCardTint)
+                        .border(0.5.dp, palette.hairlineBorder, CircleShape)
+                        .padding(horizontal = 3.dp),
+                ) {
+                    Text(
+                        text = "${group.windows.size}",
+                        fontSize = 8.5.sp,
+                        lineHeight = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = palette.primaryText,
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(2.dp))
+
+        // Authentic macOS Dock Active Dot Indicator
+        Box(
+            modifier = Modifier
+                .size(4.dp)
+                .clip(CircleShape)
+                .background(
+                    if (group.hasSelectedWindow) palette.primaryText.copy(alpha = 0.84f)
+                    else Color.Transparent
+                ),
+        )
+    }
+}
+
+@Composable
+private fun FrostedSettingsAndHostsSheet(
+    state: WorkspaceUiState,
+    palette: GlassPalette,
     onImportLink: (String, String) -> Boolean,
     onConnectSaved: (TrustedHostProfile) -> Unit,
     onRemoveSaved: (TrustedHostProfile) -> Unit,
-    onClose: () -> Unit,
+    onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
     var rawLink by remember { mutableStateOf("") }
@@ -1153,123 +1860,7 @@ private fun PairingAndHostsSheet(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp)
-            .padding(bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column {
-                Text("Mac 主机连接与配对", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                Text("本机加密身份 ID：${state.clientIdShort}…（零知识 P-256）", fontSize = 12.sp, color = TextSecondary)
-            }
-            TextButton(onClick = onClose) { Text("关闭") }
-        }
-
-        if (state.savedHosts.isNotEmpty()) {
-            Text("已信任的 Mac 主机", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TextSecondary)
-            state.savedHosts.forEach { host ->
-                val isCurrent = state.activeHost?.key == host.key
-                Surface(
-                    shape = RoundedCornerShape(14.dp),
-                    color = if (isCurrent) ElectricAccent.copy(alpha = 0.14f) else StudioSurfaceElevated,
-                    border = BorderStroke(1.dp, if (isCurrent) ElectricAccent else StudioBorder),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(14.dp))
-                        .clickable { onConnectSaved(host) }
-                        .testTag("savedHost_${host.hostId.take(6)}"),
-                ) {
-                    Row(
-                        modifier = Modifier.padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(host.name, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                            Text(
-                                text = "${host.coordUrl} · ${if (host.accessGrant != null) "已获长期授权" else "待首次认证"}",
-                                fontSize = 12.sp,
-                                color = TextSecondary,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                        IconButton(onClick = { onRemoveSaved(host) }) {
-                            Icon(Icons.Default.DeleteOutline, contentDescription = "移除主机", tint = TextSecondary)
-                        }
-                    }
-                }
-            }
-        }
-
-        HorizontalDivider(color = StudioBorder)
-        Text("导入新配对链接", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TextSecondary)
-
-        OutlinedTextField(
-            value = rawLink,
-            onValueChange = { rawLink = it },
-            placeholder = { Text("粘贴 https://.../#host=... 配对链接", fontSize = 13.sp) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth().testTag("inputPairingUrl"),
-        )
-
-        state.errorText?.let { err ->
-            Text(err, fontSize = 12.sp, color = CoralAlert)
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            OutlinedButton(
-                onClick = {
-                    val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-                    val clip = cm?.primaryClip?.getItemAt(0)?.coerceToText(context)?.toString().orEmpty()
-                    if (clip.isNotBlank()) {
-                        rawLink = clip
-                        onImportLink(clip, "")
-                    }
-                },
-                modifier = Modifier.weight(1f).testTag("btnPasteAndConnect"),
-            ) {
-                Icon(Icons.Default.ContentPaste, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text("从剪贴板一键连接")
-            }
-
-            Button(
-                onClick = { onImportLink(rawLink, "") },
-                enabled = rawLink.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = ElectricAccent),
-                modifier = Modifier.weight(1f).testTag("btnConnectLink"),
-            ) {
-                Text("配对并直连")
-            }
-        }
-    }
-}
-
-@Composable
-private fun WindowCatalogSheet(
-    state: WorkspaceUiState,
-    onRefresh: () -> Unit,
-    onSelect: (RemoteWindow) -> Unit,
-) {
-    var filter by remember { mutableStateOf("") }
-    val filtered = remember(state.windows, filter) {
-        if (filter.isBlank()) state.windows
-        else state.windows.filter { it.displayLabel.contains(filter, ignoreCase = true) }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp)
-            .padding(bottom = 24.dp),
+            .padding(horizontal = 18.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Row(
@@ -1277,131 +1868,234 @@ private fun WindowCatalogSheet(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column {
-                Text("选择要串流的 Mac 窗口", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                Text("带内热切换 · 不改变 Mac 源窗口位置与尺寸", fontSize = 12.sp, color = TextSecondary)
-            }
-            IconButton(onClick = onRefresh, modifier = Modifier.testTag("btnSheetRefreshWindows")) {
-                Icon(Icons.Default.Refresh, contentDescription = "刷新窗口目录")
-            }
+            Spacer(Modifier.width(36.dp))
+            Text("连接设置", fontSize = 17.sp, fontWeight = FontWeight.SemiBold, color = palette.primaryText)
+            Text(
+                text = "完成",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = palette.accentBlue,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(onClick = onDismiss)
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+            )
         }
 
-        OutlinedTextField(
-            value = filter,
-            onValueChange = { filter = it },
-            placeholder = { Text("搜索应用或窗口标题…", fontSize = 13.sp) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth().testTag("inputWindowFilter"),
-        )
-
-        LazyColumn(
-            modifier = Modifier.height(360.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            items(filtered, key = { it.id }) { win ->
-                val isSelected = state.selectedWindow?.id == win.id
-                Surface(
-                    shape = RoundedCornerShape(14.dp),
-                    color = if (isSelected) ElectricAccent.copy(alpha = 0.16f) else StudioSurfaceElevated,
-                    border = BorderStroke(1.dp, if (isSelected) ElectricAccent else StudioBorder),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(14.dp))
-                        .clickable { onSelect(win) }
-                        .semantics { contentDescription = "选择窗口 ${win.displayLabel}" },
-                ) {
+        if (state.savedHosts.isNotEmpty()) {
+            Text("已信任的 Mac 主机", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = palette.secondaryText, modifier = Modifier.padding(start = 6.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(palette.elevatedCardTint)
+                    .border(0.6.dp, palette.hairlineBorder, RoundedCornerShape(14.dp))
+            ) {
+                state.savedHosts.forEachIndexed { idx, host ->
+                    val isCurrent = state.activeHost?.key == host.key
                     Row(
-                        modifier = Modifier.padding(14.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onConnectSaved(host) }
+                            .padding(horizontal = 14.dp, vertical = 11.dp)
+                            .testTag("savedHost_${host.hostId.take(6)}"),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(win.displayLabel, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(host.name, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = palette.primaryText)
+                                if (isCurrent) {
+                                    Icon(Icons.Default.Check, contentDescription = null, tint = palette.accentBlue, modifier = Modifier.size(16.dp))
+                                }
+                            }
                             Text(
-                                text = "${win.widthPoints.roundToInt()}×${win.heightPoints.roundToInt()} pt · #${win.number}",
+                                text = "${host.coordUrl} · ${if (host.accessGrant != null) "已获长期授权" else "待认证"}",
                                 fontSize = 12.sp,
-                                fontFamily = FontFamily.Monospace,
-                                color = TextSecondary,
+                                color = palette.secondaryText,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
                             )
                         }
-                        Text(
-                            text = if (isSelected) "当前投流" else "投流",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = ElectricAccent,
-                        )
+                        IconButton(onClick = { onRemoveSaved(host) }, modifier = Modifier.size(34.dp)) {
+                            Icon(Icons.Default.DeleteOutline, contentDescription = "移除主机", tint = palette.secondaryText, modifier = Modifier.size(18.dp))
+                        }
+                    }
+                    if (idx < state.savedHosts.lastIndex) {
+                        HorizontalDivider(modifier = Modifier.padding(start = 14.dp), thickness = 0.6.dp, color = palette.dividerColor)
                     }
                 }
             }
         }
+
+        Text("导入新配对链接", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = palette.secondaryText, modifier = Modifier.padding(start = 6.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(42.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(palette.elevatedCardTint)
+                .border(0.6.dp, palette.hairlineBorder, RoundedCornerShape(12.dp))
+                .padding(horizontal = 12.dp),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            if (rawLink.isEmpty()) {
+                Text("粘贴 https://.../#host=... 配对链接", fontSize = 14.sp, color = palette.secondaryText)
+            }
+            BasicTextField(
+                value = rawLink,
+                onValueChange = { rawLink = it },
+                singleLine = true,
+                textStyle = TextStyle(fontSize = 14.sp, color = palette.primaryText),
+                cursorBrush = SolidColor(palette.accentBlue),
+                modifier = Modifier.fillMaxWidth().testTag("inputPairingUrl"),
+            )
+        }
+
+        state.errorText?.let { err ->
+            Text(err, fontSize = 12.sp, color = palette.destructiveRed, modifier = Modifier.padding(horizontal = 6.dp))
+        }
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(palette.elevatedCardTint)
+                    .border(0.6.dp, palette.hairlineBorder, RoundedCornerShape(12.dp))
+                    .clickable {
+                        val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                        val clip = cm?.primaryClip?.getItemAt(0)?.coerceToText(context)?.toString().orEmpty()
+                        if (clip.isNotBlank()) {
+                            rawLink = clip
+                            onImportLink(clip, "")
+                        }
+                    }
+                    .padding(vertical = 12.dp)
+                    .testTag("btnPasteAndConnect"),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(Icons.Default.ContentPaste, contentDescription = null, tint = palette.accentBlue, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("剪贴板导入", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = palette.accentBlue)
+            }
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(if (rawLink.isNotBlank()) palette.accentBlue else palette.dividerColor)
+                    .clickable(enabled = rawLink.isNotBlank()) { onImportLink(rawLink, "") }
+                    .padding(vertical = 12.dp)
+                    .testTag("btnConnectLink"),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "配对并直连",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (rawLink.isNotBlank()) Color.White else palette.secondaryText,
+                )
+            }
+        }
+
+        Text(
+            text = "本机加密身份：${state.clientIdShort}… · 配对凭证仅经端到端加密通道传输。",
+            fontSize = 11.sp,
+            color = palette.secondaryText,
+            modifier = Modifier.padding(horizontal = 6.dp),
+        )
     }
 }
 
 @Composable
-private fun TelemetryDiagnosticsSheet(
+private fun FrostedDiagnosticsSheet(
     state: WorkspaceUiState,
+    palette: GlassPalette,
     onSetScaleMode: (CanvasScaleMode) -> Unit,
     onTogglePreferHdr: () -> Unit,
     onReconnect: () -> Unit,
+    onDismiss: () -> Unit,
 ) {
     val t = state.telemetry
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp)
-            .padding(bottom = 28.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+            .padding(horizontal = 18.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("原生 WebRTC 实时遥测", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            OutlinedButton(onClick = onReconnect) { Text("重协商会话", fontSize = 12.sp) }
-        }
-
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            CanvasScaleMode.entries.forEach { mode ->
-                FilterChip(
-                    selected = state.scaleMode == mode,
-                    onClick = { onSetScaleMode(mode) },
-                    label = { Text(mode.label, fontSize = 12.sp) },
-                )
-            }
-            FilterChip(
-                selected = state.preferHdr,
-                onClick = onTogglePreferHdr,
-                label = { Text(if (state.preferHdr) "HDR 优先" else "SDR 桌面", fontSize = 12.sp) },
+            Text(
+                text = "重连",
+                fontSize = 15.sp,
+                color = palette.accentBlue,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(onClick = onReconnect)
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+            )
+            Text("详细数据", fontSize = 17.sp, fontWeight = FontWeight.SemiBold, color = palette.primaryText)
+            Text(
+                text = "完成",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = palette.accentBlue,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(onClick = onDismiss)
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
             )
         }
 
-        HorizontalDivider(color = StudioBorder)
-
-        TelemetryRow("ICE 候选对", t.candidatePair)
-        TelemetryRow("网络往返 RTT", t.rttMs?.let { String.format("%.1f ms", it) } ?: "—")
-        TelemetryRow("协商编码器", t.codec)
-        TelemetryRow("Android 硬件解码器", t.decoderName)
-        TelemetryRow("解码分辨率 / 帧率", "${state.videoWidthPx}×${state.videoHeightPx} @ ${t.fps.roundToInt()} fps")
-        TelemetryRow("视频有效码率", String.format("%.2f Mbps", t.videoMbps))
-        TelemetryRow("单帧硬解 / 抖动缓冲", "${t.decodeMs?.let { String.format("%.2f ms", it) } ?: "—"} / ${t.jitterMs?.let { String.format("%.2f ms", it) } ?: "—"}")
-        TelemetryRow("累计解码帧 / 关键帧", "${t.framesDecoded} / ${t.keyFramesDecoded}")
-        TelemetryRow("丢包 / NACK / PLI", "${t.packetsLost} / ${t.nackCount} / ${t.pliCount}")
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(14.dp))
+                .background(palette.elevatedCardTint)
+                .border(0.6.dp, palette.hairlineBorder, RoundedCornerShape(14.dp))
+                .padding(horizontal = 14.dp, vertical = 6.dp)
+        ) {
+            DiagRow("当前主机", state.activeHost?.name ?: "—", palette)
+            HorizontalDivider(thickness = 0.6.dp, color = palette.dividerColor)
+            DiagRow("ICE 候选路径", t.candidatePair, palette)
+            HorizontalDivider(thickness = 0.6.dp, color = palette.dividerColor)
+            DiagRow("网络 RTT", t.rttMs?.let { String.format("%.1f ms", it) } ?: "—", palette)
+            HorizontalDivider(thickness = 0.6.dp, color = palette.dividerColor)
+            DiagRow("实际编码", t.codec, palette)
+            HorizontalDivider(thickness = 0.6.dp, color = palette.dividerColor)
+            DiagRow("硬件解码器", t.decoderName, palette)
+            HorizontalDivider(thickness = 0.6.dp, color = palette.dividerColor)
+            DiagRow("像素尺寸 / 帧率", "${state.videoWidthPx}×${state.videoHeightPx} / ${t.fps.roundToInt()} fps", palette)
+            HorizontalDivider(thickness = 0.6.dp, color = palette.dividerColor)
+            DiagRow("视频有效载荷", String.format("%.2f Mbps", t.videoMbps), palette)
+            HorizontalDivider(thickness = 0.6.dp, color = palette.dividerColor)
+            DiagRow("解码 / 抖动缓冲", "${t.decodeMs?.let { String.format("%.1f ms", it) } ?: "—"} / ${t.jitterMs?.let { String.format("%.1f ms", it) } ?: "—"}", palette)
+            HorizontalDivider(thickness = 0.6.dp, color = palette.dividerColor)
+            DiagRow("累计解码帧 / 关键帧", "${t.framesDecoded} / ${t.keyFramesDecoded}", palette)
+            HorizontalDivider(thickness = 0.6.dp, color = palette.dividerColor)
+            DiagRow("累计丢包 / NACK / PLI", "${t.packetsLost} / ${t.nackCount} / ${t.pliCount}", palette)
+        }
     }
 }
 
 @Composable
-private fun TelemetryRow(label: String, value: String) {
+private fun DiagRow(label: String, value: String, palette: GlassPalette) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 9.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, fontSize = 13.sp, color = TextSecondary)
+        Text(label, fontSize = 14.sp, color = palette.primaryText)
         Text(
             text = value,
             fontSize = 13.sp,
             fontFamily = FontFamily.Monospace,
-            color = TextPrimary,
+            color = palette.secondaryText,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
