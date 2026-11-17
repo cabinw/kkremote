@@ -487,8 +487,8 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
 
     @discardableResult
     func sendControlSignal(_ message: SignalMessage) -> Bool {
-        guard !stopped, let channel, channel.readyState == .open, channel.bufferedAmount < 262_144,
-              let payload = try? JSONEncoder().encode(message), payload.count <= 65_536 else {
+        guard !stopped, let channel, channel.readyState == .open, channel.bufferedAmount < 524_288,
+              let payload = try? JSONEncoder().encode(message), payload.count <= 220_000 else {
             return false
         }
         return channel.sendData(RTCDataBuffer(data: payload, isBinary: false))
@@ -733,7 +733,7 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
         }
     }
     func dataChannel(_ dataChannel: RTCDataChannel, didReceiveMessageWith buffer: RTCDataBuffer) {
-        guard buffer.data.count <= 65_536 else { return }
+        guard buffer.data.count <= 220_000 else { return }
         if buffer.data.first == 0x7b,
            let control = try? JSONDecoder().decode(SignalMessage.self, from: buffer.data),
            control.type == "window" {

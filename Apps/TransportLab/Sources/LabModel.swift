@@ -290,10 +290,12 @@ final class LabModel: ObservableObject {
         engine?.receive(message)
     }
 
-    private func sendWindow(_ command: WindowMessage) {
+    @discardableResult
+    private func sendWindow(_ command: WindowMessage) -> Bool {
         let msg = SignalMessage(type: "window", session: windowSession, window: command)
-        if usesCoordSignaling { _ = engine?.sendControlSignal(msg) }
-        else { signal?.send(msg) }
+        if usesCoordSignaling { return engine?.sendControlSignal(msg) ?? false }
+        signal?.send(msg)
+        return true
     }
 
     func startCoordHostFromUI() {
@@ -645,8 +647,12 @@ final class LabModel: ObservableObject {
                 defer { if self.generation == token { self.catalogLoading = false } }
                 do {
                     let windows = try await self.windowCatalog.refresh()
+                    let icons = self.windowCatalog.icons(for: windows, maxTotalBytes: 180_000)
                     guard self.generation == token else { return }
-                    self.sendWindow(WindowMessage(action: "catalog", requestID: command.requestID, windows: windows))
+                    if !self.sendWindow(WindowMessage(action: "catalog", requestID: command.requestID, windows: windows, appIcons: icons.isEmpty ? nil : icons)) {
+                        let compactIcons = self.windowCatalog.icons(for: windows, maxTotalBytes: 48_000)
+                        self.sendWindow(WindowMessage(action: "catalog", requestID: command.requestID, windows: windows, appIcons: compactIcons.isEmpty ? nil : compactIcons))
+                    }
                 } catch {
                     guard self.generation == token else { return }
                     self.sendWindow(WindowMessage(action: "catalog", requestID: command.requestID, error: "无法读取窗口目录，请检查主机屏幕录制权限"))

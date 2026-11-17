@@ -38,6 +38,8 @@ struct WindowMessage: Codable {
     var controlLease: String? = nil
     var input: WindowInput? = nil
     var controlState: WindowControlState? = nil
+    /// Optional map of String(processID) -> 48x48 PNG Base64 app icon for Dock-style window switchers.
+    var appIcons: [String: String]? = nil
 }
 
 #if os(macOS)
@@ -47,6 +49,54 @@ import ApplicationServices
 
 final class HostWindowCatalog {
     private var entries: [String: RemoteWindow] = [:]
+    private var iconCache: [Int32: String] = [:]
+
+    @MainActor
+    func icons(for windows: [RemoteWindow], maxTotalBytes: Int = 180_000) -> [String: String] {
+        var result: [String: String] = [:]
+        var usedBytes = 0
+        for win in windows {
+            let key = String(win.processID)
+            if result[key] != nil { continue }
+            guard let b64 = iconBase64(for: win.processID) else { continue }
+            if usedBytes + b64.utf8.count > maxTotalBytes { break }
+            result[key] = b64
+            usedBytes += b64.utf8.count
+        }
+        return result
+    }
+
+    @MainActor
+    private func iconBase64(for pid: Int32) -> String? {
+        if let cached = iconCache[pid] { return cached }
+        guard let app = NSRunningApplication(processIdentifier: pid),
+              let icon = app.icon else { return nil }
+        let px = 48
+        guard let rep = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: px,
+            pixelsHigh: px,
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bytesPerRow: 0,
+            bitsPerPixel: 0
+        ) else { return nil }
+        let targetSize = NSSize(width: px, height: px)
+        rep.size = targetSize
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+        NSGraphicsContext.current?.imageInterpolation = .high
+        icon.draw(in: NSRect(origin: .zero, size: targetSize), from: .zero, operation: .copy, fraction: 1.0)
+        NSGraphicsContext.restoreGraphicsState()
+        guard let png = rep.representation(using: .png, properties: [:]) else { return nil }
+        let b64 = png.base64EncodedString()
+        if iconCache.count > 128 { iconCache.removeAll() }
+        iconCache[pid] = b64
+        return b64
+    }
 
     func refresh() async throws -> [RemoteWindow] {
         // Only advertise windows on the current desktop. Hidden helper/autofill
