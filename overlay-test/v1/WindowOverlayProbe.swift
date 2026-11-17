@@ -717,7 +717,8 @@ final class Probe: NSObject, NSApplicationDelegate {
     var canvas: OverlayCanvas!
     var bannerView: BannerView!
     let panelOnly = CommandLine.arguments.contains("--panel-only")
-    var statusItem: NSStatusItem!
+    let hideStatusItem = CommandLine.arguments.contains("--no-status-item")
+    var statusItem: NSStatusItem?
     var pollTimer: Timer?
     var uiAnimTimer: Timer?
     var appearanceItems: [AppearanceMode: NSMenuItem] = [:]
@@ -762,8 +763,6 @@ final class Probe: NSObject, NSApplicationDelegate {
         banner.contentView = bannerView
         banner.hasShadow = true
 
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        statusItem.button?.title = "▣ 遮罩测试"
         let menu = NSMenu()
         menu.addItem(withTitle: "目标：\(target.owner) · 窗口 \(target.id)", action: nil, keyEquivalent: "")
         menu.addItem(withTitle: "仅样式测试；无远程连接", action: nil, keyEquivalent: "")
@@ -792,7 +791,12 @@ final class Probe: NSObject, NSApplicationDelegate {
         let exit = NSMenuItem(title: "结束测试", action: #selector(quitFromUI), keyEquivalent: "q")
         exit.target = self
         menu.addItem(exit)
-        statusItem.menu = menu
+        if !hideStatusItem {
+            let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+            item.button?.title = "▣ 遮罩测试"
+            item.menu = menu
+            statusItem = item
+        }
         syncMenuChecks()
 
         log("START window=\(target.id) owner=\(target.owner) pid=\(target.pid) duration=\(Int(duration))s appearance=\(appearanceMode.rawValue)")

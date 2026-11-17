@@ -28,6 +28,10 @@
 overlay-test/
 ├── README.md                         本文：多版本对比总览与运行入口
 ├── .gitignore                        忽略各版本本机 build/ 及大体积参考录屏
+├── menubar/                          顶部状态栏切换工具 OverlayTest（默认演示 PopAgent，一键遍历 V1–V15）
+│   ├── OverlayTestMenuBar.swift
+│   ├── test-menubar.sh
+│   └── README.md
 ├── shared/                           V2–V15 共用的 AppKit 跟随引擎、Metal 基础库与构建脚本
 │   ├── OverlayProbeCore.swift
 │   └── build-and-run.sh
@@ -39,6 +43,16 @@ overlay-test/
 ```
 
 ## 3. 快速对比运行
+
+### 方式 A：通过菜单栏小工具挨个切换（推荐）
+
+在项目根目录运行，默认锁定 **`PopAgent`** 并在菜单栏常驻 `OverlayTest` 图标，可逐一点击 `V1`–`V15`、调节强度/明暗/停靠边及 `V11/V14/V15` 专属子模式：
+
+```bash
+./overlay-test/menubar/test-menubar.sh
+```
+
+### 方式 B：命令行单独运行指定版本
 
 在项目根目录执行对应版本的运行脚本，传入同一个目标窗口对比观感（运行下一版前点击“结束”或停止前一探针即可）：
 
