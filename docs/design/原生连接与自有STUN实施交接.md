@@ -1,6 +1,6 @@
 # KKRemote 跨平台原生连接、零知识协调与自有 STUN 实施交接
 
-日期：2026-11-17。文档状态：**第一阶段（跨平台零知识协调 + 自有 STUN + Mac/Android 5G 实机直连投流）已实施并验证；CloudKit 信任同步、应用内用户代理与原生 Android Main10 客户端待分阶段推进**。
+日期：2026-11-17。文档状态：**第一与第二阶段（跨平台零知识协调 + 自有 STUN + 原生 Android Kotlin 客户端与 Web/PWA 双端 5G 实机直连投流）已实施并验证；CloudKit 免扫码信任同步、应用内用户代理与 Android 10-bit EGL PQ 色彩管理待分阶段推进**。
 
 源码基线：`1f353da`（`codex/native-connectivity-plan` 初始设计基线）之上实施跨平台协调与原生直连闭环。所有节点地址、域名、密钥与实机标识在本文中均已脱敏（以 `coord.example.com`、`203.0.113.10` 等占位符表示）。
 
@@ -69,6 +69,7 @@ flowchart LR
 | [RouterPortMapper.swift](../../Apps/TransportLab/Sources/RouterPortMapper.swift) | 轻量级本地网关 NAT-PMP（RFC 6886）与 UPnP IGD 临时 UDP 端口映射尝试，会话结束自动 `unmap` 清理，不报错阻塞主流程 | 已集成于 `PhysicalDirectBridge` |
 | [LabH264Factory.swift](../../Apps/TransportLab/Sources/LabH264Factory.swift) | 在保留 `640c33`（Constrained High 5.1）基础上补充 `640033`（High 5.1）与 `42e033`（Constrained Baseline 5.1），避免 Android 解码器回退到 `42e01f`（Level 3.1，上限 720p30）导致 Retina 窗口无视频包 | Retina 窗口 `2334×1578@60fps` 实测通过 |
 | [PeerEngine.swift](../../Apps/TransportLab/Sources/PeerEngine.swift)、[LabModel.swift](../../Apps/TransportLab/Sources/LabModel.swift)、[LabCLI.swift](../../Apps/TransportLab/Sources/LabCLI.swift)、[LabApp.swift](../../Apps/TransportLab/Sources/LabApp.swift) | 支持 `sessionOverride`、`iceServers`、`deferInitialCapture`、带内 `RTCDataChannel` 窗口控制、不断连热切换窗口捕获、GUI 跨平台 Host 面板与 CLI `--coord-url` / `--pairing-url-fd` | [test-signaling.sh](../../scripts/test-signaling.sh)、本机 `--self-test` 与 5G 真机通过 |
+| [Apps/AndroidClient](../../Apps/AndroidClient)（[MainActivity.kt](../../Apps/AndroidClient/app/src/main/kotlin/com/kkremote/android/MainActivity.kt)、[DeviceIdentity.kt](../../Apps/AndroidClient/app/src/main/kotlin/com/kkremote/android/crypto/DeviceIdentity.kt)、[CoordSignalingClient.kt](../../Apps/AndroidClient/app/src/main/kotlin/com/kkremote/android/network/CoordSignalingClient.kt)、[NativeWebRtcClient.kt](../../Apps/AndroidClient/app/src/main/kotlin/com/kkremote/android/webrtc/NativeWebRtcClient.kt)、[KKRemoteScreen.kt](../../Apps/AndroidClient/app/src/main/kotlin/com/kkremote/android/ui/KKRemoteScreen.kt)） | 原生 Kotlin + Jetpack Compose + `libwebrtc` Android 客户端：P-256（DER↔P1363）零知识身份与 `AccessGrant` 免密重连、`HighLevelVideoDecoderFactory`（桥接高通 `c2.qti.avc.decoder` / `c2.qti.hevc.decoder` 解锁 H.264 Level 5.1 与 HEVC Main10）、OpenGL ES `WebRtcTextureView`、确定性多指手势状态机（直点/右键/滚轮/双指缩放/虚拟 macOS 触控板指针）、折叠屏内外屏自适应侧栏布局 | [build-android.sh](../../scripts/build-android.sh) JUnit 单测通过；折叠屏真机 5G 实测通过 |
 
 ---
 
@@ -118,7 +119,7 @@ flowchart LR
 | 既有 TLS 信令与窗口控制兼容 | `./scripts/test-signaling.sh` | **通过**：`SIGNAL_TESTS_PASSED`，未破坏既有 Ponte / LAN 模式 |
 | 本机 `direct-ice` 窗口串流自检 | `KKRemoteLabMac --self-test --route direct-ice` | **通过**：`2560×1440 @ 60fps` 原生解码通过 |
 | 自有 STUN 节点线上核验 | 物理网卡直发 RFC 5389 Binding 与 TURN Allocate 测试 | **通过**：`UDP 3478` / `UDP 443` 均正常返回反射地址（约 `12–17ms`），`TURN Allocate` 不响应 |
-| **Android 5G 跨网实机联调** | Mac（家庭 Wi-Fi + Surge 增强模式）↔ Android 折叠屏真机（电信 5G 蜂窝网络，关闭 Wi-Fi） | **通过**：首次配对签发 `AccessGrant`、`< 3.5s` 建立 P2P 直连（`prflx ↔ srflx`，RTT 约 `33ms`），`HN Reader` `2334×1578 @ 60fps` 实时解码，带内热切换至 `TextEdit` `1312×844 @ 54–60fps` 不断连，服务端中继流量 `0 bps` |
+| **Android 5G 跨网实机联调（Web + 原生 APK）** | Mac（家庭 Wi-Fi + Surge 增强模式）↔ Android 折叠屏真机（电信 5G 蜂窝网络，关闭 Wi-Fi） | **通过**：① Web/PWA 与原生 `com.kkremote.android` 客户端均完成首次配对签发 `AccessGrant` 与冷启动免密秒连（`prflx ↔ srflx`，RTT `23–35ms`）；② 原生客户端高通硬解 `c2.qti.avc.decoder`（`H264 640c33`，`2334×1578 @ 60fps`）与 `c2.qti.hevc.decoder`（`H265 Main10(2)`，`2298×1602 @ 60fps`，单帧硬解约 `4.9ms`）均零丢包跑通；③ 带内窗口热切换、虚拟触控板指针与键盘功能栏验证通过，服务端中继流量 `0 bps` |
 
 ### 6.2 已知限制与后续阶段（N4–N8）
 
@@ -128,7 +129,7 @@ flowchart LR
    - 远端触控点击、滚轮与键盘注入依赖宿主进程获得系统 `隐私与安全性 -> 辅助功能` 授权；未授权时已验证会自动降级为只读观看并在客户端底部清晰提示，不会导致崩溃或黑屏。
 3. **Apple 同账号 iCloud 免扫码信任同步（可选体验增强）**：
    - 底层协调与打洞已在 `CoordSignaling.swift` 就绪；iOS / macOS 客户端可按需把本地 `DeviceIdentity` 签发的 `AccessGrant` 同步到同账号 iCloud KVS / CloudKit 私有库，省去同账号 Apple 设备首次复制配对链接步骤。
-4. **原生 Android Kotlin 客户端（第二阶段 `Apps/AndroidClient`）**：
-   - 当前 Web/PWA 客户端已覆盖跨网发现、E2EE 配对、60fps H.264 Retina 窗口观看与键鼠触控；若需在 Android 端开启 **10-bit HEVC Main10 PQ HDR 硬解渲染**、系统级返回手势拦截与内嵌用户代理客户端，可在下一阶段基于同一 `kkremote-coord` 协议构建原生 Kotlin 客户端。
+4. **Android 端 10-bit BT.2020 PQ 广色域 EGL Surface 色彩映射（独立画质增强项）**：
+   - 原生 Android 客户端（`Apps/AndroidClient`）已跑通 `H265 Main10(2)` 硬解链路（`c2.qti.hevc.decoder`），默认采用 `SDR 桌面`（`H264 High 5.1`）以保证普通桌面窗口 100% 标准 sRGB 白色亮度；当前 `EglRenderer` 使用 8-bit RGBA `CONFIG_PLAIN` Surface，开启 `HDR 优先` 时尚未绑定 `EGL_EXT_gl_colorspace_bt2020_pq` / 10-bit `RGBA1010102` Surface，因此 PQ 曲线下 SDR 桌面白色会偏暗，后续可对标 iOS `ColorManagedVideo` 独立接入 Android 10-bit HDR Surface。
 5. **长稳与多区域 STUN 冗余**：
    - 当前已完成单台亚洲节点上线与 5G 实机闭环；30 分钟长稳对照（Native P2P vs Ponte vs 用户代理）、Wi-Fi↔5G 实时切网恢复以及第 2/3 台异地备用 STUN 节点按排期独立验收。
