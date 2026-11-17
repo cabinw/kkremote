@@ -262,14 +262,15 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
             // Preserve source dimensions; report real encoded/decoded dimensions as well.
             parameters.degradationPreference = NSNumber(value: RTCDegradationPreference.maintainResolution.rawValue)
             for encoding in parameters.encodings {
+                encoding.minBitrateBps = NSNumber(value: min(1_500_000, preset.megabits * 1_000_000))
                 encoding.maxBitrateBps = NSNumber(value: preset.megabits * 1_000_000)
                 encoding.maxFramerate = NSNumber(value: preset.fps)
                 encoding.scaleResolutionDownBy = 1
             }
             sender.parameters = parameters
-            // Start at a modest estimate for desktop detail. This is not a minimum:
-            // congestion control may reduce it immediately.
-            _ = pc.setBweMinBitrateBps(nil, currentBitrateBps: NSNumber(value: min(4, preset.megabits) * 1_000_000),
+            // Start at a crisp desktop-text estimate so static windows are sharp from frame 1;
+            // congestion control still scales down immediately if path capacity is lower.
+            _ = pc.setBweMinBitrateBps(nil, currentBitrateBps: NSNumber(value: min(12, preset.megabits) * 1_000_000),
                 maxBitrateBps: NSNumber(value: preset.megabits * 1_000_000))
             if !deferInitialCapture || captureWindowID != nil {
                 makeSource = { [weak self] hdr in

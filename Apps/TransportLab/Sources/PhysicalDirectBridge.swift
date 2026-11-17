@@ -137,8 +137,10 @@ final class PhysicalDirectBridge {
         let ip = String(parts[4])
         var addr = in_addr()
         guard inet_pton(AF_INET, ip, &addr) == 1 else { return }
-        // Ignore loopback / link-local / fake-ip 198.18.0.0/15 / Clash TUN 172.19.0.1
-        if ip.hasPrefix("127.") || ip.hasPrefix("169.254.") || ip.hasPrefix("198.18.") || ip.hasPrefix("198.19.") || ip.hasPrefix("0.") || ip == "172.19.0.1" {
+        // Ignore loopback / link-local / fake-ip 198.18.0.0/15 / Clash TUN 172.19.0.1 / Tailscale & CGNAT 100.64.0.0/10
+        let octets = ip.split(separator: ".").compactMap { Int($0) }
+        let isTailscaleOrCGNAT = octets.count == 4 && octets[0] == 100 && (64...127).contains(octets[1])
+        if isTailscaleOrCGNAT || ip.hasPrefix("127.") || ip.hasPrefix("169.254.") || ip.hasPrefix("198.18.") || ip.hasPrefix("198.19.") || ip.hasPrefix("0.") || ip == "172.19.0.1" {
             return
         }
         let isSrflx = cleaned.contains(" typ srflx")
@@ -195,8 +197,10 @@ final class PhysicalDirectBridge {
                 let ep = Endpoint(ip: ip, port: port)
                 let packet = Data(bytes: buf, count: n)
 
-                // Never accept traffic from STUN servers themselves once session read loop starts.
-                guard !self.stunServerIPs.contains(ip) else { continue }
+                // Never accept traffic from STUN servers or hairpinned self LAN IP (e.g. local VPN exit node).
+                guard !self.stunServerIPs.contains(ip), ip != self.lanIP else { continue }
+                let octs = ip.split(separator: ".").compactMap { Int($0) }
+                if octs.count == 4 && octs[0] == 100 && (64...127).contains(octs[1]) { continue }
                 if let first = packet.first {
                     let looksValidICEOrMedia = (first == 0x00 || first == 0x01 || (20...63).contains(first) || (128...191).contains(first))
                     guard looksValidICEOrMedia else { continue }
@@ -206,8 +210,11 @@ final class PhysicalDirectBridge {
                 let isPeerICEPacket = packet.count >= 28 && (packet[0] == 0x00 || packet[0] == 0x01) && packet[1] == 0x01
                     && packet[4] == 0x21 && packet[5] == 0x12 && packet[6] == 0xA4 && packet[7] == 0x42
                 if knownIP || (self.activePeer == nil && isPeerICEPacket) {
-                    self.activePeer = ep
-                    self.lastInboundAt = ProcessInfo.processInfo.systemUptime
+                    let now = ProcessInfo.processInfo.systemUptime
+                    if self.activePeer == nil || self.activePeer == ep || now - self.lastInboundAt >= 3.0 {
+                        self.activePeer = ep
+                    }
+                    self.lastInboundAt = now
                     if !self.targets.contains(ep), self.targets.count < 24 {
                         self.targets.append(ep)
                     }
