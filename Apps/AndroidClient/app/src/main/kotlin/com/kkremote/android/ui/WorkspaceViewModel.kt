@@ -128,7 +128,8 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
     private var coordClient: CoordSignalingClient? = null
     private var rtcClient: NativeWebRtcClient? = null
     private var activeSessionId: String = ""
-    private var autoRetriedIceOnce: Boolean = false
+    private var autoRetryCount: Int = 0
+    private var iceDisconnectWatchdogJob: Job? = null
     private var pendingAutoSelectApp: String? = null
 
     // Strictly ordered input queue matching macOS HostWindowControl invariants
@@ -195,7 +196,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun connectToHost(profile: TrustedHostProfile) {
         disconnectInternal(keepSheetClosed = true)
-        autoRetriedIceOnce = false
+        autoRetryCount = 0
         pendingAutoSelectApp = profile.autoSelectApp ?: profile.lastWindowTitle
         _uiState.update {
             it.copy(
@@ -209,6 +210,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         }
 
         val client = CoordSignalingClient(
+            appContext = getApplication(),
             identity = identity,
             initialHost = profile,
             Listener = object : CoordSignalingClient.ListenerCallbacks {
@@ -378,7 +380,13 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     fun selectWindow(window: RemoteWindow) {
-        val rtc = rtcClient ?: return
+        val rtc = rtcClient
+        if (rtc == null) {
+            pendingAutoSelectApp = window.application
+            _uiState.update { it.copy(showWindowSheet = false) }
+            reconnectActiveHost()
+            return
+        }
         resizeDebounceJob?.cancel()
         resetInputQueue()
         val vp = if (_uiState.value.windowLayoutSupported) desiredViewport else null
@@ -389,7 +397,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                 showWindowSheet = false,
             )
         }
-        rtc.sendWindowCommand(
+        val sent = rtc.sendWindowCommand(
             WindowMessage(
                 action = "select",
                 requestID = DeviceIdentity.randomHex(8),
@@ -397,6 +405,10 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                 viewport = vp,
             )
         )
+        if (!sent) {
+            pendingAutoSelectApp = window.application
+            handleMediaLostAndRecover("控制通道已断开，正在自动恢复并切换窗口…")
+        }
     }
 
     fun stopViewingKeepConnection() {
@@ -618,12 +630,14 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                         if (sessionId != activeSessionId) return@launch
                         when (state) {
                             PeerConnection.IceConnectionState.CHECKING -> {
+                                iceDisconnectWatchdogJob?.cancel()
                                 _uiState.update { it.copy(phase = ConnectionPhase.ICE_CHECKING, statusText = "ICE 打洞中…") }
                             }
 
                             PeerConnection.IceConnectionState.CONNECTED,
                             PeerConnection.IceConnectionState.COMPLETED -> {
-                                autoRetriedIceOnce = false
+                                iceDisconnectWatchdogJob?.cancel()
+                                autoRetryCount = 0
                                 _uiState.update {
                                     it.copy(
                                         phase = ConnectionPhase.CONNECTED,
@@ -636,22 +650,19 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
 
                             PeerConnection.IceConnectionState.DISCONNECTED -> {
                                 postTransientWarning("无线链路短暂波动，正在等待恢复…")
-                            }
-
-                            PeerConnection.IceConnectionState.FAILED -> {
-                                if (!autoRetriedIceOnce && _uiState.value.hostOnline) {
-                                    autoRetriedIceOnce = true
-                                    _uiState.update { it.copy(statusText = "5G/NAT 端口跳变，正在自动重协商直连…") }
-                                    coordClient?.requestNewSession()
-                                } else {
-                                    _uiState.update {
-                                        it.copy(
-                                            phase = ConnectionPhase.FAILED,
-                                            statusText = "原生 P2P 直连未打通",
-                                            errorText = "两端处于受限对称 NAT 或 UDP 被阻断，可切换网络或重试连接",
-                                        )
+                                iceDisconnectWatchdogJob?.cancel()
+                                iceDisconnectWatchdogJob = viewModelScope.launch {
+                                    delay(4000L)
+                                    if (sessionId == activeSessionId) {
+                                        handleMediaLostAndRecover("网络路径变更，正在自动重新打洞…")
                                     }
                                 }
+                            }
+
+                            PeerConnection.IceConnectionState.FAILED,
+                            PeerConnection.IceConnectionState.CLOSED -> {
+                                iceDisconnectWatchdogJob?.cancel()
+                                handleMediaLostAndRecover("5G/NAT 端口跳变，正在自动重协商直连…")
                             }
 
                             else -> Unit
@@ -672,6 +683,13 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                         if (sessionId != activeSessionId) return@launch
                         _uiState.update { it.copy(dataChannelOpen = true) }
                         refreshWindows()
+                    }
+                }
+
+                override fun onDataChannelClosed(sessionId: String) {
+                    viewModelScope.launch {
+                        if (sessionId != activeSessionId) return@launch
+                        handleMediaLostAndRecover("控制通道已断开，正在自动恢复连接…")
                     }
                 }
 
@@ -909,7 +927,37 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         inputSequence = 0
     }
 
+    private fun handleMediaLostAndRecover(reasonStatus: String) {
+        if (pendingAutoSelectApp == null) {
+            pendingAutoSelectApp = _uiState.value.selectedWindow?.application
+                ?: _uiState.value.activeHost?.lastWindowTitle
+        }
+        tearDownMediaOnly()
+        if (autoRetryCount < 2) {
+            autoRetryCount += 1
+            _uiState.update {
+                it.copy(
+                    phase = ConnectionPhase.ICE_CHECKING,
+                    statusText = reasonStatus,
+                    showWindowSheet = false,
+                )
+            }
+            coordClient?.requestNewSession()
+        } else {
+            _uiState.update {
+                it.copy(
+                    phase = ConnectionPhase.FAILED,
+                    statusText = "原生 P2P 直连中断",
+                    errorText = "网络或 VPN 路由变化导致连接中断，点击下方即可重连",
+                    showWindowSheet = false,
+                )
+            }
+        }
+    }
+
     private fun tearDownMediaOnly() {
+        iceDisconnectWatchdogJob?.cancel()
+        iceDisconnectWatchdogJob = null
         resizeDebounceJob?.cancel()
         pendingViewport = null
         appliedViewport = null

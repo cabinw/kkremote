@@ -1,5 +1,6 @@
 package com.kkremote.android.network
 
+import android.content.Context
 import android.os.Build
 import com.kkremote.android.crypto.DeviceIdentity
 import com.kkremote.android.protocol.CoordCandidatePayload
@@ -29,6 +30,7 @@ import java.util.concurrent.TimeUnit
 import javax.crypto.spec.SecretKeySpec
 
 class CoordSignalingClient(
+    private val appContext: Context,
     private val identity: DeviceIdentity,
     initialHost: TrustedHostProfile,
     private val Listener: ListenerCallbacks,
@@ -52,7 +54,9 @@ class CoordSignalingClient(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val inboundQueue = Channel<String>(capacity = 256)
     private var pingJob: Job? = null
+    private var reconnectJob: Job? = null
     private var webSocket: WebSocket? = null
+    private var wsOpen = false
 
     @Volatile
     private var closed = false
@@ -86,39 +90,61 @@ class CoordSignalingClient(
 
     fun start() {
         if (closed) return
+        reconnectJob?.cancel()
         val wsUrl = toWsEndpoint(host.coordUrl)
         Listener.onStatus("正在连接协调节点…")
         val req = Request.Builder().url(wsUrl).build()
-        webSocket = sharedOkHttp.newWebSocket(req, object : WebSocketListener() {
-            override fun onOpen(webSocket: WebSocket, response: Response) {
-                if (closed) return
-                sendClientHello(webSocket)
-                startHeartbeat(webSocket)
+        val http = PhysicalNetworkBinder.okHttpClient(appContext)
+        val socket = http.newWebSocket(req, object : WebSocketListener() {
+            override fun onOpen(ws: WebSocket, response: Response) {
+                if (closed || ws !== webSocket) return
+                wsOpen = true
+                sendClientHello(ws)
+                startHeartbeat(ws)
             }
 
-            override fun onMessage(webSocket: WebSocket, text: String) {
-                if (!closed) inboundQueue.trySend(text)
+            override fun onMessage(ws: WebSocket, text: String) {
+                if (!closed && ws === webSocket) inboundQueue.trySend(text)
             }
 
-            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-                if (!closed) {
-                    Listener.onError("协调信令连接中断：${t.message ?: "网络不可达"}")
-                }
+            override fun onFailure(ws: WebSocket, t: Throwable, response: Response?) {
+                if (closed || ws !== webSocket) return
+                wsOpen = false
+                Listener.onError("协调信令重连中：${t.message ?: "网络波动"}")
+                scheduleSocketReconnect()
             }
 
-            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-                if (!closed) {
-                    Listener.onStatus("协调信令已断开")
-                }
+            override fun onClosed(ws: WebSocket, code: Int, reason: String) {
+                if (closed || ws !== webSocket) return
+                wsOpen = false
+                Listener.onStatus("协调信令已断开，正在重连…")
+                scheduleSocketReconnect()
             }
         })
+        webSocket = socket
     }
 
-    /** Triggers a fresh E2EE WebRTC session handshake over the existing WSS connection. */
+    private fun scheduleSocketReconnect() {
+        reconnectJob?.cancel()
+        reconnectJob = scope.launch {
+            delay(1400L)
+            if (!closed && !wsOpen) {
+                runCatching { webSocket?.cancel() }
+                start()
+            }
+        }
+    }
+
+    /** Triggers a fresh E2EE WebRTC session handshake over the existing WSS connection (or reconnects WSS if closed). */
     fun requestNewSession() {
         scope.launch {
-            if (!closed && hostOnline) {
+            if (closed) return@launch
+            if (!wsOpen || webSocket == null) {
+                start()
+            } else if (hostOnline) {
                 beginSessionHandshake()
+            } else {
+                webSocket?.let { sendClientHello(it) }
             }
         }
     }
@@ -346,14 +372,6 @@ class CoordSignalingClient(
     }
 
     companion object {
-        private val sharedOkHttp: OkHttpClient by lazy {
-            OkHttpClient.Builder()
-                .connectTimeout(10, TimeUnit.SECONDS)
-                .readTimeout(0, TimeUnit.MILLISECONDS)
-                .pingInterval(20, TimeUnit.SECONDS)
-                .build()
-        }
-
         fun toWsEndpoint(coordBaseUrl: String): String {
             var raw = coordBaseUrl.trim().trimEnd('/')
             raw = when {

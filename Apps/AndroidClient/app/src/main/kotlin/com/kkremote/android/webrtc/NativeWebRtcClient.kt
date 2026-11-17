@@ -2,6 +2,7 @@ package com.kkremote.android.webrtc
 
 import android.content.Context
 import com.kkremote.android.crypto.DeviceIdentity
+import com.kkremote.android.network.PhysicalNetworkBinder
 import com.kkremote.android.protocol.CoordCandidatePayload
 import com.kkremote.android.protocol.CoordOfferAnswerPayload
 import com.kkremote.android.protocol.DataChannelSignalEnvelope
@@ -126,6 +127,7 @@ object WebRtcRuntime {
 
     @Synchronized
     fun factory(appContext: Context): PeerConnectionFactory {
+        PhysicalNetworkBinder.ensureStarted(appContext)
         if (!initialized) {
             PeerConnectionFactory.initialize(
                 PeerConnectionFactory.InitializationOptions.builder(appContext.applicationContext)
@@ -137,7 +139,13 @@ object WebRtcRuntime {
         factoryInstance?.let { return it }
         val decoderFactory = HighLevelVideoDecoderFactory(eglBase.eglBaseContext)
         val encoderFactory = DefaultVideoEncoderFactory(eglBase.eglBaseContext, true, true)
+        val options = PeerConnectionFactory.Options().apply {
+            // Bypass Android VPN TUN interfaces (e.g. Tailscale / Surge / Clash exit nodes) so libwebrtc
+            // binds UDP sockets directly to physical 5G / Wi-Fi networks via android_setsocknetwork.
+            networkIgnoreMask = PeerConnectionFactory.Options.ADAPTER_TYPE_VPN
+        }
         return PeerConnectionFactory.builder()
+            .setOptions(options)
             .setVideoDecoderFactory(decoderFactory)
             .setVideoEncoderFactory(encoderFactory)
             .createPeerConnectionFactory()
@@ -159,6 +167,7 @@ class NativeWebRtcClient(
         fun onIceConnectionState(sessionId: String, state: PeerConnection.IceConnectionState)
         fun onVideoTrack(sessionId: String, track: VideoTrack)
         fun onDataChannelOpen(sessionId: String)
+        fun onDataChannelClosed(sessionId: String)
         fun onWindowMessage(sessionId: String, message: WindowMessage)
         fun onTelemetry(sessionId: String, telemetry: StreamTelemetry)
         fun onError(sessionId: String, message: String)
@@ -223,6 +232,7 @@ class NativeWebRtcClient(
 
             override fun onIceCandidate(candidate: IceCandidate?) {
                 if (closed || candidate == null) return
+                if (PhysicalNetworkBinder.isVpnOrCgnatTunnelIp(candidate.sdp)) return
                 callbacks.onLocalIceCandidate(sessionId, candidate.sdp, candidate.sdpMid, candidate.sdpMLineIndex)
             }
 
@@ -237,8 +247,12 @@ class NativeWebRtcClient(
                     override fun onBufferedAmountChange(previousAmount: Long) {}
 
                     override fun onStateChange() {
-                        if (!closed && dc.state() == DataChannel.State.OPEN) {
-                            callbacks.onDataChannelOpen(sessionId)
+                        if (closed) return
+                        when (dc.state()) {
+                            DataChannel.State.OPEN -> callbacks.onDataChannelOpen(sessionId)
+                            DataChannel.State.CLOSING,
+                            DataChannel.State.CLOSED -> callbacks.onDataChannelClosed(sessionId)
+                            else -> Unit
                         }
                     }
 

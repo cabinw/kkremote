@@ -6,6 +6,7 @@ import com.kkremote.android.gesture.GestureAction
 import com.kkremote.android.gesture.InteractionGestureMachine
 import com.kkremote.android.gesture.TouchContact
 import com.kkremote.android.gesture.TouchPoint
+import com.kkremote.android.network.PhysicalNetworkBinder
 import com.kkremote.android.protocol.CoordConnectRequest
 import com.kkremote.android.protocol.DataChannelSignalEnvelope
 import com.kkremote.android.protocol.WindowMessage
@@ -184,5 +185,14 @@ class CryptoAndGestureTest {
         val sampledDark = estimator.consumeArgbPixels(darkTitlebar)
         assertNotNull(sampledDark)
         assertTrue(sampledDark!!.prefersLightContent)
+    }
+
+    @Test
+    fun vpnAndCgnatCandidateFilterRejectsTunnelIpsAndKeepsPhysicalIps() {
+        assertTrue(PhysicalNetworkBinder.isVpnOrCgnatTunnelIp("candidate:1 1 udp 2122260223 100.64.0.42 51234 typ host"))
+        assertTrue(PhysicalNetworkBinder.isVpnOrCgnatTunnelIp("candidate:2 1 udp 2122260223 198.18.0.1 45000 typ host"))
+        assertTrue(PhysicalNetworkBinder.isVpnOrCgnatTunnelIp("172.19.0.1"))
+        assertFalse(PhysicalNetworkBinder.isVpnOrCgnatTunnelIp("candidate:3 1 udp 2122260223 192.168.1.25 52000 typ host"))
+        assertFalse(PhysicalNetworkBinder.isVpnOrCgnatTunnelIp("candidate:4 1 udp 1686052607 203.0.113.12 39001 typ srflx"))
     }
 }
