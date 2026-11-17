@@ -1,6 +1,7 @@
 import Foundation
 
 struct WindowInput: Codable {
+    static let allowedModifiers: Set<String> = ["shift", "ctrl", "opt", "cmd", "fn"]
     var lease: String
     var sequence: Int
     var kind: String
@@ -11,16 +12,24 @@ struct WindowInput: Codable {
     var text: String? = nil
     var focus: String? = nil
     var key: String? = nil
+    var keyCode: UInt16? = nil
+    var modifiers: [String]? = nil
     func valid(width: Double, height: Double) -> Bool {
         guard sequence > 0, !lease.isEmpty else { return false }
         switch kind {
-        case "click", "secondary", "scroll":
+        case "click", "secondary", "move", "scroll":
             guard let x,let y,x.isFinite,y.isFinite,x >= 0,y >= 0,x < width,y < height else { return false }
             if kind == "scroll" { return dx?.isFinite == true && dy?.isFinite == true && abs(dx!) <= 1000 && abs(dy!) <= 1000 }
             return true
-        case "focus": return true
+        case "focus", "toggleInputSource": return true
         case "insertText": return text.map { !$0.isEmpty && $0.utf16.count <= 4000 && !$0.contains("\0") } == true && focus != nil
         case "key": return ["return","escape","backspace","tab","left","right","up","down","home","end","deleteForward"].contains(key ?? "")
+        case "rawKey":
+            guard let keyCode, keyCode <= 127 else { return false }
+            if let modifiers {
+                guard modifiers.count <= 5, modifiers.allSatisfy({ Self.allowedModifiers.contains($0) }) else { return false }
+            }
+            return true
         default: return false
         }
     }
@@ -33,6 +42,7 @@ struct WindowControlState: Codable {
 #if os(macOS)
 import AppKit
 import ApplicationServices
+import Carbon.HIToolbox
 
 /// An optional test-Host executor. No mouse button is held across wire messages.
 final class HostWindowControl {
@@ -40,6 +50,7 @@ final class HostWindowControl {
     static var onRemotePointerActivity: ((Bool) -> Void)? = nil
     let lease = UUID().uuidString
     let target: RemoteWindow
+    private let isDisplayMode: Bool
     private let application: AXUIElement
     private var window: AXUIElement
     private var active = true
@@ -54,7 +65,16 @@ final class HostWindowControl {
     init(target: RemoteWindow) throws {
         precondition(Thread.isMainThread)
         guard AXIsProcessTrusted() else { throw LabError.message("测试 Host 未获辅助功能权限，暂时只能观看") }
-        self.target=target;application=AXUIElementCreateApplication(target.processID)
+        self.target = target
+        self.isDisplayMode = target.isFullDisplay
+        if target.isFullDisplay {
+            let sys = AXUIElementCreateSystemWide()
+            self.application = sys
+            self.window = sys
+            self.focusState = WindowControlState(focus: "display")
+            return
+        }
+        application=AXUIElementCreateApplication(target.processID)
         AXUIElementSetMessagingTimeout(application,0.3)
         let frame=try Self.cgFrame(target)
         let windows=Self.attribute(application,kAXWindowsAttribute) as? [AXUIElement] ?? []
@@ -294,10 +314,120 @@ final class HostWindowControl {
         }
         if !pending.isEmpty { try await unicode(pending) }
     }
+    private static func cgFlags(from names: [String]?) -> CGEventFlags {
+        guard let names, !names.isEmpty else { return [] }
+        var flags: CGEventFlags = []
+        for item in names {
+            switch item {
+            case "shift": flags.insert(.maskShift)
+            case "ctrl": flags.insert(.maskControl)
+            case "opt": flags.insert(.maskAlternate)
+            case "cmd": flags.insert(.maskCommand)
+            case "fn": flags.insert(.maskSecondaryFn)
+            default: break
+            }
+        }
+        return flags
+    }
+
+    private func toggleMacInputSource() {
+        let filter = [
+            kTISPropertyInputSourceCategory as String: kTISCategoryKeyboardInputSource as String,
+            kTISPropertyInputSourceIsSelectCapable as String: true,
+            kTISPropertyInputSourceIsEnabled as String: true
+        ] as CFDictionary
+        guard let rawList = TISCreateInputSourceList(filter, false)?.takeRetainedValue() as? [TISInputSource],
+              rawList.count >= 2,
+              let current = TISCopyCurrentKeyboardInputSource()?.takeRetainedValue() else {
+            return
+        }
+        let currentID = TISGetInputSourceProperty(current, kTISPropertyInputSourceID).map {
+            Unmanaged<CFString>.fromOpaque($0).takeUnretainedValue() as String
+        } ?? ""
+        if let idx = rawList.firstIndex(where: { src in
+            let sid = TISGetInputSourceProperty(src, kTISPropertyInputSourceID).map {
+                Unmanaged<CFString>.fromOpaque($0).takeUnretainedValue() as String
+            } ?? ""
+            return sid == currentID
+        }) {
+            let next = rawList[(idx + 1) % rawList.count]
+            TISSelectInputSource(next)
+        } else if let first = rawList.first {
+            TISSelectInputSource(first)
+        }
+    }
+
     @MainActor private func execute(_ input:WindowInput) async throws -> WindowControlState {
+        if isDisplayMode {
+            guard active, AXIsProcessTrusted() else { throw LabError.message("输入会话已停止") }
+            let bounds = CGDisplayBounds(target.number)
+            switch input.kind {
+            case "focus":
+                return renewKeyboardFocus()
+            case "move":
+                let pt = CGPoint(x: bounds.minX + input.x!, y: bounds.minY + input.y!)
+                CGEvent(mouseEventSource: nil, mouseType: .mouseMoved, mouseCursorPosition: pt, mouseButton: .left)?.post(tap: .cghidEventTap)
+            case "click", "secondary":
+                let isRight = input.kind == "secondary"
+                let btn: CGMouseButton = isRight ? .right : .left
+                let pt = CGPoint(x: bounds.minX + input.x!, y: bounds.minY + input.y!)
+                CGEvent(mouseEventSource: nil, mouseType: .mouseMoved, mouseCursorPosition: pt, mouseButton: btn)?.post(tap: .cghidEventTap)
+                if let down = CGEvent(mouseEventSource: nil, mouseType: isRight ? .rightMouseDown : .leftMouseDown, mouseCursorPosition: pt, mouseButton: btn) {
+                    down.setIntegerValueField(.mouseEventClickState, value: 1)
+                    down.post(tap: .cghidEventTap)
+                }
+                buttonPoint = pt
+                button = btn
+                defer { releaseButton() }
+                try await Task.sleep(for: .milliseconds(22))
+                return renewKeyboardFocus()
+            case "scroll":
+                let pt = CGPoint(x: bounds.minX + input.x!, y: bounds.minY + input.y!)
+                guard let event = CGEvent(scrollWheelEvent2Source: nil, units: .pixel, wheelCount: 2, wheel1: Int32(input.dy!.rounded()), wheel2: Int32(input.dx!.rounded()), wheel3: 0) else {
+                    throw LabError.message("无法创建滚动事件")
+                }
+                event.location = pt
+                event.post(tap: .cghidEventTap)
+            case "key":
+                let codes: [String: CGKeyCode] = ["return":36,"escape":53,"backspace":51,"tab":48,"left":123,"right":124,"down":125,"up":126,"home":115,"end":119,"deleteForward":117]
+                let code = codes[input.key!]!
+                for down in [true, false] {
+                    guard let ev = CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: down) else { throw LabError.message("无法创建按键") }
+                    ev.flags = []
+                    ev.post(tap: .cghidEventTap)
+                }
+            case "rawKey":
+                let flags = Self.cgFlags(from: input.modifiers)
+                let code = CGKeyCode(input.keyCode!)
+                for down in [true, false] {
+                    guard let ev = CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: down) else { throw LabError.message("无法创建原生按键") }
+                    ev.flags = flags
+                    ev.post(tap: .cghidEventTap)
+                }
+            case "toggleInputSource":
+                toggleMacInputSource()
+            case "insertText":
+                let units = Array(input.text!.utf16)
+                for down in [true, false] {
+                    guard let ev = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: down) else { throw LabError.message("无法创建文字输入") }
+                    units.withUnsafeBufferPointer { ev.keyboardSetUnicodeString(stringLength: units.count, unicodeString: $0.baseAddress!) }
+                    ev.post(tap: .cghidEventTap)
+                }
+            default:
+                throw LabError.message("不支持的输入操作")
+            }
+            return focusState ?? renewKeyboardFocus()
+        }
+
         switch input.kind {
         case "focus":
             try await focus();return renewKeyboardFocus()
+        case "move":
+            Self.onRemotePointerActivity?(true)
+            defer { Self.onRemotePointerActivity?(false) }
+            let frame=try validate(focused:false)
+            let pt=CGPoint(x:frame.minX+input.x!,y:frame.minY+input.y!)
+            CGEvent(mouseEventSource:nil,mouseType:.mouseMoved,mouseCursorPosition:pt,mouseButton:.left)?.post(tap:.cghidEventTap)
         case "click", "secondary":
             Self.onRemotePointerActivity?(true)
             defer { Self.onRemotePointerActivity?(false) }
@@ -318,6 +448,13 @@ final class HostWindowControl {
             try validateKeyboard(input)
             let codes:[String:CGKeyCode] = ["return":36,"escape":53,"backspace":51,"tab":48,"left":123,"right":124,"down":125,"up":126,"home":115,"end":119,"deleteForward":117]
             try key(codes[input.key!]!)
+        case "rawKey":
+            try await focus()
+            let flags = Self.cgFlags(from: input.modifiers)
+            try key(CGKeyCode(input.keyCode!), flags: flags)
+            return renewKeyboardFocus()
+        case "toggleInputSource":
+            toggleMacInputSource()
         case "insertText":
             try validateKeyboard(input)
             try await insertText(input.text!)

@@ -3,6 +3,7 @@ import Foundation
 /// Window viewing and optional layout protocol carried by the existing authenticated TLS session.
 /// Handles are session/catalog scoped. Input additionally requires an explicit control capability and a fresh lease.
 struct RemoteWindow: Codable, Identifiable, Equatable {
+    static let mainDisplayHandle = "__main_display__"
     let id: String
     let number: UInt32
     let processID: Int32
@@ -10,6 +11,7 @@ struct RemoteWindow: Codable, Identifiable, Equatable {
     let title: String
     let widthPoints: Double
     let heightPoints: Double
+    var isFullDisplay: Bool { id == Self.mainDisplayHandle && processID == 0 }
     var label: String { title.isEmpty ? application : "\(application) · \(title)" }
 }
 
@@ -30,6 +32,7 @@ struct WindowMessage: Codable {
     var action: String
     var requestID: String
     var windowID: String? = nil
+    var processID: Int32? = nil
     var windows: [RemoteWindow]? = nil
     var selected: RemoteWindow? = nil
     var mediaSession: String? = nil
@@ -118,6 +121,9 @@ final class HostWindowCatalog {
     }
 
     func resolve(_ handle: String) async throws -> RemoteWindow {
+        if handle == RemoteWindow.mainDisplayHandle {
+            return try await mainDisplay()
+        }
         guard let entry = entries[handle] else { throw LabError.message("窗口列表已更新，请刷新后重新选择") }
         let content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: false)
         guard let window = content.windows.first(where: { $0.windowID == entry.number &&
@@ -131,6 +137,9 @@ final class HostWindowCatalog {
     }
 
     func current(_ entry: RemoteWindow) async throws -> RemoteWindow {
+        if entry.isFullDisplay {
+            return try await mainDisplay()
+        }
         // Selected handles survive a directory refresh, but never a process/window replacement.
         let content = try await SCShareableContent.excludingDesktopWindows(true,onScreenWindowsOnly:false)
         guard let window = content.windows.first(where: { $0.windowID == entry.number &&
@@ -140,6 +149,44 @@ final class HostWindowCatalog {
         let liveTitle = String((window.title ?? entry.title).prefix(128))
         return RemoteWindow(id:entry.id,number:entry.number,processID:entry.processID,
             application:entry.application,title:liveTitle,widthPoints:window.frame.width,heightPoints:window.frame.height)
+    }
+
+    @MainActor
+    func mainDisplay() async throws -> RemoteWindow {
+        let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
+        let primaryID = (NSScreen.screens.first?.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value
+        guard let display = content.displays.first(where: { $0.displayID == primaryID }) ?? content.displays.first else {
+            throw LabError.message("未找到可捕获的主显示器")
+        }
+        return RemoteWindow(
+            id: RemoteWindow.mainDisplayHandle,
+            number: display.displayID,
+            processID: 0,
+            application: "macOS 桌面",
+            title: "\(display.width)×\(display.height)",
+            widthPoints: Double(display.width),
+            heightPoints: Double(display.height)
+        )
+    }
+
+    func resolveOrMatchApp(_ handle: String, fallbackProcessID: Int32? = nil) async throws -> RemoteWindow {
+        if let entry = entries[handle] {
+            return try await current(entry)
+        }
+        let content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: true)
+        if let pid = fallbackProcessID,
+           let win = content.windows.first(where: { $0.owningApplication?.processID == pid && $0.windowLayer == 0 && $0.frame.width > 100 && $0.frame.height > 100 }) {
+            return RemoteWindow(
+                id: handle,
+                number: win.windowID,
+                processID: pid,
+                application: String((win.owningApplication?.applicationName ?? "").prefix(64)),
+                title: String((win.title ?? "").prefix(128)),
+                widthPoints: win.frame.width,
+                heightPoints: win.frame.height
+            )
+        }
+        throw LabError.message("目标应用窗口不可用")
     }
 }
 

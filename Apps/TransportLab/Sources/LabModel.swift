@@ -395,7 +395,7 @@ final class LabModel: ObservableObject {
     #if os(macOS)
     @MainActor
     private func syncControlledWindowOverlay() {
-        if running, mode == "host", let selected = selectedRemoteWindow {
+        if running, mode == "host", let selected = selectedRemoteWindow, !selected.isFullDisplay {
             ControlledWindowOverlay.shared.attach(target: selected) { [weak self] in
                 self?.stopHostWindowFromLocalOverlay()
             }
@@ -717,7 +717,19 @@ final class LabModel: ObservableObject {
                     self.sendWindow(WindowMessage(action: "catalog", requestID: command.requestID, error: "无法读取窗口目录，请检查主机屏幕录制权限"))
                 }
             }
-        case "select", "unsubscribe", "resize":
+        case "activateWindow":
+            guard enablesWindowControl else { return }
+            let handle = command.windowID ?? ""
+            let fallbackPID = command.processID
+            Task { @MainActor [weak self] in
+                guard let self, self.generation == token else { return }
+                if !handle.isEmpty, let target = try? await self.windowCatalog.resolveOrMatchApp(handle, fallbackProcessID: fallbackPID) {
+                    HostWindowLayout.raise(target)
+                } else if let pid = fallbackPID, pid > 0 {
+                    NSRunningApplication(processIdentifier: pid)?.activate(options: [.activateIgnoringOtherApps])
+                }
+            }
+        case "select", "selectDisplay", "unsubscribe", "resize":
             guard !windowBusy, !catalogLoading else {
                 sendWindow(WindowMessage(action: "error", requestID: command.requestID, error: "主机正在处理窗口操作，请稍后重试")); return
             }
@@ -729,10 +741,13 @@ final class LabModel: ObservableObject {
                     let target: RemoteWindow?
                     if command.action == "resize" {
                         guard self.enablesWindowLayout,let selected=self.selectedRemoteWindow,
+                              !selected.isFullDisplay,
                               selected.id == command.windowID,command.viewport?.isValid == true else {
                             throw LabError.message("窗口尺寸请求不可用")
                         }
                         target=try await self.windowCatalog.current(selected)
+                    } else if command.action == "selectDisplay" {
+                        target = try await self.windowCatalog.mainDisplay()
                     } else if command.action == "select" {
                         guard let handle = command.windowID else { throw LabError.message("缺少窗口引用") }
                         target = try await self.windowCatalog.resolve(handle)
@@ -742,10 +757,10 @@ final class LabModel: ObservableObject {
                     if self.usesCoordSignaling {
                         let reqID = command.requestID
                         self.resetControl()
-                        await HostWindowLayout.restoreNativeWindows(except: target).value
+                        await HostWindowLayout.restoreNativeWindows(except: target?.isFullDisplay == true ? nil : target).value
                         guard self.generation == token, self.pendingWindowRequest == reqID else { return }
                         var accepted = target, warning: String?
-                        if let target {
+                        if let target, !target.isFullDisplay {
                             HostWindowLayout.raise(target)
                             if let viewport = command.viewport, self.enablesWindowLayout {
                                 do {
@@ -769,9 +784,15 @@ final class LabModel: ObservableObject {
                         self.windowTimeout?.cancel(); self.pendingWindowRequest = nil; self.windowBusy = false
                         self.captureWindowID = accepted?.number
                         self.selectedRemoteWindow = accepted
-                        self.activeVideoSource = accepted == nil ? "none" : "window"
+                        self.activeVideoSource = accepted == nil ? "none" : (accepted?.isFullDisplay == true ? "display" : "window")
                         let winSize = accepted.map { CGSize(width: $0.widthPoints, height: $0.heightPoints) }
-                        self.engine?.switchWindowCapture(windowID: accepted?.number, expectedProcessID: accepted?.processID, windowSizePoints: winSize)
+                        let isDisp = accepted?.isFullDisplay == true
+                        self.engine?.switchWindowCapture(
+                            windowID: accepted?.number,
+                            expectedProcessID: isDisp ? nil : accepted?.processID,
+                            windowSizePoints: winSize,
+                            isDisplayCapture: isDisp
+                        )
                         if self.enablesWindowControl, let accepted {
                             do { self.hostControl = try HostWindowControl(target: accepted) }
                             catch { warning = warning ?? error.localizedDescription }
@@ -820,10 +841,10 @@ final class LabModel: ObservableObject {
             guard self.generation == token,self.pendingWindowRequest == request else { return }
             var accepted=target,warning:String?
             #if os(macOS)
-            await HostWindowLayout.restoreNativeWindows(except:target).value
+            await HostWindowLayout.restoreNativeWindows(except:target?.isFullDisplay == true ? nil : target).value
             guard self.generation == token,self.pendingWindowRequest == request else {return}
-            if let target { HostWindowLayout.raise(target) }
-            if let target,let viewport,self.enablesWindowLayout {
+            if let target, !target.isFullDisplay { HostWindowLayout.raise(target) }
+            if let target, !target.isFullDisplay, let viewport, self.enablesWindowLayout {
                 do { try await HostWindowLayout.resize(target,viewport:viewport,workspaceDisplayID:self.nativeWorkspaceDisplayID,maximumPixels:CGFloat(self.activePreset.width*self.activePreset.height),isCurrent:{self.generation==token && self.pendingWindowRequest==request}) }
                 catch {
                     guard self.generation==token,self.pendingWindowRequest==request else {return}
@@ -840,7 +861,7 @@ final class LabModel: ObservableObject {
             guard self.generation == token,self.pendingWindowRequest == request else { return }
             self.windowTimeout?.cancel()
             self.captureWindowID=accepted?.number;self.selectedRemoteWindow=accepted
-            self.activeVideoSource=accepted == nil ? "none":"window"
+            self.activeVideoSource=accepted == nil ? "none":(accepted?.isFullDisplay == true ? "display":"window")
             do {
                 if accepted != nil { try self.makeEngine(isHost:true) }
                 self.expectedMediaSession=self.engine?.sessionID

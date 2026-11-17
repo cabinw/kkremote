@@ -464,7 +464,7 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
 
     #if os(macOS)
     /// Hot-swap captured window without closing PeerConnection or invalidating NAT hole-punching.
-    func switchWindowCapture(windowID: UInt32?, expectedProcessID: Int32?, windowSizePoints: CGSize? = nil) {
+    func switchWindowCapture(windowID: UInt32?, expectedProcessID: Int32?, windowSizePoints: CGSize? = nil, isDisplayCapture: Bool = false) {
         guard isHost, !stopped, let videoSource = hostVideoSource else { return }
         source?.stop()
         source = nil
@@ -476,7 +476,7 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
         }
         let trace = encoderTelemetry.trace
         makeSource = { [weak self] hdr in
-            WindowCaptureSource(source: videoSource, preset: windowPreset, windowID: windowID, expectedProcessID: expectedProcessID, hdr: hdr, nativeWindowPixels: true, viewport: nil, requiresNativeClientPixels: false, trace: trace) { [weak self] message in
+            WindowCaptureSource(source: videoSource, preset: windowPreset, windowID: windowID, expectedProcessID: expectedProcessID, isDisplayCapture: isDisplayCapture, hdr: hdr, nativeWindowPixels: true, viewport: nil, requiresNativeClientPixels: false, trace: trace) { [weak self] message in
                 guard let self, !self.stopped else { return }
                 if let onSourceFailure = self.onSourceFailure { onSourceFailure(message) }
                 else { self.onFailure?(message) }

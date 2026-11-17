@@ -29,6 +29,9 @@ final class PhysicalDirectBridge {
     private var boundIfIndex: UInt32 = 0
     private var fd: Int32 = -1
     private var readSource: DispatchSourceRead?
+    private var emuFd: Int32 = -1
+    private var emuPort: UInt16 = 0
+    private var emuReadSource: DispatchSourceRead?
     private var stopped = false
     private var stunServerIPs: Set<String> = []
     private var targets: [Endpoint] = []
@@ -36,6 +39,8 @@ final class PhysicalDirectBridge {
     private var srflxPortsByIP: [String: [UInt16]] = [:]
     private var activePeer: Endpoint?
     private var lastInboundAt: TimeInterval = 0
+    private var activeLoopbackPeer: Endpoint?
+    private var lastLoopbackInboundAt: TimeInterval = 0
     private var lastSweepAt: TimeInterval = 0
 
     init() throws {
@@ -111,10 +116,15 @@ final class PhysicalDirectBridge {
                 self.fd = sock
                 self.local.start()
                 self.startReadLoop(sock: sock)
+                self.setupEmulatorLoopbackSocket()
 
                 var candidates: [String] = [
                     "candidate:kkphys1 1 udp 2122260223 \(self.lanIP) \(self.physicalPort) typ host generation 0"
                 ]
+                if self.emuPort > 0 {
+                    // Android Emulator on the same Mac maps 10.0.2.2 -> host 127.0.0.1; lower priority than LAN Wi-Fi.
+                    candidates.append("candidate:kkemu1 1 udp 2122129151 10.0.2.2 \(self.emuPort) typ host generation 0")
+                }
                 if let srflx = self.srflxEndpoint {
                     let advPort = mappedExtPort ?? srflx.port
                     candidates.append("candidate:kkphys2 1 udp 1686052607 \(srflx.ip) \(advPort) typ srflx raddr \(self.lanIP) rport \(self.physicalPort) generation 0")
@@ -226,13 +236,84 @@ final class PhysicalDirectBridge {
         source.resume()
     }
 
+    private func setupEmulatorLoopbackSocket() {
+        let sock = Darwin.socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
+        guard sock >= 0 else { return }
+        var sndBuf: Int32 = 1_048_576
+        var rcvBuf: Int32 = 2_097_152
+        _ = setsockopt(sock, SOL_SOCKET, SO_SNDBUF, &sndBuf, socklen_t(MemoryLayout<Int32>.size))
+        _ = setsockopt(sock, SOL_SOCKET, SO_RCVBUF, &rcvBuf, socklen_t(MemoryLayout<Int32>.size))
+        var bindAddr = sockaddr_in()
+        bindAddr.sin_len = UInt8(MemoryLayout<sockaddr_in>.size)
+        bindAddr.sin_family = sa_family_t(AF_INET)
+        bindAddr.sin_port = 0
+        bindAddr.sin_addr.s_addr = UInt32(0x7F000001).bigEndian // strictly 127.0.0.1
+        let bound = withUnsafePointer(to: &bindAddr) {
+            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {
+                Darwin.bind(sock, $0, socklen_t(MemoryLayout<sockaddr_in>.size))
+            }
+        }
+        guard bound == 0 else { Darwin.close(sock); return }
+        var actual = sockaddr_in()
+        var actualLen = socklen_t(MemoryLayout<sockaddr_in>.size)
+        _ = withUnsafeMutablePointer(to: &actual) {
+            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {
+                getsockname(sock, $0, &actualLen)
+            }
+        }
+        let port = UInt16(bigEndian: actual.sin_port)
+        guard port > 0, port != localPort else { Darwin.close(sock); return }
+        let flags = fcntl(sock, F_GETFL, 0)
+        _ = fcntl(sock, F_SETFL, flags | O_NONBLOCK)
+        self.emuFd = sock
+        self.emuPort = port
+
+        let source = DispatchSource.makeReadSource(fileDescriptor: sock, queue: queue)
+        source.setEventHandler { [weak self] in
+            guard let self, !self.stopped, self.emuFd >= 0 else { return }
+            var buf = [UInt8](repeating: 0, count: 2048)
+            while true {
+                var sender = sockaddr_in()
+                var senderLen = socklen_t(MemoryLayout<sockaddr_in>.size)
+                let n = withUnsafeMutablePointer(to: &sender) { sPtr in
+                    sPtr.withMemoryRebound(to: sockaddr.self, capacity: 1) { saPtr in
+                        buf.withUnsafeMutableBytes { rawPtr in
+                            recvfrom(sock, rawPtr.baseAddress, rawPtr.count, 0, saPtr, &senderLen)
+                        }
+                    }
+                }
+                if n <= 0 { break }
+                guard sender.sin_family == sa_family_t(AF_INET),
+                      UInt32(bigEndian: sender.sin_addr.s_addr) == 0x7F000001 else { continue }
+                let senderPort = UInt16(bigEndian: sender.sin_port)
+                guard senderPort > 0, senderPort != self.localPort, senderPort != self.emuPort else { continue }
+                let packet = Data(bytes: buf, count: n)
+                guard let first = packet.first else { continue }
+                let looksValid = (first == 0x00 || first == 0x01 || (20...63).contains(first) || (128...191).contains(first))
+                guard looksValid else { continue }
+                let isPeerICE = packet.count >= 28 && (packet[0] == 0x00 || packet[0] == 0x01) && packet[1] == 0x01
+                    && packet[4] == 0x21 && packet[5] == 0x12 && packet[6] == 0xA4 && packet[7] == 0x42
+                let ep = Endpoint(ip: "127.0.0.1", port: senderPort)
+                if self.activeLoopbackPeer == ep || isPeerICE {
+                    self.activeLoopbackPeer = ep
+                    self.lastLoopbackInboundAt = ProcessInfo.processInfo.systemUptime
+                    self.local.send(packet)
+                }
+            }
+        }
+        self.emuReadSource = source
+        source.resume()
+    }
+
     private func sendOutbound(_ data: Data) {
         guard !stopped, fd >= 0 else { return }
         let now = ProcessInfo.processInfo.systemUptime
         // If we have an active peer that spoke within the last 5 seconds, send directly to it;
         // otherwise (during ICE hole punching or path recovery), fan out connectivity checks to all candidates.
-        if let peer = activePeer, now - lastInboundAt < 5.0 {
+        if let peer = activePeer, now - lastInboundAt < 5.0, lastInboundAt >= lastLoopbackInboundAt {
             sendDatagram(data, to: peer)
+        } else if let lbPeer = activeLoopbackPeer, emuFd >= 0, now - lastLoopbackInboundAt < 5.0 {
+            sendLoopbackDatagram(data, to: lbPeer)
         } else {
             for target in targets {
                 sendDatagram(data, to: target)
@@ -241,6 +322,18 @@ final class PhysicalDirectBridge {
                 lastSweepAt = now
                 for pred in neighborTargets {
                     sendDatagram(data, to: pred)
+                }
+            }
+        }
+    }
+
+    private func sendLoopbackDatagram(_ data: Data, to endpoint: Endpoint) {
+        guard emuFd >= 0 else { return }
+        var dst = endpoint.addr
+        _ = data.withUnsafeBytes { rawPtr in
+            withUnsafePointer(to: &dst) { dPtr in
+                dPtr.withMemoryRebound(to: sockaddr.self, capacity: 1) { saPtr in
+                    sendto(emuFd, rawPtr.baseAddress, rawPtr.count, 0, saPtr, socklen_t(MemoryLayout<sockaddr_in>.size))
                 }
             }
         }
@@ -263,6 +356,17 @@ final class PhysicalDirectBridge {
             guard !stopped else { DispatchQueue.main.async(execute: completion); return }
             stopped = true
             if boundIfIndex > 0 { portMapper.unmap(ifIndex: boundIfIndex) }
+            let eSock = emuFd
+            emuFd = -1
+            if let emuReadSource {
+                emuReadSource.setCancelHandler {
+                    if eSock >= 0 { Darwin.close(eSock) }
+                }
+                emuReadSource.cancel()
+                self.emuReadSource = nil
+            } else if eSock >= 0 {
+                Darwin.close(eSock)
+            }
             let sock = fd
             fd = -1
             if let readSource {

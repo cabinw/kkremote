@@ -24,6 +24,7 @@ final class WindowCaptureSource: NSObject, LabVideoSource, SCStreamOutput, SCStr
     private let preset: LabPreset
     private let windowID: UInt32
     private let expectedProcessID: Int32?
+    private let isDisplayCapture: Bool
     private let hdr: Bool
     private let nativeWindowPixels: Bool
     private let viewport: WindowViewport?
@@ -47,10 +48,11 @@ final class WindowCaptureSource: NSObject, LabVideoSource, SCStreamOutput, SCStr
     private let trace: FrameTrace?
     private var callbackID: UInt64 = 0
 
-    init(source: RTCVideoSource, preset: LabPreset, windowID: UInt32, expectedProcessID: Int32? = nil, hdr: Bool = false, nativeWindowPixels: Bool = false, viewport: WindowViewport? = nil, requiresNativeClientPixels:Bool = false, trace: FrameTrace? = nil, onFailure: @escaping (String) -> Void) {
+    init(source: RTCVideoSource, preset: LabPreset, windowID: UInt32, expectedProcessID: Int32? = nil, isDisplayCapture: Bool = false, hdr: Bool = false, nativeWindowPixels: Bool = false, viewport: WindowViewport? = nil, requiresNativeClientPixels:Bool = false, trace: FrameTrace? = nil, onFailure: @escaping (String) -> Void) {
         self.nativeWindowPixels = nativeWindowPixels
         self.viewport=viewport
         self.requiresNativeClientPixels=requiresNativeClientPixels
+        self.isDisplayCapture = isDisplayCapture
         self.trace = trace
         self.source = source; self.preset = preset; self.windowID = windowID; self.hdr = hdr; self.onFailure = onFailure; self.expectedProcessID = expectedProcessID
         capturer = RTCVideoCapturer(delegate: source)
@@ -72,12 +74,20 @@ final class WindowCaptureSource: NSObject, LabVideoSource, SCStreamOutput, SCStr
         Task { @MainActor [weak self] in
             guard let self else { return }
             do {
-                let content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: false)
+                let content = try await SCShareableContent.excludingDesktopWindows(!self.isDisplayCapture, onScreenWindowsOnly: false)
                 guard !self.stopped else { return }
-                guard let window = content.windows.first(where: { $0.windowID == self.windowID && (self.expectedProcessID == nil || $0.owningApplication?.processID == self.expectedProcessID) }) else {
-                    throw LabError.message("选定窗口已关闭或不可捕获，请重新选择窗口")
+                let filter: SCContentFilter
+                if self.isDisplayCapture {
+                    guard let display = content.displays.first(where: { $0.displayID == self.windowID }) ?? content.displays.first else {
+                        throw LabError.message("未找到可捕获的主屏幕")
+                    }
+                    filter = SCContentFilter(display: display, excludingWindows: [])
+                } else {
+                    guard let window = content.windows.first(where: { $0.windowID == self.windowID && (self.expectedProcessID == nil || $0.owningApplication?.processID == self.expectedProcessID) }) else {
+                        throw LabError.message("选定窗口已关闭或不可捕获，请重新选择窗口")
+                    }
+                    filter = SCContentFilter(desktopIndependentWindow: window)
                 }
-                let filter = SCContentFilter(desktopIndependentWindow: window)
                 let config = self.hdr ? SCStreamConfiguration(preset: .captureHDRStreamCanonicalDisplay) : SCStreamConfiguration()
                 config.width = self.preset.width; config.height = self.preset.height
                 if self.nativeWindowPixels,let pixels=MobileWindowSizing.capturePixels(for:filter.contentRect.size,
@@ -85,14 +95,14 @@ final class WindowCaptureSource: NSObject, LabVideoSource, SCStreamOutput, SCStr
                     config.captureResolution = .best
                     config.width=Int(pixels.width);config.height=Int(pixels.height)
                     self.source.adaptOutputFormat(toWidth:Int32(config.width),height:Int32(config.height),fps:Int32(self.preset.fps))
-                    print("WINDOW_NATIVE_PIXELS source=\(filter.contentRect.size) scale=\(filter.pointPixelScale) canvas=\(config.width)x\(config.height)")
+                    print("WINDOW_NATIVE_PIXELS source=\(filter.contentRect.size) scale=\(filter.pointPixelScale) canvas=\(config.width)x\(config.height) display=\(self.isDisplayCapture)")
                 }
                 // Let WindowServer deliver at display cadence; RTCVideoSource caps output fps.
                 // Throttling twice at exactly 1/60 can discard near-boundary display updates.
                 config.minimumFrameInterval = .zero
                 config.pixelFormat = self.hdr ? HDRFormat.pixelFormat : kCVPixelFormatType_32BGRA
                 config.queueDepth = Self.diagnosticQueueDepth
-                config.showsCursor = false; config.showMouseClicks = false
+                config.showsCursor = self.isDisplayCapture; config.showMouseClicks = false
                 config.capturesAudio = false; config.captureMicrophone = false
                 config.ignoreShadowsSingleWindow = true
                 config.ignoreGlobalClipSingleWindow = true
