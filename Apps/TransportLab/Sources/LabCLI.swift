@@ -14,7 +14,7 @@ enum LabCLI {
         var terminationSource: DispatchSourceSignal?
         do {
             let args = Array(CommandLine.arguments.dropFirst())
-            let known: Set<String> = ["--lab-role", "--route", "--host", "--port", "--media-port", "--key-file", "--duration", "--resolution", "--fps", "--mbps", "--pattern", "--report", "--host-report", "--pacing", "--playout", "--receive-depth", "--capture-depth", "--bridge-transport", "--window-id", "--frame-preview", "--window-cycle", "--frame-trace-dir", "--hevc-keyframe-seconds", "--simulate-outage-ms", "--diagnostic-impairment", "--report-history-limit"]
+            let known: Set<String> = ["--lab-role", "--route", "--host", "--port", "--media-port", "--key-file", "--duration", "--resolution", "--fps", "--mbps", "--pattern", "--report", "--host-report", "--pacing", "--playout", "--receive-depth", "--capture-depth", "--bridge-transport", "--window-id", "--frame-preview", "--window-cycle", "--frame-trace-dir", "--hevc-keyframe-seconds", "--simulate-outage-ms", "--diagnostic-impairment", "--report-history-limit", "--coord-url", "--identity-file", "--pairing-url-file", "--pairing-url-fd", "--autoselect-app"]
             let qualityOptions: Set<String> = ["--hevc-max-qp", "--native-workspace-display-id"]
             var flags = Set<String>()
             var options: [String: String] = [:], i = 0
@@ -141,8 +141,36 @@ enum LabCLI {
                 model.captureWindowID = id
             }
             var hostKey: String?
+            var coordIdentity: DeviceIdentity?
+            let coordURL = options["--coord-url"]
             if selfTest { model.startLocalDemo(endpoint: model.host, useCurrentPreset: true) }
-            else {
+            else if let coordURL {
+                guard role == "host" else {
+                    throw LabError.message("协调服务 CLI 模式当前用于 --lab-role host")
+                }
+                model.coordAutoSelectApp = options["--autoselect-app"]
+                let identity: DeviceIdentity
+                if let identityPath = options["--identity-file"], identityPath != "default" {
+                    identity = try DeviceIdentity.loadOrCreate(atFile: identityPath)
+                } else {
+                    identity = try DeviceIdentity.loadOrCreateDefault()
+                }
+                coordIdentity = identity
+                model.startCoordHost(identity: identity, coordURL: coordURL)
+                guard model.running else { throw LabError.message(model.error ?? "协调主机启动失败") }
+                if let rawFD = options["--pairing-url-fd"], let fd = Int32(rawFD), fd >= 3 {
+                    let handle = FileHandle(fileDescriptor: fd, closeOnDealloc: true)
+                    try handle.write(contentsOf: Data((model.pairingURL + "\n").utf8))
+                    try handle.close()
+                } else if let pairOut = options["--pairing-url-file"] {
+                    unlink(pairOut)
+                    let fd = open(pairOut, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, S_IRUSR | S_IWUSR)
+                    guard fd >= 0 else { throw LabError.message("无法安全写入配对链接文件") }
+                    let handle = FileHandle(fileDescriptor: fd, closeOnDealloc: true)
+                    try handle.write(contentsOf: Data((model.pairingURL + "\n").utf8))
+                    try handle.close()
+                }
+            } else {
                 guard ["host", "viewer"].contains(role), let keyFile = options["--key-file"] else {
                     throw LabError.message("独立进程需要 --lab-role host|viewer 和 --key-file 路径")
                 }
@@ -168,7 +196,11 @@ enum LabCLI {
                 if let due = retryAt {
                     if Date() < due { continue }
                     retryAt = nil
-                    model.startHost(pairingKey: hostKey)
+                    if let coordURL, let coordIdentity {
+                        model.startCoordHost(identity: coordIdentity, coordURL: coordURL)
+                    } else {
+                        model.startHost(pairingKey: hostKey)
+                    }
                     print("LAB_HOST_LISTENING session=\(sessionNumber)"); fflush(stdout)
                 }
                 if let error = model.error ?? model.localHostError {

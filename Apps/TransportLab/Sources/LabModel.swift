@@ -86,10 +86,16 @@ final class LabModel: ObservableObject {
     @Published var track: RTCVideoTrack?
     @Published var exportedReport: URL?
     @Published var mode = "viewer"
+    @Published var coordURL = ""
+    @Published private(set) var pairingURL = ""
+    var coordAutoSelectApp: String? = nil
     @Published private(set) var lastSampleAt: Date?
     @Published private(set) var connectedHost = ""
     @Published private(set) var connectedNetworkLabel = ""
     private var signal: SignalTransport?
+    private var coord: CoordSignaling?
+    private var activeStunServers: [String] = []
+    private var usesCoordSignaling: Bool { coord != nil }
     private var engine: PeerEngine?
     private var demoHost: LabModel?
     private var samples: [LabSample] = []
@@ -285,7 +291,147 @@ final class LabModel: ObservableObject {
     }
 
     private func sendWindow(_ command: WindowMessage) {
-        signal?.send(SignalMessage(type: "window", session: windowSession, window: command))
+        let msg = SignalMessage(type: "window", session: windowSession, window: command)
+        if usesCoordSignaling { _ = engine?.sendControlSignal(msg) }
+        else { signal?.send(msg) }
+    }
+
+    func startCoordHostFromUI() {
+        let trimmed = coordURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            error = "请填写协调节点 HTTPS 地址"
+            return
+        }
+        do {
+            let identity = try DeviceIdentity.loadOrCreateDefault()
+            enablesWindowControl = true
+            startCoordHost(identity: identity, coordURL: trimmed)
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    func startCoordHost(identity: DeviceIdentity, coordURL: String) {
+        stop(); error = nil; samples.removeAll(); sample = LabSample(); exportedReport = nil
+        lastSampleAt = nil
+        self.coordURL = coordURL
+        activePreset = preset; activeRoute = .directICE; activeHDR = hdr
+        activeVideoSource = captureWindowID == nil ? "none" : "window"
+        mode = "host"; connectedHost = coordURL; connectedNetworkLabel = "Native ICE (STUN + Coord)"
+        let token = UUID(); generation = token
+        do {
+            let coord = try CoordSignaling(identity: identity, coordURLString: coordURL)
+            self.coord = coord
+            self.pairingURL = identity.makePairingURL(
+                coordBaseURL: coordURL,
+                hostName: Host.current().localizedName ?? "Mac Host",
+                autoSelectApp: coordAutoSelectApp
+            )
+            coord.onStatus = { [weak self] value in
+                guard let self, self.generation == token else { return }
+                self.status = value
+            }
+            coord.onFailure = { [weak self] value in
+                guard let self, self.generation == token else { return }
+                self.stop(); self.error = value; self.status = "协调连接已结束"
+            }
+            coord.onClientAuthorized = { [weak self] sessionID, stunServers in
+                guard let self, self.generation == token else { return }
+                self.detachCoordPeerSession()
+                self.activeStunServers = stunServers
+                self.windowSession = UUID().uuidString
+                self.windowSupported = true
+                self.expectedMediaSession = sessionID
+                do {
+                    try self.makeCoordHostEngine(sessionID: sessionID, stunServers: stunServers)
+                    self.engine?.startOffer()
+                } catch {
+                    self.status = "创建原生连接会话失败：\(error.localizedDescription)"
+                }
+            }
+            coord.onSignal = { [weak self] message in
+                guard let self, self.generation == token else { return }
+                self.receiveSignal(message)
+            }
+            coord.startHost()
+            running = true
+            status = "正在连接协调节点…"
+        } catch {
+            stop(); self.error = error.localizedDescription
+        }
+    }
+
+    private func detachCoordPeerSession() {
+        resetControl()
+        windowTimeout?.cancel(); pendingWindowRequest = nil; pendingWindowTarget = nil
+        windowBusy = false; catalogLoading = false; catalogRequestID = nil
+        selectedRemoteWindow = nil
+        engineGeneration = UUID()
+        engine?.stop(); engine = nil
+    }
+
+    private func makeCoordHostEngine(sessionID: String, stunServers: [String]) throws {
+        let token = generation, mediaToken = UUID()
+        engineGeneration = mediaToken
+        let engine = try PeerEngine(
+            isHost: true,
+            preset: activePreset,
+            route: .directICE,
+            captureWindowID: captureWindowID,
+            expectedWindowProcessID: selectedRemoteWindow?.processID,
+            nativeWindowPixels: captureWindowID != nil,
+            hdr: activeHDR,
+            sdrReceiver: sdrReceiver,
+            traceDirectory: frameTraceDirectory,
+            sessionOverride: sessionID,
+            iceServers: stunServers,
+            ignoreVPNAdapters: true,
+            deferInitialCapture: captureWindowID == nil
+        )
+        self.engine = engine
+        engine.onSignal = { [weak self] original in
+            guard let self, self.generation == token, self.engineGeneration == mediaToken else { return }
+            var message = original
+            if message.type == "offer" {
+                message.windowProtocol = WindowMessage.version
+                message.windowSession = self.windowSession
+                message.windowLayout = false
+                message.windowControl = self.enablesWindowControl
+                message.windowKeyboard = self.enablesWindowControl
+            }
+            self.coord?.send(message)
+        }
+        engine.onControlSignal = { [weak self] message in
+            guard let self, self.generation == token, self.engineGeneration == mediaToken else { return }
+            self.receiveSignal(message)
+        }
+        engine.onStatus = { [weak self] value in
+            guard let self, self.generation == token, self.engineGeneration == mediaToken else { return }
+            self.status = value
+        }
+        engine.onFailure = { [weak self] value in
+            guard let self, self.generation == token, self.engineGeneration == mediaToken else { return }
+            self.detachCoordPeerSession()
+            self.status = "上一客户端连接已结束（\(value)），等待新连接"
+        }
+        engine.onSourceFailure = { [weak self] _ in
+            guard let self, self.generation == token, self.engineGeneration == mediaToken else { return }
+            self.resetControl()
+            self.windowTimeout?.cancel(); self.pendingWindowRequest = nil
+            self.windowBusy = false; self.selectedRemoteWindow = nil; self.captureWindowID = nil
+            self.activeVideoSource = "none"
+            #if os(macOS)
+            self.engine?.switchWindowCapture(windowID: nil, expectedProcessID: nil)
+            #endif
+            self.sendWindow(WindowMessage(action: "unavailable", requestID: UUID().uuidString,
+                error: "窗口已关闭或捕获中断，请选择其他窗口"))
+        }
+        engine.onSample = { [weak self] value in
+            guard let self, self.generation == token, self.engineGeneration == mediaToken else { return }
+            self.sample = value; self.lastSampleAt = Date(); self.samples.append(value)
+            self.sampleJournal?.append(value)
+            if self.samples.count > self.diagnosticHistoryLimit { self.samples.removeFirst(self.samples.count - self.diagnosticHistoryLimit) }
+        }
     }
 
     func refreshRemoteWindows() {
@@ -528,6 +674,33 @@ final class LabModel: ObservableObject {
                     } else { target = nil }
                     guard self.generation == token, self.pendingWindowRequest == command.requestID else { return }
                     if let viewport=command.viewport,!viewport.isValid { throw LabError.message("无效的窗口尺寸") }
+                    if self.usesCoordSignaling {
+                        self.resetControl()
+                        self.windowTimeout?.cancel(); self.pendingWindowRequest = nil; self.windowBusy = false
+                        var accepted = target, warning: String?
+                        if let target {
+                            accepted = try await self.windowCatalog.current(target)
+                        }
+                        self.captureWindowID = accepted?.number
+                        self.selectedRemoteWindow = accepted
+                        self.activeVideoSource = accepted == nil ? "none" : "window"
+                        let winSize = accepted.map { CGSize(width: $0.widthPoints, height: $0.heightPoints) }
+                        self.engine?.switchWindowCapture(windowID: accepted?.number, expectedProcessID: accepted?.processID, windowSizePoints: winSize)
+                        if self.enablesWindowControl, let accepted {
+                            do { self.hostControl = try HostWindowControl(target: accepted) }
+                            catch { warning = error.localizedDescription }
+                            self.controlLease = self.hostControl?.lease
+                        }
+                        self.sendWindow(WindowMessage(
+                            action: "selected",
+                            requestID: command.requestID,
+                            selected: accepted,
+                            mediaSession: self.engine?.sessionID,
+                            error: warning,
+                            controlLease: self.controlLease
+                        ))
+                        return
+                    }
                     self.pendingWindowViewport=self.enablesWindowLayout ? command.viewport:nil
                     self.pendingWindowTarget = target; self.hostMediaStopped = false; self.viewerMediaStopped = false
                     self.sendWindow(WindowMessage(action: "prepare", requestID: command.requestID))
@@ -646,6 +819,7 @@ final class LabModel: ObservableObject {
         windowBusy = false; catalogLoading = false; catalogRequestID = nil; remoteWindows = []; selectedRemoteWindow = nil
         windowError = nil; windowStatus = "连接后可查看远端窗口"
         engine?.stop(); engine = nil; signal?.stop(); signal = nil
+        coord?.stop(); coord = nil; pairingURL = ""
         demoHost?.stop(); demoHost = nil
         track = nil; running = false; status = "已停止"
     }

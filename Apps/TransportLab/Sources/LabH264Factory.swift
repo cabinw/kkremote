@@ -23,8 +23,11 @@ enum LabH264Capabilities {
         ]
         guard settings.allSatisfy({ VTSessionSetProperty(session, key: $0.0, value: $0.1) == noErr }),
               VTCompressionSessionPrepareToEncodeFrames(session) == noErr else { return defaults }
-        return [RTCVideoCodecInfo(name: "H264", parameters: ["profile-level-id": "640c33",
-            "level-asymmetry-allowed": "1", "packetization-mode": "1"])] + defaults
+        return [
+            RTCVideoCodecInfo(name: "H264", parameters: ["profile-level-id": "640c33", "level-asymmetry-allowed": "1", "packetization-mode": "1"]),
+            RTCVideoCodecInfo(name: "H264", parameters: ["profile-level-id": "640033", "level-asymmetry-allowed": "1", "packetization-mode": "1"]),
+            RTCVideoCodecInfo(name: "H264", parameters: ["profile-level-id": "42e033", "level-asymmetry-allowed": "1", "packetization-mode": "1"])
+        ] + defaults
     }()
 }
 

@@ -1,5 +1,8 @@
 import SwiftUI
 import WebRTC
+#if os(macOS)
+import AppKit
+#endif
 
 @main
 struct LabApp: App {
@@ -83,6 +86,29 @@ struct LabView: View {
                             }
                         }.padding(4)
                     }
+                    #if os(macOS)
+                    GroupBox("跨平台协调直连 Host · Android / Web / Apple") {
+                        VStack(alignment: .leading, spacing: 10) {
+                            TextField("协调节点地址（如 https://coord.example.com）", text: $model.coordURL)
+                                .textFieldStyle(.roundedBorder)
+                                .disabled(model.running)
+                            Text("零知识 E2EE 协调信令 + 自有 STUN 原生 UDP 打洞；配对密钥仅保存在本地 #fragment，不上传协调节点。")
+                                .font(.caption).foregroundStyle(.secondary)
+                            HStack {
+                                Button("启动跨平台 Host") { model.startCoordHostFromUI() }
+                                    .buttonStyle(.borderedProminent)
+                                    .disabled(model.running)
+                                if !model.pairingURL.isEmpty {
+                                    Button("复制配对链接（含端到端凭证）") {
+                                        NSPasteboard.general.clearContents()
+                                        NSPasteboard.general.setString(model.pairingURL, forType: .string)
+                                    }
+                                }
+                                Button("停止") { model.stop() }.disabled(!model.running)
+                            }
+                        }.padding(4)
+                    }
+                    #endif
                     GroupBox("发送端参数 · 连接前设置") {
                         VStack {
                             #if os(macOS)

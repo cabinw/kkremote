@@ -164,6 +164,12 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
     private let receiveDepth: Int
     private let bridgeTransport: BridgeTransportKind
     private var bridge: DatagramBridge?
+    private let configuredICEServers: [String]
+    private let usesPhysicalNICBridge: Bool
+    #if os(macOS)
+    private var physicalBridge: PhysicalDirectBridge?
+    private var physicalCandidates: [String] = []
+    #endif
     private var localBridgeCandidate: RTCIceCandidate?
     private var bridgeCandidateAdded = false
     private var negotiatedAt: Double?
@@ -177,16 +183,21 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
     private var rtts: [Double] = []
     private var lastPongAt: Double?
     private var remoteTrack: RTCVideoTrack?
+    private var hostVideoSource: RTCVideoSource?
+    private let deferInitialCapture: Bool
     let frameCounter = FrameCounter()
     var onSignal: ((SignalMessage) -> Void)?
+    var onControlSignal: ((SignalMessage) -> Void)?
+    var onDataChannelOpen: (() -> Void)?
     var onTrack: ((RTCVideoTrack) -> Void)?
     var onStatus: ((String) -> Void)?
     var onSample: ((LabSample) -> Void)?
     var onFailure: ((String) -> Void)?
     var onSourceFailure: ((String) -> Void)?
 
-    init(isHost: Bool, preset: LabPreset, route: MediaRoute = .directICE, endpointHost: String = "", mediaPort: UInt16 = 45991, receiveDepth: Int = 16, bridgeTransport: BridgeTransportKind = .network, captureWindowID: UInt32? = nil, expectedWindowProcessID: Int32? = nil, nativeWindowPixels: Bool = false, windowViewport: WindowViewport? = nil, requiresNativeClientPixels: Bool = false, hdr: Bool = false, sdrReceiver: Bool = false, traceDirectory: URL? = nil) throws {
+    init(isHost: Bool, preset: LabPreset, route: MediaRoute = .directICE, endpointHost: String = "", mediaPort: UInt16 = 45991, receiveDepth: Int = 16, bridgeTransport: BridgeTransportKind = .network, captureWindowID: UInt32? = nil, expectedWindowProcessID: Int32? = nil, nativeWindowPixels: Bool = false, windowViewport: WindowViewport? = nil, requiresNativeClientPixels: Bool = false, hdr: Bool = false, sdrReceiver: Bool = false, traceDirectory: URL? = nil, sessionOverride: String? = nil, iceServers: [String] = [], ignoreVPNAdapters: Bool = false, deferInitialCapture: Bool = false) throws {
         self.traceDirectory = traceDirectory
+        self.deferInitialCapture = deferInitialCapture
         encoderTelemetry = EncoderTelemetry(trace: traceDirectory != nil ? FrameTrace(role: isHost ? "sender" : "receiver",
             probes: ["sdkDropDiagnostics": WebRTCRuntime.sdkDropDiagnostics, "frameDropperDisabled": WebRTCRuntime.disableFrameDropperForSelfTest],
             settings: ["requestedHEVCKeyframeSeconds": Int(WebRTCRuntime.hevcKeyframeSeconds),
@@ -197,7 +208,13 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
         self.receiveDepth = receiveDepth; self.bridgeTransport = bridgeTransport
         self.requestedHDR = hdr
         self.sdrReceiver = sdrReceiver
-        self.session = isHost ? UUID().uuidString : nil
+        self.configuredICEServers = iceServers
+        #if os(macOS)
+        self.usesPhysicalNICBridge = isHost && route == .directICE && ignoreVPNAdapters
+        #else
+        self.usesPhysicalNICBridge = false
+        #endif
+        self.session = sessionOverride ?? (isHost ? UUID().uuidString : nil)
         super.init()
         frameCounter.trace = encoderTelemetry.trace
         if isHost, WebRTCRuntime.sdkDropDiagnostics, let trace = encoderTelemetry.trace {
@@ -205,7 +222,7 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
         }
         let configuration = RTCConfiguration()
         configuration.sdpSemantics = .unifiedPlan
-        configuration.iceServers = []
+        configuration.iceServers = (usesPhysicalNICBridge || iceServers.isEmpty) ? [] : [RTCIceServer(urlStrings: iceServers)]
         configuration.bundlePolicy = .maxBundle
         configuration.rtcpMuxPolicy = .require
         configuration.tcpCandidatePolicy = .disabled
@@ -213,11 +230,15 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
         WebRTCRuntime.initialize(WebRTCRuntime.mode)
         let factory = RTCPeerConnectionFactory(encoderFactory: hdr ? HEVCEncoderFactory(telemetry: encoderTelemetry) : LabH264EncoderFactory(telemetry: encoderTelemetry), decoderFactory: sdrReceiver ? LabH264DecoderFactory(telemetry: receiverTelemetry) : HEVCDecoderFactory(telemetry: receiverTelemetry))
         self.factory = factory
-        if route != .directICE {
+        if route != .directICE || usesPhysicalNICBridge {
             let options = RTCPeerConnectionFactoryOptions()
             options.ignoreLoopbackNetworkAdapter = false
             options.ignoreVPNNetworkAdapter = true; options.ignoreWiFiNetworkAdapter = true
             options.ignoreEthernetNetworkAdapter = true; options.ignoreCellularNetworkAdapter = true
+            factory.setOptions(options)
+        } else if ignoreVPNAdapters {
+            let options = RTCPeerConnectionFactoryOptions()
+            options.ignoreVPNNetworkAdapter = true
             factory.setOptions(options)
         }
         guard let pc = factory.peerConnection(with: configuration,
@@ -227,6 +248,8 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
         peer = pc
         if isHost {
             let videoSource = factory.videoSource(forScreenCast: true)
+            videoSource.adaptOutputFormat(toWidth: Int32(preset.width), height: Int32(preset.height), fps: Int32(preset.fps))
+            self.hostVideoSource = videoSource
             let track = factory.videoTrack(with: videoSource, trackId: "pattern")
             let transceiver = RTCRtpTransceiverInit()
             transceiver.direction = .sendOnly
@@ -248,19 +271,21 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
             // congestion control may reduce it immediately.
             _ = pc.setBweMinBitrateBps(nil, currentBitrateBps: NSNumber(value: min(4, preset.megabits) * 1_000_000),
                 maxBitrateBps: NSNumber(value: preset.megabits * 1_000_000))
-            makeSource = { [weak self] hdr in
-                let trace = self?.encoderTelemetry.trace
-                #if os(macOS)
-                if let captureWindowID {
-                    return WindowCaptureSource(source: videoSource, preset: preset, windowID: captureWindowID, expectedProcessID: expectedWindowProcessID, hdr: hdr, nativeWindowPixels: nativeWindowPixels, viewport: windowViewport, requiresNativeClientPixels: requiresNativeClientPixels, trace: trace) { [weak self] message in
-                        guard let self, !self.stopped else { return }
-                        if let onSourceFailure = self.onSourceFailure { onSourceFailure(message) }
-                        else { self.onFailure?(message) }
+            if !deferInitialCapture || captureWindowID != nil {
+                makeSource = { [weak self] hdr in
+                    let trace = self?.encoderTelemetry.trace
+                    #if os(macOS)
+                    if let captureWindowID {
+                        return WindowCaptureSource(source: videoSource, preset: preset, windowID: captureWindowID, expectedProcessID: expectedWindowProcessID, hdr: hdr, nativeWindowPixels: nativeWindowPixels, viewport: windowViewport, requiresNativeClientPixels: requiresNativeClientPixels, trace: trace) { [weak self] message in
+                            guard let self, !self.stopped else { return }
+                            if let onSourceFailure = self.onSourceFailure { onSourceFailure(message) }
+                            else { self.onFailure?(message) }
+                        }
                     }
+                    #endif
+                    if hdr { return try HDRTestPattern(source: videoSource, width: preset.width, height: preset.height, fps: preset.fps, trace: trace) }
+                    return try TestPattern(source: videoSource, preset: preset, trace: trace)
                 }
-                #endif
-                if hdr { return try HDRTestPattern(source: videoSource, width: preset.width, height: preset.height, fps: preset.fps, trace: trace) }
-                return try TestPattern(source: videoSource, preset: preset, trace: trace)
             }
             let settings = RTCDataChannelConfiguration()
             settings.isOrdered = true
@@ -275,6 +300,25 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
     func startOffer() {
         guard isHost, !stopped else { return }
         negotiatedAt = ProcessInfo.processInfo.systemUptime
+        #if os(macOS)
+        if usesPhysicalNICBridge {
+            do {
+                let pb = try PhysicalDirectBridge()
+                self.physicalBridge = pb
+                pb.prepare(stunServers: configuredICEServers) { [weak self] result in
+                    guard let self, !self.stopped else { return }
+                    switch result {
+                    case .success(let cands):
+                        self.physicalCandidates = cands
+                        self.makeOffer()
+                    case .failure(let err):
+                        self.onFailure?(err.localizedDescription)
+                    }
+                }
+            } catch { onFailure?(error.localizedDescription) }
+            return
+        }
+        #endif
         if route != .directICE {
             do {
                 let encoded = try SignalTransport.newPairingKey()
@@ -306,9 +350,16 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
                 guard let self, !self.stopped, let session = self.session else { return }
                 guard error == nil else { self.onFailure?("无法设置本地 SDP"); return }
                 if sdp.type == .answer { self.encoderTelemetry.trace?.rtp.configure(RTPTraceConfiguration.parse(sdp.sdp)) }
-                let text = self.route != .directICE ? Self.withoutCandidates(sdp.sdp) : sdp.sdp
+                let text = (self.route != .directICE || self.usesPhysicalNICBridge) ? Self.withoutCandidates(sdp.sdp) : sdp.sdp
                 self.onSignal?(SignalMessage(type: sdp.type == .offer ? "offer" : "answer", session: session, sdp: text,
                     videoFormat: self.sdrReceiver ? nil : (HDRFormat.prefersMain10(text) ? "hevc-main10-pq" : "h264-sdr")))
+                #if os(macOS)
+                if self.usesPhysicalNICBridge, sdp.type == .offer {
+                    for cand in self.physicalCandidates {
+                        self.onSignal?(SignalMessage(type: "candidate", session: session, candidate: cand, mid: "0", line: 0))
+                    }
+                }
+                #endif
             }
         }
     }
@@ -331,6 +382,12 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
             } catch { onFailure?(error.localizedDescription) }
         case "candidate":
             guard route == .directICE else { onFailure?("固定 UDP 会话拒绝外部 ICE 候选"); return }
+            #if os(macOS)
+            if usesPhysicalNICBridge {
+                if let value = message.candidate { physicalBridge?.addRemoteCandidate(value) }
+                return
+            }
+            #endif
             guard let value = message.candidate, let line = message.line, line >= 0 else { return }
             let candidate = RTCIceCandidate(sdp: value, sdpMLineIndex: line, sdpMid: message.mid)
             if remoteReady { add(candidate) }
@@ -341,7 +398,14 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
             guard let sdp = message.sdp, (message.type == "answer") == isHost else { onFailure?("意外 SDP 类型"); return }
             guard !remoteReady else { onFailure?("测试会话不接受重复 SDP"); return }
             negotiatedAt = negotiatedAt ?? ProcessInfo.processInfo.systemUptime
-            let remoteSDP = route != .directICE ? Self.withoutCandidates(sdp) : sdp
+            #if os(macOS)
+            if usesPhysicalNICBridge {
+                for line in sdp.components(separatedBy: "\r\n") where line.hasPrefix("a=candidate:") {
+                    physicalBridge?.addRemoteCandidate(line)
+                }
+            }
+            #endif
+            let remoteSDP = (route != .directICE || usesPhysicalNICBridge) ? Self.withoutCandidates(sdp) : sdp
             peer.setRemoteDescription(RTCSessionDescription(type: isHost ? .answer : .offer, sdp: remoteSDP)) { [weak self] error in
                 DispatchQueue.main.async {
                     guard let self, !self.stopped else { return }
@@ -397,6 +461,39 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
         catch { onFailure?("无法启动协商的视频源：\(error.localizedDescription)") }
     }
 
+    #if os(macOS)
+    /// Hot-swap captured window without closing PeerConnection or invalidating NAT hole-punching.
+    func switchWindowCapture(windowID: UInt32?, expectedProcessID: Int32?, windowSizePoints: CGSize? = nil) {
+        guard isHost, !stopped, let videoSource = hostVideoSource else { return }
+        source?.stop()
+        source = nil
+        guard let windowID else { makeSource = nil; return }
+        var windowPreset = self.preset
+        if let size = windowSizePoints,
+           let fitted = MobileWindowSizing.capturePixels(for: size, pointPixelScale: 2.0, maximumPixels: CGFloat(self.preset.width * self.preset.height)) {
+            windowPreset = LabPreset(width: Int(fitted.width), height: Int(fitted.height), fps: self.preset.fps, megabits: self.preset.megabits, pattern: self.preset.pattern)
+        }
+        let trace = encoderTelemetry.trace
+        makeSource = { [weak self] hdr in
+            WindowCaptureSource(source: videoSource, preset: windowPreset, windowID: windowID, expectedProcessID: expectedProcessID, hdr: hdr, nativeWindowPixels: false, viewport: nil, requiresNativeClientPixels: false, trace: trace) { [weak self] message in
+                guard let self, !self.stopped else { return }
+                if let onSourceFailure = self.onSourceFailure { onSourceFailure(message) }
+                else { self.onFailure?(message) }
+            }
+        }
+        startSourceIfReady()
+    }
+    #endif
+
+    @discardableResult
+    func sendControlSignal(_ message: SignalMessage) -> Bool {
+        guard !stopped, let channel, channel.readyState == .open, channel.bufferedAmount < 262_144,
+              let payload = try? JSONEncoder().encode(message), payload.count <= 65_536 else {
+            return false
+        }
+        return channel.sendData(RTCDataBuffer(data: payload, isBinary: false))
+    }
+
     private func install(_ bridge: DatagramBridge) {
         self.bridge = bridge
         bridge.onAuthenticated = { [weak self] in
@@ -408,10 +505,17 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
         }
     }
     private func addBridgeCandidateIfReady() {
-        guard remoteReady, !bridgeCandidateAdded, let bridge, let candidate = localBridgeCandidate else { return }
+        guard remoteReady, !bridgeCandidateAdded, let candidate = localBridgeCandidate else { return }
+        let port: UInt16?
+        #if os(macOS)
+        port = bridge?.localPort ?? physicalBridge?.localPort
+        #else
+        port = bridge?.localPort
+        #endif
+        guard let port else { return }
         bridgeCandidateAdded = true
         // This candidate points to our own adapter socket, never to a rewritten public/LAN IP.
-        let sdp = "candidate:kkudp 1 udp 2130706431 127.0.0.1 \(bridge.localPort) typ host"
+        let sdp = "candidate:kkudp 1 udp 2130706431 127.0.0.1 \(port) typ host"
         add(RTCIceCandidate(sdp: sdp, sdpMLineIndex: candidate.sdpMLineIndex, sdpMid: candidate.sdpMid))
     }
     private static func withoutCandidates(_ sdp: String) -> String {
@@ -446,6 +550,9 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
             }
             completion()
         }
+        #if os(macOS)
+        if let pb = physicalBridge { self.physicalBridge = nil; pb.stop(completion: drained); return }
+        #endif
         if let bridge { self.bridge = nil; bridge.stop(completion: drained) }
         else { drained() }
     }
@@ -462,7 +569,7 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
 
     private func poll() {
         guard !stopped else { return }
-        if !isHost, firstFrameAt == nil, let negotiatedAt {
+        if !isHost, !deferInitialCapture, firstFrameAt == nil, let negotiatedAt {
             if let first = frameCounter.firstReceivedAt { firstFrameAt = first }
             else if ProcessInfo.processInfo.systemUptime - negotiatedAt > 30 {
                 onFailure?("媒体协商后 30 秒仍无解码帧：检查 UDP / ICE / 编码阶段"); return
@@ -588,10 +695,17 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
     func peerConnection(_ peerConnection: RTCPeerConnection, didGenerate candidate: RTCIceCandidate) {
         DispatchQueue.main.async { [weak self] in
             guard let self, !self.stopped, let session = self.session else { return }
-            if self.route != .directICE {
+            if self.route != .directICE || self.usesPhysicalNICBridge {
                 let fields = candidate.sdp.split(separator: " ")
                 guard self.localBridgeCandidate == nil, fields.count >= 8, fields[2].lowercased() == "udp",
-                      fields[4] == "127.0.0.1", let port = UInt16(fields[5]), port > 0, let bridge = self.bridge else { return }
+                      fields[4] == "127.0.0.1", let port = UInt16(fields[5]), port > 0 else { return }
+                #if os(macOS)
+                if let pb = self.physicalBridge {
+                    self.localBridgeCandidate = candidate; pb.setLocalPeer(port: port)
+                    self.addBridgeCandidateIfReady(); return
+                }
+                #endif
+                guard let bridge = self.bridge else { return }
                 self.localBridgeCandidate = candidate; bridge.setLocalPeer(port: port)
                 self.addBridgeCandidateIfReady(); return
             }
@@ -603,6 +717,7 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
         DispatchQueue.main.async { [weak self] in
             guard let self, !self.stopped else { dataChannel.close(); return }
             self.channel = dataChannel; dataChannel.delegate = self
+            if dataChannel.readyState == .open { self.onDataChannelOpen?() }
         }
     }
     func peerConnection(_ peerConnection: RTCPeerConnection, didAdd rtpReceiver: RTCRtpReceiver, streams: [RTCMediaStream]) {
@@ -611,8 +726,23 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
     func peerConnection(_ peerConnection: RTCPeerConnection, didStartReceivingOn transceiver: RTCRtpTransceiver) {
         DispatchQueue.main.async { [weak self] in self?.receiveTrack(transceiver.receiver.track as? RTCVideoTrack) }
     }
-    func dataChannelDidChangeState(_ dataChannel: RTCDataChannel) {}
+    func dataChannelDidChangeState(_ dataChannel: RTCDataChannel) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self, !self.stopped, self.channel === dataChannel else { return }
+            if dataChannel.readyState == .open { self.onDataChannelOpen?() }
+        }
+    }
     func dataChannel(_ dataChannel: RTCDataChannel, didReceiveMessageWith buffer: RTCDataBuffer) {
+        guard buffer.data.count <= 65_536 else { return }
+        if buffer.data.first == 0x7b,
+           let control = try? JSONDecoder().decode(SignalMessage.self, from: buffer.data),
+           control.type == "window" {
+            DispatchQueue.main.async { [weak self] in
+                guard let self, !self.stopped else { return }
+                self.onControlSignal?(control)
+            }
+            return
+        }
         guard buffer.data.count < 256, let text = String(data: buffer.data, encoding: .utf8) else { return }
         DispatchQueue.main.async { [weak self] in
             guard let self, !self.stopped else { return }

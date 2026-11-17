@@ -11,6 +11,7 @@
 		0B337A48E8777725F7447CF8 /* ConnectionPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66FCE124D94C1537B8C757FD /* ConnectionPreferences.swift */; };
 		0BB119551A97BC66FAA982A9 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B803EFD91995BFC401600592 /* PrivacyInfo.xcprivacy */; };
 		11FA5A81ABBB2E4C8D15B334 /* RTPTrace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24D442A5AFD1A6EF4A3560C4 /* RTPTrace.swift */; };
+		16CD116296164327A0CCB268 /* RouterPortMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D16FAAAF885D20AA9E18CC0 /* RouterPortMapper.swift */; };
 		18601150B83D55735A4CE474 /* ResourceTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 471571BF3DBA878589225EA8 /* ResourceTelemetry.swift */; };
 		1A172D0ECD53B92EC82E6228 /* IPhoneWindowWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30D087D23A0255F49EA2EB67 /* IPhoneWindowWorkspace.swift */; };
 		1FA2D500E19B3C107327CA6F /* WindowEdgeAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E507D884965CCFA4F7EAD8F /* WindowEdgeAppearance.swift */; };
@@ -22,16 +23,20 @@
 		289ADB7E983124E3C11C9E41 /* IPhoneOfflineWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B0F11A057B752F425A08104 /* IPhoneOfflineWorkspace.swift */; };
 		29F1B2AF35A98D6C86B94325 /* WebRTCRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48CAAFAAFE8C6DE9642FA41E /* WebRTCRuntime.swift */; };
 		2A431F9CE0FCA0277BAB2B41 /* LoopbackDatagramPort.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3906527D06061792D69CD87 /* LoopbackDatagramPort.swift */; };
+		2B4AF14B700E4203DD204648 /* PhysicalDirectBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 851251AF8C4E790811595DD6 /* PhysicalDirectBridge.swift */; };
 		3069F5E960B9C0674240B4A9 /* RemoteWindowsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D843251B2FFB189F7A4A156 /* RemoteWindowsView.swift */; };
 		331E69A877B874E328F56943 /* HEVCCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B0487CBCFF552EDC6775EE2 /* HEVCCodec.swift */; };
 		33E6D7F0F4D8F831E38D1530 /* IPhoneXPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F68DBB215CA2E661521E21F /* IPhoneXPreview.swift */; };
 		343B7799436C4783E56EE9D8 /* InteractionGestureMachine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9823A2605FEB6A28EA214A /* InteractionGestureMachine.swift */; };
 		35984F90D97242498D1964EA /* LabVideoSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 885BD861B6356258EFDDAB1F /* LabVideoSource.swift */; };
 		35A6403B2271DF9E5DCB8E99 /* MobileTouchSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE3CB6B8A51EA386AD3D08DC /* MobileTouchSurface.swift */; };
+		36BE2A747F98A624C9207BE5 /* RouterPortMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D16FAAAF885D20AA9E18CC0 /* RouterPortMapper.swift */; };
 		370B537AED09A476052AE752 /* LabVideoSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 885BD861B6356258EFDDAB1F /* LabVideoSource.swift */; };
 		3AE10936D18826B96F4B66DA /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B803EFD91995BFC401600592 /* PrivacyInfo.xcprivacy */; };
 		43047BF2507DB56BB0705268 /* LabCLI.swift in Sources */ = {isa = PBXBuildFile; fileRef = E121061760F554354AB40CB3 /* LabCLI.swift */; };
 		43ED559B591E819B18100A02 /* IOSLabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A879DD5A3D870A874DF66A27 /* IOSLabView.swift */; };
+		465FDCE4174CFF72D0BC2CD7 /* CoordSignaling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38223C1320D9F92D67121F81 /* CoordSignaling.swift */; };
+		49B8DF1EA7C0F78A9FA6E15B /* CoordSignaling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38223C1320D9F92D67121F81 /* CoordSignaling.swift */; };
 		49E7ED9DDC03729340AD423E /* LabApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36D6D3B59DA9FC7C09A7BC10 /* LabApp.swift */; };
 		4A9D3E7931F35752CB5040CA /* ReceiverTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEBF5167580FAEF75E548F37 /* ReceiverTelemetry.swift */; };
 		4DCC704645F99E9DE72B8814 /* HDRVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA7F65C1CD67680D7D1597B2 /* HDRVideoView.swift */; };
@@ -62,6 +67,7 @@
 		8EC1114DC3C4309DCF6E8A3E /* EncoderTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF48D0FE7946D410215DE8F /* EncoderTelemetry.swift */; };
 		9102BDD6B600260E89F9281C /* LabModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78AC53B2E4A155687286D160 /* LabModel.swift */; };
 		92A01AD0018EA8CCE033A8AA /* InteractionGestureMachine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9823A2605FEB6A28EA214A /* InteractionGestureMachine.swift */; };
+		99A54DBCEDA7766F8EE4A1C6 /* DeviceIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = F82EE6EF76450E2DD5091CC7 /* DeviceIdentity.swift */; };
 		9AA41253EE6E79F3F4FF7CBA /* MobileTextComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90196243A5CD287A875E5900 /* MobileTextComposer.swift */; };
 		9ACC95ECED63D9F1F43AC40B /* RTPTrace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24D442A5AFD1A6EF4A3560C4 /* RTPTrace.swift */; };
 		9FF74D0582256A2A4594E222 /* ConnectionPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66FCE124D94C1537B8C757FD /* ConnectionPreferences.swift */; };
@@ -89,6 +95,7 @@
 		DBBB2E3B8DE57D010F5EB1E3 /* WindowTitleIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 452F407AFD8D85CD5EDED942 /* WindowTitleIdentity.swift */; };
 		DBBB84A52C7B768565A2C399 /* WindowControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F2AAF630056CFA52DD9771 /* WindowControl.swift */; };
 		DCBA75A17C389A1FFC7937CF /* WindowColorSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7CC684604E466FA6E074FB8 /* WindowColorSampler.swift */; };
+		DD7FED99268C6A03234A2A4D /* DeviceIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = F82EE6EF76450E2DD5091CC7 /* DeviceIdentity.swift */; };
 		DF5BC1E91CDACFEEA843504F /* DesktopPattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = 685AE22A1ABE008C10BB9776 /* DesktopPattern.swift */; };
 		E1ACCD636FC7FE7BABBAA469 /* HEVCCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B0487CBCFF552EDC6775EE2 /* HEVCCodec.swift */; };
 		E25E845782DDE6AAEA9EFE6F /* Main10Probe.hevc in Resources */ = {isa = PBXBuildFile; fileRef = 89F771D78894959C8594411B /* Main10Probe.hevc */; };
@@ -103,6 +110,7 @@
 		EE91B696FAD67B3A7A6B0669 /* WindowCaptureSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86AFCBC1B64C3DDF9CEDD11 /* WindowCaptureSource.swift */; };
 		F10D682727CEFC0C1D81E714 /* Main10Probe.md in Resources */ = {isa = PBXBuildFile; fileRef = 7ADB77F867006A8A7FF9151B /* Main10Probe.md */; };
 		F1DCC9B68ECC00C33F206B2C /* WindowControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F2AAF630056CFA52DD9771 /* WindowControl.swift */; };
+		F3801F56F723AE4DB4453744 /* PhysicalDirectBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 851251AF8C4E790811595DD6 /* PhysicalDirectBridge.swift */; };
 		F568FF11A59BDDFD26772286 /* SDKDropDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = C017CA04EF0234BC6F74E044 /* SDKDropDiagnostics.swift */; };
 		F5DF8AE699917081CCC5D828 /* TransportImpairment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34C93B3564E3CB5A3783A885 /* TransportImpairment.swift */; };
 		F632A9CE96534DD5CC5DD34F /* DatagramBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E611FAAC103A193A4412063 /* DatagramBridge.swift */; };
@@ -127,6 +135,7 @@
 		34C93B3564E3CB5A3783A885 /* TransportImpairment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransportImpairment.swift; sourceTree = "<group>"; };
 		36D6D3B59DA9FC7C09A7BC10 /* LabApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabApp.swift; sourceTree = "<group>"; };
 		37E3C84CE20CC7A40ADF7752 /* MobileWindowSizing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileWindowSizing.swift; sourceTree = "<group>"; };
+		38223C1320D9F92D67121F81 /* CoordSignaling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoordSignaling.swift; sourceTree = "<group>"; };
 		3C547F1880EFAB4D73276855 /* KKRemoteLab.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = KKRemoteLab.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3E507D884965CCFA4F7EAD8F /* WindowEdgeAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowEdgeAppearance.swift; sourceTree = "<group>"; };
 		41FBBE491584DE1A643FDD12 /* PeerEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerEngine.swift; sourceTree = "<group>"; };
@@ -137,6 +146,7 @@
 		5B0F11A057B752F425A08104 /* IPhoneOfflineWorkspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPhoneOfflineWorkspace.swift; sourceTree = "<group>"; };
 		66FCE124D94C1537B8C757FD /* ConnectionPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionPreferences.swift; sourceTree = "<group>"; };
 		685AE22A1ABE008C10BB9776 /* DesktopPattern.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopPattern.swift; sourceTree = "<group>"; };
+		6D16FAAAF885D20AA9E18CC0 /* RouterPortMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouterPortMapper.swift; sourceTree = "<group>"; };
 		6D315A4735594B08A7C94F94 /* TestPattern.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestPattern.swift; sourceTree = "<group>"; };
 		6F729F0580D7C03A3282EC02 /* MobileInputPracticeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileInputPracticeView.swift; sourceTree = "<group>"; };
 		78AC53B2E4A155687286D160 /* LabModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabModel.swift; sourceTree = "<group>"; };
@@ -144,6 +154,7 @@
 		7ADB77F867006A8A7FF9151B /* Main10Probe.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Main10Probe.md; sourceTree = "<group>"; };
 		7BF48D0FE7946D410215DE8F /* EncoderTelemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncoderTelemetry.swift; sourceTree = "<group>"; };
 		7D843251B2FFB189F7A4A156 /* RemoteWindowsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteWindowsView.swift; sourceTree = "<group>"; };
+		851251AF8C4E790811595DD6 /* PhysicalDirectBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhysicalDirectBridge.swift; sourceTree = "<group>"; };
 		885BD861B6356258EFDDAB1F /* LabVideoSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabVideoSource.swift; sourceTree = "<group>"; };
 		89F771D78894959C8594411B /* Main10Probe.hevc */ = {isa = PBXFileReference; path = Main10Probe.hevc; sourceTree = "<group>"; };
 		90196243A5CD287A875E5900 /* MobileTextComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileTextComposer.swift; sourceTree = "<group>"; };
@@ -168,6 +179,7 @@
 		E86AFCBC1B64C3DDF9CEDD11 /* WindowCaptureSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowCaptureSource.swift; sourceTree = "<group>"; };
 		F3906527D06061792D69CD87 /* LoopbackDatagramPort.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopbackDatagramPort.swift; sourceTree = "<group>"; };
 		F7CC684604E466FA6E074FB8 /* WindowColorSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowColorSampler.swift; sourceTree = "<group>"; };
+		F82EE6EF76450E2DD5091CC7 /* DeviceIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceIdentity.swift; sourceTree = "<group>"; };
 		F8AAC35B8C3A874444E7BAE4 /* WebRTC-LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "WebRTC-LICENSE.txt"; sourceTree = "<group>"; };
 		F939DB04B50EA673CF061E71 /* ViewportGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewportGeometry.swift; sourceTree = "<group>"; };
 		FE3CB6B8A51EA386AD3D08DC /* MobileTouchSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileTouchSurface.swift; sourceTree = "<group>"; };
@@ -205,8 +217,10 @@
 			isa = PBXGroup;
 			children = (
 				66FCE124D94C1537B8C757FD /* ConnectionPreferences.swift */,
+				38223C1320D9F92D67121F81 /* CoordSignaling.swift */,
 				0E611FAAC103A193A4412063 /* DatagramBridge.swift */,
 				685AE22A1ABE008C10BB9776 /* DesktopPattern.swift */,
+				F82EE6EF76450E2DD5091CC7 /* DeviceIdentity.swift */,
 				7BF48D0FE7946D410215DE8F /* EncoderTelemetry.swift */,
 				138E9383CAAA1F9E9CF4FC31 /* FrameTrace.swift */,
 				2E5E1B9B9465A540A5A60935 /* HDRTestPattern.swift */,
@@ -222,9 +236,11 @@
 				F3906527D06061792D69CD87 /* LoopbackDatagramPort.swift */,
 				D006CB48F875AE64D3F8C885 /* MediaDatagram.swift */,
 				41FBBE491584DE1A643FDD12 /* PeerEngine.swift */,
+				851251AF8C4E790811595DD6 /* PhysicalDirectBridge.swift */,
 				BEBF5167580FAEF75E548F37 /* ReceiverTelemetry.swift */,
 				7D843251B2FFB189F7A4A156 /* RemoteWindowsView.swift */,
 				471571BF3DBA878589225EA8 /* ResourceTelemetry.swift */,
+				6D16FAAAF885D20AA9E18CC0 /* RouterPortMapper.swift */,
 				24D442A5AFD1A6EF4A3560C4 /* RTPTrace.swift */,
 				C017CA04EF0234BC6F74E044 /* SDKDropDiagnostics.swift */,
 				A9294C4C27F90B30E8333335 /* SignalTransport.swift */,
@@ -412,8 +428,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				9FF74D0582256A2A4594E222 /* ConnectionPreferences.swift in Sources */,
+				49B8DF1EA7C0F78A9FA6E15B /* CoordSignaling.swift in Sources */,
 				F632A9CE96534DD5CC5DD34F /* DatagramBridge.swift in Sources */,
 				DF5BC1E91CDACFEEA843504F /* DesktopPattern.swift in Sources */,
+				99A54DBCEDA7766F8EE4A1C6 /* DeviceIdentity.swift in Sources */,
 				849B04AAFA0C8FC665FCF5D6 /* EncoderTelemetry.swift in Sources */,
 				EC963F12A49A9FE6B44C8F73 /* FrameTrace.swift in Sources */,
 				FE910C59DF7176D71EF4DA32 /* HDRTestPattern.swift in Sources */,
@@ -439,10 +457,12 @@
 				B6A71850F2794C09F38BC897 /* MobileViewport.swift in Sources */,
 				5F0F87C8CB3293E68452D7B4 /* MobileWindowSizing.swift in Sources */,
 				E9E3D391311379AA13355AB1 /* PeerEngine.swift in Sources */,
+				2B4AF14B700E4203DD204648 /* PhysicalDirectBridge.swift in Sources */,
 				11FA5A81ABBB2E4C8D15B334 /* RTPTrace.swift in Sources */,
 				4A9D3E7931F35752CB5040CA /* ReceiverTelemetry.swift in Sources */,
 				223EA9477A2846D558C9CF68 /* RemoteWindowsView.swift in Sources */,
 				7548621DF487D8F93C08AC97 /* ResourceTelemetry.swift in Sources */,
+				36BE2A747F98A624C9207BE5 /* RouterPortMapper.swift in Sources */,
 				723E87B0BD329EEE9CFF5706 /* SDKDropDiagnostics.swift in Sources */,
 				704737AB04D63DF4DEF6A5D6 /* SignalTransport.swift in Sources */,
 				D94A691C7924525A2CFDF7F3 /* TestPattern.swift in Sources */,
@@ -466,8 +486,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				0B337A48E8777725F7447CF8 /* ConnectionPreferences.swift in Sources */,
+				465FDCE4174CFF72D0BC2CD7 /* CoordSignaling.swift in Sources */,
 				7B7FA50F7D6A5379E4EFF624 /* DatagramBridge.swift in Sources */,
 				B449AD90ED4C74B58DAFB353 /* DesktopPattern.swift in Sources */,
+				DD7FED99268C6A03234A2A4D /* DeviceIdentity.swift in Sources */,
 				8EC1114DC3C4309DCF6E8A3E /* EncoderTelemetry.swift in Sources */,
 				FAD01FBBC86863FD8BF9813D /* FrameTrace.swift in Sources */,
 				74D8047E121DC9CC9B0ACDC3 /* HDRTestPattern.swift in Sources */,
@@ -493,10 +515,12 @@
 				6BE4D561358578FC2E086B20 /* MobileViewport.swift in Sources */,
 				CF8D7DD73AE460A2F85C6EA2 /* MobileWindowSizing.swift in Sources */,
 				C5BC78878B86590AA5D5C031 /* PeerEngine.swift in Sources */,
+				F3801F56F723AE4DB4453744 /* PhysicalDirectBridge.swift in Sources */,
 				9ACC95ECED63D9F1F43AC40B /* RTPTrace.swift in Sources */,
 				6B43F1C9E7088CBD4D744991 /* ReceiverTelemetry.swift in Sources */,
 				3069F5E960B9C0674240B4A9 /* RemoteWindowsView.swift in Sources */,
 				18601150B83D55735A4CE474 /* ResourceTelemetry.swift in Sources */,
+				16CD116296164327A0CCB268 /* RouterPortMapper.swift in Sources */,
 				F568FF11A59BDDFD26772286 /* SDKDropDiagnostics.swift in Sources */,
 				6BED5CD0438D54D2A2057F42 /* SignalTransport.swift in Sources */,
 				E29F093B5951967BB63DBB43 /* TestPattern.swift in Sources */,
