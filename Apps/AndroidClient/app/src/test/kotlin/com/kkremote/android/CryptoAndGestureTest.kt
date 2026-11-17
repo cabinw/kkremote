@@ -9,6 +9,7 @@ import com.kkremote.android.gesture.TouchPoint
 import com.kkremote.android.protocol.CoordConnectRequest
 import com.kkremote.android.protocol.DataChannelSignalEnvelope
 import com.kkremote.android.protocol.WindowMessage
+import com.kkremote.android.protocol.WindowViewport
 import com.kkremote.android.ui.WindowEdgeColorEstimator
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
@@ -151,11 +152,18 @@ class CryptoAndGestureTest {
         val dcJson = wireJson.encodeToString(
             DataChannelSignalEnvelope(
                 session = "ws1",
-                window = WindowMessage(action = "list", requestID = "r1"),
+                window = WindowMessage(
+                    action = "resize",
+                    requestID = "r1",
+                    windowID = "w1",
+                    viewport = WindowViewport(width = 902.0, height = 766.0, displayScale = 2.75),
+                ),
             )
         )
         assertTrue(dcJson.contains("\"type\":\"window\""))
         assertTrue(dcJson.contains("\"version\":1"))
+        assertTrue(dcJson.contains("\"width\":902.0"))
+        assertTrue(dcJson.contains("\"height\":766.0"))
         assertFalse(dcJson.contains("\"windows\""))
     }
 

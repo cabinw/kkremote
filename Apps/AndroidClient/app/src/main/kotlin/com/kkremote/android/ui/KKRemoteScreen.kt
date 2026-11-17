@@ -124,6 +124,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -214,6 +215,25 @@ fun KKRemoteScreen(viewModel: WorkspaceViewModel) {
             insetsController.isAppearanceLightStatusBars = !isDarkMaterial
             insetsController.isAppearanceLightNavigationBars = !isDarkMaterial
         }
+    }
+
+    // Report physical/logical window viewport (excluding transient soft IME) so Mac Host auto-fits window aspect ratio
+    val configuration = LocalConfiguration.current
+    val density = LocalDensity.current
+    val statusTopDp = WindowInsets.statusBars.asPaddingValues().calculateTopPadding().value.toDouble()
+    val navBottomDp = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding().value.toDouble()
+    val viewportWidthDp = configuration.screenWidthDp.toDouble()
+    val viewportHeightDp = if (state.scaleMode == CanvasScaleMode.FIT) {
+        max(150.0, configuration.screenHeightDp.toDouble() - statusTopDp - navBottomDp * 0.6 - 6.0)
+    } else {
+        configuration.screenHeightDp.toDouble()
+    }
+    LaunchedEffect(viewportWidthDp, viewportHeightDp, density.density) {
+        viewModel.onClientViewportChanged(
+            widthDp = viewportWidthDp,
+            heightDp = viewportHeightDp,
+            displayScale = density.density.toDouble(),
+        )
     }
 
     var liveVideoBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
@@ -1660,7 +1680,7 @@ private fun MacHorizontalWindowDock(
                                         val win = group.windows.first()
                                         val alreadyActive = state.selectedWindow?.number == win.number &&
                                             state.selectedWindow.processID == win.processID
-                                        if (alreadyActive && state.hasLiveVideo) onCollapse() else onSelect(win)
+                                        if (alreadyActive && state.hasLiveVideo && state.canControl) onCollapse() else onSelect(win)
                                     } else {
                                         expandedPid = if (expandedPid == group.processID) null else group.processID
                                     }

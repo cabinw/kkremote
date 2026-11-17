@@ -14,6 +14,7 @@ import com.kkremote.android.protocol.StreamTelemetry
 import com.kkremote.android.protocol.TrustedHostProfile
 import com.kkremote.android.protocol.WindowInput
 import com.kkremote.android.protocol.WindowMessage
+import com.kkremote.android.protocol.WindowViewport
 import com.kkremote.android.webrtc.NativeWebRtcClient
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -27,8 +28,10 @@ import kotlinx.serialization.json.Json
 import org.webrtc.PeerConnection
 import org.webrtc.VideoTrack
 import java.io.File
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 enum class CanvasScaleMode(val label: String) {
     FIT("完整窗口"),
@@ -68,6 +71,7 @@ data class WorkspaceUiState(
     val bannerWarning: String? = null,
     val errorText: String? = null,
     val dataChannelOpen: Boolean = false,
+    val windowLayoutSupported: Boolean = false,
     val windowControlSupported: Boolean = false,
     val directKeyboardSupported: Boolean = false,
     val windows: List<RemoteWindow> = emptyList(),
@@ -139,6 +143,10 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
     private var pendingScrollDy: Double = 0.0
     private var scrollFlushJob: Job? = null
     private var warningDismissJob: Job? = null
+    private var resizeDebounceJob: Job? = null
+    private var desiredViewport: WindowViewport? = null
+    private var appliedViewport: WindowViewport? = null
+    private var pendingViewport: WindowViewport? = null
     private var rippleCounter: Long = 0L
 
     init {
@@ -331,9 +339,50 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    fun onClientViewportChanged(widthDp: Double, heightDp: Double, displayScale: Double) {
+        if (!widthDp.isFinite() || !heightDp.isFinite() || !displayScale.isFinite()) return
+        val clampedW = widthDp.roundToInt().toDouble().coerceIn(200.0, 2000.0)
+        val clampedH = heightDp.roundToInt().toDouble().coerceIn(150.0, 2000.0)
+        val clampedScale = ((displayScale * 100.0).roundToInt() / 100.0).coerceIn(1.0, 3.0)
+        val prev = desiredViewport
+        if (prev != null &&
+            abs(prev.width - clampedW) < 4.0 &&
+            abs(prev.height - clampedH) < 4.0 &&
+            abs((prev.displayScale ?: clampedScale) - clampedScale) < 0.05
+        ) {
+            return
+        }
+        desiredViewport = WindowViewport(width = clampedW, height = clampedH, displayScale = clampedScale)
+        scheduleWindowResizeIfNeeded()
+    }
+
+    private fun scheduleWindowResizeIfNeeded() {
+        resizeDebounceJob?.cancel()
+        resizeDebounceJob = viewModelScope.launch {
+            delay(350L)
+            val st = _uiState.value
+            val win = st.selectedWindow ?: return@launch
+            val vp = desiredViewport ?: return@launch
+            val rtc = rtcClient ?: return@launch
+            if (!st.dataChannelOpen || !st.windowLayoutSupported || vp == appliedViewport) return@launch
+            pendingViewport = vp
+            rtc.sendWindowCommand(
+                WindowMessage(
+                    action = "resize",
+                    requestID = DeviceIdentity.randomHex(8),
+                    windowID = win.id,
+                    viewport = vp,
+                )
+            )
+        }
+    }
+
     fun selectWindow(window: RemoteWindow) {
         val rtc = rtcClient ?: return
+        resizeDebounceJob?.cancel()
         resetInputQueue()
+        val vp = if (_uiState.value.windowLayoutSupported) desiredViewport else null
+        pendingViewport = vp
         _uiState.update {
             it.copy(
                 statusText = "正在切换窗口…",
@@ -345,12 +394,16 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                 action = "select",
                 requestID = DeviceIdentity.randomHex(8),
                 windowID = window.id,
+                viewport = vp,
             )
         )
     }
 
     fun stopViewingKeepConnection() {
         val rtc = rtcClient ?: return
+        resizeDebounceJob?.cancel()
+        pendingViewport = null
+        appliedViewport = null
         resetInputQueue()
         _uiState.update {
             it.copy(
@@ -538,6 +591,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
             it.copy(
                 phase = ConnectionPhase.ICE_CHECKING,
                 statusText = "正在与 ${hostUpdated.name} 建立原生 P2P 打洞…",
+                windowLayoutSupported = offer.windowLayout == true,
                 windowControlSupported = offer.windowControl == true,
                 directKeyboardSupported = offer.windowKeyboard == true,
                 errorText = null,
@@ -690,6 +744,12 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
 
             "selected" -> {
                 val win = cmd.selected
+                appliedViewport = if (win != null && cmd.error.isNullOrBlank()) {
+                    pendingViewport ?: appliedViewport
+                } else {
+                    null
+                }
+                pendingViewport = null
                 resetInputQueue()
                 val initialCursor = win?.let {
                     TouchPoint((it.widthPoints * 0.5).toFloat(), (it.heightPoints * 0.5).toFloat())
@@ -714,12 +774,17 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                         statusText = if (win != null) "${win.application} · $controlNote" else "请选择远端窗口",
                     )
                 }
-                if (win != null && cmd.controlLease.isNullOrBlank() && !cmd.error.isNullOrBlank()) {
+                if (win != null && !cmd.error.isNullOrBlank()) {
                     postTransientWarning(cmd.error)
                 } else {
                     postTransientWarning(null)
                 }
-                if (win != null) {
+                if (win != null && cmd.error.isNullOrBlank()) {
+                    _uiState.value.activeHost?.let { active ->
+                        upsertHost(active.copy(lastWindowTitle = win.application))
+                    }
+                    scheduleWindowResizeIfNeeded()
+                } else if (win != null) {
                     _uiState.value.activeHost?.let { active ->
                         upsertHost(active.copy(lastWindowTitle = win.application))
                     }
@@ -740,17 +805,33 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                 drainNextInput()
             }
 
-            "unavailable", "error" -> {
+            "unavailable" -> {
+                resizeDebounceJob?.cancel()
+                pendingViewport = null
+                appliedViewport = null
                 resetInputQueue()
                 _uiState.update {
                     it.copy(
                         selectedWindow = null,
                         controlLease = null,
-                        bannerWarning = cmd.error ?: "目标窗口已关闭，请重新选择窗口",
+                        videoWidthPx = 0,
+                        videoHeightPx = 0,
+                        edgeColor = WindowEdgeColor.Initial,
                         showWindowSheet = true,
+                        showKeyboardBar = false,
+                        statusText = "请选择远端窗口",
                     )
                 }
+                postTransientWarning(cmd.error ?: "目标窗口已结束观看，请重新选择窗口")
                 refreshWindows()
+            }
+
+            "error" -> {
+                pendingViewport = null
+                postTransientWarning(cmd.error ?: "窗口操作未完成，请稍后重试")
+                if (_uiState.value.selectedWindow == null) {
+                    _uiState.update { it.copy(showWindowSheet = true) }
+                }
             }
         }
     }
@@ -829,6 +910,9 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     private fun tearDownMediaOnly() {
+        resizeDebounceJob?.cancel()
+        pendingViewport = null
+        appliedViewport = null
         resetInputQueue()
         activeSessionId = ""
         _videoTrack.value = null

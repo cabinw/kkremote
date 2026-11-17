@@ -102,6 +102,13 @@ data class WindowInput(
 )
 
 @Serializable
+data class WindowViewport(
+    val width: Double,
+    val height: Double,
+    val displayScale: Double? = null,
+)
+
+@Serializable
 data class WindowMessage(
     val version: Int = 1,
     val action: String,
@@ -111,6 +118,7 @@ data class WindowMessage(
     val selected: RemoteWindow? = null,
     val mediaSession: String? = null,
     val error: String? = null,
+    val viewport: WindowViewport? = null,
     val controlLease: String? = null,
     val input: WindowInput? = null,
     val controlState: WindowControlState? = null,
