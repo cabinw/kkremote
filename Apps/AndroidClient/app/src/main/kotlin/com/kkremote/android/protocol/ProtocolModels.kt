@@ -78,8 +78,15 @@ data class RemoteWindow(
     val widthPoints: Double,
     val heightPoints: Double,
 ) {
+    val isFullDisplay: Boolean
+        get() = id == MAIN_DISPLAY_HANDLE && processID == 0
+
     val displayLabel: String
         get() = if (title.isBlank()) application else "$application · $title"
+
+    companion object {
+        const val MAIN_DISPLAY_HANDLE = "__main_display__"
+    }
 }
 
 @Serializable
@@ -99,6 +106,8 @@ data class WindowInput(
     val text: String? = null,
     val focus: String? = null,
     val key: String? = null,
+    val keyCode: Int? = null,
+    val modifiers: List<String>? = null,
 )
 
 @Serializable
@@ -114,6 +123,7 @@ data class WindowMessage(
     val action: String,
     val requestID: String,
     val windowID: String? = null,
+    val processID: Int? = null,
     val windows: List<RemoteWindow>? = null,
     val selected: RemoteWindow? = null,
     val mediaSession: String? = null,

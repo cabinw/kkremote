@@ -33,6 +33,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -55,6 +56,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -148,6 +150,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.kkremote.android.gesture.GestureAction
 import com.kkremote.android.gesture.InteractionGestureMachine
 import com.kkremote.android.gesture.TouchContact
@@ -209,7 +213,7 @@ fun KKRemoteScreen(viewModel: WorkspaceViewModel) {
         label = "ambientEdgeColor",
     )
 
-    // Synchronize system status-bar & navigation-bar icon appearance with sampled window edge luminance (just like iPhone)
+    // Synchronize system status-bar & navigation-bar icon appearance + Omni-Desktop immersive mode
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
@@ -217,6 +221,13 @@ fun KKRemoteScreen(viewModel: WorkspaceViewModel) {
             val insetsController = WindowCompat.getInsetsController(window, view)
             insetsController.isAppearanceLightStatusBars = !isDarkMaterial
             insetsController.isAppearanceLightNavigationBars = !isDarkMaterial
+            if (state.omniDesktopMode) {
+                insetsController.systemBarsBehavior =
+                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                insetsController.hide(WindowInsetsCompat.Type.systemBars())
+            } else {
+                insetsController.show(WindowInsetsCompat.Type.systemBars())
+            }
         }
     }
 
@@ -268,15 +279,8 @@ fun KKRemoteScreen(viewModel: WorkspaceViewModel) {
             .fillMaxSize()
             .onSizeChanged { fullWindowSizePx = it }
     ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(ambientBg)
-            .semantics { testTagsAsResourceId = true }
-            .imePadding()
-    ) {
-        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            RemoteWindowStage(
+        if (state.omniDesktopMode) {
+            OmniDesktopWorkspace(
                 state = state,
                 palette = palette,
                 backdrop = backdrop,
@@ -290,161 +294,208 @@ fun KKRemoteScreen(viewModel: WorkspaceViewModel) {
                 onVideoRectChanged = { rect -> liveVideoRectInRoot = rect },
                 onZoomAndPan = viewModel::updateZoomAndPan,
                 onResetViewport = viewModel::resetViewport,
-                onMoveTrackpadCursor = viewModel::moveTrackpadCursor,
                 onRemoteClick = viewModel::sendRemoteClick,
                 onRemoteScroll = viewModel::queueRemoteScroll,
+                onTrackpadDelta = viewModel::moveOmniTrackpadCursor,
+                onTrackpadClick = viewModel::clickAtTrackpadCursor,
+                onTrackpadScroll = viewModel::scrollAtTrackpadCursor,
+                onSendRawKey = viewModel::sendRawMacKey,
+                onToggleInputSource = viewModel::sendToggleMacInputSource,
+                onActivateOmniApp = viewModel::activateOmniApp,
+                onRefreshWindows = viewModel::refreshWindows,
+                onCycleKeyboardStyle = viewModel::cycleOmniKeyboardStyle,
+                onExitOmniMode = { viewModel.setOmniDesktopMode(false) },
                 onConnectOrOpenSettings = {
                     if (state.activeHost != null) viewModel.reconnectActiveHost()
                     else viewModel.setShowPairingSheet(true)
                 },
                 onOpenSettings = { viewModel.setShowPairingSheet(true) },
-                onOpenWindows = { viewModel.setShowWindowSheet(true) },
+                onOpenDiagnostics = { viewModel.setShowTelemetrySheet(true) },
             )
-
-            // Subtle auto-dismissing top frosted notice (matches IOSLabView controlError banner)
-            val statusBarPad = WindowInsets.statusBars.asPaddingValues()
-            androidx.compose.animation.AnimatedVisibility(
-                visible = !state.bannerWarning.isNullOrBlank(),
-                enter = fadeIn(tween(180)),
-                exit = fadeOut(tween(220)),
+        } else {
+            Column(
                 modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = statusBarPad.calculateTopPadding() + 10.dp, start = 16.dp, end = 16.dp),
+                    .fillMaxSize()
+                    .background(ambientBg)
+                    .semantics { testTagsAsResourceId = true }
+                    .imePadding()
             ) {
-                FrostedGlassBox(
-                    palette = palette,
-                    backdrop = backdrop,
-                    shape = CircleShape,
-                    blurRadius = 22.dp,
-                    shadowElevation = 8.dp,
-                ) {
-                    Text(
-                        text = state.bannerWarning.orEmpty(),
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                        fontSize = 12.sp,
-                        color = palette.primaryText,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                    RemoteWindowStage(
+                        state = state,
+                        palette = palette,
+                        backdrop = backdrop,
+                        videoTrack = videoTrack,
+                        onVideoSizeChanged = viewModel::onVideoSizeChanged,
+                        onBackdropSampled = { bmp, edge, gen ->
+                            liveVideoBitmap = bmp
+                            liveGeneration = gen
+                            viewModel.onEdgeColorSampled(edge)
+                        },
+                        onVideoRectChanged = { rect -> liveVideoRectInRoot = rect },
+                        onZoomAndPan = viewModel::updateZoomAndPan,
+                        onResetViewport = viewModel::resetViewport,
+                        onMoveTrackpadCursor = viewModel::moveTrackpadCursor,
+                        onRemoteClick = viewModel::sendRemoteClick,
+                        onRemoteScroll = viewModel::queueRemoteScroll,
+                        onConnectOrOpenSettings = {
+                            if (state.activeHost != null) viewModel.reconnectActiveHost()
+                            else viewModel.setShowPairingSheet(true)
+                        },
+                        onOpenSettings = { viewModel.setShowPairingSheet(true) },
+                        onOpenWindows = { viewModel.setShowWindowSheet(true) },
+                        onEnterOmniDesktop = { viewModel.setOmniDesktopMode(true) },
+                    )
+
+                    // Subtle auto-dismissing top frosted notice (matches IOSLabView controlError banner)
+                    val statusBarPad = WindowInsets.statusBars.asPaddingValues()
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = !state.bannerWarning.isNullOrBlank(),
+                        enter = fadeIn(tween(180)),
+                        exit = fadeOut(tween(220)),
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = statusBarPad.calculateTopPadding() + 10.dp, start = 16.dp, end = 16.dp),
+                    ) {
+                        FrostedGlassBox(
+                            palette = palette,
+                            backdrop = backdrop,
+                            shape = CircleShape,
+                            blurRadius = 22.dp,
+                            shadowElevation = 8.dp,
+                        ) {
+                            Text(
+                                text = state.bannerWarning.orEmpty(),
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                                fontSize = 12.sp,
+                                color = palette.primaryText,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+
+                    // Transparent outside-tap dismiss scrim when iOS popover menu OR horizontal macOS Dock is open
+                    if (showOverflowMenu || state.showWindowSheet) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                    onClick = {
+                                        showOverflowMenu = false
+                                        if (state.showWindowSheet) viewModel.setShowWindowSheet(false)
+                                    },
+                                )
+                        )
+                    }
+
+                    // Horizontal macOS Dock Window Switcher (replaces modal window!)
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = state.showWindowSheet && state.dataChannelOpen,
+                        enter = slideInVertically(
+                            initialOffsetY = { it + 64 },
+                            animationSpec = spring(dampingRatio = 0.78f, stiffness = Spring.StiffnessMediumLow),
+                        ) + fadeIn(tween(160)),
+                        exit = slideOutVertically(
+                            targetOffsetY = { it + 64 },
+                            animationSpec = tween(180),
+                        ) + fadeOut(tween(150)),
+                        modifier = Modifier.align(Alignment.BottomCenter),
+                    ) {
+                        MacHorizontalWindowDock(
+                            state = state,
+                            palette = palette,
+                            backdrop = backdrop,
+                            onSelect = viewModel::selectWindow,
+                            onRefresh = viewModel::refreshWindows,
+                            onCollapse = { viewModel.setShowWindowSheet(false) },
+                        )
+                    }
+
+                    // Bottom-Right Draggable Frosted Glass Capsule Dock + iOS Popover Menu (hidden while horizontal macOS Dock is expanded)
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = !(state.showWindowSheet && state.dataChannelOpen),
+                        enter = fadeIn(tween(160)),
+                        exit = fadeOut(tween(120)),
+                        modifier = Modifier.align(Alignment.BottomEnd),
+                    ) {
+                        FloatingIosCapsuleDock(
+                            state = state,
+                            palette = palette,
+                            backdrop = backdrop,
+                            showMenu = showOverflowMenu,
+                            onToggleMenu = { showOverflowMenu = !showOverflowMenu },
+                            onDismissMenu = { showOverflowMenu = false },
+                            onToggleKeyboard = {
+                                showOverflowMenu = false
+                                viewModel.setShowKeyboardBar(!state.showKeyboardBar)
+                            },
+                            onOpenWindows = {
+                                showOverflowMenu = false
+                                viewModel.setShowWindowSheet(true)
+                            },
+                            onToggleOmniDesktop = {
+                                showOverflowMenu = false
+                                viewModel.toggleOmniDesktopMode()
+                            },
+                            onTogglePointerMode = {
+                                showOverflowMenu = false
+                                viewModel.togglePointerMode()
+                            },
+                            onSetScaleMode = { mode ->
+                                showOverflowMenu = false
+                                viewModel.setScaleMode(mode)
+                            },
+                            onZoomIn = {
+                                showOverflowMenu = false
+                                viewModel.zoomInStep()
+                            },
+                            onToggleHdr = {
+                                showOverflowMenu = false
+                                viewModel.togglePreferHdr()
+                            },
+                            onToggleLinkQualityBar = {
+                                viewModel.toggleLinkQualityBar()
+                            },
+                            onSendQuickKey = { key ->
+                                showOverflowMenu = false
+                                viewModel.sendRemoteKey(key)
+                            },
+                            onOpenSettings = {
+                                showOverflowMenu = false
+                                viewModel.setShowPairingSheet(true)
+                            },
+                            onOpenDiagnostics = {
+                                showOverflowMenu = false
+                                viewModel.setShowTelemetrySheet(true)
+                            },
+                            onStopViewingKeepConn = {
+                                showOverflowMenu = false
+                                viewModel.stopViewingKeepConnection()
+                            },
+                            onDisconnect = {
+                                showOverflowMenu = false
+                                viewModel.disconnect()
+                            },
+                        )
+                    }
+                }
+
+                // Frosted Glass Bottom Keyboard & IME Composer (matches iOS MobileTextComposer)
+                AnimatedVisibility(visible = state.showKeyboardBar) {
+                    FrostedKeyboardComposerBar(
+                        palette = palette,
+                        backdrop = backdrop,
+                        canControl = state.canControl,
+                        onSendText = viewModel::sendRemoteText,
+                        onSendKey = viewModel::sendRemoteKey,
+                        onClose = { viewModel.setShowKeyboardBar(false) },
                     )
                 }
             }
-
-            // Transparent outside-tap dismiss scrim when iOS popover menu OR horizontal macOS Dock is open
-            if (showOverflowMenu || state.showWindowSheet) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = {
-                                showOverflowMenu = false
-                                if (state.showWindowSheet) viewModel.setShowWindowSheet(false)
-                            },
-                        )
-                )
-            }
-
-            // Horizontal macOS Dock Window Switcher (replaces modal window!)
-            androidx.compose.animation.AnimatedVisibility(
-                visible = state.showWindowSheet && state.dataChannelOpen,
-                enter = slideInVertically(
-                    initialOffsetY = { it + 64 },
-                    animationSpec = spring(dampingRatio = 0.78f, stiffness = Spring.StiffnessMediumLow),
-                ) + fadeIn(tween(160)),
-                exit = slideOutVertically(
-                    targetOffsetY = { it + 64 },
-                    animationSpec = tween(180),
-                ) + fadeOut(tween(150)),
-                modifier = Modifier.align(Alignment.BottomCenter),
-            ) {
-                MacHorizontalWindowDock(
-                    state = state,
-                    palette = palette,
-                    backdrop = backdrop,
-                    onSelect = viewModel::selectWindow,
-                    onRefresh = viewModel::refreshWindows,
-                    onCollapse = { viewModel.setShowWindowSheet(false) },
-                )
-            }
-
-            // Bottom-Right Draggable Frosted Glass Capsule Dock + iOS Popover Menu (hidden while horizontal macOS Dock is expanded)
-            androidx.compose.animation.AnimatedVisibility(
-                visible = !(state.showWindowSheet && state.dataChannelOpen),
-                enter = fadeIn(tween(160)),
-                exit = fadeOut(tween(120)),
-                modifier = Modifier.align(Alignment.BottomEnd),
-            ) {
-                FloatingIosCapsuleDock(
-                    state = state,
-                    palette = palette,
-                    backdrop = backdrop,
-                    showMenu = showOverflowMenu,
-                    onToggleMenu = { showOverflowMenu = !showOverflowMenu },
-                    onDismissMenu = { showOverflowMenu = false },
-                    onToggleKeyboard = {
-                        showOverflowMenu = false
-                        viewModel.setShowKeyboardBar(!state.showKeyboardBar)
-                    },
-                    onOpenWindows = {
-                        showOverflowMenu = false
-                        viewModel.setShowWindowSheet(true)
-                    },
-                    onTogglePointerMode = {
-                        showOverflowMenu = false
-                        viewModel.togglePointerMode()
-                    },
-                    onSetScaleMode = { mode ->
-                        showOverflowMenu = false
-                        viewModel.setScaleMode(mode)
-                    },
-                    onZoomIn = {
-                        showOverflowMenu = false
-                        viewModel.zoomInStep()
-                    },
-                    onToggleHdr = {
-                        showOverflowMenu = false
-                        viewModel.togglePreferHdr()
-                    },
-                    onToggleLinkQualityBar = {
-                        viewModel.toggleLinkQualityBar()
-                    },
-                    onSendQuickKey = { key ->
-                        showOverflowMenu = false
-                        viewModel.sendRemoteKey(key)
-                    },
-                    onOpenSettings = {
-                        showOverflowMenu = false
-                        viewModel.setShowPairingSheet(true)
-                    },
-                    onOpenDiagnostics = {
-                        showOverflowMenu = false
-                        viewModel.setShowTelemetrySheet(true)
-                    },
-                    onStopViewingKeepConn = {
-                        showOverflowMenu = false
-                        viewModel.stopViewingKeepConnection()
-                    },
-                    onDisconnect = {
-                        showOverflowMenu = false
-                        viewModel.disconnect()
-                    },
-                )
-            }
         }
-
-        // Frosted Glass Bottom Keyboard & IME Composer (matches iOS MobileTextComposer)
-        AnimatedVisibility(visible = state.showKeyboardBar) {
-            FrostedKeyboardComposerBar(
-                palette = palette,
-                backdrop = backdrop,
-                canControl = state.canControl,
-                onSendText = viewModel::sendRemoteText,
-                onSendKey = viewModel::sendRemoteKey,
-                onClose = { viewModel.setShowKeyboardBar(false) },
-            )
-        }
-    }
     }
 
     // Remaining Frosted Glass Modal Sheets (Settings & Diagnostics only)
@@ -458,6 +509,8 @@ fun KKRemoteScreen(viewModel: WorkspaceViewModel) {
                 state = state,
                 palette = palette,
                 onToggleLinkQualityBar = viewModel::setShowLinkQualityBar,
+                onToggleOmniDesktopMode = viewModel::setOmniDesktopMode,
+                onSelectOmniKeyboardStyle = viewModel::setOmniKeyboardStyle,
                 onImportLink = { link, coord -> viewModel.importPairingLink(link, coord) },
                 onConnectSaved = viewModel::connectToHost,
                 onRemoveSaved = viewModel::removeHost,
@@ -501,6 +554,7 @@ private fun RemoteWindowStage(
     onConnectOrOpenSettings: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenWindows: () -> Unit,
+    onEnterOmniDesktop: () -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
     val hostView = LocalView.current
@@ -765,6 +819,7 @@ private fun RemoteWindowStage(
                 onConnectOrOpenSettings = onConnectOrOpenSettings,
                 onOpenSettings = onOpenSettings,
                 onOpenWindows = onOpenWindows,
+                onEnterOmniDesktop = onEnterOmniDesktop,
             )
         }
 
@@ -845,6 +900,7 @@ private fun IosStyleIdleWorkspace(
     onConnectOrOpenSettings: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenWindows: () -> Unit,
+    onEnterOmniDesktop: () -> Unit,
 ) {
     val navPad = WindowInsets.navigationBars.asPaddingValues()
     if (state.phase == ConnectionPhase.CONNECTED && state.dataChannelOpen && state.selectedWindow != null) {
@@ -950,17 +1006,31 @@ private fun IosStyleIdleWorkspace(
 
         Spacer(Modifier.height(14.dp))
 
-        Text(
-            text = "连接设置",
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Medium,
-            color = palette.accentBlue,
-            modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
-                .clickable(onClick = onOpenSettings)
-                .padding(horizontal = 12.dp, vertical = 6.dp)
-                .testTag("btnOpenSettingsHero"),
-        )
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = "Omni-Desktop 全桌面",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = palette.accentBlue,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(onClick = onEnterOmniDesktop)
+                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                    .testTag("btnEnterOmniHero"),
+            )
+            Text("·", fontSize = 14.sp, color = palette.secondaryText)
+            Text(
+                text = "连接设置",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+                color = palette.accentBlue,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(onClick = onOpenSettings)
+                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                    .testTag("btnOpenSettingsHero"),
+            )
+        }
 
         state.errorText?.let { err ->
             Spacer(Modifier.height(10.dp))
@@ -993,6 +1063,7 @@ private fun FloatingIosCapsuleDock(
     onDismissMenu: () -> Unit,
     onToggleKeyboard: () -> Unit,
     onOpenWindows: () -> Unit,
+    onToggleOmniDesktop: () -> Unit,
     onTogglePointerMode: () -> Unit,
     onSetScaleMode: (CanvasScaleMode) -> Unit,
     onZoomIn: () -> Unit,
@@ -1057,6 +1128,7 @@ private fun FloatingIosCapsuleDock(
                 palette = palette,
                 backdrop = backdrop,
                 onOpenWindows = onOpenWindows,
+                onToggleOmniDesktop = onToggleOmniDesktop,
                 onSetScaleMode = onSetScaleMode,
                 onZoomIn = onZoomIn,
                 onTogglePointerMode = onTogglePointerMode,
@@ -1277,6 +1349,7 @@ private fun FrostedIosContextMenu(
     palette: GlassPalette,
     backdrop: LiveVideoBackdrop,
     onOpenWindows: () -> Unit,
+    onToggleOmniDesktop: () -> Unit,
     onSetScaleMode: (CanvasScaleMode) -> Unit,
     onZoomIn: () -> Unit,
     onTogglePointerMode: () -> Unit,
@@ -1294,9 +1367,16 @@ private fun FrostedIosContextMenu(
         shape = RoundedCornerShape(18.dp),
         blurRadius = 30.dp,
         shadowElevation = 20.dp,
-        modifier = Modifier.width(250.dp).testTag("iosContextMenu"),
+        modifier = Modifier
+            .width(254.dp)
+            .heightIn(max = 520.dp)
+            .testTag("iosContextMenu"),
     ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState()),
+        ) {
             // Header: Current Window Title (matches IPhoneWindowWorkspace Menu Section header)
             val headerTitle = state.selectedWindow?.displayLabel ?: (state.activeHost?.name ?: "KKRemote")
             Text(
@@ -1307,6 +1387,14 @@ private fun FrostedIosContextMenu(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+            )
+            HorizontalDivider(thickness = 0.6.dp, color = palette.dividerColor)
+
+            IosMenuRow(
+                label = if (state.omniDesktopMode) "✓ Omni-Desktop 全桌面" else "Omni-Desktop 全桌面",
+                icon = Icons.Default.DesktopWindows,
+                palette = palette,
+                onClick = onToggleOmniDesktop,
             )
             HorizontalDivider(thickness = 0.6.dp, color = palette.dividerColor)
 
@@ -2060,6 +2148,8 @@ private fun FrostedSettingsAndHostsSheet(
     state: WorkspaceUiState,
     palette: GlassPalette,
     onToggleLinkQualityBar: (Boolean) -> Unit,
+    onToggleOmniDesktopMode: (Boolean) -> Unit,
+    onSelectOmniKeyboardStyle: (OmniKeyboardStyle) -> Unit,
     onImportLink: (String, String) -> Boolean,
     onConnectSaved: (TrustedHostProfile) -> Unit,
     onRemoveSaved: (TrustedHostProfile) -> Unit,
@@ -2071,6 +2161,7 @@ private fun FrostedSettingsAndHostsSheet(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 18.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -2093,40 +2184,127 @@ private fun FrostedSettingsAndHostsSheet(
             )
         }
 
-        Text("界面与监控", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = palette.secondaryText, modifier = Modifier.padding(start = 6.dp))
-        Row(
+        Text("界面与工作模式", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = palette.secondaryText, modifier = Modifier.padding(start = 6.dp))
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(14.dp))
                 .background(palette.elevatedCardTint)
-                .border(0.6.dp, palette.hairlineBorder, RoundedCornerShape(14.dp))
-                .clickable { onToggleLinkQualityBar(!state.showLinkQualityBar) }
-                .padding(horizontal = 14.dp, vertical = 10.dp)
-                .testTag("rowToggleLinkQualityBar"),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
+                .border(0.6.dp, palette.hairlineBorder, RoundedCornerShape(14.dp)),
         ) {
-            Column(modifier = Modifier.weight(1f).padding(end = 10.dp)) {
-                Text("显示连接质量工具栏", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = palette.primaryText)
-                Text(
-                    text = "在工具按钮左侧实时显示速度、延迟、FPS 与码率",
-                    fontSize = 11.5.sp,
-                    color = palette.secondaryText,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onToggleOmniDesktopMode(!state.omniDesktopMode) }
+                    .padding(horizontal = 14.dp, vertical = 10.dp)
+                    .testTag("rowToggleOmniDesktop"),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column(modifier = Modifier.weight(1f).padding(end = 10.dp)) {
+                    Text("Omni-Desktop 全桌面模式", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = palette.primaryText)
+                    Text(
+                        text = "上方 100% 满宽显示 Mac 原生桌面，下方自绘键盘与 Dock",
+                        fontSize = 11.5.sp,
+                        color = palette.secondaryText,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Switch(
+                    checked = state.omniDesktopMode,
+                    onCheckedChange = { onToggleOmniDesktopMode(it) },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = palette.accentBlue,
+                        uncheckedThumbColor = Color.White,
+                        uncheckedTrackColor = palette.dividerColor,
+                    ),
+                    modifier = Modifier.testTag("switchOmniDesktop"),
                 )
             }
-            Switch(
-                checked = state.showLinkQualityBar,
-                onCheckedChange = { onToggleLinkQualityBar(it) },
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
-                    checkedTrackColor = palette.accentBlue,
-                    uncheckedThumbColor = Color.White,
-                    uncheckedTrackColor = palette.dividerColor,
-                ),
-                modifier = Modifier.testTag("switchLinkQualityBar"),
-            )
+
+            HorizontalDivider(modifier = Modifier.padding(start = 14.dp), thickness = 0.6.dp, color = palette.dividerColor)
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("自绘虚拟键盘样式", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = palette.primaryText)
+                    Text(state.omniKeyboardStyle.fullLabel, fontSize = 11.5.sp, color = palette.secondaryText)
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(palette.dividerColor)
+                        .padding(3.dp),
+                    horizontalArrangement = Arrangement.spacedBy(3.dp),
+                ) {
+                    for (style in OmniKeyboardStyle.entries) {
+                        val selected = state.omniKeyboardStyle == style
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (selected) palette.accentBlue else Color.Transparent)
+                                .clickable { onSelectOmniKeyboardStyle(style) }
+                                .padding(vertical = 7.dp)
+                                .testTag("segOmniStyle_${style.name}"),
+                        ) {
+                            Text(
+                                text = style.shortLabel,
+                                fontSize = 12.sp,
+                                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                                color = if (selected) Color.White else palette.primaryText,
+                                maxLines = 1,
+                            )
+                        }
+                    }
+                }
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(start = 14.dp), thickness = 0.6.dp, color = palette.dividerColor)
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onToggleLinkQualityBar(!state.showLinkQualityBar) }
+                    .padding(horizontal = 14.dp, vertical = 10.dp)
+                    .testTag("rowToggleLinkQualityBar"),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column(modifier = Modifier.weight(1f).padding(end = 10.dp)) {
+                    Text("显示连接质量工具栏", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = palette.primaryText)
+                    Text(
+                        text = "实时显示速度、延迟、FPS 与码率",
+                        fontSize = 11.5.sp,
+                        color = palette.secondaryText,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Switch(
+                    checked = state.showLinkQualityBar,
+                    onCheckedChange = { onToggleLinkQualityBar(it) },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = palette.accentBlue,
+                        uncheckedThumbColor = Color.White,
+                        uncheckedTrackColor = palette.dividerColor,
+                    ),
+                    modifier = Modifier.testTag("switchLinkQualityBar"),
+                )
+            }
         }
 
         if (state.savedHosts.isNotEmpty()) {
@@ -2345,6 +2523,882 @@ private fun DiagRow(label: String, value: String, palette: GlassPalette) {
             color = palette.secondaryText,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+@Composable
+private fun OmniDesktopWorkspace(
+    state: WorkspaceUiState,
+    palette: GlassPalette,
+    backdrop: LiveVideoBackdrop,
+    videoTrack: VideoTrack?,
+    onVideoSizeChanged: (Int, Int) -> Unit,
+    onBackdropSampled: (ImageBitmap, WindowEdgeColor?, Long) -> Unit,
+    onVideoRectChanged: (Rect) -> Unit,
+    onZoomAndPan: (Float, Float, Float) -> Unit,
+    onResetViewport: () -> Unit,
+    onRemoteClick: (Double, Double, Boolean, Float, Float) -> Unit,
+    onRemoteScroll: (Double, Double, Double, Double) -> Unit,
+    onTrackpadDelta: (Float, Float) -> Unit,
+    onTrackpadClick: (Boolean) -> Unit,
+    onTrackpadScroll: (Double, Double) -> Unit,
+    onSendRawKey: (Int, List<String>) -> Unit,
+    onToggleInputSource: () -> Unit,
+    onActivateOmniApp: (RemoteWindow) -> Unit,
+    onRefreshWindows: () -> Unit,
+    onCycleKeyboardStyle: () -> Unit,
+    onExitOmniMode: () -> Unit,
+    onConnectOrOpenSettings: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenDiagnostics: () -> Unit,
+) {
+    val density = LocalDensity.current
+    val statusTopDp = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val navBottomDp = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF0B0D12))
+            .semantics { testTagsAsResourceId = true }
+            .testTag("omniDesktopWorkspace"),
+    ) {
+        val topInsetDp = 0.dp
+        val bottomInsetDp = navBottomDp.coerceAtMost(16.dp)
+        val controlBarH = 36.dp
+        val minKeyboardBodyH = if (state.omniKeyboardStyle == OmniKeyboardStyle.SLIM_4_ROW) 120.dp else 136.dp
+        val maxKeyboardBodyH = if (state.omniKeyboardStyle == OmniKeyboardStyle.SLIM_4_ROW) 158.dp else 182.dp
+
+        val vidW = max(1, state.videoWidthPx)
+        val vidH = max(1, state.videoHeightPx)
+        val videoAspect = if (state.hasLiveVideo) {
+            (vidW.toFloat() / vidH.toFloat()).coerceIn(0.6f, 3.2f)
+        } else {
+            1728f / 1117f
+        }
+
+        // Priority 1: Lock Mac native screen to 100% edge-to-edge full horizontal width first!
+        val fullWidthScreenH = maxWidth / videoAspect
+        val maxAllowedScreenH = (maxHeight - topInsetDp - controlBarH - minKeyboardBodyH - bottomInsetDp)
+            .coerceAtLeast(140.dp)
+        val screenStageH = minOf(fullWidthScreenH, maxAllowedScreenH)
+
+        val remainingBelowControl = (maxHeight - topInsetDp - screenStageH - controlBarH - bottomInsetDp)
+            .coerceAtLeast(minKeyboardBodyH)
+        val keyboardBodyH = remainingBelowControl.coerceIn(minKeyboardBodyH, maxKeyboardBodyH)
+        val portraitTrackpadSlackH = (remainingBelowControl - keyboardBodyH).coerceAtLeast(0.dp)
+
+        Column(modifier = Modifier.fillMaxSize()) {
+            if (topInsetDp > 0.dp) {
+                Spacer(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(topInsetDp)
+                        .background(Color(0xFF0B0D12)),
+                )
+            }
+
+            // 1. Top 100% Full-Width Native Mac Desktop Stage
+            OmniTopDisplayStage(
+                state = state,
+                palette = palette,
+                backdrop = backdrop,
+                videoTrack = videoTrack,
+                onVideoSizeChanged = onVideoSizeChanged,
+                onBackdropSampled = onBackdropSampled,
+                onVideoRectChanged = onVideoRectChanged,
+                onZoomAndPan = onZoomAndPan,
+                onResetViewport = onResetViewport,
+                onRemoteClick = onRemoteClick,
+                onRemoteScroll = onRemoteScroll,
+                onConnectOrOpenSettings = onConnectOrOpenSettings,
+                onOpenSettings = onOpenSettings,
+                onExitOmniMode = onExitOmniMode,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(screenStageH),
+            )
+
+            // 2. Slim Frosted Control Strip (Link Quality + Mini Mac App Dock + Quick Shortcuts)
+            OmniControlAndDockBar(
+                state = state,
+                palette = palette,
+                onActivateOmniApp = onActivateOmniApp,
+                onRefreshWindows = onRefreshWindows,
+                onSendRawKey = onSendRawKey,
+                onCycleKeyboardStyle = onCycleKeyboardStyle,
+                onExitOmniMode = onExitOmniMode,
+                onOpenSettings = onOpenSettings,
+                onOpenDiagnostics = onOpenDiagnostics,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(controlBarH),
+            )
+
+            // 3. Optional Ergonomic Multi-Touch Trackpad Deck on Tall Portrait Screens
+            // (Keeps the keyboard compact at the bottom instead of stretching keys huge)
+            if (portraitTrackpadSlackH >= 28.dp) {
+                OmniFullWidthTrackpadDeck(
+                    enabled = state.canControl,
+                    onDelta = onTrackpadDelta,
+                    onClick = onTrackpadClick,
+                    onScroll = onTrackpadScroll,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(portraitTrackpadSlackH),
+                )
+            }
+
+            // 4. Custom Self-Drawn Virtual Mac Keyboard (Zero Android System IME)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(keyboardBodyH + bottomInsetDp)
+                    .background(Color(0xFF0D0F14))
+                    .padding(bottom = bottomInsetDp),
+            ) {
+                OmniMacKeyboard(
+                    style = state.omniKeyboardStyle,
+                    enabled = state.canControl,
+                    onSendRawKey = onSendRawKey,
+                    onToggleInputSource = onToggleInputSource,
+                    onTrackpadDelta = onTrackpadDelta,
+                    onTrackpadClick = onTrackpadClick,
+                    onTrackpadScroll = onTrackpadScroll,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+
+        // Subtle warning banner overlaid at top of Mac stage if needed
+        AnimatedVisibility(
+            visible = !state.bannerWarning.isNullOrBlank(),
+            enter = fadeIn(tween(180)),
+            exit = fadeOut(tween(220)),
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = topInsetDp + 8.dp, start = 16.dp, end = 16.dp),
+        ) {
+            FrostedGlassBox(
+                palette = palette,
+                backdrop = backdrop,
+                shape = CircleShape,
+                blurRadius = 20.dp,
+                shadowElevation = 6.dp,
+            ) {
+                Text(
+                    text = state.bannerWarning.orEmpty(),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    fontSize = 11.5.sp,
+                    color = palette.primaryText,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun OmniTopDisplayStage(
+    state: WorkspaceUiState,
+    palette: GlassPalette,
+    backdrop: LiveVideoBackdrop,
+    videoTrack: VideoTrack?,
+    onVideoSizeChanged: (Int, Int) -> Unit,
+    onBackdropSampled: (ImageBitmap, WindowEdgeColor?, Long) -> Unit,
+    onVideoRectChanged: (Rect) -> Unit,
+    onZoomAndPan: (Float, Float, Float) -> Unit,
+    onResetViewport: () -> Unit,
+    onRemoteClick: (Double, Double, Boolean, Float, Float) -> Unit,
+    onRemoteScroll: (Double, Double, Double, Double) -> Unit,
+    onConnectOrOpenSettings: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onExitOmniMode: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val haptics = LocalHapticFeedback.current
+    val density = LocalDensity.current
+    var stageSize by remember { mutableStateOf(IntSize.Zero) }
+    val gestureMachine = remember {
+        InteractionGestureMachine().apply {
+            relativeTrackpad = false
+            directScroll = true
+        }
+    }
+
+    val vidW = max(1, state.videoWidthPx)
+    val vidH = max(1, state.videoHeightPx)
+    val stW = stageSize.width.toFloat()
+    val stH = stageSize.height.toFloat()
+
+    val (drawW, drawH) = remember(stW, stH, vidW, vidH) {
+        if (stW <= 1f || stH <= 1f) {
+            0f to 0f
+        } else {
+            val s = min(stW / vidW.toFloat(), stH / vidH.toFloat())
+            // Snap to exact full width when within 1.5% aspect tolerance so zero sub-pixel seams appear
+            val rawW = vidW * s
+            val rawH = vidH * s
+            if (kotlin.math.abs(rawW - stW) <= stW * 0.015f) {
+                stW to stH
+            } else {
+                rawW to rawH
+            }
+        }
+    }
+
+    val transform = StageTransform(
+        left0 = (stW - drawW) * 0.5f,
+        top0 = (stH - drawH) * 0.5f,
+        drawW = drawW,
+        drawH = drawH,
+        centerX = stW * 0.5f,
+        centerY = stH * 0.5f,
+        zoom = state.zoom,
+        panX = state.panX,
+        panY = state.panY,
+    )
+
+    var latestTransform by remember { mutableStateOf(transform) }
+    latestTransform = transform
+    var latestState by remember { mutableStateOf(state) }
+    latestState = state
+
+    val rippleAnim = remember { Animatable(0f) }
+    LaunchedEffect(state.lastRipple?.id) {
+        if (state.lastRipple != null) {
+            rippleAnim.snapTo(0f)
+            rippleAnim.animateTo(1f, tween(durationMillis = 220))
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .background(Color.Black)
+            .clip(RoundedCornerShape(0.dp))
+            .onSizeChanged { stageSize = it }
+            .testTag("omniTopDisplayStage")
+            .pointerInput(Unit) {
+                var scrollAnchorPt: Pair<Double, Double>? = null
+                awaitEachGesture {
+                    do {
+                        val event = awaitPointerEvent()
+                        val timeSec = (event.changes.firstOrNull()?.uptimeMillis ?: System.currentTimeMillis()) / 1000.0
+                        val activeContacts = event.changes
+                            .filter { it.pressed }
+                            .map { ch ->
+                                ch.consume()
+                                TouchContact(ch.id.value.toInt(), TouchPoint(ch.position.x, ch.position.y))
+                            }
+                        val actions = gestureMachine.update(activeContacts, timeSec)
+                        val curState = latestState
+                        val curTransform = latestTransform
+                        val win = curState.selectedWindow
+
+                        for (act in actions) {
+                            when (act) {
+                                is GestureAction.Zoom -> onZoomAndPan(act.factor, 0f, 0f)
+                                is GestureAction.Pan -> onZoomAndPan(1.0f, act.delta.dx, act.delta.dy)
+                                is GestureAction.RelativeMove -> Unit
+                                is GestureAction.Tap -> {
+                                    if (win != null && curState.hasLiveVideo) {
+                                        curTransform.screenToNormalized(act.point.x, act.point.y)?.let { (u, v) ->
+                                            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            onRemoteClick(u * win.widthPoints, v * win.heightPoints, false, act.point.x, act.point.y)
+                                        }
+                                    }
+                                }
+                                is GestureAction.SecondaryClick -> {
+                                    if (win != null && curState.hasLiveVideo) {
+                                        curTransform.screenToNormalized(act.point.x, act.point.y)?.let { (u, v) ->
+                                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            onRemoteClick(u * win.widthPoints, v * win.heightPoints, true, act.point.x, act.point.y)
+                                        }
+                                    }
+                                }
+                                is GestureAction.ScrollBegan -> {
+                                    if (win != null) {
+                                        scrollAnchorPt = curTransform.screenToNormalized(act.origin.x, act.origin.y)?.let { (u, v) ->
+                                            (u * win.widthPoints) to (v * win.heightPoints)
+                                        }
+                                    }
+                                }
+                                is GestureAction.Scroll -> {
+                                    val anchor = scrollAnchorPt
+                                    if (win != null && anchor != null) {
+                                        val ptsPerPx = curTransform.effectivePointsPerScreenPixel(win.widthPoints)
+                                        onRemoteScroll(
+                                            anchor.first,
+                                            anchor.second,
+                                            (act.delta.dx * ptsPerPx).toDouble(),
+                                            (act.delta.dy * ptsPerPx).toDouble(),
+                                        )
+                                    }
+                                }
+                                GestureAction.ScrollEnded, GestureAction.Cancel -> {
+                                    scrollAnchorPt = null
+                                }
+                            }
+                        }
+                    } while (event.changes.any { it.pressed })
+                }
+            },
+    ) {
+        if (videoTrack != null && drawW > 1f && drawH > 1f) {
+            val drawWDp = with(density) { drawW.toDp() }
+            val drawHDp = with(density) { drawH.toDp() }
+            AndroidView(
+                factory = { ctx ->
+                    WebRtcTextureView(ctx).also { v ->
+                        v.setHdrPqMode(state.negotiatedHdrPq)
+                        v.onVideoDimensionsChanged = onVideoSizeChanged
+                        v.onBackdropSampled = onBackdropSampled
+                        v.bindTrack(videoTrack)
+                    }
+                },
+                update = { view ->
+                    view.setHdrPqMode(state.negotiatedHdrPq)
+                    view.onVideoDimensionsChanged = onVideoSizeChanged
+                    view.onBackdropSampled = onBackdropSampled
+                    view.bindTrack(videoTrack)
+                },
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(drawWDp, drawHDp)
+                    .graphicsLayer {
+                        scaleX = state.zoom
+                        scaleY = state.zoom
+                        translationX = state.panX
+                        translationY = state.panY
+                        alpha = if (state.hasLiveVideo) 1f else 0f
+                    }
+                    .onGloballyPositioned { coords ->
+                        onVideoRectChanged(coords.boundsInRoot())
+                    },
+            )
+        }
+
+        if (!state.hasLiveVideo) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFF10131B))
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    if (state.phase == ConnectionPhase.CONNECTING_COORD ||
+                        state.phase == ConnectionPhase.HANDSHAKING ||
+                        state.phase == ConnectionPhase.ICE_CHECKING ||
+                        (state.dataChannelOpen && state.selectedWindow != null)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp,
+                            color = Color(0xFF0A84FF),
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.DesktopWindows,
+                            contentDescription = null,
+                            tint = Color(0xFF0A84FF),
+                            modifier = Modifier.size(22.dp),
+                        )
+                    }
+                    Text(
+                        text = if (state.dataChannelOpen) "正在载入 Mac 原生全尺寸桌面…" else "Omni-Desktop 原生桌面工作台",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFFF3F5FA),
+                    )
+                }
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = state.statusText,
+                    fontSize = 12.sp,
+                    color = Color(0xFF9AA3B8),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (!state.dataChannelOpen) {
+                    Spacer(Modifier.height(12.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color(0xFF0A84FF))
+                                .clickable(onClick = onConnectOrOpenSettings)
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                .testTag("omniBtnConnect"),
+                        ) {
+                            Text(
+                                text = if (state.activeHost != null) "连接 ${state.activeHost.name}" else "配对并连接 Mac",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.White,
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color(0xFF232836))
+                                .clickable(onClick = onOpenSettings)
+                                .padding(horizontal = 14.dp, vertical = 8.dp),
+                        ) {
+                            Text("设置", fontSize = 13.sp, color = Color(0xFFD5DCEB))
+                        }
+                    }
+                }
+            }
+        }
+
+        if (state.hasLiveVideo && state.zoom > 1.02f) {
+            FrostedGlassBox(
+                palette = palette,
+                backdrop = backdrop,
+                shape = CircleShape,
+                blurRadius = 20.dp,
+                shadowElevation = 8.dp,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = 10.dp, bottom = 8.dp)
+                    .clickable(onClick = onResetViewport),
+            ) {
+                Text(
+                    text = "100% 满宽",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = palette.primaryText,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                )
+            }
+        }
+
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val ripple = state.lastRipple
+            if (ripple != null && rippleAnim.value < 0.99f) {
+                val p = rippleAnim.value
+                val color = if (ripple.isSecondary) Color(0xFFFF9F0A) else Color(0xFF0A84FF)
+                drawCircle(
+                    color = color.copy(alpha = (1f - p) * 0.65f),
+                    radius = 8.dp.toPx() + p * 18.dp.toPx(),
+                    center = Offset(ripple.viewX, ripple.viewY),
+                    style = Stroke(width = 1.8.dp.toPx()),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun OmniControlAndDockBar(
+    state: WorkspaceUiState,
+    palette: GlassPalette,
+    onActivateOmniApp: (RemoteWindow) -> Unit,
+    onRefreshWindows: () -> Unit,
+    onSendRawKey: (Int, List<String>) -> Unit,
+    onCycleKeyboardStyle: () -> Unit,
+    onExitOmniMode: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenDiagnostics: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val haptics = LocalHapticFeedback.current
+    val t = state.telemetry
+    val isConnected = state.phase == ConnectionPhase.CONNECTED || state.dataChannelOpen || state.hasLiveVideo
+    val rtt = t.rttMs
+    val ledColor = when {
+        !isConnected -> Color(0xFF6B7280)
+        rtt == null || rtt < 45.0 -> Color(0xFF30D158)
+        rtt < 110.0 -> Color(0xFFFF9F0A)
+        else -> Color(0xFFFF453A)
+    }
+    val bytesPerSec = if (t.rxBytesPerSec > 0.0) t.rxBytesPerSec else (t.videoMbps * 125_000.0)
+    val speedStr = when {
+        !isConnected -> "—"
+        bytesPerSec >= 1_000_000.0 -> String.format("%.1fM/s", bytesPerSec / 1_000_000.0)
+        bytesPerSec >= 1_000.0 -> String.format("%dK/s", (bytesPerSec / 1_000.0).roundToInt())
+        else -> "0K/s"
+    }
+    val rttStr = rtt?.let { "${it.roundToInt()}ms" } ?: "—"
+    val fpsStr = if (state.hasLiveVideo) "${t.fps.roundToInt()}fps" else "—"
+
+    val dockApps = remember(state.windows, state.appIcons, state.activeOmniAppPid) {
+        state.windows
+            .filter { !it.isFullDisplay }
+            .groupBy { it.processID }
+            .map { (pid, wins) ->
+                Triple(wins.first(), state.appIcons[pid], state.activeOmniAppPid == pid)
+            }
+    }
+
+    Row(
+        modifier = modifier
+            .background(Color(0xFF181B24))
+            .border(BorderStroke(0.5.dp, Color.White.copy(alpha = 0.10f)))
+            .padding(horizontal = 6.dp, vertical = 3.dp)
+            .testTag("omniControlDockBar"),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
+    ) {
+        // 1. Live Link Quality Pill (respects showLinkQualityBar)
+        if (state.showLinkQualityBar) {
+            Row(
+                modifier = Modifier
+                    .height(28.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xFF222735))
+                    .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(8.dp))
+                    .clickable(onClick = onOpenDiagnostics)
+                    .padding(horizontal = 7.dp)
+                    .testTag("omniLinkQualityPill"),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.5.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(6.dp)
+                        .clip(CircleShape)
+                        .background(ledColor),
+                )
+                Text(
+                    text = if (isConnected) "$rttStr·$fpsStr·$speedStr" else "待直连",
+                    fontSize = 10.sp,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFFE5EAF5),
+                    maxLines = 1,
+                )
+            }
+        }
+
+        // 2. Center Scrollable Mini Mac App Dock
+        LazyRow(
+            modifier = Modifier
+                .weight(1f)
+                .height(30.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color(0xFF13161E))
+                .padding(horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            if (dockApps.isEmpty()) {
+                item {
+                    Text(
+                        text = if (state.dataChannelOpen) "Dock 就绪 · 点刷新载入应用" else "等待连接载入 Mac Dock",
+                        fontSize = 10.sp,
+                        color = Color(0xFF7F8BA3),
+                        modifier = Modifier
+                            .clickable(enabled = state.dataChannelOpen, onClick = onRefreshWindows)
+                            .padding(horizontal = 6.dp),
+                    )
+                }
+            } else {
+                items(dockApps, key = { it.first.processID }) { (win, iconB64, isFocusedApp) ->
+                    OmniMiniDockIcon(
+                        window = win,
+                        iconBase64 = iconB64,
+                        isActive = isFocusedApp,
+                        onClick = {
+                            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onActivateOmniApp(win)
+                        },
+                    )
+                }
+            }
+            if (state.dataChannelOpen) {
+                item {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Color(0xFF222735))
+                            .clickable {
+                                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onRefreshWindows()
+                            }
+                            .testTag("omniDockRefresh"),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "刷新 Dock",
+                            tint = Color(0xFFA8B3CA),
+                            modifier = Modifier.size(13.dp),
+                        )
+                    }
+                }
+            }
+        }
+
+        // 3. Quick Mac Chord & Mode Pills (bounded width on narrow cover screens so Dock stays visible)
+        val isNarrowStrip = LocalConfiguration.current.screenWidthDp < 560
+        Row(
+            modifier = Modifier
+                .widthIn(max = if (isNarrowStrip) 158.dp else 440.dp)
+                .horizontalScroll(rememberScrollState()),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            OmniMacroChip("Esc", enabled = state.canControl, tag = "omniMacro_esc") {
+                onSendRawKey(MacKeyCode.ESCAPE, emptyList())
+            }
+            OmniMacroChip("⌘Space", enabled = state.canControl, tag = "omniMacro_spotlight") {
+                onSendRawKey(MacKeyCode.SPACE, listOf("cmd"))
+            }
+            OmniMacroChip("⌘Tab", enabled = state.canControl, tag = "omniMacro_cmdtab") {
+                onSendRawKey(MacKeyCode.TAB, listOf("cmd"))
+            }
+            OmniMacroChip("⌘C", enabled = state.canControl, tag = "omniMacro_copy") {
+                onSendRawKey(MacKeyCode.C, listOf("cmd"))
+            }
+            OmniMacroChip("⌘V", enabled = state.canControl, tag = "omniMacro_paste") {
+                onSendRawKey(MacKeyCode.V, listOf("cmd"))
+            }
+
+            // 1-Tap Keyboard Layout Style Switcher
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .height(27.dp)
+                    .clip(RoundedCornerShape(7.dp))
+                    .background(Color(0xFF1D3557))
+                    .border(0.5.dp, Color(0xFF5EA8FF).copy(alpha = 0.45f), RoundedCornerShape(7.dp))
+                    .clickable {
+                        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onCycleKeyboardStyle()
+                    }
+                    .padding(horizontal = 7.dp)
+                    .testTag("btnOmniCycleKeyboard"),
+            ) {
+                Text(
+                    text = state.omniKeyboardStyle.shortLabel,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF9ED0FF),
+                    maxLines = 1,
+                )
+            }
+
+            // Exit back to Single-Window Mode
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .height(27.dp)
+                    .clip(RoundedCornerShape(7.dp))
+                    .background(Color(0xFF232836))
+                    .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(7.dp))
+                    .clickable(onClick = onExitOmniMode)
+                    .padding(horizontal = 7.dp)
+                    .testTag("btnOmniExit"),
+            ) {
+                Text(
+                    text = "单窗",
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFFD5DCEB),
+                    maxLines = 1,
+                )
+            }
+
+            // Settings button
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(27.dp)
+                    .clip(RoundedCornerShape(7.dp))
+                    .background(Color(0xFF232836))
+                    .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(7.dp))
+                    .clickable(onClick = onOpenSettings)
+                    .testTag("btnOmniSettings"),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "设置",
+                    tint = Color(0xFFD5DCEB),
+                    modifier = Modifier.size(14.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun OmniMiniDockIcon(
+    window: RemoteWindow,
+    iconBase64: String?,
+    isActive: Boolean,
+    onClick: () -> Unit,
+) {
+    val decodedIcon = remember(iconBase64) {
+        if (iconBase64.isNullOrBlank()) null
+        else runCatching {
+            val bytes = Base64.decode(iconBase64, Base64.DEFAULT)
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.asImageBitmap()
+        }.getOrNull()
+    }
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .size(26.dp)
+            .clip(RoundedCornerShape(6.dp))
+            .background(if (isActive) Color(0xFF0A84FF).copy(alpha = 0.28f) else Color.Transparent)
+            .clickable(onClick = onClick)
+            .semantics { contentDescription = "激活 ${window.application}" },
+    ) {
+        if (decodedIcon != null) {
+            Image(
+                bitmap = decodedIcon,
+                contentDescription = window.application,
+                modifier = Modifier.size(22.dp),
+            )
+        } else {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(21.dp)
+                    .clip(RoundedCornerShape(5.dp))
+                    .background(Color(0xFF2E3648)),
+            ) {
+                Text(
+                    text = window.application.take(1).uppercase(),
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun OmniMacroChip(
+    label: String,
+    enabled: Boolean,
+    tag: String,
+    onClick: () -> Unit,
+) {
+    val haptics = LocalHapticFeedback.current
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .height(27.dp)
+            .clip(RoundedCornerShape(7.dp))
+            .background(Color(0xFF232836))
+            .border(0.5.dp, Color.White.copy(alpha = 0.11f), RoundedCornerShape(7.dp))
+            .clickable(enabled = enabled) {
+                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onClick()
+            }
+            .padding(horizontal = 6.5.dp)
+            .testTag(tag),
+    ) {
+        Text(
+            text = label,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Medium,
+            color = if (enabled) Color(0xFFE5EAF5) else Color(0xFF6B7280),
+            maxLines = 1,
+        )
+    }
+}
+
+@Composable
+private fun OmniFullWidthTrackpadDeck(
+    enabled: Boolean,
+    onDelta: (Float, Float) -> Unit,
+    onClick: (Boolean) -> Unit,
+    onScroll: (Double, Double) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val haptics = LocalHapticFeedback.current
+    val density = LocalDensity.current.density
+    val latestEnabled by remember { mutableStateOf(enabled) }.apply { value = enabled }
+    var touchPos by remember { mutableStateOf<Offset?>(null) }
+
+    Box(
+        modifier = modifier
+            .background(Color(0xFF12151E))
+            .padding(horizontal = 8.dp, vertical = 5.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(Color(0xFF191D29), Color(0xFF141720)),
+                )
+            )
+            .border(0.7.dp, Color.White.copy(alpha = 0.09f), RoundedCornerShape(12.dp))
+            .testTag("omniPortraitTrackpadDeck")
+            .pointerInput(density) {
+                awaitEachGesture {
+                    val first = awaitPointerEvent()
+                    val down = first.changes.firstOrNull { it.pressed } ?: return@awaitEachGesture
+                    first.changes.forEach { it.consume() }
+
+                    val startMs = System.currentTimeMillis()
+                    var maxPointers = first.changes.count { it.pressed }
+                    var travel = 0f
+                    var prev = down.position
+                    touchPos = prev
+
+                    while (true) {
+                        val ev = awaitPointerEvent()
+                        ev.changes.forEach { it.consume() }
+                        val pts = ev.changes.mapNotNull { if (it.pressed) it.position else null }
+                        if (pts.isEmpty()) break
+                        if (pts.size > maxPointers) {
+                            maxPointers = pts.size
+                            prev = Offset(pts.map { it.x }.average().toFloat(), pts.map { it.y }.average().toFloat())
+                            continue
+                        }
+                        val cur = Offset(pts.map { it.x }.average().toFloat(), pts.map { it.y }.average().toFloat())
+                        touchPos = cur
+                        val dx = cur.x - prev.x
+                        val dy = cur.y - prev.y
+                        prev = cur
+                        val dist = kotlin.math.hypot(dx, dy)
+                        travel += dist
+                        if (!latestEnabled || dist < 0.35f) continue
+                        val dxDp = dx / max(1f, density)
+                        val dyDp = dy / max(1f, density)
+                        if (pts.size >= 2) {
+                            onScroll((dxDp * 2.2f).toDouble(), (dyDp * 2.2f).toDouble())
+                        } else {
+                            val boost = min(2.5f, 1.15f + dist * 0.045f)
+                            onDelta(dxDp * boost, dyDp * boost)
+                        }
+                    }
+
+                    touchPos = null
+                    if (latestEnabled && System.currentTimeMillis() - startMs <= 270L && travel <= 11f * density) {
+                        val right = maxPointers >= 2
+                        haptics.performHapticFeedback(
+                            if (right) HapticFeedbackType.LongPress else HapticFeedbackType.TextHandleMove
+                        )
+                        onClick(right)
+                    }
+                }
+            },
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            touchPos?.let { p ->
+                drawCircle(Color(0xFF0A84FF).copy(alpha = 0.22f), radius = 20.dp.toPx(), center = p)
+                drawCircle(Color(0xFF8EC8FF).copy(alpha = 0.85f), radius = 4.dp.toPx(), center = p)
+            }
+        }
+        Text(
+            text = "MAC MULTI-TOUCH TRACKPAD · 单指移动点按 / 双指滚动右键",
+            fontSize = 9.5.sp,
+            fontFamily = FontFamily.Monospace,
+            color = Color(0xFF7F8BA3).copy(alpha = 0.62f),
+            modifier = Modifier.align(Alignment.Center),
         )
     }
 }

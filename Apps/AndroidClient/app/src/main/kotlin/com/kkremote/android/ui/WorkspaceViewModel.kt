@@ -89,6 +89,9 @@ data class WorkspaceUiState(
     val preferHdr: Boolean = false,
     val negotiatedHdrPq: Boolean = false,
     val showLinkQualityBar: Boolean = true,
+    val omniDesktopMode: Boolean = false,
+    val omniKeyboardStyle: OmniKeyboardStyle = OmniKeyboardStyle.COMPACT_5_ROW,
+    val activeOmniAppPid: Int? = null,
     val zoom: Float = 1.0f,
     val panX: Float = 0f,
     val panY: Float = 0f,
@@ -110,6 +113,8 @@ data class WorkspaceUiState(
 @Serializable
 private data class ClientUiPrefs(
     val showLinkQualityBar: Boolean = true,
+    val omniDesktopMode: Boolean = false,
+    val omniKeyboardStyle: OmniKeyboardStyle = OmniKeyboardStyle.COMPACT_5_ROW,
 )
 
 class WorkspaceViewModel(application: Application) : AndroidViewModel(application) {
@@ -147,11 +152,13 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
     private var inFlightInputId: String? = null
     private var inFlightTimeoutJob: Job? = null
 
-    // Coalesced smooth scrolling
+    // Coalesced smooth scrolling & relative pointer glide
     private var pendingScrollPt: TouchPoint? = null
     private var pendingScrollDx: Double = 0.0
     private var pendingScrollDy: Double = 0.0
     private var scrollFlushJob: Job? = null
+    private var pendingMovePt: TouchPoint? = null
+    private var moveFlushJob: Job? = null
     private var warningDismissJob: Job? = null
     private var resizeDebounceJob: Job? = null
     private var desiredViewport: WindowViewport? = null
@@ -168,6 +175,8 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                 savedHosts = loaded,
                 activeHost = mostRecent,
                 showLinkQualityBar = uiPrefs.showLinkQualityBar,
+                omniDesktopMode = uiPrefs.omniDesktopMode,
+                omniKeyboardStyle = uiPrefs.omniKeyboardStyle,
                 showPairingSheet = false,
             )
         }
@@ -375,6 +384,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
             delay(350L)
             val st = _uiState.value
             val win = st.selectedWindow ?: return@launch
+            if (st.omniDesktopMode || win.isFullDisplay) return@launch
             val vp = desiredViewport ?: return@launch
             val rtc = rtcClient ?: return@launch
             if (!st.dataChannelOpen || !st.windowLayoutSupported || vp == appliedViewport) return@launch
@@ -388,6 +398,45 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                 )
             )
         }
+    }
+
+    fun selectFullMacDisplay() {
+        val rtc = rtcClient ?: run {
+            reconnectActiveHost()
+            return
+        }
+        resizeDebounceJob?.cancel()
+        pendingViewport = null
+        resetInputQueue()
+        _uiState.update {
+            it.copy(
+                statusText = "正在进入 Omni-Desktop 原生桌面…",
+                showWindowSheet = false,
+                showKeyboardBar = false,
+            )
+        }
+        val sent = rtc.sendWindowCommand(
+            WindowMessage(
+                action = "selectDisplay",
+                requestID = DeviceIdentity.randomHex(8),
+            )
+        )
+        if (!sent) {
+            handleMediaLostAndRecover("控制通道已断开，正在自动恢复桌面连接…")
+        }
+    }
+
+    fun activateOmniApp(window: RemoteWindow) {
+        val rtc = rtcClient ?: return
+        _uiState.update { it.copy(activeOmniAppPid = window.processID) }
+        rtc.sendWindowCommand(
+            WindowMessage(
+                action = "activateWindow",
+                requestID = DeviceIdentity.randomHex(8),
+                windowID = window.id,
+                processID = window.processID,
+            )
+        )
     }
 
     fun selectWindow(window: RemoteWindow) {
@@ -585,6 +634,80 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         enqueueInput(kind = "key", key = keyName)
     }
 
+    fun sendRawMacKey(keyCode: Int, modifiers: List<String> = emptyList()) {
+        if (!_uiState.value.canControl || keyCode !in 0..127) return
+        val cleanMods = modifiers.filter { it in setOf("shift", "ctrl", "opt", "cmd", "fn") }.distinct()
+        enqueueInput(
+            kind = "rawKey",
+            keyCode = keyCode,
+            modifiers = cleanMods.ifEmpty { null },
+        )
+    }
+
+    fun sendToggleMacInputSource() {
+        if (!_uiState.value.canControl) return
+        enqueueInput(kind = "toggleInputSource")
+    }
+
+    fun moveOmniTrackpadCursor(deltaPtX: Float, deltaPtY: Float) {
+        val win = _uiState.value.selectedWindow ?: return
+        var targetPt: TouchPoint? = null
+        _uiState.update { st ->
+            val cur = st.trackpadCursorPt
+                ?: TouchPoint((win.widthPoints * 0.5).toFloat(), (win.heightPoints * 0.5).toFloat())
+            val nx = (cur.x + deltaPtX).coerceIn(0f, max(0f, win.widthPoints.toFloat() - 0.5f))
+            val ny = (cur.y + deltaPtY).coerceIn(0f, max(0f, win.heightPoints.toFloat() - 0.5f))
+            val pt = TouchPoint(nx, ny)
+            targetPt = pt
+            st.copy(trackpadCursorPt = pt)
+        }
+        val pt = targetPt ?: return
+        if (!_uiState.value.canControl) return
+        pendingMovePt = pt
+        if (moveFlushJob != null) return
+        moveFlushJob = viewModelScope.launch {
+            delay(26L)
+            moveFlushJob = null
+            val latest = pendingMovePt ?: return@launch
+            pendingMovePt = null
+            enqueueInput(
+                kind = "move",
+                x = latest.x.toDouble(),
+                y = latest.y.toDouble(),
+            )
+        }
+    }
+
+    fun clickAtTrackpadCursor(isSecondary: Boolean) {
+        val win = _uiState.value.selectedWindow ?: return
+        if (!_uiState.value.canControl) return
+        val cur = _uiState.value.trackpadCursorPt
+            ?: TouchPoint((win.widthPoints * 0.5).toFloat(), (win.heightPoints * 0.5).toFloat())
+        enqueueInput(
+            kind = if (isSecondary) "secondary" else "click",
+            x = min(win.widthPoints - 0.5, max(0.0, cur.x.toDouble())),
+            y = min(win.heightPoints - 0.5, max(0.0, cur.y.toDouble())),
+        )
+    }
+
+    fun scrollAtTrackpadCursor(dxPoints: Double, dyPoints: Double) {
+        val win = _uiState.value.selectedWindow ?: return
+        val cur = _uiState.value.trackpadCursorPt
+            ?: TouchPoint((win.widthPoints * 0.5).toFloat(), (win.heightPoints * 0.5).toFloat())
+        queueRemoteScroll(cur.x.toDouble(), cur.y.toDouble(), dxPoints, dyPoints)
+    }
+
+    private fun saveCurrentUiPrefs() {
+        val st = _uiState.value
+        persistUiPrefs(
+            ClientUiPrefs(
+                showLinkQualityBar = st.showLinkQualityBar,
+                omniDesktopMode = st.omniDesktopMode,
+                omniKeyboardStyle = st.omniKeyboardStyle,
+            )
+        )
+    }
+
     fun setShowPairingSheet(visible: Boolean) = _uiState.update { it.copy(showPairingSheet = visible, errorText = null) }
     fun setShowWindowSheet(visible: Boolean) {
         _uiState.update { it.copy(showWindowSheet = visible) }
@@ -593,10 +716,40 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
     fun setShowTelemetrySheet(visible: Boolean) = _uiState.update { it.copy(showTelemetrySheet = visible) }
     fun setShowLinkQualityBar(enabled: Boolean) {
         _uiState.update { it.copy(showLinkQualityBar = enabled) }
-        persistUiPrefs(ClientUiPrefs(showLinkQualityBar = enabled))
+        saveCurrentUiPrefs()
     }
     fun toggleLinkQualityBar() {
         setShowLinkQualityBar(!_uiState.value.showLinkQualityBar)
+    }
+    fun setOmniDesktopMode(enabled: Boolean) {
+        val wasOmni = _uiState.value.omniDesktopMode
+        if (wasOmni == enabled) return
+        _uiState.update {
+            it.copy(
+                omniDesktopMode = enabled,
+                showWindowSheet = false,
+                showKeyboardBar = false,
+            )
+        }
+        saveCurrentUiPrefs()
+        if (!_uiState.value.dataChannelOpen) return
+        if (enabled) {
+            selectFullMacDisplay()
+        } else if (_uiState.value.selectedWindow?.isFullDisplay == true) {
+            stopViewingKeepConnection()
+        }
+    }
+    fun toggleOmniDesktopMode() {
+        setOmniDesktopMode(!_uiState.value.omniDesktopMode)
+    }
+    fun setOmniKeyboardStyle(style: OmniKeyboardStyle) {
+        _uiState.update { it.copy(omniKeyboardStyle = style) }
+        saveCurrentUiPrefs()
+    }
+    fun cycleOmniKeyboardStyle() {
+        val styles = OmniKeyboardStyle.entries
+        val next = styles[(_uiState.value.omniKeyboardStyle.ordinal + 1) % styles.size]
+        setOmniKeyboardStyle(next)
     }
     fun setShowKeyboardBar(visible: Boolean) {
         _uiState.update { it.copy(showKeyboardBar = visible) }
@@ -705,7 +858,11 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                     viewModelScope.launch {
                         if (sessionId != activeSessionId) return@launch
                         _uiState.update { it.copy(dataChannelOpen = true) }
-                        refreshWindows()
+                        if (_uiState.value.omniDesktopMode) {
+                            selectFullMacDisplay()
+                        } else {
+                            refreshWindows()
+                        }
                     }
                 }
 
@@ -774,7 +931,11 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                 }
                 val currentSelected = _uiState.value.selectedWindow
                 val autoTarget = pendingAutoSelectApp
-                if (currentSelected == null && list.isNotEmpty()) {
+                if (_uiState.value.omniDesktopMode) {
+                    if (currentSelected?.isFullDisplay != true) {
+                        selectFullMacDisplay()
+                    }
+                } else if (currentSelected == null && list.isNotEmpty()) {
                     val matched = if (!autoTarget.isNullOrBlank()) {
                         list.firstOrNull { win ->
                             win.displayLabel.contains(autoTarget, ignoreCase = true)
@@ -791,7 +952,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
 
             "selected" -> {
                 val win = cmd.selected
-                appliedViewport = if (win != null && cmd.error.isNullOrBlank()) {
+                appliedViewport = if (win != null && !win.isFullDisplay && cmd.error.isNullOrBlank()) {
                     pendingViewport ?: appliedViewport
                 } else {
                     null
@@ -826,7 +987,9 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                 } else {
                     postTransientWarning(null)
                 }
-                if (win != null && cmd.error.isNullOrBlank()) {
+                if (win != null && win.isFullDisplay) {
+                    refreshWindows()
+                } else if (win != null && cmd.error.isNullOrBlank()) {
                     _uiState.value.activeHost?.let { active ->
                         upsertHost(active.copy(lastWindowTitle = win.application))
                     }
@@ -891,6 +1054,8 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         dy: Double? = null,
         text: String? = null,
         key: String? = null,
+        keyCode: Int? = null,
+        modifiers: List<String>? = null,
     ) {
         val st = _uiState.value
         val lease = st.controlLease ?: return
@@ -909,6 +1074,8 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
             text = text,
             focus = st.controlFocus ?: "pending",
             key = key,
+            keyCode = keyCode,
+            modifiers = modifiers,
         )
         val msg = WindowMessage(
             action = "input",
@@ -952,6 +1119,9 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
         inFlightInputId = null
         scrollFlushJob?.cancel()
         scrollFlushJob = null
+        moveFlushJob?.cancel()
+        moveFlushJob = null
+        pendingMovePt = null
         queuedInputs.clear()
         inputSequence = 0
     }

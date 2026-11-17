@@ -9,6 +9,8 @@ import com.kkremote.android.gesture.TouchPoint
 import com.kkremote.android.network.PhysicalNetworkBinder
 import com.kkremote.android.protocol.CoordConnectRequest
 import com.kkremote.android.protocol.DataChannelSignalEnvelope
+import com.kkremote.android.protocol.RemoteWindow
+import com.kkremote.android.protocol.WindowInput
 import com.kkremote.android.protocol.WindowMessage
 import com.kkremote.android.protocol.WindowViewport
 import com.kkremote.android.ui.WindowEdgeColorEstimator
@@ -194,5 +196,42 @@ class CryptoAndGestureTest {
         assertTrue(PhysicalNetworkBinder.isVpnOrCgnatTunnelIp("172.19.0.1"))
         assertFalse(PhysicalNetworkBinder.isVpnOrCgnatTunnelIp("candidate:3 1 udp 2122260223 192.168.1.25 52000 typ host"))
         assertFalse(PhysicalNetworkBinder.isVpnOrCgnatTunnelIp("candidate:4 1 udp 1686052607 203.0.113.12 39001 typ srflx"))
+    }
+
+    @OptIn(ExperimentalSerializationApi::class)
+    @Test
+    fun omniDesktopDisplayAndRawKeyWireModelsSerializeCleanly() {
+        val json = Json { encodeDefaults = true; explicitNulls = false; ignoreUnknownKeys = true }
+        val disp = RemoteWindow(
+            id = RemoteWindow.MAIN_DISPLAY_HANDLE,
+            number = 1L,
+            processID = 0,
+            application = "macOS 桌面",
+            title = "1728×1117",
+            widthPoints = 1728.0,
+            heightPoints = 1117.0,
+        )
+        assertTrue(disp.isFullDisplay)
+
+        val rawChordMsg = WindowMessage(
+            action = "input",
+            requestID = "req1",
+            windowID = disp.id,
+            mediaSession = "sess1",
+            input = WindowInput(
+                lease = "lease1",
+                sequence = 1,
+                kind = "rawKey",
+                keyCode = 8,
+                modifiers = listOf("cmd", "shift"),
+            ),
+        )
+        val encoded = json.encodeToString(rawChordMsg)
+        assertTrue(encoded.contains("\"kind\":\"rawKey\""))
+        assertTrue(encoded.contains("\"keyCode\":8"))
+        assertTrue(encoded.contains("\"modifiers\":[\"cmd\",\"shift\"]"))
+        val decoded = json.decodeFromString<WindowMessage>(encoded)
+        assertEquals(8, decoded.input?.keyCode)
+        assertEquals(listOf("cmd", "shift"), decoded.input?.modifiers)
     }
 }
