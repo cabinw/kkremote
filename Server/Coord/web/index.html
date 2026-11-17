@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>KKRemote · 原生窗口远控</title>
+<style>
+  :root {
+    --bg: #0b0d12;
+    --panel: rgba(20, 24, 33, 0.92);
+    --border: rgba(255, 255, 255, 0.11);
+    --text: #f3f5f9;
+    --muted: #939bb0;
+    --accent: #3b82f6;
+    --ok: #10b981;
+    --warn: #f59e0b;
+    --err: #ef4444;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Roboto", sans-serif;
+    overflow: hidden; touch-action: none;
+  }
+  #app {
+    display: flex; flex-direction: column; width: 100%; height: 100dvh;
+    padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
+  }
+  #topbar {
+    display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+    background: var(--panel); border-bottom: 1px solid var(--border);
+    flex-shrink: 0; overflow-x: auto; white-space: nowrap;
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 9px; border-radius: 999px; font-size: 12px; font-weight: 600;
+    background: rgba(255,255,255,0.07); color: var(--text);
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+  .dot.ok { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+  .dot.warn { background: var(--warn); }
+  .dot.err { background: var(--err); }
+  button, select, input {
+    background: rgba(255,255,255,0.08); color: var(--text);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px 11px; font-size: 13px; outline: none;
+  }
+  button { cursor: pointer; font-weight: 500; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.active { background: rgba(59,130,246,0.28); border-color: var(--accent); }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  #stage {
+    position: relative; flex: 1; min-height: 0; width: 100%;
+    display: flex; align-items: center; justify-content: center;
+    background: #050608; overflow: hidden;
+  }
+  #remoteVideo {
+    width: 100%; height: 100%; object-fit: contain;
+    background: #000; user-select: none;
+  }
+  #remoteVideo.pixel1x { object-fit: none; }
+  #overlayCard {
+    position: absolute; inset: 16px; margin: auto;
+    max-width: 520px; max-height: calc(100% - 32px); overflow-y: auto;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 16px; padding: 18px; backdrop-filter: blur(16px);
+    display: flex; flex-direction: column; gap: 12px; touch-action: pan-y;
+  }
+  #overlayCard.hidden { display: none; }
+  .win-list { display: flex; flex-direction: column; gap: 8px; max-height: 46vh; overflow-y: auto; }
+  .win-item {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border); text-align: left; width: 100%;
+  }
+  .win-item:hover, .win-item:active { border-color: var(--accent); background: rgba(59,130,246,0.16); }
+  .win-meta { font-size: 11px; color: var(--muted); }
+  #keybar {
+    display: flex; align-items: center; gap: 6px; padding: 8px 10px;
+    background: var(--panel); border-top: 1px solid var(--border);
+    flex-shrink: 0; overflow-x: auto;
+  }
+  #keybar.hidden { display: none; }
+  #textInput { flex: 1; min-width: 120px; touch-action: manipulation; }
+  #toast {
+    position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+    background: rgba(15, 18, 26, 0.92); border: 1px solid var(--border);
+    padding: 6px 12px; border-radius: 999px; font-size: 12px; color: var(--muted);
+    pointer-events: none; max-width: 92%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  #clickRipple {
+    position: absolute; width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid var(--accent); transform: translate(-50%, -50%) scale(0.4);
+    opacity: 0; pointer-events: none; transition: transform 0.22s ease-out, opacity 0.22s ease-out;
+  }
+  #clickRipple.show { transform: translate(-50%, -50%) scale(1.1); opacity: 0.9; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <span class="badge"><span id="hostDot" class="dot"></span><span id="hostLabel">未配对主机</span></span>
+    <span class="badge" id="iceBadge">等待连接</span>
+    <span class="badge" id="statsBadge">—</span>
+    <button id="btnConnect" class="primary">连接</button>
+    <button id="btnWindows" disabled>窗口目录</button>
+    <button id="btnRightClick" title="切换单次右键点击">右键:关</button>
+    <button id="btnKeyboard" disabled>键盘</button>
+    <button id="btnScale">适应窗口</button>
+  </div>
+
+  <div id="stage">
+    <video id="remoteVideo" playsinline autoplay muted></video>
+    <div id="clickRipple"></div>
+
+    <div id="overlayCard">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <strong id="cardTitle" style="font-size:16px;">KKRemote 原生直连</strong>
+        <button id="btnCloseCard" class="hidden">关闭面板</button>
+      </div>
+      <div id="pairBox" style="display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:13px;color:var(--muted);">首次连接请用手机打开 Mac 主机生成的配对链接，或在下方粘贴配对串（密钥仅存于本机浏览器，不上传服务器）：</div>
+        <div style="display:flex;gap:6px;">
+          <input id="pairInput" placeholder="粘贴 https://...#host=... 配对链接" style="flex:1;">
+          <button id="btnImportPair" class="primary">导入连接</button>
+        </div>
+      </div>
+      <div id="catalogBox" style="display:none;flex-direction:column;gap:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:13px;color:var(--muted);" id="catalogHint">选择要串流的 Mac 独立窗口（不改变源窗口位置与尺寸）</span>
+          <button id="btnRefreshWin">刷新列表</button>
+        </div>
+        <div id="winList" class="win-list"></div>
+      </div>
+      <div id="errorText" style="font-size:12px;color:var(--err);display:none;"></div>
+    </div>
+
+    <div id="toast">就绪</div>
+  </div>
+
+  <div id="keybar" class="hidden">
+    <input id="textInput" type="text" placeholder="输入中英文后点发送（需先点击远端输入框）" autocomplete="off">
+    <button id="btnSendText" class="primary">发送文字</button>
+    <button data-key="return">回车</button>
+    <button data-key="backspace">退格</button>
+    <button data-key="tab">Tab</button>
+    <button data-key="escape">Esc</button>
+    <button data-key="up">↑</button>
+    <button data-key="down">↓</button>
+    <button data-key="left">←</button>
+    <button data-key="right">→</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const enc = new TextEncoder();
+  const dec = new TextDecoder();
+
+  const b64ToBytes = (b64) => {
+    const norm = b64.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((b64.length + 3) % 4);
+    const bin = atob(norm);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  };
+  const bytesToB64 = (bytes) => {
+    let bin = "";
+    const u8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+    for (let i = 0; i < u8.length; i++) bin += String.fromCharCode(u8[i]);
+    return btoa(bin);
+  };
+  const bytesToHex = (bytes) => [...new Uint8Array(bytes)].map(b => b.toString(16).padStart(2, "0")).join("");
+  const randomHex = (n) => {
+    const b = new Uint8Array(n);
+    crypto.getRandomValues(b);
+    return bytesToHex(b);
+  };
+
+  const state = {
+    clientID: "",
+    signKeyPair: null,
+    kexKeyPair: null,
+    signPubB64: "",
+    kexPubB64: "",
+    host: null, // { hostID, signPub, kexPub, name, grant, pendingPairToken }
+    ws: null,
+    stunServers: [],
+    hostOnline: false,
+    sessionID: "",
+    pc: null,
+    dc: null,
+    aesKey: null,
+    hostSignKey: null,
+    remoteReady: false,
+    pendingCandidates: [],
+    windowSession: "",
+    windowControlSupported: false,
+    directKeyboardSupported: false,
+    selectedWindow: null,
+    controlLease: null,
+    controlFocus: null,
+    inputSeq: 0,
+    inputBusy: false,
+    inputAcked: 0,
+    rightClickOnce: false,
+    pixel1x: false,
+    framesDecoded: 0,
+    fps: 0,
+    videoMbps: 0,
+    rttMs: null,
+    candidatePair: "unknown",
+    codec: "unknown",
+    autoSelectApp: "",
+    autoRetriedOnce: false
+  };
+  window.__kkState = state;
+
+  const $ = (id) => document.getElementById(id);
+  const toast = (msg, isErr = false) => {
+    $("toast").textContent = msg;
+    $("toast").style.color = isErr ? "var(--err)" : "var(--muted)";
+    if (isErr) {
+      $("errorText").style.display = "block";
+      $("errorText").textContent = msg;
+    }
+  };
+
+  async function initClientIdentity() {
+    const saved = localStorage.getItem("kkremote.clientIdentity.v1");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        const signPriv = await crypto.subtle.importKey("jwk", parsed.signPriv, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]);
+        const signPub = await crypto.subtle.importKey("spki", b64ToBytes(parsed.signPubB64), { name: "ECDSA", namedCurve: "P-256" }, true, ["verify"]);
+        const kexPriv = await crypto.subtle.importKey("jwk", parsed.kexPriv, { name: "ECDH", namedCurve: "P-256" }, false, ["deriveBits"]);
+        const kexPub = await crypto.subtle.importKey("spki", b64ToBytes(parsed.kexPubB64), { name: "ECDH", namedCurve: "P-256" }, true, []);
+        state.signKeyPair = { privateKey: signPriv, publicKey: signPub };
+        state.kexKeyPair = { privateKey: kexPriv, publicKey: kexPub };
+        state.signPubB64 = parsed.signPubB64;
+        state.kexPubB64 = parsed.kexPubB64;
+        state.clientID = parsed.clientID;
+        return;
+      } catch (_) {}
+    }
+    const signKP = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
+    const kexKP = await crypto.subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, ["deriveBits"]);
+    const signSPKI = await crypto.subtle.exportKey("spki", signKP.publicKey);
+    const kexSPKI = await crypto.subtle.exportKey("spki", kexKP.publicKey);
+    const hash = await crypto.subtle.digest("SHA-256", signSPKI);
+    state.clientID = bytesToHex(hash.slice(0, 16));
+    state.signPubB64 = bytesToB64(signSPKI);
+    state.kexPubB64 = bytesToB64(kexSPKI);
+    state.signKeyPair = signKP;
+    state.kexKeyPair = kexKP;
+    localStorage.setItem("kkremote.clientIdentity.v1", JSON.stringify({
+      clientID: state.clientID,
+      signPubB64: state.signPubB64,
+      kexPubB64: state.kexPubB64,
+      signPriv: await crypto.subtle.exportKey("jwk", signKP.privateKey),
+      kexPriv: await crypto.subtle.exportKey("jwk", kexKP.privateKey)
+    }));
+  }
+
+  function loadSavedHost() {
+    try {
+      const raw = localStorage.getItem("kkremote.trustedHost.v1");
+      if (raw) state.host = JSON.parse(raw);
+    } catch (_) {}
+  }
+
+  function saveHost() {
+    if (!state.host) return;
+    const copy = {
+      hostID: state.host.hostID,
+      signPub: state.host.signPub,
+      kexPub: state.host.kexPub,
+      name: state.host.name || "Mac Host",
+      grant: state.host.grant || null
+    };
+    localStorage.setItem("kkremote.trustedHost.v1", JSON.stringify(copy));
+  }
+
+  function parsePairingFragment(hashStr) {
+    const clean = hashStr.includes("#") ? hashStr.slice(hashStr.indexOf("#") + 1) : hashStr.replace(/^[?#]/, "");
+    if (!clean) return false;
+    const params = new URLSearchParams(clean);
+    const hostID = (params.get("host") || "").trim().toLowerCase();
+    const pub = (params.get("pub") || "").trim();
+    const kex = (params.get("kex") || "").trim();
+    const pair = (params.get("pair") || "").trim();
+    const name = params.get("name") || "Mac Host";
+    const autoselect = params.get("autoselect") || "";
+    if (!/^[0-9a-f]{32}$/.test(hostID) || !pub || !kex) return false;
+    const prevGrant = (state.host && state.host.hostID === hostID) ? state.host.grant : null;
+    state.host = {
+      hostID,
+      signPub: bytesToB64(b64ToBytes(pub)),
+      kexPub: bytesToB64(b64ToBytes(kex)),
+      name,
+      grant: prevGrant,
+      pendingPairToken: pair || null
+    };
+    if (autoselect) state.autoSelectApp = autoselect;
+    saveHost();
+    if (location.hash) {
+      history.replaceState(null, "", location.pathname + location.search);
+    }
+    return true;
+  }
+
+  async function signText(text) {
+    const sig = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, state.signKeyPair.privateKey, enc.encode(text));
+    return bytesToB64(sig);
+  }
+
+  async function deriveSessionKeys(sessionID, hostSignPubB64, hostKexPubB64) {
+    const hostSignKey = await crypto.subtle.importKey("spki", b64ToBytes(hostSignPubB64), { name: "ECDSA", namedCurve: "P-256" }, false, ["verify"]);
+    const hostKexKey = await crypto.subtle.importKey("spki", b64ToBytes(hostKexPubB64), { name: "ECDH", namedCurve: "P-256" }, false, []);
+    const sharedBits = await crypto.subtle.deriveBits({ name: "ECDH", public: hostKexKey }, state.kexKeyPair.privateKey, 256);
+    const hkdfKey = await crypto.subtle.importKey("raw", sharedBits, "HKDF", false, ["deriveKey"]);
+    const aesKey = await crypto.subtle.deriveKey(
+      { name: "HKDF", hash: "SHA-256", salt: enc.encode(sessionID), info: enc.encode("kkremote-coord-e2ee-v1") },
+      hkdfKey,
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["encrypt", "decrypt"]
+    );
+    return { hostSignKey, aesKey };
+  }
+
+  async function sendEncrypted(kind, payloadObj) {
+    if (!state.ws || state.ws.readyState !== WebSocket.OPEN || !state.host || !state.aesKey) return;
+    const iv = new Uint8Array(12);
+    crypto.getRandomValues(iv);
+    const nonceB64 = bytesToB64(iv);
+    const aad = enc.encode(`kkremote-e2ee-v1|${state.sessionID}|${state.clientID}|${state.host.hostID}|${kind}`);
+    const plaintext = enc.encode(JSON.stringify(payloadObj));
+    const ctBuf = await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: aad }, state.aesKey, plaintext);
+    const ciphertextB64 = bytesToB64(ctBuf);
+    const sigInput = `kkremote-e2ee-sig-v1|${state.sessionID}|${state.clientID}|${state.host.hostID}|${kind}|${nonceB64}|${ciphertextB64}`;
+    const payloadSig = await signText(sigInput);
+    state.ws.send(JSON.stringify({
+      type: "relay",
+      to: state.host.hostID,
+      session: state.sessionID,
+      kind,
+      e2eNonce: nonceB64,
+      ciphertext: ciphertextB64,
+      payloadSig
+    }));
+  }
+
+  async function openEncrypted(msg) {
+    if (!state.host || msg.from !== state.host.hostID) throw new Error("unexpected relay sender");
+    if (msg.fromSignPub !== state.host.signPub) throw new Error("host signing key mismatch");
+    if (msg.fromKexPub && msg.fromKexPub !== state.host.kexPub) {
+      state.host.kexPub = msg.fromKexPub;
+      saveHost();
+      const derived = await deriveSessionKeys(msg.session, state.host.signPub, state.host.kexPub);
+      state.hostSignKey = derived.hostSignKey;
+      state.aesKey = derived.aesKey;
+    }
+    const sigInput = `kkremote-e2ee-sig-v1|${msg.session}|${msg.from}|${state.clientID}|${msg.kind}|${msg.e2eNonce}|${msg.ciphertext}`;
+    const ok = await crypto.subtle.verify(
+      { name: "ECDSA", hash: "SHA-256" },
+      state.hostSignKey,
+      b64ToBytes(msg.payloadSig || ""),
+      enc.encode(sigInput)
+    );
+    if (!ok) throw new Error("invalid E2EE signature from host");
+    const aad = enc.encode(`kkremote-e2ee-v1|${msg.session}|${msg.from}|${state.clientID}|${msg.kind}`);
+    const ptBuf = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: b64ToBytes(msg.e2eNonce), additionalData: aad },
+      state.aesKey,
+      b64ToBytes(msg.ciphertext)
+    );
+    return JSON.parse(dec.decode(ptBuf));
+  }
+
+  function extractSdpFingerprints(sdp) {
+    return sdp.split(/\r?\n/)
+      .filter(l => l.startsWith("a=fingerprint:"))
+      .map(l => l.slice("a=fingerprint:".length).trim().toUpperCase());
+  }
+
+  function updateUI() {
+    if (!state.host) {
+      $("hostDot").className = "dot";
+      $("hostLabel").textContent = "未配对主机";
+      $("pairBox").style.display = "flex";
+      return;
+    }
+    $("hostLabel").textContent = state.host.name || `Mac (${state.host.hostID.slice(0, 6)})`;
+    $("hostDot").className = state.hostOnline ? "dot ok" : "dot warn";
+    $("pairBox").style.display = (!state.host.grant && !state.host.pendingPairToken) ? "flex" : "none";
+  }
+
+  async function connectCoord() {
+    if (!state.host) {
+      $("overlayCard").classList.remove("hidden");
+      toast("请先导入配对链接");
+      return;
+    }
+    $("errorText").style.display = "none";
+    if (state.ws && (state.ws.readyState === WebSocket.OPEN || state.ws.readyState === WebSocket.CONNECTING)) {
+      if (state.hostOnline) await startSessionHandshake();
+      return;
+    }
+    const proto = location.protocol === "https:" ? "wss:" : "ws:";
+    const ws = new WebSocket(`${proto}//${location.host}/v1/ws`);
+    state.ws = ws;
+    $("iceBadge").textContent = "连接协调节点…";
+
+    ws.onopen = async () => {
+      const ts = Math.floor(Date.now() / 1000);
+      const nonce = randomHex(12);
+      const signed = `kkremote-client-hello-v1|${state.clientID}|${state.host.hostID}|${state.kexPubB64}|${ts}|${nonce}`;
+      const sig = await signText(signed);
+      ws.send(JSON.stringify({
+        type: "clientHello",
+        clientID: state.clientID,
+        targetHostID: state.host.hostID,
+        name: "Android/Web Viewer",
+        signPub: state.signPubB64,
+        kexPub: state.kexPubB64,
+        ts,
+        nonce,
+        sig
+      }));
+    };
+
+    let wsChain = Promise.resolve();
+    ws.onmessage = (ev) => {
+      wsChain = wsChain.then(async () => {
+        try {
+          const msg = JSON.parse(ev.data);
+        if (msg.type === "welcome") {
+          state.stunServers = msg.stunServers || [];
+          state.hostOnline = !!msg.hostOnline;
+          if (msg.hostOnline) {
+            if (msg.hostSignPub && msg.hostSignPub !== state.host.signPub) {
+              throw new Error("远端主机公钥与已信任记录不符，拒绝连接");
+            }
+            if (msg.hostKexPub) state.host.kexPub = msg.hostKexPub;
+            if (msg.hostName) state.host.name = msg.hostName;
+            saveHost();
+            updateUI();
+            await startSessionHandshake();
+          } else {
+            updateUI();
+            $("iceBadge").textContent = "主机当前离线";
+            toast("协调服务已连通，等待 Mac 主机上线…");
+          }
+        } else if (msg.type === "hostPresence") {
+          state.hostOnline = !!msg.hostOnline;
+          if (msg.hostKexPub) state.host.kexPub = msg.hostKexPub;
+          if (msg.hostName) state.host.name = msg.hostName;
+          updateUI();
+          if (state.hostOnline && !state.pc) {
+            await startSessionHandshake();
+          } else if (!state.hostOnline) {
+            $("iceBadge").textContent = "主机离线";
+          }
+        } else if (msg.type === "relay") {
+          if (msg.session !== state.sessionID) return;
+          const inner = await openEncrypted(msg);
+          await handleEncryptedSignal(msg.kind, inner);
+        } else if (msg.type === "error") {
+          toast(`协调错误：${msg.error}`, true);
+        }
+        } catch (err) {
+          toast(`信令处理失败：${err.message || err}`, true);
+        }
+      });
+    };
+
+    ws.onclose = () => {
+      if (!state.pc || state.pc.iceConnectionState !== "connected") {
+        $("iceBadge").textContent = "信令已断开";
+      }
+    };
+  }
+
+  async function startSessionHandshake() {
+    cleanupPeer();
+    state.sessionID = crypto.randomUUID ? crypto.randomUUID() : randomHex(16);
+    const derived = await deriveSessionKeys(state.sessionID, state.host.signPub, state.host.kexPub);
+    state.hostSignKey = derived.hostSignKey;
+    state.aesKey = derived.aesKey;
+    $("iceBadge").textContent = "加密握手中…";
+    toast("正在向 Mac 主机发起端到端认证请求…");
+    await sendEncrypted("connectRequest", {
+      protocolVersion: 1,
+      session: state.sessionID,
+      pairToken: state.host.pendingPairToken || null,
+      accessGrant: state.host.grant || null,
+      userAgent: navigator.userAgent.slice(0, 120)
+    });
+  }
+
+  function cleanupPeer() {
+    if (state.dc) { try { state.dc.close(); } catch (_) {} state.dc = null; }
+    if (state.pc) { try { state.pc.close(); } catch (_) {} state.pc = null; }
+    state.remoteReady = false;
+    state.pendingCandidates = [];
+    state.selectedWindow = null;
+    state.controlLease = null;
+    state.controlFocus = null;
+    state.inputSeq = 0;
+    state.inputBusy = false;
+    $("btnWindows").disabled = true;
+    $("btnKeyboard").disabled = true;
+  }
+
+  async function handleEncryptedSignal(kind, body) {
+    if (kind === "reject") {
+      if (state.host) state.host.pendingPairToken = null;
+      $("pairBox").style.display = "flex";
+      $("overlayCard").classList.remove("hidden");
+      throw new Error(body.error || "主机拒绝了本次连接请求");
+    }
+    if (kind === "offer") {
+      if (body.accessGrant) {
+        state.host.grant = body.accessGrant;
+        state.host.pendingPairToken = null;
+        saveHost();
+        updateUI();
+      }
+      const sdp = body.sdp || "";
+      const fps = extractSdpFingerprints(sdp);
+      if (!body.dtlsFingerprint || !fps.includes(body.dtlsFingerprint.toUpperCase())) {
+        throw new Error("DTLS 指纹绑定校验失败");
+      }
+      state.windowSession = body.windowSession || "";
+      state.windowControlSupported = !!body.windowControl;
+      state.directKeyboardSupported = !!body.windowKeyboard;
+
+      const pc = new RTCPeerConnection({
+        iceServers: state.stunServers.length ? [{ urls: state.stunServers }] : [],
+        bundlePolicy: "max-bundle",
+        rtcpMuxPolicy: "require"
+      });
+      state.pc = pc;
+
+      pc.onicecandidate = async (ev) => {
+        if (ev.candidate) {
+          await sendEncrypted("candidate", {
+            session: state.sessionID,
+            candidate: ev.candidate.candidate,
+            mid: ev.candidate.sdpMid,
+            line: ev.candidate.sdpMLineIndex
+          });
+        }
+      };
+
+      pc.oniceconnectionstatechange = () => {
+        const st = pc.iceConnectionState;
+        const map = { checking: "ICE 打洞中…", connected: "原生 P2P 已直连", completed: "原生 P2P 已就绪", disconnected: "链路波动", failed: "ICE 打洞失败" };
+        $("iceBadge").textContent = map[st] || st;
+        if (st === "connected" || st === "completed") {
+          state.autoRetriedOnce = false;
+          toast("端到端加密 WebRTC 直连已建立");
+        } else if (st === "failed") {
+          if (!state.autoRetriedOnce && state.ws && state.ws.readyState === WebSocket.OPEN && state.hostOnline) {
+            state.autoRetriedOnce = true;
+            toast("5G/NAT 端口跳变，正在自动重协商直连…");
+            setTimeout(() => { if (state.pc === pc) startSessionHandshake(); }, 300);
+            return;
+          }
+          toast("原生 UDP 直连未打通（受限对称 NAT 或防火墙阻断）", true);
+        }
+      };
+
+      pc.ontrack = (ev) => {
+        const video = $("remoteVideo");
+        const stream = (ev.streams && ev.streams[0]) ? ev.streams[0] : new MediaStream([ev.track]);
+        if (video.srcObject !== stream) {
+          video.srcObject = stream;
+          video.play().catch(() => {});
+        }
+      };
+
+      pc.ondatachannel = (ev) => {
+        const dc = ev.channel;
+        state.dc = dc;
+        dc.onopen = () => {
+          $("btnWindows").disabled = false;
+          $("btnKeyboard").disabled = !state.directKeyboardSupported;
+          $("catalogBox").style.display = "flex";
+          $("btnCloseCard").classList.remove("hidden");
+          refreshWindows();
+        };
+        dc.onmessage = (mev) => {
+          const text = typeof mev.data === "string" ? mev.data : dec.decode(mev.data);
+          if (text.startsWith("ping:")) {
+            if (dc.bufferedAmount < 4096) dc.send("pong:" + text.slice(5));
+            return;
+          }
+          try {
+            const ctrl = JSON.parse(text);
+            if (ctrl.type === "window" && ctrl.session === state.windowSession && ctrl.window) {
+              handleWindowMessage(ctrl.window);
+            }
+          } catch (_) {}
+        };
+      };
+
+      await pc.setRemoteDescription({ type: "offer", sdp });
+      state.remoteReady = true;
+      for (const c of state.pendingCandidates) {
+        await pc.addIceCandidate(c).catch(() => {});
+      }
+      state.pendingCandidates = [];
+
+      // Prefer hardware H.264 High Profile (6400/640c) first so Retina >720p60 windows never fall back to Level 3.1.
+      if (RTCRtpReceiver.getCapabilities) {
+        const caps = RTCRtpReceiver.getCapabilities("video");
+        if (caps && caps.codecs) {
+          const rankH264 = (c) => {
+            const mime = (c.mimeType || "").toLowerCase();
+            if (mime !== "video/h264") return 10;
+            const fmtp = (c.sdpFmtpLine || "").toLowerCase();
+            if (!fmtp.includes("packetization-mode=1")) return 5;
+            if (fmtp.includes("profile-level-id=640c") || fmtp.includes("profile-level-id=6400")) return 0;
+            if (fmtp.includes("profile-level-id=4d")) return 1;
+            if (fmtp.includes("profile-level-id=42")) return 2;
+            return 3;
+          };
+          const h264Only = caps.codecs
+            .filter(c => /\/(H264|rtx|red|ulpfec)$/i.test(c.mimeType))
+            .sort((a, b) => rankH264(a) - rankH264(b));
+          if (h264Only.length) {
+            pc.getTransceivers().forEach(t => {
+              if (t.receiver && t.receiver.track && t.receiver.track.kind === "video" && t.setCodecPreferences) {
+                try { t.setCodecPreferences(h264Only); } catch (_) {}
+              }
+            });
+          }
+        }
+      }
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      const localFps = extractSdpFingerprints(answer.sdp);
+      await sendEncrypted("answer", {
+        session: state.sessionID,
+        sdp: answer.sdp,
+        dtlsFingerprint: localFps[0] || "",
+        videoFormat: "h264-sdr"
+      });
+    } else if (kind === "candidate") {
+      if (!body.candidate) return;
+      const init = { candidate: body.candidate, sdpMid: body.mid, sdpMLineIndex: body.line };
+      if (state.remoteReady && state.pc) {
+        await state.pc.addIceCandidate(init).catch(() => {});
+      } else if (state.pendingCandidates.length < 128) {
+        state.pendingCandidates.push(init);
+      }
+    }
+  }
+
+  function sendWindowCmd(windowMsg) {
+    if (!state.dc || state.dc.readyState !== "open") return false;
+    state.dc.send(JSON.stringify({
+      type: "window",
+      session: state.windowSession,
+      window: Object.assign({ version: 1 }, windowMsg)
+    }));
+    return true;
+  }
+
+  function refreshWindows() {
+    sendWindowCmd({ action: "list", requestID: randomHex(8) });
+  }
+
+  function selectWindow(winID) {
+    toast("正在切换捕获窗口…");
+    sendWindowCmd({ action: "select", requestID: randomHex(8), windowID: winID });
+  }
+
+  function handleWindowMessage(cmd) {
+    if (cmd.action === "catalog") {
+      const list = cmd.windows || [];
+      const box = $("winList");
+      box.innerHTML = "";
+      if (cmd.error) toast(cmd.error, true);
+      list.forEach((w) => {
+        const btn = document.createElement("button");
+        btn.className = "win-item";
+        const label = w.title ? `${w.application} · ${w.title}` : w.application;
+        btn.innerHTML = `<div><div style="font-weight:600;font-size:14px;"></div><div class="win-meta">${Math.round(w.widthPoints)}×${Math.round(w.heightPoints)} pt · #${w.number}</div></div><span style="color:var(--accent);font-size:13px;">投流</span>`;
+        btn.querySelector("div > div").textContent = label;
+        btn.onclick = () => selectWindow(w.id);
+        box.appendChild(btn);
+      });
+      if (state.autoSelectApp && !state.selectedWindow && list.length > 0) {
+        const target = list.find(w => (w.application + " " + w.title).toLowerCase().includes(state.autoSelectApp.toLowerCase())) || list[0];
+        state.autoSelectApp = "";
+        if (target) selectWindow(target.id);
+      }
+    } else if (cmd.action === "selected") {
+      state.selectedWindow = cmd.selected || null;
+      state.controlLease = cmd.controlLease || null;
+      state.controlFocus = cmd.controlState ? cmd.controlState.focus : null;
+      state.inputSeq = 0;
+      state.inputBusy = false;
+      if (state.selectedWindow) {
+        $("overlayCard").classList.add("hidden");
+        const modeText = state.controlLease ? "可触控/键鼠操控" : (cmd.error || "只读观看");
+        toast(`正在投流：${state.selectedWindow.application}（${modeText}）`);
+      }
+    } else if (cmd.action === "inputResult") {
+      state.inputBusy = false;
+      if (cmd.error) {
+        toast(`输入提示：${cmd.error}`, true);
+      } else {
+        state.inputAcked += 1;
+        if (cmd.controlState && cmd.controlState.focus) {
+          state.controlFocus = cmd.controlState.focus;
+        }
+      }
+    } else if (cmd.action === "unavailable" || cmd.action === "error") {
+      toast(cmd.error || "远端窗口不可用，请重新选择", true);
+      $("overlayCard").classList.remove("hidden");
+      refreshWindows();
+    }
+  }
+
+  function mapVideoPoint(clientX, clientY) {
+    const video = $("remoteVideo");
+    const win = state.selectedWindow;
+    if (!win || !video.videoWidth || !video.videoHeight) return null;
+    const rect = video.getBoundingClientRect();
+    let drawW = rect.width, drawH = rect.height, offX = 0, offY = 0;
+    if (state.pixel1x) {
+      drawW = video.videoWidth;
+      drawH = video.videoHeight;
+      offX = (rect.width - drawW) / 2;
+      offY = (rect.height - drawH) / 2;
+    } else {
+      const vr = video.videoWidth / video.videoHeight;
+      const br = rect.width / rect.height;
+      if (vr > br) {
+        drawW = rect.width;
+        drawH = rect.width / vr;
+        offY = (rect.height - drawH) / 2;
+      } else {
+        drawH = rect.height;
+        drawW = rect.height * vr;
+        offX = (rect.width - drawW) / 2;
+      }
+    }
+    const rx = (clientX - rect.left - offX) / drawW;
+    const ry = (clientY - rect.top - offY) / drawH;
+    if (rx < 0 || rx >= 1 || ry < 0 || ry >= 1) return null;
+    return {
+      x: Math.min(win.widthPoints - 0.5, Math.max(0, rx * win.widthPoints)),
+      y: Math.min(win.heightPoints - 0.5, Math.max(0, ry * win.heightPoints))
+    };
+  }
+
+  function dispatchRemoteInput(payload) {
+    if (!state.selectedWindow || !state.controlLease || state.inputBusy) return false;
+    state.inputSeq += 1;
+    state.inputBusy = true;
+    const reqID = randomHex(8);
+    setTimeout(() => { if (state.inputBusy) state.inputBusy = false; }, 2500);
+    return sendWindowCmd({
+      action: "input",
+      requestID: reqID,
+      windowID: state.selectedWindow.id,
+      mediaSession: state.sessionID,
+      input: Object.assign({
+        lease: state.controlLease,
+        sequence: state.inputSeq,
+        focus: state.controlFocus || "pending"
+      }, payload)
+    });
+  }
+
+  window.__kkSendInput = dispatchRemoteInput;
+  window.__kkSelectWindow = selectWindow;
+  window.__kkRefreshWindows = refreshWindows;
+
+  // Pointer & two-finger scroll handling on stage
+  let lastTwoY = null, lastTwoX = null;
+  const videoEl = $("remoteVideo");
+
+  videoEl.addEventListener("pointerup", (ev) => {
+    if (!$("overlayCard").classList.contains("hidden")) return;
+    if (!ev.isPrimary) return;
+    const pt = mapVideoPoint(ev.clientX, ev.clientY);
+    if (!pt) return;
+    const ripple = $("clickRipple");
+    const stageRect = $("stage").getBoundingClientRect();
+    ripple.style.left = `${ev.clientX - stageRect.left}px`;
+    ripple.style.top = `${ev.clientY - stageRect.top}px`;
+    ripple.classList.add("show");
+    setTimeout(() => ripple.classList.remove("show"), 220);
+
+    const kind = (ev.button === 2 || state.rightClickOnce) ? "secondary" : "click";
+    if (state.rightClickOnce) {
+      state.rightClickOnce = false;
+      $("btnRightClick").textContent = "右键:关";
+      $("btnRightClick").classList.remove("active");
+    }
+    dispatchRemoteInput({ kind, x: pt.x, y: pt.y });
+  });
+
+  videoEl.addEventListener("wheel", (ev) => {
+    ev.preventDefault();
+    const pt = mapVideoPoint(ev.clientX, ev.clientY);
+    if (!pt) return;
+    dispatchRemoteInput({
+      kind: "scroll",
+      x: pt.x,
+      y: pt.y,
+      dx: Math.max(-600, Math.min(600, -ev.deltaX)),
+      dy: Math.max(-600, Math.min(600, -ev.deltaY))
+    });
+  }, { passive: false });
+
+  videoEl.addEventListener("touchstart", (ev) => {
+    if (ev.touches.length === 2) {
+      lastTwoX = (ev.touches[0].clientX + ev.touches[1].clientX) / 2;
+      lastTwoY = (ev.touches[0].clientY + ev.touches[1].clientY) / 2;
+    }
+  }, { passive: true });
+
+  videoEl.addEventListener("touchmove", (ev) => {
+    if (ev.touches.length === 2 && lastTwoY !== null) {
+      ev.preventDefault();
+      const cx = (ev.touches[0].clientX + ev.touches[1].clientX) / 2;
+      const cy = (ev.touches[0].clientY + ev.touches[1].clientY) / 2;
+      const dx = cx - lastTwoX, dy = cy - lastTwoY;
+      if (Math.hypot(dx, dy) >= 12) {
+        const pt = mapVideoPoint(cx, cy);
+        if (pt) dispatchRemoteInput({ kind: "scroll", x: pt.x, y: pt.y, dx: Math.max(-500, Math.min(500, dx)), dy: Math.max(-500, Math.min(500, dy)) });
+        lastTwoX = cx; lastTwoY = cy;
+      }
+    }
+  }, { passive: false });
+
+  // Stats polling (1 Hz)
+  let prevBytes = 0, prevTs = 0;
+  setInterval(async () => {
+    if (!state.pc) return;
+    const stats = await state.pc.getStats();
+    let selPairId = null;
+    stats.forEach((r) => {
+      if (r.type === "inbound-rtp" && r.kind === "video") {
+        state.framesDecoded = r.framesDecoded || 0;
+        state.fps = Math.round(r.framesPerSecond || 0);
+        if (prevTs > 0 && r.timestamp > prevTs && r.bytesReceived >= prevBytes) {
+          state.videoMbps = +(((r.bytesReceived - prevBytes) * 8) / ((r.timestamp - prevTs) / 1000) / 1e6).toFixed(2);
+        }
+        prevBytes = r.bytesReceived || 0;
+        prevTs = r.timestamp || 0;
+        if (r.codecId && stats.get(r.codecId)) state.codec = stats.get(r.codecId).mimeType || "unknown";
+      }
+      if (r.type === "transport" && r.selectedCandidatePairId) selPairId = r.selectedCandidatePairId;
+    });
+    if (selPairId && stats.get(selPairId)) {
+      const pair = stats.get(selPairId);
+      state.rttMs = pair.currentRoundTripTime != null ? Math.round(pair.currentRoundTripTime * 1000) : null;
+      const loc = stats.get(pair.localCandidateId);
+      const rem = stats.get(pair.remoteCandidateId);
+      if (loc && rem) state.candidatePair = `${loc.candidateType}/${loc.protocol}↔${rem.candidateType}/${rem.protocol}`;
+    }
+    const vw = videoEl.videoWidth, vh = videoEl.videoHeight;
+    if (vw && vh) {
+      $("statsBadge").textContent = `${vw}×${vh} · ${state.fps}fps · ${state.videoMbps}Mbps · ${state.rttMs ?? "—"}ms · ${state.candidatePair}`;
+      document.title = `KKRemote [${state.framesDecoded}f ${vw}x${vh}]`;
+    }
+  }, 1000);
+
+  // UI bindings
+  $("btnConnect").onclick = () => connectCoord();
+  $("btnImportPair").onclick = () => {
+    if (parsePairingFragment($("pairInput").value.trim())) {
+      $("pairInput").value = "";
+      updateUI();
+      connectCoord();
+    } else {
+      toast("配对串格式无效，请检查是否包含 #host=...&pub=...&kex=...", true);
+    }
+  };
+  $("btnWindows").onclick = () => {
+    $("overlayCard").classList.toggle("hidden");
+    if (!$("overlayCard").classList.contains("hidden")) refreshWindows();
+  };
+  $("btnCloseCard").onclick = () => $("overlayCard").classList.add("hidden");
+  $("btnRefreshWin").onclick = () => refreshWindows();
+  $("btnRightClick").onclick = () => {
+    state.rightClickOnce = !state.rightClickOnce;
+    $("btnRightClick").textContent = state.rightClickOnce ? "右键:单次" : "右键:关";
+    $("btnRightClick").classList.toggle("active", state.rightClickOnce);
+  };
+  $("btnKeyboard").onclick = () => {
+    $("keybar").classList.toggle("hidden");
+    if (!$("keybar").classList.contains("hidden")) $("textInput").focus();
+  };
+  $("btnScale").onclick = () => {
+    state.pixel1x = !state.pixel1x;
+    videoEl.classList.toggle("pixel1x", state.pixel1x);
+    $("btnScale").textContent = state.pixel1x ? "编码像素 1:1" : "适应窗口";
+  };
+  $("btnSendText").onclick = () => {
+    const val = $("textInput").value;
+    if (!val) return;
+    if (!state.controlFocus) {
+      toast("请先轻点远端窗口中的输入框获取焦点", true);
+      return;
+    }
+    if (dispatchRemoteInput({ kind: "insertText", text: val, focus: state.controlFocus })) {
+      $("textInput").value = "";
+    }
+  };
+  $("textInput").addEventListener("keydown", (ev) => {
+    if (ev.key === "Enter") { ev.preventDefault(); $("btnSendText").click(); }
+  });
+  document.querySelectorAll("#keybar button[data-key]").forEach((btn) => {
+    btn.onclick = () => {
+      if (!state.controlFocus) { toast("请先轻点远端窗口获取焦点", true); return; }
+      dispatchRemoteInput({ kind: "key", key: btn.dataset.key, focus: state.controlFocus });
+    };
+  });
+
+  // Boot
+  (async () => {
+    await initClientIdentity();
+    loadSavedHost();
+    const imported = parsePairingFragment(location.hash);
+    updateUI();
+    if (imported || (state.host && state.host.grant)) {
+      await connectCoord();
+    }
+  })();
+})();
+</script>
+</body>
+</html>
