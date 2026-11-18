@@ -37,6 +37,7 @@ import androidx.compose.material.icons.automirrored.rounded.KeyboardTab
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.rounded.Mic
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -263,6 +264,7 @@ internal val MechanicalLightSkin = KbSkin(
     previewBackdrop = Color(0xFFF4F3F0),
 )
 
+
 internal fun OmniKeyboardTheme.skin(): KbSkin = when (this) {
     OmniKeyboardTheme.GRAPHITE -> GraphiteSkin
     OmniKeyboardTheme.MECHANICAL_LIGHT -> MechanicalLightSkin
@@ -286,6 +288,7 @@ private data class KeyboardVisual(
     val symbolLayer: Boolean,
     val cursorDragging: Boolean,
     val enabled: Boolean,
+    val voiceActive: Boolean = false,
 ) {
     fun mode(m: OmniModifier): ModifierLatchMode = modes[m] ?: ModifierLatchMode.OFF
     val shiftActive: Boolean get() = mode(OmniModifier.SHIFT) != ModifierLatchMode.OFF
@@ -320,10 +323,12 @@ fun OmniMacKeyboard(
     maxRowPitch: Dp = OmniKeyboardMetrics.MaxRowPitch,
     onRowPitchChange: ((rowPitch: Dp?, final: Boolean) -> Unit)? = null,
     theme: OmniKeyboardTheme = OmniKeyboardTheme.GRAPHITE,
+    onSendText: (String) -> Unit = {},
 ) {
     OmniMacKeyboardImpl(
         style = style,
         theme = theme,
+        onSendText = onSendText,
         enabled = enabled,
         onSendRawKey = onSendRawKey,
         onToggleInputSource = onToggleInputSource,
@@ -335,6 +340,7 @@ fun OmniMacKeyboard(
         maxRowPitch = maxRowPitch,
         onRowPitchChange = onRowPitchChange,
         previewSetup = null,
+        previewVoiceSetup = null,
     )
 }
 
@@ -342,6 +348,7 @@ fun OmniMacKeyboard(
 private fun OmniMacKeyboardImpl(
     style: OmniKeyboardStyle,
     theme: OmniKeyboardTheme,
+    onSendText: (String) -> Unit,
     enabled: Boolean,
     onSendRawKey: (keyCode: Int, modifiers: List<String>) -> Unit,
     onToggleInputSource: () -> Unit,
@@ -353,6 +360,7 @@ private fun OmniMacKeyboardImpl(
     maxRowPitch: Dp,
     onRowPitchChange: ((Dp?, Boolean) -> Unit)?,
     previewSetup: ((OmniKeyTouchEngine, OmniModifierController) -> Unit)?,
+    previewVoiceSetup: ((VoiceDictationController) -> Unit)?,
 ) {
     val view = LocalView.current
     val density = LocalDensity.current
@@ -364,6 +372,13 @@ private fun OmniMacKeyboardImpl(
     val latestEnabled by rememberUpdatedState(enabled)
     val latestSend by rememberUpdatedState(onSendRawKey)
     val latestToggleIme by rememberUpdatedState(onToggleInputSource)
+    val latestSendText by rememberUpdatedState(onSendText)
+
+    val voice = rememberVoiceDictationController()
+    voice.onSendText = { latestSendText(it) }
+    voice.onSendReturn = { if (latestEnabled) latestSend(MacKeyCode.RETURN, emptyList()) }
+    voice.isEnabled = { latestEnabled }
+    remember(voice) { previewVoiceSetup?.invoke(voice); true }
 
     val engine = remember {
         OmniKeyTouchEngine(
@@ -375,6 +390,7 @@ private fun OmniMacKeyboardImpl(
             toggleLayer = { symbolLayer = !symbolLayer },
             haptic = { view.keyHaptic(it) },
             onChanged = { revision++ },
+            voiceKey = { pressed -> voice.press(pressed) },
         ).also { e -> previewSetup?.invoke(e, controller) }
     }
     engine.cursorStartPx = with(density) { 14.dp.toPx() }
@@ -386,18 +402,21 @@ private fun OmniMacKeyboardImpl(
         if (appliedStyle[0] != style) {
             appliedStyle[0] = style
             engine.cancelAll()
-            if (style != OmniKeyboardStyle.SLIM_4_ROW) symbolLayer = false
+            if (style != OmniKeyboardStyle.SLIM_4_ROW && style != OmniKeyboardStyle.SPLIT_TRACKPAD) symbolLayer = false
         }
+        if (style != OmniKeyboardStyle.VOICE_DECK) voice.cancelAll()
     }
     LaunchedEffect(enabled) {
         if (!enabled) {
             engine.cancelAll()
+            voice.cancelAll()
             controller.resetAll()
             revision++
         }
     }
 
-    val visual = remember(revision, symbolLayer, enabled) {
+    val voiceActive = voice.isListening
+    val visual = remember(revision, symbolLayer, enabled, voiceActive) {
         KeyboardVisual(
             pressed = engine.pressedKeyIds(),
             touches = engine.activeTouches.map { TouchVisual(it.key, it.cursorMode) },
@@ -405,6 +424,7 @@ private fun OmniMacKeyboardImpl(
             symbolLayer = symbolLayer,
             cursorDragging = engine.isCursorDragging(),
             enabled = enabled,
+            voiceActive = voiceActive,
         )
     }
 
@@ -463,39 +483,77 @@ private fun OmniMacKeyboardImpl(
                 )
 
                 OmniKeyboardStyle.SPLIT_TRACKPAD -> BoxWithConstraints(Modifier.fillMaxSize()) {
-                    val trackpadWidth = (maxWidth * 0.22f).coerceIn(104.dp, 200.dp)
-                    val gutter = 8.dp
-                    Row(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalArrangement = Arrangement.spacedBy(gutter),
-                    ) {
+                    // Each half keeps a thumb-sized unit and hugs its own screen edge; the
+                    // centre (out of comfortable thumb reach anyway) becomes the trackpad.
+                    val unit = ThumbSplitMetrics.unit(maxWidth)
+                    val deckWidth = unit * ThumbSplitMetrics.COLUMNS
+                    val centreWidth = maxWidth - deckWidth * 2
+                    Row(modifier = Modifier.fillMaxSize()) {
                         KeyDeck(
                             deck = 0,
-                            rows = OmniMacLayouts.splitLeftRows,
+                            rows = if (symbolLayer) OmniMacLayouts.splitLeftSymbolRows else OmniMacLayouts.splitLeftRows,
                             engine = engine,
                             visual = visual,
                             scope = scope,
-                            modifier = Modifier.weight(0.95f).fillMaxHeight(),
+                            modifier = Modifier.width(deckWidth).fillMaxHeight(),
                         )
-                        CenterMiniTrackpad(
-                            enabled = enabled,
-                            onDelta = onTrackpadDelta,
-                            onClick = { secondary ->
-                                view.keyHaptic(if (secondary) KeyHaptic.CONFIRM else KeyHaptic.TAP)
-                                onTrackpadClick(secondary)
-                            },
-                            onScroll = onTrackpadScroll,
+                        Box(
                             modifier = Modifier
-                                .width(trackpadWidth)
-                                .fillMaxHeight(),
+                                .width(centreWidth)
+                                .fillMaxHeight()
+                                .padding(horizontal = ThumbSplitMetrics.Gutter),
+                        ) {
+                            if (centreWidth >= ThumbSplitMetrics.MinTrackpad) {
+                                CenterMiniTrackpad(
+                                    enabled = enabled,
+                                    onDelta = onTrackpadDelta,
+                                    onClick = { secondary ->
+                                        view.keyHaptic(if (secondary) KeyHaptic.CONFIRM else KeyHaptic.TAP)
+                                        onTrackpadClick(secondary)
+                                    },
+                                    onScroll = onTrackpadScroll,
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                            }
+                        }
+                        KeyDeck(
+                            deck = 1,
+                            rows = if (symbolLayer) OmniMacLayouts.splitRightSymbolRows else OmniMacLayouts.splitRightRows,
+                            engine = engine,
+                            visual = visual,
+                            scope = scope,
+                            modifier = Modifier.width(deckWidth).fillMaxHeight(),
+                        )
+                    }
+                }
+
+                OmniKeyboardStyle.VOICE_DECK -> BoxWithConstraints(Modifier.fillMaxSize()) {
+                    val unit = VoiceDeckMetrics.unit(maxWidth)
+                    val deckWidth = unit * VoiceDeckMetrics.COLUMNS
+                    Row(modifier = Modifier.fillMaxSize()) {
+                        KeyDeck(
+                            deck = 0,
+                            rows = OmniMacLayouts.voiceLeftRows,
+                            engine = engine,
+                            visual = visual,
+                            scope = scope,
+                            modifier = Modifier.width(deckWidth).fillMaxHeight(),
+                        )
+                        VoiceDictationPanel(
+                            controller = voice,
+                            enabled = enabled,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .padding(horizontal = VoiceDeckMetrics.Gutter),
                         )
                         KeyDeck(
                             deck = 1,
-                            rows = OmniMacLayouts.splitRightRows,
+                            rows = OmniMacLayouts.voiceRightRows,
                             engine = engine,
                             visual = visual,
                             scope = scope,
-                            modifier = Modifier.weight(1.05f).fillMaxHeight(),
+                            modifier = Modifier.width(deckWidth).fillMaxHeight(),
                         )
                     }
                 }
@@ -503,6 +561,41 @@ private fun OmniMacKeyboardImpl(
         }
         Spacer(Modifier.height(OmniKeyboardMetrics.BottomPadding))
     }
+    }
+}
+
+/**
+ * Thumb split sizing. Halves keep a thumb-sized key unit instead of stretching with the screen:
+ * at the 50dp cap the farthest letters (T/G/B, Y/H/N) are 5.5 units ≈ 275dp ≈ 44mm from the
+ * edge, within a relaxed thumb sweep while the hand holds the device.
+ */
+internal object ThumbSplitMetrics {
+    const val COLUMNS = 6
+    val MaxUnit: Dp = 50.dp
+    val MinUnit: Dp = 26.dp
+    val Gutter: Dp = 10.dp
+    val MinTrackpad: Dp = 120.dp
+
+    fun unit(width: Dp): Dp {
+        val withTrackpad = (width - MinTrackpad - Gutter * 2) / (COLUMNS * 2)
+        return if (withTrackpad >= 36.dp) {
+            withTrackpad.coerceAtMost(MaxUnit)
+        } else {
+            ((width - Gutter * 2) / (COLUMNS * 2)).coerceIn(MinUnit, MaxUnit)
+        }
+    }
+}
+
+/** Voice deck sizing: three thumb columns per side, the rest is the dictation panel. */
+internal object VoiceDeckMetrics {
+    const val COLUMNS = 3
+    val Gutter: Dp = 8.dp
+    val MinPanel: Dp = 120.dp
+
+    fun unit(width: Dp): Dp {
+        val preferred = (width * 0.075f).coerceIn(48.dp, 62.dp)
+        val fit = (width - MinPanel - Gutter * 2) / (COLUMNS * 2)
+        return minOf(preferred, fit).coerceAtLeast(34.dp)
     }
 }
 
@@ -680,7 +773,7 @@ private fun spokenLabel(spec: KeySpec): String = when (spec) {
         MacKeyCode.LEFT -> "左箭头"
         MacKeyCode.RIGHT -> "右箭头"
         else -> spec.primary
-    }
+    }.let { base -> spec.caption?.let { "$it ${spec.primary}" } ?: base }
     is KeySpec.ModifierKey -> when (spec.modifier) {
         OmniModifier.SHIFT -> "Shift"
         OmniModifier.CTRL -> "Control"
@@ -690,6 +783,7 @@ private fun spokenLabel(spec: KeySpec): String = when (spec) {
     }
     is KeySpec.InputSourceKey -> "切换中英文输入法"
     is KeySpec.LayerToggleKey -> "切换数字符号层"
+    is KeySpec.VoiceKey -> "语音输入，轻点听写，按住说话"
 }
 
 /** Pixel geometry of a sculpted mechanical keycap inside its key slot. */
@@ -727,6 +821,7 @@ private fun KeyCap(
         spec is KeySpec.ModifierKey && modMode == ModifierLatchMode.LOCKED -> CapTone.ACCENT
         spec is KeySpec.ModifierKey && modMode != ModifierLatchMode.OFF -> CapTone.ACTIVE
         layerOn -> CapTone.ACTIVE
+        spec is KeySpec.VoiceKey && visual.voiceActive -> CapTone.ACCENT
         spec is KeySpec.CharOrAction && spec.isAccent -> CapTone.ACCENT
         spec is KeySpec.CharOrAction && !spec.isUtility -> CapTone.LETTER
         else -> CapTone.FUNCTION
@@ -849,7 +944,7 @@ private fun KeyCap(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(3.dp),
                 ) {
-                    if (showWords) {
+                    if (showWords && widthDp >= 64.dp) {
                         Icon(
                             imageVector = Icons.Rounded.Language,
                             contentDescription = null,
@@ -865,6 +960,27 @@ private fun KeyCap(
                         maxLines = 1,
                         softWrap = false,
                     )
+                }
+                is KeySpec.VoiceKey -> Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Mic,
+                        contentDescription = null,
+                        tint = if (visual.voiceActive) caps.legend else skin.textAccent,
+                        modifier = Modifier.size(with(density) { px(0.42f, 22f).toDp() }),
+                    )
+                    if (showWords) {
+                        Text(
+                            text = if (visual.voiceActive) "正在听" else spec.label,
+                            fontSize = px(0.22f, 12f),
+                            fontWeight = FontWeight.Medium,
+                            color = caps.legend,
+                            maxLines = 1,
+                            softWrap = false,
+                        )
+                    }
                 }
                 is KeySpec.LayerToggleKey -> Text(
                     text = if (visual.symbolLayer) spec.labelActive else spec.labelInactive,
@@ -1006,7 +1122,26 @@ private fun CharCapContent(
     val skin = LocalKbSkin.current
     val fnText = spec.fnLabel
     val icon = iconFor(spec.keyCode)
+    val caption = spec.caption
     when {
+        caption != null -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = spec.primary,
+                fontSize = px(0.30f, 16f),
+                fontWeight = FontWeight.Medium,
+                color = baseColor,
+                maxLines = 1,
+                softWrap = false,
+            )
+            Text(
+                text = caption,
+                fontSize = px(0.20f, 10.5f),
+                color = skin.textSecondary,
+                maxLines = 1,
+                softWrap = false,
+            )
+        }
+
         visual.fnActive && fnText != null -> Text(
             text = fnText,
             fontSize = px(if (fnText.length >= 3) 0.26f else 0.32f, 15f),
@@ -1407,6 +1542,7 @@ private fun KeyboardPreviewFrame(
     rowPitch: Dp,
     theme: OmniKeyboardTheme = OmniKeyboardTheme.GRAPHITE,
     enabled: Boolean = true,
+    voiceSetup: (VoiceDictationController) -> Unit = {},
     setup: (OmniKeyTouchEngine, OmniModifierController) -> Unit = { _, _ -> },
 ) {
     Column(Modifier.fillMaxSize().background(theme.skin().previewBackdrop)) {
@@ -1425,6 +1561,8 @@ private fun KeyboardPreviewFrame(
             maxRowPitch = OmniKeyboardMetrics.MaxRowPitch,
             onRowPitchChange = { _, _ -> },
             previewSetup = setup,
+            previewVoiceSetup = voiceSetup,
+            onSendText = {},
         )
     }
 }
@@ -1452,7 +1590,7 @@ private fun PreviewSlimPhone() {
     }
 }
 
-@Preview(name = "Foldable · 分体触控 · fn 按住", widthDp = 840, heightDp = 400)
+@Preview(name = "Foldable · 拇指分体 · fn 按住", widthDp = 840, heightDp = 400)
 @Composable
 private fun PreviewSplitFoldable() {
     KeyboardPreviewFrame(OmniKeyboardStyle.SPLIT_TRACKPAD, OmniKeyboardMetrics.WideDefaultRowPitch) { engine, _ ->
@@ -1496,7 +1634,7 @@ private fun PreviewMechanicalSlimPhone() {
     }
 }
 
-@Preview(name = "机械浅色 · Foldable · 分体触控", widthDp = 840, heightDp = 400)
+@Preview(name = "机械浅色 · Foldable · 拇指分体", widthDp = 840, heightDp = 400)
 @Composable
 private fun PreviewMechanicalSplitFoldable() {
     KeyboardPreviewFrame(
@@ -1516,4 +1654,47 @@ private fun PreviewMechanicalCompactFoldable() {
         OmniKeyboardMetrics.WideDefaultRowPitch,
         theme = OmniKeyboardTheme.MECHANICAL_LIGHT,
     )
+}
+
+@Preview(name = "机械浅色 · Foldable · 拇指分体 · #+= 符号层", widthDp = 840, heightDp = 400)
+@Composable
+private fun PreviewMechanicalSplitSymbols() {
+    KeyboardPreviewFrame(
+        OmniKeyboardStyle.SPLIT_TRACKPAD,
+        OmniKeyboardMetrics.WideDefaultRowPitch,
+        theme = OmniKeyboardTheme.MECHANICAL_LIGHT,
+    ) { engine, _ ->
+        val layer = refAt(OmniMacLayouts.splitRightRows, 1, 4, 1)
+        engine.onDown(1, layer, 0f); engine.onUp(1)
+    }
+}
+
+@Preview(name = "Foldable · 语音 · 石墨", widthDp = 840, heightDp = 400)
+@Composable
+private fun PreviewVoiceFoldable() {
+    KeyboardPreviewFrame(
+        OmniKeyboardStyle.VOICE_DECK,
+        OmniKeyboardMetrics.WideDefaultRowPitch,
+        voiceSetup = { v ->
+            v.autoSend = false
+            v.history.add("把这段文字发送到 Mac 的光标位置")
+            v.draft = "明天上午十点开会，记得带上周的数据报表"
+        },
+    )
+}
+
+@Preview(name = "机械浅色 · Foldable · 语音", widthDp = 840, heightDp = 400)
+@Composable
+private fun PreviewMechanicalVoiceFoldable() {
+    KeyboardPreviewFrame(
+        OmniKeyboardStyle.VOICE_DECK,
+        OmniKeyboardMetrics.WideDefaultRowPitch,
+        theme = OmniKeyboardTheme.MECHANICAL_LIGHT,
+    )
+}
+
+@Preview(name = "Phone · 语音", widthDp = 411, heightDp = 360)
+@Composable
+private fun PreviewVoicePhone() {
+    KeyboardPreviewFrame(OmniKeyboardStyle.VOICE_DECK, OmniKeyboardMetrics.DefaultRowPitch)
 }

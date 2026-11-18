@@ -304,6 +304,7 @@ fun KKRemoteScreen(viewModel: WorkspaceViewModel) {
                 onTrackpadClick = viewModel::clickAtTrackpadCursor,
                 onTrackpadScroll = viewModel::scrollAtTrackpadCursor,
                 onSendRawKey = viewModel::sendRawMacKey,
+                onSendText = viewModel::sendRemoteText,
                 onToggleInputSource = viewModel::sendToggleMacInputSource,
                 onActivateOmniApp = viewModel::activateOmniApp,
                 onRefreshWindows = viewModel::refreshWindows,
@@ -2606,6 +2607,7 @@ private fun OmniDesktopWorkspace(
     onTrackpadClick: (Boolean) -> Unit,
     onTrackpadScroll: (Double, Double) -> Unit,
     onSendRawKey: (Int, List<String>) -> Unit,
+    onSendText: (String) -> Unit,
     onToggleInputSource: () -> Unit,
     onActivateOmniApp: (RemoteWindow) -> Unit,
     onRefreshWindows: () -> Unit,
@@ -2751,6 +2753,7 @@ private fun OmniDesktopWorkspace(
                     maxRowPitch = maxRowPitch,
                     onRowPitchChange = onKeyboardRowPitchChange,
                     theme = state.omniKeyboardTheme,
+                    onSendText = onSendText,
                 )
             }
         }

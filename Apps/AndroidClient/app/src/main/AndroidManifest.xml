@@ -5,6 +5,15 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Voice deck: on-phone dictation that is typed into the Mac as text. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <queries>
+        <!-- Lets SpeechRecognizer discover the system recognition service on Android 11+. -->
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
 
     <application
         android:allowBackup="false"

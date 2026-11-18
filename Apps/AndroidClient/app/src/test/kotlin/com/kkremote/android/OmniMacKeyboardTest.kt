@@ -83,8 +83,8 @@ class OmniMacKeyboardTest {
     }
 
     @Test
-    fun allThreeKeyboardLayoutsCoverFullAlphabetDigitsAndImeSwitch() {
-        assertEquals(3, OmniKeyboardStyle.entries.size)
+    fun allTypingLayoutsCoverFullAlphabetDigitsAndImeSwitch() {
+        assertEquals(4, OmniKeyboardStyle.entries.size)
 
         val compactAll = listOf(
             OmniMacLayouts.rowNumberCompact,
@@ -103,7 +103,10 @@ class OmniMacKeyboardTest {
             OmniMacLayouts.slimRow4,
         ).flatten()
 
-        val splitAll = (OmniMacLayouts.splitLeftRows + OmniMacLayouts.splitRightRows).flatten()
+        val splitAll = (
+            OmniMacLayouts.splitLeftRows + OmniMacLayouts.splitRightRows +
+                OmniMacLayouts.splitLeftSymbolRows + OmniMacLayouts.splitRightSymbolRows
+            ).flatten()
 
         val expectedLetters = listOf(
             MacKeyCode.A, MacKeyCode.B, MacKeyCode.C, MacKeyCode.D, MacKeyCode.E,

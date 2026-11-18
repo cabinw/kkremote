@@ -97,6 +97,8 @@ internal class OmniKeyTouchEngine(
     private val toggleLayer: () -> Unit,
     private val haptic: (KeyHaptic) -> Unit,
     private val onChanged: () -> Unit,
+    /** Voice key pressed (true) / released or cancelled (false). */
+    private val voiceKey: (pressed: Boolean) -> Unit = {},
 ) {
     var cursorStartPx: Float = 24f
     var cursorStepPx: Float = 18f
@@ -137,6 +139,7 @@ internal class OmniKeyTouchEngine(
                 repeat = true
             }
             is KeySpec.InputSourceKey, is KeySpec.LayerToggleKey -> Unit
+            is KeySpec.VoiceKey -> voiceKey(true)
         }
         onChanged()
         return repeat
@@ -186,7 +189,7 @@ internal class OmniKeyTouchEngine(
                     onChanged()
                 }
             }
-            is KeySpec.ModifierKey -> Unit
+            is KeySpec.ModifierKey, is KeySpec.VoiceKey -> Unit
         }
     }
 
@@ -219,6 +222,10 @@ internal class OmniKeyTouchEngine(
                     toggleLayer()
                 }
             }
+            is KeySpec.VoiceKey -> {
+                touches.remove(pointer)
+                voiceKey(false)
+            }
         }
         onChanged()
     }
@@ -250,6 +257,7 @@ internal class OmniKeyTouchEngine(
     private fun cancelTouch(t: Touch) {
         val spec = t.origin.spec
         if (spec is KeySpec.ModifierKey) modifiers.onModifierUp(spec.modifier, clock(), cancelled = true)
+        if (spec is KeySpec.VoiceKey) voiceKey(false)
     }
 
     private fun flushPending(exceptPointer: Long) {
@@ -268,6 +276,8 @@ internal class OmniKeyTouchEngine(
         val useFn = fnCode != null && modifiers.isActive(OmniModifier.FN)
         val code = if (useFn) fnCode!! else spec.keyCode
         val mods = modifiers.consumeForKeystroke(omitFnWireFlag = useFn)
-        sendKey(code, mods)
+        val all = if (spec.forcedModifiers.isEmpty()) mods
+        else (mods + spec.forcedModifiers.map { it.wireName }).distinct()
+        sendKey(code, all)
     }
 }

@@ -213,6 +213,101 @@ class OmniKeyboardEngineTest {
     }
 
     @Test
+    fun thumbSplitHalvesAreMirroredSoGAndHAreEquidistantFromTheirEdges() {
+        val left = OmniMacLayouts.splitLeftRows
+        val right = OmniMacLayouts.splitRightRows
+        for (rows in listOf(left, right, OmniMacLayouts.splitLeftSymbolRows, OmniMacLayouts.splitRightSymbolRows)) {
+            assertEquals(5, rows.size)
+            // Ortholinear 6-unit rows: every column lines up and no row is stretched.
+            for (row in rows) assertEquals(6f, row.sumOf { it.weight.toDouble() }.toFloat(), 0.001f)
+        }
+        val unit = 50f
+        val gl = DeckGeometry(0, left, widthPx = 6 * unit, heightPx = 250f, hGapPx = 6f, vGapPx = 6f)
+        val gr = DeckGeometry(1, right, widthPx = 6 * unit, heightPx = 250f, hGapPx = 6f, vGapPx = 6f)
+        fun rectOf(g: DeckGeometry, rows: List<List<KeySpec>>, code: Int) = rows.withIndex().firstNotNullOf { (r, row) ->
+            row.indexOfFirst { it is KeySpec.CharOrAction && it.keyCode == code }.takeIf { it >= 0 }?.let { g.rects[r][it] }
+        }
+        val g = rectOf(gl, left, MacKeyCode.G)
+        val h = rectOf(gr, right, MacKeyCode.H)
+        val distG = g.center.x // from the left screen edge
+        val distH = gr.widthPx - h.center.x // from the right screen edge
+        assertEquals(distG, distH, 0.5f)
+        assertEquals(g.center.y, h.center.y, 0.5f)
+        // Same for the other inner columns (T/Y, B/N).
+        assertEquals(rectOf(gl, left, MacKeyCode.T).center.x, gr.widthPx - rectOf(gr, right, MacKeyCode.Y).center.x, 0.5f)
+        assertEquals(rectOf(gl, left, MacKeyCode.B).center.x, gr.widthPx - rectOf(gr, right, MacKeyCode.N).center.x, 0.5f)
+    }
+
+    @Test
+    fun thumbSplitUnitStaysThumbSizedOnWideScreensAndLeavesCentreForTrackpad() {
+        val wide = com.kkremote.android.ui.ThumbSplitMetrics.unit(androidx.compose.ui.unit.Dp(1100f))
+        assertEquals(50f, wide.value, 0.01f) // capped: halves do not stretch on tablets
+        val foldable = com.kkremote.android.ui.ThumbSplitMetrics.unit(androidx.compose.ui.unit.Dp(840f))
+        assertTrue(foldable.value in 44f..50f)
+        assertTrue(840f - foldable.value * 12 >= 120f) // centre trackpad still fits
+    }
+
+    @Test
+    fun comboAndSymbolKeysCarryForcedModifiers() {
+        val h = Harness()
+        val voiceRows = OmniMacLayouts.voiceLeftRows + OmniMacLayouts.voiceRightRows
+        val undo = voiceRows.flatten().first { it.tag == "voice_undo" }
+        val redo = voiceRows.flatten().first { it.tag == "voice_redo" }
+        h.engine.onDown(1, KeyRef(KeyId(0, 0, 1), undo), 0f); h.engine.onUp(1)
+        h.engine.onDown(2, KeyRef(KeyId(0, 0, 2), redo), 0f); h.engine.onUp(2)
+        assertEquals(MacKeyCode.Z to listOf("cmd"), h.sent[0])
+        assertEquals(MacKeyCode.Z, h.sent[1].first)
+        assertEquals(setOf("cmd", "shift"), h.sent[1].second.toSet())
+
+        val brace = OmniMacLayouts.splitRightSymbolRows.flatten().first { it.tag == "sym_lbrace" }
+        h.engine.onDown(3, KeyRef(KeyId(1, 1, 3), brace), 0f); h.engine.onUp(3)
+        assertEquals(MacKeyCode.LEFT_BRACKET to listOf("shift"), h.sent[2])
+
+        // A latched ⇧ plus a forced ⇧ is sent once.
+        val shift = modOf("mod_shift_l")
+        h.engine.onDown(4, shift, 0f); h.now += 30; h.engine.onUp(4)
+        h.engine.onDown(5, KeyRef(KeyId(1, 1, 3), brace), 0f); h.engine.onUp(5)
+        assertEquals(listOf("shift"), h.sent[3].second)
+    }
+
+    @Test
+    fun voiceKeyReportsPressAndReleaseAndCancel() {
+        val events = mutableListOf<Boolean>()
+        val engine = OmniKeyTouchEngine(
+            modifiers = OmniModifierController(),
+            clock = { 0L },
+            isEnabled = { true },
+            sendKey = { _, _ -> },
+            toggleInputSource = {},
+            toggleLayer = {},
+            haptic = {},
+            onChanged = {},
+            voiceKey = { events += it },
+        )
+        val mic = KeyRef(KeyId(1, 4, 0), OmniMacLayouts.voiceRightRows[4][0])
+        assertTrue(mic.spec is KeySpec.VoiceKey)
+        engine.onDown(1, mic, 0f)
+        engine.onUp(1)
+        engine.onDown(2, mic, 0f)
+        engine.cancelAll()
+        assertEquals(listOf(true, false, true, false), events)
+    }
+
+    @Test
+    fun voiceDeckKeepsEditingEssentialsUnderBothThumbs() {
+        val left = OmniMacLayouts.voiceLeftRows.flatten()
+        val right = OmniMacLayouts.voiceRightRows.flatten()
+        assertTrue(left.any { it is KeySpec.VoiceKey })
+        assertTrue(right.any { it is KeySpec.VoiceKey })
+        val rightCodes = right.filterIsInstance<KeySpec.CharOrAction>().map { it.keyCode }.toSet()
+        assertTrue(rightCodes.containsAll(listOf(MacKeyCode.DELETE, MacKeyCode.RETURN, MacKeyCode.SPACE, MacKeyCode.LEFT, MacKeyCode.RIGHT, MacKeyCode.UP, MacKeyCode.DOWN)))
+        assertTrue(left.any { it is KeySpec.InputSourceKey })
+        for (rows in listOf(OmniMacLayouts.voiceLeftRows, OmniMacLayouts.voiceRightRows)) {
+            for (row in rows) assertEquals(3f, row.sumOf { it.weight.toDouble() }.toFloat(), 0.001f)
+        }
+    }
+
+    @Test
     fun cancelReleasesHeldModifierWithoutLatching() {
         val h = Harness()
         h.engine.onDown(1, modOf("mod_cmd_l"), 0f)
