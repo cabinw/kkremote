@@ -122,9 +122,19 @@ internal class VoiceDictationController(
     var requestPermission: () -> Unit = {}
     var isEnabled: () -> Boolean = { true }
 
-    val recognitionAvailable: Boolean by lazy {
+    private val serviceInstalled: Boolean by lazy {
         !inspectionMode && runCatching { SpeechRecognizer.isRecognitionAvailable(context) }.getOrDefault(false)
     }
+
+    /**
+     * A service may be installed without being usable: e.g. ColorOS CN ships no Google recogniser,
+     * only third-party assistant services and no default selection, so the first session fails
+     * with ERROR_CLIENT before onReadyForSpeech. That marks the recogniser broken for this run.
+     */
+    private var recognizerBroken by mutableStateOf(false)
+    private var gotReady = false
+
+    val recognitionAvailable: Boolean get() = serviceInstalled && !recognizerBroken
 
     private var recognizer: SpeechRecognizer? = null
     private var pressedAt = 0L
@@ -179,7 +189,7 @@ internal class VoiceDictationController(
         }
         partial = ""
         status = VoiceStatus.LISTENING
-        r.startListening(buildIntent())
+        runCatching { r.startListening(buildIntent()) }.onFailure { markRecognizerBroken() }
     }
 
     fun onPermissionResult(granted: Boolean) {
@@ -265,7 +275,18 @@ internal class VoiceDictationController(
 
     // Recognizer callbacks (via RecognizerBridge) ----------------------------------------------
 
+    private fun markRecognizerBroken() {
+        recognizerBroken = true
+        handsFree = false
+        status = VoiceStatus.IDLE
+        runCatching { recognizer?.destroy() }
+        recognizer = null
+        message = "本机语音识别服务不可用，已改用输入法语音"
+        showFallback = true
+    }
+
     internal fun onReady() {
+        gotReady = true
         if (status == VoiceStatus.IDLE) status = VoiceStatus.LISTENING
     }
 
@@ -280,6 +301,10 @@ internal class VoiceDictationController(
     internal fun onRecognizerError(error: Int) {
         level = 0f
         partial = ""
+        if (!gotReady && error in SETUP_FAILURES) {
+            markRecognizerBroken()
+            return
+        }
         val benign = error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT
         if (benign && restartIfHandsFree()) return
         handsFree = false
@@ -307,6 +332,16 @@ internal class VoiceDictationController(
 
     companion object {
         private const val TAP_MS = 300L
+
+        /** Errors that, before the first onReadyForSpeech, mean the service cannot be used at all. */
+        private val SETUP_FAILURES = setOf(
+            SpeechRecognizer.ERROR_CLIENT,
+            SpeechRecognizer.ERROR_SERVER,
+            11, // ERROR_SERVER_DISCONNECTED
+            12, // ERROR_LANGUAGE_NOT_SUPPORTED
+            13, // ERROR_LANGUAGE_UNAVAILABLE
+            14, // ERROR_CANNOT_CHECK_SUPPORT
+        )
 
         private fun defaultLanguageTag(): String =
             if (Locale.getDefault().language == "en") "en-US" else "zh-CN"
