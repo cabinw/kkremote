@@ -706,11 +706,18 @@ final class LabModel: ObservableObject {
                 defer { if self.generation == token { self.catalogLoading = false } }
                 do {
                     let windows = try await self.windowCatalog.refresh()
-                    let icons = self.windowCatalog.icons(for: windows, maxTotalBytes: 180_000)
+                    let batches = self.windowCatalog.iconBatches(for: windows, maxBytesPerBatch: 110_000)
                     guard self.generation == token else { return }
-                    if !self.sendWindow(WindowMessage(action: "catalog", requestID: command.requestID, windows: windows, appIcons: icons.isEmpty ? nil : icons)) {
-                        let compactIcons = self.windowCatalog.icons(for: windows, maxTotalBytes: 48_000)
-                        self.sendWindow(WindowMessage(action: "catalog", requestID: command.requestID, windows: windows, appIcons: compactIcons.isEmpty ? nil : compactIcons))
+                    if self.sendWindow(WindowMessage(action: "catalog", requestID: command.requestID, windows: windows, appIcons: batches.first)) {
+                        for batch in batches.dropFirst() {
+                            _ = self.sendWindow(WindowMessage(action: "appIcons", requestID: command.requestID, appIcons: batch))
+                        }
+                    } else {
+                        _ = self.sendWindow(WindowMessage(action: "catalog", requestID: command.requestID, windows: windows, appIcons: nil))
+                        let compactBatches = self.windowCatalog.iconBatches(for: windows, maxBytesPerBatch: 48_000)
+                        for batch in compactBatches {
+                            _ = self.sendWindow(WindowMessage(action: "appIcons", requestID: command.requestID, appIcons: batch))
+                        }
                     }
                 } catch {
                     guard self.generation == token else { return }

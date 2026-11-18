@@ -3,6 +3,7 @@ package com.kkremote.android.ui
 import android.app.Activity
 import android.content.ClipboardManager
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Rect as AndroidRect
 import android.util.Base64
@@ -116,6 +117,7 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
@@ -126,6 +128,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
@@ -2034,6 +2037,18 @@ private fun MacHorizontalWindowDock(
     }
 }
 
+private fun decodeRetinaAppIcon(iconBase64: String?): ImageBitmap? {
+    if (iconBase64.isNullOrBlank()) return null
+    return runCatching {
+        val bytes = Base64.decode(iconBase64, Base64.DEFAULT)
+        val opts = BitmapFactory.Options().apply {
+            inScaled = false
+            inPreferredConfig = Bitmap.Config.ARGB_8888
+        }
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts)?.asImageBitmap()
+    }.getOrNull()
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun MacDockAppTile(
@@ -2043,13 +2058,7 @@ private fun MacDockAppTile(
     onClick: () -> Unit,
     onLongPress: () -> Unit,
 ) {
-    val decodedIcon = remember(group.iconBase64) {
-        if (group.iconBase64.isNullOrBlank()) null
-        else runCatching {
-            val bytes = Base64.decode(group.iconBase64, Base64.DEFAULT)
-            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.asImageBitmap()
-        }.getOrNull()
-    }
+    val decodedIcon = remember(group.iconBase64) { decodeRetinaAppIcon(group.iconBase64) }
 
     val scale by animateFloatAsState(
         targetValue = if (isExpanded) 1.14f else 1.0f,
@@ -2082,6 +2091,8 @@ private fun MacDockAppTile(
                 Image(
                     bitmap = decodedIcon,
                     contentDescription = group.application,
+                    contentScale = ContentScale.Fit,
+                    filterQuality = FilterQuality.High,
                     modifier = Modifier.size(40.dp),
                 )
             } else {
@@ -2574,7 +2585,7 @@ private fun OmniDesktopWorkspace(
     ) {
         val topInsetDp = 0.dp
         val bottomInsetDp = navBottomDp.coerceAtMost(16.dp)
-        val controlBarH = 36.dp
+        val controlBarH = 38.dp
         val minKeyboardBodyH = if (state.omniKeyboardStyle == OmniKeyboardStyle.SLIM_4_ROW) 120.dp else 136.dp
         val maxKeyboardBodyH = when (state.omniKeyboardStyle) {
             OmniKeyboardStyle.SLIM_4_ROW -> 158.dp
@@ -3155,7 +3166,7 @@ private fun OmniControlAndDockBar(
         LazyRow(
             modifier = Modifier
                 .weight(1f)
-                .height(30.dp)
+                .height(32.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .background(Color(0xFF13161E))
                 .padding(horizontal = 4.dp),
@@ -3310,19 +3321,13 @@ private fun OmniMiniDockIcon(
     isActive: Boolean,
     onClick: () -> Unit,
 ) {
-    val decodedIcon = remember(iconBase64) {
-        if (iconBase64.isNullOrBlank()) null
-        else runCatching {
-            val bytes = Base64.decode(iconBase64, Base64.DEFAULT)
-            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.asImageBitmap()
-        }.getOrNull()
-    }
+    val decodedIcon = remember(iconBase64) { decodeRetinaAppIcon(iconBase64) }
 
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
-            .size(26.dp)
-            .clip(RoundedCornerShape(6.dp))
+            .size(30.dp)
+            .clip(RoundedCornerShape(7.dp))
             .background(if (isActive) Color(0xFF0A84FF).copy(alpha = 0.28f) else Color.Transparent)
             .clickable(onClick = onClick)
             .semantics { contentDescription = "激活 ${window.application}" },
@@ -3331,7 +3336,9 @@ private fun OmniMiniDockIcon(
             Image(
                 bitmap = decodedIcon,
                 contentDescription = window.application,
-                modifier = Modifier.size(22.dp),
+                contentScale = ContentScale.Fit,
+                filterQuality = FilterQuality.High,
+                modifier = Modifier.size(26.dp),
             )
         } else {
             Box(

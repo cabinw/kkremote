@@ -915,16 +915,23 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     private fun handleWindowMessage(cmd: WindowMessage) {
+        val parsedIcons = cmd.appIcons?.mapNotNull { (k, v) ->
+            k.toIntOrNull()?.let { pid -> pid to v }
+        }?.toMap().orEmpty()
+
         when (cmd.action) {
+            "appIcons" -> {
+                if (parsedIcons.isNotEmpty()) {
+                    _uiState.update { it.copy(appIcons = it.appIcons + parsedIcons) }
+                }
+            }
+
             "catalog" -> {
                 val list = cmd.windows.orEmpty()
-                val newIcons = cmd.appIcons?.mapNotNull { (k, v) ->
-                    k.toIntOrNull()?.let { pid -> pid to v }
-                }?.toMap().orEmpty()
                 _uiState.update {
                     it.copy(
                         windows = list,
-                        appIcons = if (newIcons.isEmpty()) it.appIcons else (it.appIcons + newIcons),
+                        appIcons = if (parsedIcons.isEmpty()) it.appIcons else (it.appIcons + parsedIcons),
                         catalogLoading = false,
                         bannerWarning = cmd.error ?: it.bannerWarning,
                     )

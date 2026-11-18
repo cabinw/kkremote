@@ -41,7 +41,7 @@ struct WindowMessage: Codable {
     var controlLease: String? = nil
     var input: WindowInput? = nil
     var controlState: WindowControlState? = nil
-    /// Optional map of String(processID) -> 48x48 PNG Base64 app icon for Dock-style window switchers.
+    /// Optional map of String(processID) -> 128x128 Retina PNG Base64 app icon for Dock-style window switchers.
     var appIcons: [String: String]? = nil
 }
 
@@ -56,17 +56,31 @@ final class HostWindowCatalog {
 
     @MainActor
     func icons(for windows: [RemoteWindow], maxTotalBytes: Int = 180_000) -> [String: String] {
-        var result: [String: String] = [:]
-        var usedBytes = 0
+        iconBatches(for: windows, maxBytesPerBatch: maxTotalBytes).first ?? [:]
+    }
+
+    @MainActor
+    func iconBatches(for windows: [RemoteWindow], maxBytesPerBatch: Int = 110_000) -> [[String: String]] {
+        var batches: [[String: String]] = []
+        var current: [String: String] = [:]
+        var currentBytes = 0
+        var seen = Set<Int32>()
         for win in windows {
-            let key = String(win.processID)
-            if result[key] != nil { continue }
+            guard seen.insert(win.processID).inserted else { continue }
             guard let b64 = iconBase64(for: win.processID) else { continue }
-            if usedBytes + b64.utf8.count > maxTotalBytes { break }
-            result[key] = b64
-            usedBytes += b64.utf8.count
+            let bytes = b64.utf8.count
+            if !current.isEmpty && currentBytes + bytes > maxBytesPerBatch {
+                batches.append(current)
+                current = [:]
+                currentBytes = 0
+            }
+            current[String(win.processID)] = b64
+            currentBytes += bytes
         }
-        return result
+        if !current.isEmpty {
+            batches.append(current)
+        }
+        return batches
     }
 
     @MainActor
@@ -74,7 +88,7 @@ final class HostWindowCatalog {
         if let cached = iconCache[pid] { return cached }
         guard let app = NSRunningApplication(processIdentifier: pid),
               let icon = app.icon else { return nil }
-        let px = 48
+        let px = 128
         guard let rep = NSBitmapImageRep(
             bitmapDataPlanes: nil,
             pixelsWide: px,
