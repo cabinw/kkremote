@@ -5,7 +5,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Handler
 import android.os.SystemClock
+import android.provider.Settings
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
@@ -70,6 +72,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -81,6 +84,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.delay
 import java.util.Locale
 
 internal enum class VoiceStatus { IDLE, LISTENING, FINISHING }
@@ -123,7 +127,12 @@ internal class VoiceDictationController(
     var isEnabled: () -> Boolean = { true }
 
     private val serviceInstalled: Boolean by lazy {
-        !inspectionMode && runCatching { SpeechRecognizer.isRecognitionAvailable(context) }.getOrDefault(false)
+        if (inspectionMode) return@lazy false
+        if (!runCatching { SpeechRecognizer.isRecognitionAvailable(context) }.getOrDefault(false)) return@lazy false
+        val configured = runCatching {
+            Settings.Secure.getString(context.contentResolver, "voice_recognition_service")
+        }
+        !(configured.isSuccess && configured.getOrNull().isNullOrBlank())
     }
 
     /**
@@ -136,6 +145,10 @@ internal class VoiceDictationController(
 
     val recognitionAvailable: Boolean get() = serviceInstalled && !recognizerBroken
 
+    private val mainHandler by lazy { Handler(context.mainLooper) }
+    private val readyWatchdog = Runnable {
+        if (status == VoiceStatus.LISTENING && !gotReady) markRecognizerBroken()
+    }
     private var recognizer: SpeechRecognizer? = null
     private var pressedAt = 0L
     private var stopOnRelease = false
@@ -183,13 +196,22 @@ internal class VoiceDictationController(
             return
         }
         this.handsFree = handsFree
-        val r = recognizer ?: SpeechRecognizer.createSpeechRecognizer(context).also {
-            it.setRecognitionListener(RecognizerBridge(this))
-            recognizer = it
+        val r = recognizer ?: runCatching {
+            SpeechRecognizer.createSpeechRecognizer(context).also {
+                it.setRecognitionListener(RecognizerBridge(this))
+                recognizer = it
+            }
+        }.getOrElse {
+            markRecognizerBroken()
+            return
         }
         partial = ""
         status = VoiceStatus.LISTENING
-        runCatching { r.startListening(buildIntent()) }.onFailure { markRecognizerBroken() }
+        mainHandler.removeCallbacks(readyWatchdog)
+        runCatching {
+            r.startListening(buildIntent())
+            if (!gotReady) mainHandler.postDelayed(readyWatchdog, 2500L)
+        }.onFailure { markRecognizerBroken() }
     }
 
     fun onPermissionResult(granted: Boolean) {
@@ -208,6 +230,7 @@ internal class VoiceDictationController(
     }
 
     fun cancelAll() {
+        mainHandler.removeCallbacks(readyWatchdog)
         handsFree = false
         stopOnRelease = false
         restartPending = false
@@ -266,7 +289,7 @@ internal class VoiceDictationController(
         if (!handsFree || restartPending) return false
         restartPending = true
         status = VoiceStatus.LISTENING
-        android.os.Handler(context.mainLooper).postDelayed({
+        mainHandler.postDelayed({
             restartPending = false
             if (handsFree) recognizer?.startListening(buildIntent())
         }, 120L)
@@ -276,6 +299,7 @@ internal class VoiceDictationController(
     // Recognizer callbacks (via RecognizerBridge) ----------------------------------------------
 
     private fun markRecognizerBroken() {
+        mainHandler.removeCallbacks(readyWatchdog)
         recognizerBroken = true
         handsFree = false
         status = VoiceStatus.IDLE
@@ -287,6 +311,7 @@ internal class VoiceDictationController(
 
     internal fun onReady() {
         gotReady = true
+        mainHandler.removeCallbacks(readyWatchdog)
         if (status == VoiceStatus.IDLE) status = VoiceStatus.LISTENING
     }
 
@@ -583,6 +608,7 @@ private fun ImeVoiceFallbackDialog(controller: VoiceDictationController) {
     var text by remember { mutableStateOf("") }
     val focus = remember { FocusRequester() }
     Dialog(onDismissRequest = { controller.showFallback = false }) {
+        val keyboard = LocalSoftwareKeyboardController.current
         Column(
             modifier = Modifier
                 .clip(RoundedCornerShape(18.dp))
@@ -609,18 +635,30 @@ private fun ImeVoiceFallbackDialog(controller: VoiceDictationController) {
             Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
                 TextButton(onClick = { controller.showFallback = false }) { Text("关闭") }
                 TextButton(onClick = {
-                    controller.deliver(text, force = true)
-                    text = ""
+                    if (text.isNotBlank()) {
+                        controller.deliver(text, force = true)
+                        text = ""
+                    }
+                    controller.showFallback = false
                 }) { Text("发送") }
                 TextButton(onClick = {
-                    controller.deliver(text, force = true)
+                    if (text.isNotBlank()) {
+                        controller.deliver(text, force = true)
+                    }
                     controller.onSendReturn()
                     text = ""
+                    controller.showFallback = false
                 }) { Text("发送并回车") }
             }
         }
+        LaunchedEffect(Unit) {
+            delay(80)
+            runCatching {
+                focus.requestFocus()
+                keyboard?.show()
+            }
+        }
     }
-    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
 }
 
 /**
