@@ -2568,7 +2568,11 @@ private fun OmniDesktopWorkspace(
         val bottomInsetDp = navBottomDp.coerceAtMost(16.dp)
         val controlBarH = 36.dp
         val minKeyboardBodyH = if (state.omniKeyboardStyle == OmniKeyboardStyle.SLIM_4_ROW) 120.dp else 136.dp
-        val maxKeyboardBodyH = if (state.omniKeyboardStyle == OmniKeyboardStyle.SLIM_4_ROW) 158.dp else 182.dp
+        val maxKeyboardBodyH = when (state.omniKeyboardStyle) {
+            OmniKeyboardStyle.SLIM_4_ROW -> 158.dp
+            OmniKeyboardStyle.COMPACT_5_ROW -> 182.dp
+            OmniKeyboardStyle.SPLIT_TRACKPAD -> 236.dp
+        }
 
         val vidW = max(1, state.videoWidthPx)
         val vidH = max(1, state.videoHeightPx)
@@ -2588,6 +2592,8 @@ private fun OmniDesktopWorkspace(
             .coerceAtLeast(minKeyboardBodyH)
         val keyboardBodyH = remainingBelowControl.coerceIn(minKeyboardBodyH, maxKeyboardBodyH)
         val portraitTrackpadSlackH = (remainingBelowControl - keyboardBodyH).coerceAtLeast(0.dp)
+        val showStandaloneTrackpad = state.omniKeyboardStyle != OmniKeyboardStyle.SPLIT_TRACKPAD &&
+            portraitTrackpadSlackH >= 28.dp
 
         Column(modifier = Modifier.fillMaxSize()) {
             if (topInsetDp > 0.dp) {
@@ -2637,8 +2643,8 @@ private fun OmniDesktopWorkspace(
             )
 
             // 3. Optional Ergonomic Multi-Touch Trackpad Deck on Tall Portrait Screens
-            // (Keeps the keyboard compact at the bottom instead of stretching keys huge)
-            if (portraitTrackpadSlackH >= 28.dp) {
+            // (Avoids redundant second trackpad when SPLIT_TRACKPAD is active; keeps keys anchored at bottom)
+            if (showStandaloneTrackpad) {
                 OmniFullWidthTrackpadDeck(
                     enabled = state.canControl,
                     onDelta = onTrackpadDelta,
@@ -2648,6 +2654,8 @@ private fun OmniDesktopWorkspace(
                         .fillMaxWidth()
                         .height(portraitTrackpadSlackH),
                 )
+            } else if (portraitTrackpadSlackH > 0.dp) {
+                Spacer(modifier = Modifier.weight(1f))
             }
 
             // 4. Custom Self-Drawn Virtual Mac Keyboard (Zero Android System IME)
