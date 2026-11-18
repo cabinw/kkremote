@@ -144,6 +144,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -1241,14 +1242,14 @@ private fun FrostedLinkQualityPill(
     val bytesPerSec = if (t.rxBytesPerSec > 0.0) t.rxBytesPerSec else (t.videoMbps * 125_000.0)
     val speedStr = when {
         !isConnected -> "—"
-        bytesPerSec >= 1_000_000.0 -> String.format("%.1f MB/s", bytesPerSec / 1_000_000.0)
-        bytesPerSec >= 1_000.0 -> String.format("%d KB/s", (bytesPerSec / 1_000.0).roundToInt())
+        bytesPerSec >= 1_000_000.0 -> String.format("%.1f MB/s", (bytesPerSec / 1_000_000.0).coerceAtMost(99.9))
+        bytesPerSec >= 1_000.0 -> String.format("%d KB/s", (bytesPerSec / 1_000.0).roundToInt().coerceIn(0, 999))
         else -> "0 KB/s"
     }
-    val rttStr = rtt?.let { "${it.roundToInt()} ms" } ?: "—"
-    val fpsStr = if (state.hasLiveVideo) "${t.fps.roundToInt()} fps" else "—"
+    val rttStr = rtt?.let { "${it.roundToInt().coerceIn(0, 999)} ms" } ?: "—"
+    val fpsStr = if (state.hasLiveVideo) "${t.fps.roundToInt().coerceIn(0, 240)} fps" else "—"
     val bitrateStr = if (state.hasLiveVideo || t.videoMbps > 0.01) {
-        String.format("%.1f Mbps", t.videoMbps)
+        String.format("%.1f Mbps", t.videoMbps.coerceIn(0.0, 99.9))
     } else {
         "—"
     }
@@ -1267,6 +1268,7 @@ private fun FrostedLinkQualityPill(
         if (compact) {
             Row(
                 modifier = Modifier
+                    .width(172.dp)
                     .height(48.dp)
                     .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -1283,8 +1285,10 @@ private fun FrostedLinkQualityPill(
                     fontSize = 11.5.sp,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Medium,
+                    style = TextStyle(fontFeatureSettings = "tnum"),
                     color = palette.primaryText,
                     maxLines = 1,
+                    softWrap = false,
                 )
             }
         } else {
@@ -1301,13 +1305,13 @@ private fun FrostedLinkQualityPill(
                         .clip(CircleShape)
                         .background(ledColor),
                 )
-                QualityMetricCell(label = "速度", value = speedStr, palette = palette)
+                QualityMetricCell(label = "速度", value = speedStr, cellWidth = 62.dp, palette = palette)
                 VerticalDivider(modifier = Modifier.height(18.dp), thickness = 0.6.dp, color = palette.dividerColor)
-                QualityMetricCell(label = "延迟", value = rttStr, palette = palette)
+                QualityMetricCell(label = "延迟", value = rttStr, cellWidth = 44.dp, palette = palette)
                 VerticalDivider(modifier = Modifier.height(18.dp), thickness = 0.6.dp, color = palette.dividerColor)
-                QualityMetricCell(label = "帧率", value = fpsStr, palette = palette)
+                QualityMetricCell(label = "帧率", value = fpsStr, cellWidth = 46.dp, palette = palette)
                 VerticalDivider(modifier = Modifier.height(18.dp), thickness = 0.6.dp, color = palette.dividerColor)
-                QualityMetricCell(label = "码率", value = bitrateStr, palette = palette)
+                QualityMetricCell(label = "码率", value = bitrateStr, cellWidth = 60.dp, palette = palette)
             }
         }
     }
@@ -1317,9 +1321,11 @@ private fun FrostedLinkQualityPill(
 private fun QualityMetricCell(
     label: String,
     value: String,
+    cellWidth: Dp,
     palette: GlassPalette,
 ) {
     Column(
+        modifier = Modifier.width(cellWidth),
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -1337,8 +1343,10 @@ private fun QualityMetricCell(
             lineHeight = 13.sp,
             fontFamily = FontFamily.Monospace,
             fontWeight = FontWeight.SemiBold,
+            style = TextStyle(fontFeatureSettings = "tnum"),
             color = palette.primaryText,
             maxLines = 1,
+            softWrap = false,
         )
     }
 }
@@ -3030,12 +3038,12 @@ private fun OmniControlAndDockBar(
     val bytesPerSec = if (t.rxBytesPerSec > 0.0) t.rxBytesPerSec else (t.videoMbps * 125_000.0)
     val speedStr = when {
         !isConnected -> "—"
-        bytesPerSec >= 1_000_000.0 -> String.format("%.1fM/s", bytesPerSec / 1_000_000.0)
-        bytesPerSec >= 1_000.0 -> String.format("%dK/s", (bytesPerSec / 1_000.0).roundToInt())
+        bytesPerSec >= 1_000_000.0 -> String.format("%.1fM/s", (bytesPerSec / 1_000_000.0).coerceAtMost(99.9))
+        bytesPerSec >= 1_000.0 -> String.format("%dK/s", (bytesPerSec / 1_000.0).roundToInt().coerceIn(0, 999))
         else -> "0K/s"
     }
-    val rttStr = rtt?.let { "${it.roundToInt()}ms" } ?: "—"
-    val fpsStr = if (state.hasLiveVideo) "${t.fps.roundToInt()}fps" else "—"
+    val rttStr = rtt?.let { "${it.roundToInt().coerceIn(0, 999)}ms" } ?: "—"
+    val fpsStr = if (state.hasLiveVideo) "${t.fps.roundToInt().coerceIn(0, 240)}fps" else "—"
 
     val dockApps = remember(state.windows, state.appIcons, state.activeOmniAppPid) {
         state.windows
@@ -3055,19 +3063,20 @@ private fun OmniControlAndDockBar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(5.dp),
     ) {
-        // 1. Live Link Quality Pill (respects showLinkQualityBar)
+        // 1. Live Link Quality Pill (respects showLinkQualityBar) with locked width + tabular numerals
         if (state.showLinkQualityBar) {
             Row(
                 modifier = Modifier
+                    .width(156.dp)
                     .height(28.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .background(Color(0xFF222735))
                     .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(8.dp))
                     .clickable(onClick = onOpenDiagnostics)
-                    .padding(horizontal = 7.dp)
+                    .padding(horizontal = 6.dp)
                     .testTag("omniLinkQualityPill"),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.5.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 Box(
                     modifier = Modifier
@@ -3075,14 +3084,70 @@ private fun OmniControlAndDockBar(
                         .clip(CircleShape)
                         .background(ledColor),
                 )
-                Text(
-                    text = if (isConnected) "$rttStr·$fpsStr·$speedStr" else "待直连",
-                    fontSize = 10.sp,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFFE5EAF5),
-                    maxLines = 1,
-                )
+                if (!isConnected) {
+                    Text(
+                        text = "待直连",
+                        fontSize = 10.sp,
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Medium,
+                        style = TextStyle(fontFeatureSettings = "tnum"),
+                        color = Color(0xFFE5EAF5),
+                        maxLines = 1,
+                        softWrap = false,
+                        modifier = Modifier.weight(1f),
+                    )
+                } else {
+                    val metricStyle = TextStyle(fontFeatureSettings = "tnum")
+                    val metricColor = Color(0xFFE5EAF5)
+                    Text(
+                        text = rttStr,
+                        fontSize = 10.sp,
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Medium,
+                        style = metricStyle,
+                        textAlign = TextAlign.End,
+                        color = metricColor,
+                        maxLines = 1,
+                        softWrap = false,
+                        modifier = Modifier.width(33.dp),
+                    )
+                    Text(
+                        text = "·",
+                        fontSize = 10.sp,
+                        color = metricColor.copy(alpha = 0.65f),
+                        maxLines = 1,
+                    )
+                    Text(
+                        text = fpsStr,
+                        fontSize = 10.sp,
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Medium,
+                        style = metricStyle,
+                        textAlign = TextAlign.End,
+                        color = metricColor,
+                        maxLines = 1,
+                        softWrap = false,
+                        modifier = Modifier.width(38.dp),
+                    )
+                    Text(
+                        text = "·",
+                        fontSize = 10.sp,
+                        color = metricColor.copy(alpha = 0.65f),
+                        maxLines = 1,
+                    )
+                    Text(
+                        text = speedStr,
+                        fontSize = 10.sp,
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Medium,
+                        style = metricStyle,
+                        textAlign = TextAlign.End,
+                        color = metricColor,
+                        maxLines = 1,
+                        softWrap = false,
+                        modifier = Modifier.width(46.dp),
+                    )
+                }
             }
         }
 
