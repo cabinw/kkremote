@@ -308,6 +308,9 @@ fun KKRemoteScreen(viewModel: WorkspaceViewModel) {
                 onActivateOmniApp = viewModel::activateOmniApp,
                 onRefreshWindows = viewModel::refreshWindows,
                 onCycleKeyboardStyle = viewModel::cycleOmniKeyboardStyle,
+                onKeyboardRowPitchChange = { pitch, final ->
+                    viewModel.setOmniKeyboardRowPitch(pitch?.value, persist = final)
+                },
                 onExitOmniMode = { viewModel.setOmniDesktopMode(false) },
                 onConnectOrOpenSettings = {
                     if (state.activeHost != null) viewModel.reconnectActiveHost()
@@ -2567,6 +2570,7 @@ private fun OmniDesktopWorkspace(
     onActivateOmniApp: (RemoteWindow) -> Unit,
     onRefreshWindows: () -> Unit,
     onCycleKeyboardStyle: () -> Unit,
+    onKeyboardRowPitchChange: (Dp?, Boolean) -> Unit,
     onExitOmniMode: () -> Unit,
     onConnectOrOpenSettings: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -2586,12 +2590,9 @@ private fun OmniDesktopWorkspace(
         val topInsetDp = 0.dp
         val bottomInsetDp = navBottomDp.coerceAtMost(16.dp)
         val controlBarH = 38.dp
-        val minKeyboardBodyH = if (state.omniKeyboardStyle == OmniKeyboardStyle.SLIM_4_ROW) 120.dp else 136.dp
-        val maxKeyboardBodyH = when (state.omniKeyboardStyle) {
-            OmniKeyboardStyle.SLIM_4_ROW -> 158.dp
-            OmniKeyboardStyle.COMPACT_5_ROW -> 182.dp
-            OmniKeyboardStyle.SPLIT_TRACKPAD -> 236.dp
-        }
+        val style = state.omniKeyboardStyle
+        val rowCount = OmniKeyboardMetrics.rowCount(style)
+        val minStageH = 140.dp
 
         val vidW = max(1, state.videoWidthPx)
         val vidH = max(1, state.videoHeightPx)
@@ -2601,18 +2602,30 @@ private fun OmniDesktopWorkspace(
             1728f / 1117f
         }
 
-        // Priority 1: Lock Mac native screen to 100% edge-to-edge full horizontal width first!
+        // Ergonomic key size first: thumbs need ~40dp caps, so the keyboard keeps the user's row
+        // pitch (or the screen default) and only shrinks when the Mac stage would drop below its floor.
+        // Automatic pitch may give up a few dp (never below 44dp) to keep the Mac stage full-width.
         val fullWidthScreenH = maxWidth / videoAspect
-        val maxAllowedScreenH = (maxHeight - topInsetDp - controlBarH - minKeyboardBodyH - bottomInsetDp)
-            .coerceAtLeast(140.dp)
+        val pitchForFullWidthStage = (maxHeight - topInsetDp - controlBarH - bottomInsetDp - fullWidthScreenH -
+            OmniKeyboardMetrics.ChromeHeight) / rowCount
+        val autoPitch = OmniKeyboardMetrics.defaultRowPitch(maxWidth)
+            .coerceAtMost(pitchForFullWidthStage.coerceAtLeast(44.dp))
+        val requestedPitch = state.omniKeyboardRowPitchDp?.dp ?: autoPitch
+        val pitchByHeight = (maxHeight - topInsetDp - controlBarH - bottomInsetDp - minStageH -
+            OmniKeyboardMetrics.ChromeHeight) / rowCount
+        val maxRowPitch = pitchByHeight.coerceIn(OmniKeyboardMetrics.MinRowPitch, OmniKeyboardMetrics.MaxRowPitch)
+        val rowPitch = requestedPitch.coerceIn(OmniKeyboardMetrics.MinRowPitch, maxRowPitch)
+        val keyboardBodyH = OmniKeyboardMetrics.heightFor(style, rowPitch)
+
+        // Mac desktop stays 100% edge-to-edge wide; it takes whatever height the keyboard leaves.
+        val maxAllowedScreenH = (maxHeight - topInsetDp - controlBarH - keyboardBodyH - bottomInsetDp)
+            .coerceAtLeast(96.dp)
         val screenStageH = minOf(fullWidthScreenH, maxAllowedScreenH)
 
-        val remainingBelowControl = (maxHeight - topInsetDp - screenStageH - controlBarH - bottomInsetDp)
-            .coerceAtLeast(minKeyboardBodyH)
-        val keyboardBodyH = remainingBelowControl.coerceIn(minKeyboardBodyH, maxKeyboardBodyH)
-        val portraitTrackpadSlackH = (remainingBelowControl - keyboardBodyH).coerceAtLeast(0.dp)
-        val showStandaloneTrackpad = state.omniKeyboardStyle != OmniKeyboardStyle.SPLIT_TRACKPAD &&
-            portraitTrackpadSlackH >= 28.dp
+        val portraitTrackpadSlackH = (maxHeight - topInsetDp - screenStageH - controlBarH - keyboardBodyH - bottomInsetDp)
+            .coerceAtLeast(0.dp)
+        val showStandaloneTrackpad = style != OmniKeyboardStyle.SPLIT_TRACKPAD &&
+            portraitTrackpadSlackH >= 72.dp
 
         Column(modifier = Modifier.fillMaxSize()) {
             if (topInsetDp > 0.dp) {
@@ -2682,7 +2695,7 @@ private fun OmniDesktopWorkspace(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(keyboardBodyH + bottomInsetDp)
-                    .background(Color(0xFF0D0F14))
+                    .background(Color(0xFF121419))
                     .padding(bottom = bottomInsetDp),
             ) {
                 OmniMacKeyboard(
@@ -2694,6 +2707,9 @@ private fun OmniDesktopWorkspace(
                     onTrackpadClick = onTrackpadClick,
                     onTrackpadScroll = onTrackpadScroll,
                     modifier = Modifier.fillMaxSize(),
+                    rowPitch = rowPitch,
+                    maxRowPitch = maxRowPitch,
+                    onRowPitchChange = onKeyboardRowPitchChange,
                 )
             }
         }
