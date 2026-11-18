@@ -81,7 +81,10 @@ final class WindowCaptureSource: NSObject, LabVideoSource, SCStreamOutput, SCStr
                     guard let display = content.displays.first(where: { $0.displayID == self.windowID }) ?? content.displays.first else {
                         throw LabError.message("未找到可捕获的主屏幕")
                     }
-                    filter = SCContentFilter(display: display, excludingWindows: [])
+                    let excludedSelfWindows = content.windows.filter {
+                        $0.owningApplication?.processID == ProcessInfo.processInfo.processIdentifier
+                    }
+                    filter = SCContentFilter(display: display, excludingWindows: excludedSelfWindows)
                 } else {
                     guard let window = content.windows.first(where: { $0.windowID == self.windowID && (self.expectedProcessID == nil || $0.owningApplication?.processID == self.expectedProcessID) }) else {
                         throw LabError.message("选定窗口已关闭或不可捕获，请重新选择窗口")

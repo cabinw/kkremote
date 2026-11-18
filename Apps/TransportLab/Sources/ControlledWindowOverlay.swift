@@ -98,7 +98,8 @@ private struct OverlayWindowSnapshot {
     }
 
     var appKitFrame: NSRect {
-        let primaryTop = NSScreen.screens.first?.frame.maxY ?? 0
+        let cgHeight = CGDisplayBounds(CGMainDisplayID()).height
+        let primaryTop = cgHeight > 0 ? cgHeight : (NSScreen.screens.first?.frame.maxY ?? 0)
         return NSRect(x: frame.minX, y: primaryTop - frame.maxY, width: frame.width, height: frame.height)
     }
 }
@@ -106,6 +107,10 @@ private struct OverlayWindowSnapshot {
 private final class ControlledOverlayPanel: NSPanel {
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
+
+    override func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect {
+        frameRect
+    }
 
     init(interactive: Bool) {
         super.init(
@@ -1117,6 +1122,18 @@ final class ControlledWindowOverlay: NSObject {
             self.style = .standard
         }
         super.init()
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.lastFrame = .null
+                self.lastOrder = nil
+                self.update()
+            }
+        }
         HostWindowControl.onRemotePointerActivity = { [weak self] active in
             if Thread.isMainThread {
                 MainActor.assumeIsolated {
@@ -1417,6 +1434,23 @@ final class ControlledWindowOverlay: NSObject {
         HostWindowControl.ignoredOverlayWindowIDs = ids
     }
 
+    private func computeBannerLayout(for rect: NSRect) -> (frame: NSRect, uiScale: CGFloat) {
+        let uiScale = min(1.0, max(0.62, (rect.width - 28) / V1BannerView.baseSize.width))
+        let panelSize = NSSize(
+            width: round(V1BannerView.baseSize.width * uiScale),
+            height: round(V1BannerView.baseSize.height * uiScale)
+        )
+        let visibleMinY = max(rect.minY, 12)
+        let targetY = min(visibleMinY + 20, rect.maxY - panelSize.height - 12)
+        let frame = NSRect(
+            x: round(rect.midX - panelSize.width / 2),
+            y: round(targetY),
+            width: panelSize.width,
+            height: panelSize.height
+        )
+        return (frame, uiScale)
+    }
+
     private func update() {
         guard let target = activeTarget,
               let canvas,
@@ -1441,12 +1475,18 @@ final class ControlledWindowOverlay: NSObject {
         }
 
         let selfPID = ProcessInfo.processInfo.processIdentifier
+        let currentArea = max(1, current.frame.width * current.frame.height)
+        let expandedCurrent = current.frame.insetBy(dx: -24, dy: -24)
         let occluder = windows[..<index].first {
-            $0.pid != selfPID && $0.layer == 0 &&
-            !($0.owner == "ChatGPT Computer Use" && $0.title == "Software Cursor") &&
-            !($0.pid == current.pid && $0.frame.width <= 120 && $0.frame.height <= 44 &&
-              current.frame.contains($0.frame) && $0.frame.minY < current.frame.minY + 48) &&
-            $0.frame.intersects(current.frame)
+            guard $0.pid != selfPID, $0.layer == 0 else { return false }
+            if $0.owner == "ChatGPT Computer Use" && $0.title == "Software Cursor" { return false }
+            if $0.pid == current.pid {
+                let childArea = $0.frame.width * $0.frame.height
+                if childArea < currentArea * 0.35 && expandedCurrent.contains($0.frame) {
+                    return false
+                }
+            }
+            return $0.frame.intersects(current.frame)
         }
         if let occluder {
             hide("occluded-by-\(occluder.owner)-\(occluder.id)")
@@ -1462,6 +1502,7 @@ final class ControlledWindowOverlay: NSObject {
 
         let appearing = lastVisibility != "visible"
         let rect = current.appKitFrame
+        let bannerLayout = computeBannerLayout(for: rect)
         let pad = theme.outerPadding
         if rect != lastFrame || pad != lastOuterPad {
             let expandedRect = rect.insetBy(dx: -pad, dy: -pad)
@@ -1470,19 +1511,8 @@ final class ControlledWindowOverlay: NSObject {
             canvas.cornerRadius = cornerRadius(for: rect)
             bannerView.subtitleField.stringValue = "移动设备实时控制 · \(Int(rect.width.rounded()))×\(Int(rect.height.rounded())) pt"
 
-            let uiScale = min(1.0, max(0.62, (rect.width - 28) / V1BannerView.baseSize.width))
-            let panelSize = NSSize(
-                width: round(V1BannerView.baseSize.width * uiScale),
-                height: round(V1BannerView.baseSize.height * uiScale)
-            )
-            bannerView.uiScale = uiScale
-            let targetY = min(rect.minY + 18 + panelSize.height, rect.maxY - panelSize.height - 12)
-            let targetFrame = NSRect(
-                x: round(rect.midX - panelSize.width / 2),
-                y: round(targetY),
-                width: panelSize.width,
-                height: panelSize.height
-            )
+            bannerView.uiScale = bannerLayout.uiScale
+            let targetFrame = bannerLayout.frame
             if appearing {
                 bannerPanel.setFrame(targetFrame, display: true)
             } else {
@@ -1546,16 +1576,12 @@ final class ControlledWindowOverlay: NSObject {
         if appearing {
             syncIgnoredWindowIDs()
             if isBannerVisible {
-                let scale = min(1.0, max(0.62, (rect.width - 28) / V1BannerView.baseSize.width))
-                let finalY = round(min(
-                    rect.minY + 18 + round(V1BannerView.baseSize.height * scale),
-                    rect.maxY - round(V1BannerView.baseSize.height * scale) - 12
-                ))
+                let finalY = bannerLayout.frame.minY
                 NSAnimationContext.runAnimationGroup { context in
                     context.duration = reduceMotion ? 0.12 : 0.28
                     context.timingFunction = CAMediaTimingFunction(name: .easeOut)
                     bannerPanel.animator().alphaValue = 1
-                    bannerPanel.animator().setFrameOrigin(NSPoint(x: bannerPanel.frame.minX, y: finalY))
+                    bannerPanel.animator().setFrameOrigin(NSPoint(x: bannerLayout.frame.minX, y: finalY))
                 }
             }
             setUIAnimationRunning(isBannerVisible)

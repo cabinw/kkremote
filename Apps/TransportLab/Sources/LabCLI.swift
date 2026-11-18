@@ -35,6 +35,8 @@ enum LabCLI {
                 }
                 listWindows(to: options["--report"])
             }
+            NSApp.setActivationPolicy(.accessory)
+            NSApp.finishLaunching()
             let persistentHost = flags.contains("--persistent-host")
             guard let historyLimit = Int(options["--report-history-limit"] ?? "3600"), [60, 300, 3600].contains(historyLimit),
                   historyLimit == 3600 || flags.contains("--sample-journal") else {
@@ -209,7 +211,18 @@ enum LabCLI {
                 print("LAB_HOST_LISTENING session=1"); fflush(stdout)
             }
             while Date() < deadline {
-                RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+                let sliceEnd = Date().addingTimeInterval(0.05)
+                if let app = NSApp {
+                    if let first = app.nextEvent(matching: .any, until: sliceEnd, inMode: .default, dequeue: true) {
+                        app.sendEvent(first)
+                        while let more = app.nextEvent(matching: .any, until: nil, inMode: .default, dequeue: true) {
+                            app.sendEvent(more)
+                        }
+                        app.updateWindows()
+                    }
+                } else {
+                    RunLoop.main.run(until: sliceEnd)
+                }
                 if interrupted { throw LabError.message("测试被终止；保留诊断，不计为完成") }
                 if let due = retryAt {
                     if Date() < due { continue }
