@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.KeyboardTest" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#FF0B0D12</item>
+    </style>
+    <color name="ic_launcher_background">#FFE8E6E1</color>
+</resources>
