@@ -518,6 +518,7 @@ fun KKRemoteScreen(viewModel: WorkspaceViewModel) {
                 onToggleLinkQualityBar = viewModel::setShowLinkQualityBar,
                 onToggleOmniDesktopMode = viewModel::setOmniDesktopMode,
                 onSelectOmniKeyboardStyle = viewModel::setOmniKeyboardStyle,
+                onSelectOmniKeyboardTheme = viewModel::setOmniKeyboardTheme,
                 onImportLink = { link, coord -> viewModel.importPairingLink(link, coord) },
                 onConnectSaved = viewModel::connectToHost,
                 onRemoveSaved = viewModel::removeHost,
@@ -2172,6 +2173,7 @@ private fun FrostedSettingsAndHostsSheet(
     onToggleLinkQualityBar: (Boolean) -> Unit,
     onToggleOmniDesktopMode: (Boolean) -> Unit,
     onSelectOmniKeyboardStyle: (OmniKeyboardStyle) -> Unit,
+    onSelectOmniKeyboardTheme: (OmniKeyboardTheme) -> Unit,
     onImportLink: (String, String) -> Boolean,
     onConnectSaved: (TrustedHostProfile) -> Unit,
     onRemoveSaved: (TrustedHostProfile) -> Unit,
@@ -2284,6 +2286,44 @@ private fun FrostedSettingsAndHostsSheet(
                         ) {
                             Text(
                                 text = style.shortLabel,
+                                fontSize = 12.sp,
+                                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                                color = if (selected) Color.White else palette.primaryText,
+                                maxLines = 1,
+                            )
+                        }
+                    }
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("键盘外观", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = palette.primaryText)
+                    Text(state.omniKeyboardTheme.fullLabel, fontSize = 11.5.sp, color = palette.secondaryText)
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(palette.dividerColor)
+                        .padding(3.dp),
+                    horizontalArrangement = Arrangement.spacedBy(3.dp),
+                ) {
+                    for (theme in OmniKeyboardTheme.entries) {
+                        val selected = state.omniKeyboardTheme == theme
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (selected) palette.accentBlue else Color.Transparent)
+                                .clickable { onSelectOmniKeyboardTheme(theme) }
+                                .padding(vertical = 7.dp)
+                                .testTag("segOmniTheme_${theme.name}"),
+                        ) {
+                            Text(
+                                text = theme.shortLabel,
                                 fontSize = 12.sp,
                                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
                                 color = if (selected) Color.White else palette.primaryText,
@@ -2695,7 +2735,7 @@ private fun OmniDesktopWorkspace(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(keyboardBodyH + bottomInsetDp)
-                    .background(Color(0xFF121419))
+                    .background(omniKeyboardTrayColor(state.omniKeyboardTheme))
                     .padding(bottom = bottomInsetDp),
             ) {
                 OmniMacKeyboard(
@@ -2710,6 +2750,7 @@ private fun OmniDesktopWorkspace(
                     rowPitch = rowPitch,
                     maxRowPitch = maxRowPitch,
                     onRowPitchChange = onKeyboardRowPitchChange,
+                    theme = state.omniKeyboardTheme,
                 )
             }
         }

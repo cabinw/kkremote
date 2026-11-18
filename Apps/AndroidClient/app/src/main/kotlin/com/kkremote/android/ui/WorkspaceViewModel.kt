@@ -93,6 +93,7 @@ data class WorkspaceUiState(
     val omniKeyboardStyle: OmniKeyboardStyle = OmniKeyboardStyle.COMPACT_5_ROW,
     /** User-chosen keyboard row pitch in dp; null = automatic for the current screen. */
     val omniKeyboardRowPitchDp: Float? = null,
+    val omniKeyboardTheme: OmniKeyboardTheme = OmniKeyboardTheme.GRAPHITE,
     val activeOmniAppPid: Int? = null,
     val zoom: Float = 1.0f,
     val panX: Float = 0f,
@@ -118,6 +119,7 @@ private data class ClientUiPrefs(
     val omniDesktopMode: Boolean = false,
     val omniKeyboardStyle: OmniKeyboardStyle = OmniKeyboardStyle.COMPACT_5_ROW,
     val omniKeyboardRowPitchDp: Float? = null,
+    val omniKeyboardTheme: OmniKeyboardTheme = OmniKeyboardTheme.GRAPHITE,
 )
 
 class WorkspaceViewModel(application: Application) : AndroidViewModel(application) {
@@ -181,6 +183,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                 omniDesktopMode = uiPrefs.omniDesktopMode,
                 omniKeyboardStyle = uiPrefs.omniKeyboardStyle,
                 omniKeyboardRowPitchDp = uiPrefs.omniKeyboardRowPitchDp,
+                omniKeyboardTheme = uiPrefs.omniKeyboardTheme,
                 showPairingSheet = false,
             )
         }
@@ -709,6 +712,7 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
                 omniDesktopMode = st.omniDesktopMode,
                 omniKeyboardStyle = st.omniKeyboardStyle,
                 omniKeyboardRowPitchDp = st.omniKeyboardRowPitchDp,
+                omniKeyboardTheme = st.omniKeyboardTheme,
             )
         )
     }
@@ -755,6 +759,10 @@ class WorkspaceViewModel(application: Application) : AndroidViewModel(applicatio
     fun setOmniKeyboardRowPitch(rowPitchDp: Float?, persist: Boolean) {
         _uiState.update { it.copy(omniKeyboardRowPitchDp = rowPitchDp) }
         if (persist) saveCurrentUiPrefs()
+    }
+    fun setOmniKeyboardTheme(theme: OmniKeyboardTheme) {
+        _uiState.update { it.copy(omniKeyboardTheme = theme) }
+        saveCurrentUiPrefs()
     }
     fun cycleOmniKeyboardStyle() {
         val styles = OmniKeyboardStyle.entries

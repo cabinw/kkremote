@@ -1,6 +1,7 @@
 package com.kkremote.android
 
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.luminance
 import com.kkremote.android.ui.DeckGeometry
 import com.kkremote.android.ui.KeyHaptic
 import com.kkremote.android.ui.KeyId
@@ -9,10 +10,13 @@ import com.kkremote.android.ui.KeySpec
 import com.kkremote.android.ui.MacKeyCode
 import com.kkremote.android.ui.ModifierLatchMode
 import com.kkremote.android.ui.OmniKeyTouchEngine
+import com.kkremote.android.ui.OmniKeyboardTheme
 import com.kkremote.android.ui.OmniMacLayouts
 import com.kkremote.android.ui.OmniModifier
 import com.kkremote.android.ui.OmniModifierController
 import com.kkremote.android.ui.compactRows
+import com.kkremote.android.ui.skin
+import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -191,6 +195,21 @@ class OmniKeyboardEngineTest {
         h.engine.onDown(3, shift, 0f); h.now += 40; h.engine.onUp(3)
         assertEquals(ModifierLatchMode.LOCKED, h.controller.modeOf(OmniModifier.SHIFT))
         assertTrue(h.haptics.contains(KeyHaptic.CONFIRM))
+    }
+
+    @Test
+    fun themesMapToDistinctSkinsAndSerialiseByName() {
+        val graphite = OmniKeyboardTheme.GRAPHITE.skin()
+        val mech = OmniKeyboardTheme.MECHANICAL_LIGHT.skin()
+        assertFalse(graphite.mechanical)
+        assertTrue(mech.mechanical)
+        // Light skin: dark legends on light caps, light tray.
+        assertTrue(mech.letter.faceBottom.luminance() > 0.8f)
+        assertTrue(mech.letter.legend.luminance() < 0.1f)
+        assertTrue(graphite.trayBottom.luminance() < 0.05f)
+        val json = Json.encodeToString(OmniKeyboardTheme.MECHANICAL_LIGHT)
+        assertEquals("\"MECHANICAL_LIGHT\"", json)
+        assertEquals(OmniKeyboardTheme.MECHANICAL_LIGHT, Json.decodeFromString<OmniKeyboardTheme>(json))
     }
 
     @Test

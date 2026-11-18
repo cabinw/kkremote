@@ -14,6 +14,13 @@ enum class OmniKeyboardStyle(val shortLabel: String, val fullLabel: String) {
     SPLIT_TRACKPAD("分体触控", "左右分体 + 中置触控板"),
 }
 
+/** Visual skin of the self-drawn keyboard. */
+@Serializable
+enum class OmniKeyboardTheme(val shortLabel: String, val fullLabel: String) {
+    GRAPHITE("石墨深色", "石墨深色 · 低光环境"),
+    MECHANICAL_LIGHT("机械浅色", "机械浅色 · 拟物键帽"),
+}
+
 /**
  * Complete macOS Carbon HIToolbox virtual key codes (kVK_ANSI_* / kVK_*), all within 0..127.
  */

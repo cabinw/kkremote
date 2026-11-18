@@ -51,6 +51,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -62,6 +64,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
@@ -122,41 +125,153 @@ object OmniKeyboardMetrics {
         (deckWidth / unitsPerRow * 0.16f).coerceIn(3.5.dp, 7.dp)
 }
 
-private object KbPalette {
-    val trayTop = Color(0xFF1C1F27)
-    val trayBottom = Color(0xFF121419)
-    val trayHairline = Color.White.copy(alpha = 0.07f)
+/** Colours for one keycap family. Wall colours are only used by the mechanical skin. */
+@Immutable
+internal data class CapColors(
+    val faceTop: Color,
+    val faceBottom: Color,
+    val pressedTop: Color,
+    val pressedBottom: Color,
+    val legend: Color,
+    val wallTop: Color = faceBottom,
+    val wallBottom: Color = faceBottom,
+)
 
-    val letterTop = Color(0xFF3C414E)
-    val letterBottom = Color(0xFF353A46)
-    val letterPressedTop = Color(0xFF5A6072)
-    val letterPressedBottom = Color(0xFF4E5465)
+/** Full visual skin of the keyboard; switched by [OmniKeyboardTheme]. */
+@Immutable
+internal data class KbSkin(
+    val mechanical: Boolean,
+    val trayTop: Color,
+    val trayBottom: Color,
+    val trayHairline: Color,
+    val trayInnerShadow: Color,
+    val letter: CapColors,
+    val func: CapColors,
+    val accent: CapColors,
+    val active: CapColors,
+    val lip: Color,
+    val letterWeight: FontWeight,
+    val textPrimary: Color,
+    val textSecondary: Color,
+    val textAccent: Color,
+    val textWarning: Color,
+    val ledOff: Color,
+    val ledOneShot: Color,
+    val ledLocked: Color,
+    val bubbleTop: Color,
+    val bubbleBottom: Color,
+    val bubbleBorder: Color,
+    val bubbleText: Color,
+    val grabberIdle: Color,
+    val trackpadTop: Color,
+    val trackpadBottom: Color,
+    val trackpadBorder: Color,
+    val trackpadHighlight: Color,
+    val trackpadTouch: Color,
+    val trackpadTouchDot: Color,
+    val previewBackdrop: Color,
+)
 
-    val funcTop = Color(0xFF282C36)
-    val funcBottom = Color(0xFF22262F)
-    val funcPressedTop = Color(0xFF3D4250)
-    val funcPressedBottom = Color(0xFF363A47)
+internal val GraphiteSkin = KbSkin(
+    mechanical = false,
+    trayTop = Color(0xFF1C1F27),
+    trayBottom = Color(0xFF121419),
+    trayHairline = Color.White.copy(alpha = 0.07f),
+    trayInnerShadow = Color.Transparent,
+    letter = CapColors(Color(0xFF3C414E), Color(0xFF353A46), Color(0xFF5A6072), Color(0xFF4E5465), Color(0xFFF2F4F8)),
+    func = CapColors(Color(0xFF282C36), Color(0xFF22262F), Color(0xFF3D4250), Color(0xFF363A47), Color(0xFFF2F4F8)),
+    accent = CapColors(Color(0xFF2E8BFF), Color(0xFF1570E3), Color(0xFF63A9FF), Color(0xFF3B8CF5), Color.White),
+    active = CapColors(Color(0xFF233A5E), Color(0xFF1D3251), Color(0xFF2F4D7A), Color(0xFF284369), Color(0xFF8CC8FF)),
+    lip = Color(0xFF07080B),
+    letterWeight = FontWeight.Normal,
+    textPrimary = Color(0xFFF2F4F8),
+    textSecondary = Color(0xFF9AA2B4),
+    textAccent = Color(0xFF8CC8FF),
+    textWarning = Color(0xFFFFC46B),
+    ledOff = Color.Transparent,
+    ledOneShot = Color(0xFF6CC1FF),
+    ledLocked = Color.White,
+    bubbleTop = Color(0xFF616879),
+    bubbleBottom = Color(0xFF4C5263),
+    bubbleBorder = Color.White.copy(alpha = 0.14f),
+    bubbleText = Color.White,
+    grabberIdle = Color.White.copy(alpha = 0.22f),
+    trackpadTop = Color(0xFF2A2E39),
+    trackpadBottom = Color(0xFF232731),
+    trackpadBorder = Color.White.copy(alpha = 0.08f),
+    trackpadHighlight = Color.White.copy(alpha = 0.10f),
+    trackpadTouch = Color(0xFF0A84FF).copy(alpha = 0.20f),
+    trackpadTouchDot = Color(0xFF8CC8FF).copy(alpha = 0.9f),
+    previewBackdrop = Color(0xFF0B0D12),
+)
 
-    val accentTop = Color(0xFF2E8BFF)
-    val accentBottom = Color(0xFF1570E3)
-    val accentPressedTop = Color(0xFF63A9FF)
-    val accentPressedBottom = Color(0xFF3B8CF5)
+/**
+ * Light skeuomorphic skin modelled on a mechanical keyboard: warm aluminium case, ivory PBT
+ * alpha caps, warm-grey modifiers, an orange Return, sculpted OEM-style caps with visible side
+ * walls and a dished top, plus per-key indicator LEDs (amber = one-shot, green = locked).
+ */
+internal val MechanicalLightSkin = KbSkin(
+    mechanical = true,
+    trayTop = Color(0xFFE8E6E1),
+    trayBottom = Color(0xFFD6D3CB),
+    trayHairline = Color.White.copy(alpha = 0.9f),
+    trayInnerShadow = Color.Black.copy(alpha = 0.07f),
+    letter = CapColors(
+        faceTop = Color(0xFFF0EDE6), faceBottom = Color(0xFFFCFBF8),
+        pressedTop = Color(0xFFE7E3DA), pressedBottom = Color(0xFFF3F1EB),
+        legend = Color(0xFF34322D),
+        wallTop = Color(0xFFE7E3DA), wallBottom = Color(0xFFC6C0B2),
+    ),
+    func = CapColors(
+        faceTop = Color(0xFFC6C2B9), faceBottom = Color(0xFFD6D2CA),
+        pressedTop = Color(0xFFBDB9AF), pressedBottom = Color(0xFFCCC8BF),
+        legend = Color(0xFF34322D),
+        wallTop = Color(0xFFBEB9AF), wallBottom = Color(0xFF9C968A),
+    ),
+    accent = CapColors(
+        faceTop = Color(0xFFE2733A), faceBottom = Color(0xFFF2905A),
+        pressedTop = Color(0xFFD86B33), pressedBottom = Color(0xFFE6844E),
+        legend = Color.White,
+        wallTop = Color(0xFFD9692F), wallBottom = Color(0xFFA94D1D),
+    ),
+    active = CapColors(
+        faceTop = Color(0xFFC6C2B9), faceBottom = Color(0xFFD6D2CA),
+        pressedTop = Color(0xFFBDB9AF), pressedBottom = Color(0xFFCCC8BF),
+        legend = Color(0xFF34322D),
+        wallTop = Color(0xFFBEB9AF), wallBottom = Color(0xFF9C968A),
+    ),
+    lip = Color.Transparent,
+    letterWeight = FontWeight.Medium,
+    textPrimary = Color(0xFF34322D),
+    textSecondary = Color(0xFF8C877C),
+    textAccent = Color(0xFFD0632A),
+    textWarning = Color(0xFFB4670A),
+    ledOff = Color(0xFF8F8A80).copy(alpha = 0.35f),
+    ledOneShot = Color(0xFFFFA62B),
+    ledLocked = Color(0xFF3DDC84),
+    bubbleTop = Color(0xFFFFFFFF),
+    bubbleBottom = Color(0xFFF2F0EB),
+    bubbleBorder = Color.Black.copy(alpha = 0.08f),
+    bubbleText = Color(0xFF2E2C28),
+    grabberIdle = Color.Black.copy(alpha = 0.16f),
+    trackpadTop = Color(0xFFDCD9D2),
+    trackpadBottom = Color(0xFFE9E7E2),
+    trackpadBorder = Color.Black.copy(alpha = 0.08f),
+    trackpadHighlight = Color.Black.copy(alpha = 0.10f),
+    trackpadTouch = Color(0xFFE2733A).copy(alpha = 0.18f),
+    trackpadTouchDot = Color(0xFFD0632A).copy(alpha = 0.9f),
+    previewBackdrop = Color(0xFFF4F3F0),
+)
 
-    val activeTop = Color(0xFF233A5E)
-    val activeBottom = Color(0xFF1D3251)
-    val activePressedTop = Color(0xFF2F4D7A)
-    val activePressedBottom = Color(0xFF284369)
-
-    val lip = Color(0xFF07080B)
-    val textPrimary = Color(0xFFF2F4F8)
-    val textSecondary = Color(0xFF9AA2B4)
-    val textAccent = Color(0xFF8CC8FF)
-    val textWarning = Color(0xFFFFC46B)
-    val ledOn = Color(0xFF6CC1FF)
-
-    val bubbleTop = Color(0xFF616879)
-    val bubbleBottom = Color(0xFF4C5263)
+internal fun OmniKeyboardTheme.skin(): KbSkin = when (this) {
+    OmniKeyboardTheme.GRAPHITE -> GraphiteSkin
+    OmniKeyboardTheme.MECHANICAL_LIGHT -> MechanicalLightSkin
 }
+
+/** Colour the host should paint behind the keyboard (e.g. under the navigation bar). */
+fun omniKeyboardTrayColor(theme: OmniKeyboardTheme): Color = theme.skin().trayBottom
+
+internal val LocalKbSkin = staticCompositionLocalOf { GraphiteSkin }
 
 private enum class CapTone { LETTER, FUNCTION, ACCENT, ACTIVE }
 
@@ -204,9 +319,11 @@ fun OmniMacKeyboard(
     rowPitch: Dp = OmniKeyboardMetrics.DefaultRowPitch,
     maxRowPitch: Dp = OmniKeyboardMetrics.MaxRowPitch,
     onRowPitchChange: ((rowPitch: Dp?, final: Boolean) -> Unit)? = null,
+    theme: OmniKeyboardTheme = OmniKeyboardTheme.GRAPHITE,
 ) {
     OmniMacKeyboardImpl(
         style = style,
+        theme = theme,
         enabled = enabled,
         onSendRawKey = onSendRawKey,
         onToggleInputSource = onToggleInputSource,
@@ -224,6 +341,7 @@ fun OmniMacKeyboard(
 @Composable
 private fun OmniMacKeyboardImpl(
     style: OmniKeyboardStyle,
+    theme: OmniKeyboardTheme,
     enabled: Boolean,
     onSendRawKey: (keyCode: Int, modifiers: List<String>) -> Unit,
     onToggleInputSource: () -> Unit,
@@ -290,12 +408,23 @@ private fun OmniMacKeyboardImpl(
         )
     }
 
+    val skin = theme.skin()
+    CompositionLocalProvider(LocalKbSkin provides skin) {
     Column(
         modifier = modifier
             .fillMaxWidth()
             .drawBehind {
-                drawRect(Brush.verticalGradient(listOf(KbPalette.trayTop, KbPalette.trayBottom)))
-                drawLine(KbPalette.trayHairline, Offset(0f, 0f), Offset(size.width, 0f), strokeWidth = 1f)
+                drawRect(Brush.verticalGradient(listOf(skin.trayTop, skin.trayBottom)))
+                if (skin.trayInnerShadow.alpha > 0f) {
+                    drawRect(
+                        Brush.verticalGradient(
+                            listOf(skin.trayInnerShadow, Color.Transparent),
+                            startY = 1f,
+                            endY = 7.dp.toPx(),
+                        ),
+                    )
+                }
+                drawLine(skin.trayHairline, Offset(0f, 0f), Offset(size.width, 0f), strokeWidth = 1f)
             }
             .padding(horizontal = OmniKeyboardMetrics.SidePadding)
             .testTag("omni_mac_keyboard"),
@@ -373,6 +502,7 @@ private fun OmniMacKeyboardImpl(
             }
         }
         Spacer(Modifier.height(OmniKeyboardMetrics.BottomPadding))
+    }
     }
 }
 
@@ -562,6 +692,17 @@ private fun spokenLabel(spec: KeySpec): String = when (spec) {
     is KeySpec.LayerToggleKey -> "切换数字符号层"
 }
 
+/** Pixel geometry of a sculpted mechanical keycap inside its key slot. */
+private class MechCapGeometry(widthPx: Float, heightPx: Float, density: Density) {
+    val shadowSpace = with(density) { 3.dp.toPx() }
+    val travel = with(density) { 2.5.dp.toPx() }
+    val bodyH = heightPx - shadowSpace
+    val radius = min(with(density) { 7.dp.toPx() }, bodyH * 0.2f)
+    val insetX = (widthPx * 0.085f).coerceIn(with(density) { 2.5.dp.toPx() }, with(density) { 5.dp.toPx() })
+    val insetTop = (bodyH * 0.05f).coerceIn(with(density) { 1.2.dp.toPx() }, with(density) { 2.5.dp.toPx() })
+    val insetBottom = (bodyH * 0.16f).coerceIn(with(density) { 3.5.dp.toPx() }, with(density) { 7.dp.toPx() })
+}
+
 @Composable
 private fun KeyCap(
     spec: KeySpec,
@@ -572,35 +713,103 @@ private fun KeyCap(
     density: Density,
     onAccessibilityActivate: () -> Unit,
 ) {
+    val skin = LocalKbSkin.current
     val press by animateFloatAsState(
         targetValue = if (pressed) 1f else 0f,
         animationSpec = if (pressed) snap() else tween(durationMillis = 120),
         label = "keyPress",
     )
     val modMode = (spec as? KeySpec.ModifierKey)?.let { visual.mode(it.modifier) } ?: ModifierLatchMode.OFF
+    val layerOn = spec is KeySpec.LayerToggleKey && visual.symbolLayer
     val tone = when {
+        // Mechanical skin keeps modifier caps grey and reports state with the LED + latch depth.
+        skin.mechanical && (spec is KeySpec.ModifierKey || spec is KeySpec.LayerToggleKey) -> CapTone.FUNCTION
         spec is KeySpec.ModifierKey && modMode == ModifierLatchMode.LOCKED -> CapTone.ACCENT
         spec is KeySpec.ModifierKey && modMode != ModifierLatchMode.OFF -> CapTone.ACTIVE
-        spec is KeySpec.LayerToggleKey && visual.symbolLayer -> CapTone.ACTIVE
+        layerOn -> CapTone.ACTIVE
         spec is KeySpec.CharOrAction && spec.isAccent -> CapTone.ACCENT
         spec is KeySpec.CharOrAction && !spec.isUtility -> CapTone.LETTER
         else -> CapTone.FUNCTION
     }
-    val (top, bottom, pTop, pBottom) = when (tone) {
-        CapTone.LETTER -> listOf(KbPalette.letterTop, KbPalette.letterBottom, KbPalette.letterPressedTop, KbPalette.letterPressedBottom)
-        CapTone.FUNCTION -> listOf(KbPalette.funcTop, KbPalette.funcBottom, KbPalette.funcPressedTop, KbPalette.funcPressedBottom)
-        CapTone.ACCENT -> listOf(KbPalette.accentTop, KbPalette.accentBottom, KbPalette.accentPressedTop, KbPalette.accentPressedBottom)
-        CapTone.ACTIVE -> listOf(KbPalette.activeTop, KbPalette.activeBottom, KbPalette.activePressedTop, KbPalette.activePressedBottom)
+    val caps = when (tone) {
+        CapTone.LETTER -> skin.letter
+        CapTone.FUNCTION -> skin.func
+        CapTone.ACCENT -> skin.accent
+        CapTone.ACTIVE -> skin.active
+    }
+    // A latched modifier stays partly pressed down, like a locking switch.
+    val latch = if (!skin.mechanical) 0f else when {
+        modMode == ModifierLatchMode.LOCKED -> 0.55f
+        modMode == ModifierLatchMode.ONE_SHOT || layerOn -> 0.3f
+        else -> 0f
+    }
+    val depth = max(press, latch)
+    val ledColor = when {
+        modMode == ModifierLatchMode.LOCKED -> skin.ledLocked
+        modMode != ModifierLatchMode.OFF || layerOn -> skin.ledOneShot
+        skin.mechanical && (spec is KeySpec.ModifierKey || spec is KeySpec.LayerToggleKey) -> skin.ledOff
+        else -> null
     }
 
     val widthDp = with(density) { rect.width.toDp() }
     val heightDp = with(density) { rect.height.toDp() }
     val lipPx = with(density) { 1.5.dp.toPx() }
     val radiusPx = min(with(density) { 8.dp.toPx() }, rect.height * 0.2f)
+    val mech = remember(rect.width, rect.height, density) { MechCapGeometry(rect.width, rect.height, density) }
     val showWords = widthDp >= 44.dp && heightDp >= 36.dp
-    val keyH = rect.height
+    val keyH = if (skin.mechanical) rect.height * 0.86f else rect.height
     fun px(fraction: Float, maxSp: Float): TextUnit = with(density) {
         min((keyH * fraction).toSp().value, maxSp).sp
+    }
+
+    val drawCap: Modifier = if (skin.mechanical) {
+        Modifier.drawBehind { drawMechanicalCap(mech, caps, depth, press) }
+    } else {
+        Modifier.drawBehind {
+            val r = CornerRadius(radiusPx)
+            val sink = lipPx * press
+            val faceH = size.height - lipPx
+            drawRoundRect(color = skin.lip, topLeft = Offset(0f, lipPx), size = Size(size.width, faceH), cornerRadius = r)
+            drawRoundRect(
+                brush = Brush.verticalGradient(
+                    listOf(lerp(caps.faceTop, caps.pressedTop, press), lerp(caps.faceBottom, caps.pressedBottom, press)),
+                    startY = sink,
+                    endY = sink + faceH,
+                ),
+                topLeft = Offset(0f, sink),
+                size = Size(size.width, faceH),
+                cornerRadius = r,
+            )
+            drawRoundRect(
+                brush = Brush.verticalGradient(
+                    listOf(Color.White.copy(alpha = 0.11f * (1f - press * 0.5f)), Color.Transparent),
+                    startY = sink,
+                    endY = sink + faceH * 0.55f,
+                ),
+                topLeft = Offset(0.5f, sink + 0.5f),
+                size = Size(size.width - 1f, faceH - 1f),
+                cornerRadius = r,
+                style = Stroke(width = 1f),
+            )
+        }
+    }
+    val contentModifier = if (skin.mechanical) {
+        with(density) {
+            Modifier
+                .fillMaxSize()
+                .padding(
+                    start = mech.insetX.toDp(),
+                    end = mech.insetX.toDp(),
+                    top = mech.insetTop.toDp(),
+                    bottom = (mech.insetBottom + mech.shadowSpace).toDp(),
+                )
+                .offset { IntOffset(0, (mech.travel * depth).roundToInt()) }
+        }
+    } else {
+        Modifier
+            .fillMaxSize()
+            .padding(bottom = 1.5.dp)
+            .offset { IntOffset(0, (lipPx * press).roundToInt()) }
     }
 
     Box(
@@ -614,74 +823,28 @@ private fun KeyCap(
                 role = Role.Button
                 onClick { onAccessibilityActivate(); true }
             }
-            .drawBehind {
-                val r = CornerRadius(radiusPx)
-                val sink = lipPx * press
-                val faceH = size.height - lipPx
-                drawRoundRect(
-                    color = KbPalette.lip,
-                    topLeft = Offset(0f, lipPx),
-                    size = Size(size.width, faceH),
-                    cornerRadius = r,
-                )
-                drawRoundRect(
-                    brush = Brush.verticalGradient(
-                        listOf(lerp(top, pTop, press), lerp(bottom, pBottom, press)),
-                        startY = sink,
-                        endY = sink + faceH,
-                    ),
-                    topLeft = Offset(0f, sink),
-                    size = Size(size.width, faceH),
-                    cornerRadius = r,
-                )
-                drawRoundRect(
-                    brush = Brush.verticalGradient(
-                        listOf(Color.White.copy(alpha = 0.11f * (1f - press * 0.5f)), Color.Transparent),
-                        startY = sink,
-                        endY = sink + faceH * 0.55f,
-                    ),
-                    topLeft = Offset(0.5f, sink + 0.5f),
-                    size = Size(size.width - 1f, faceH - 1f),
-                    cornerRadius = r,
-                    style = Stroke(width = 1f),
-                )
-            },
+            .then(drawCap),
     ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = 1.5.dp)
-                .offset { IntOffset(0, (lipPx * press).roundToInt()) },
-        ) {
-            val onAccent = tone == CapTone.ACCENT
-            val baseColor = if (onAccent) Color.White else KbPalette.textPrimary
+        Box(contentAlignment = Alignment.Center, modifier = contentModifier) {
+            val baseColor = caps.legend
+            if (ledColor != null) {
+                KeyLed(
+                    color = ledColor,
+                    mechanical = skin.mechanical,
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(start = if (skin.mechanical) 3.dp else 5.dp, top = if (skin.mechanical) 3.dp else 4.dp),
+                )
+            }
             when (spec) {
                 is KeySpec.CharOrAction -> CharCapContent(spec, visual, showWords, baseColor, ::px)
-                is KeySpec.ModifierKey -> {
-                    val color = when (modMode) {
-                        ModifierLatchMode.OFF -> KbPalette.textPrimary
-                        ModifierLatchMode.LOCKED -> Color.White
-                        else -> KbPalette.textAccent
-                    }
-                    if (modMode != ModifierLatchMode.OFF) {
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.TopStart)
-                                .padding(start = 5.dp, top = 4.dp)
-                                .size(width = 8.dp, height = 3.dp)
-                                .clip(CircleShape)
-                                .background(if (modMode == ModifierLatchMode.LOCKED) Color.White else KbPalette.ledOn),
-                        )
-                    }
-                    SymbolWithWord(
-                        symbol = spec.caption,
-                        word = if (showWords) wordFor(spec) else null,
-                        color = color,
-                        symbolSize = if (spec.caption.length >= 2) px(0.30f, 15f) else px(0.40f, 20f),
-                        wordSize = px(0.20f, 10f),
-                    )
-                }
+                is KeySpec.ModifierKey -> SymbolWithWord(
+                    symbol = spec.caption,
+                    word = if (showWords) wordFor(spec) else null,
+                    color = baseColor,
+                    symbolSize = if (spec.caption.length >= 2) px(0.30f, 15f) else px(0.40f, 20f),
+                    wordSize = px(0.20f, 10f),
+                )
                 is KeySpec.InputSourceKey -> Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(3.dp),
@@ -690,15 +853,15 @@ private fun KeyCap(
                         Icon(
                             imageVector = Icons.Rounded.Language,
                             contentDescription = null,
-                            tint = KbPalette.textAccent,
-                            modifier = Modifier.size(heightDp * 0.34f),
+                            tint = skin.textAccent,
+                            modifier = Modifier.size(heightDp * 0.30f),
                         )
                     }
                     Text(
                         text = spec.label,
                         fontSize = px(0.28f, 14f),
                         fontWeight = FontWeight.Medium,
-                        color = KbPalette.textAccent,
+                        color = skin.textAccent,
                         maxLines = 1,
                         softWrap = false,
                     )
@@ -707,13 +870,129 @@ private fun KeyCap(
                     text = if (visual.symbolLayer) spec.labelActive else spec.labelInactive,
                     fontSize = px(0.28f, 14f),
                     fontWeight = FontWeight.Medium,
-                    color = if (visual.symbolLayer) KbPalette.textAccent else KbPalette.textPrimary,
+                    color = if (layerOn && !skin.mechanical) skin.textAccent else baseColor,
                     maxLines = 1,
                     softWrap = false,
                 )
             }
         }
     }
+}
+
+@Composable
+private fun KeyLed(color: Color, mechanical: Boolean, modifier: Modifier = Modifier) {
+    if (!mechanical) {
+        Box(modifier.size(width = 8.dp, height = 3.dp).clip(CircleShape).background(color))
+        return
+    }
+    val lit = color.alpha >= 0.99f
+    Canvas(modifier.size(9.dp)) {
+        val c = Offset(size.width / 2f, size.height / 2f)
+        if (lit) {
+            drawCircle(
+                Brush.radialGradient(listOf(color.copy(alpha = 0.55f), Color.Transparent), center = c, radius = size.minDimension / 2f),
+                radius = size.minDimension / 2f,
+                center = c,
+            )
+        }
+        drawCircle(color, radius = 2.2.dp.toPx(), center = c)
+        drawCircle(Color.Black.copy(alpha = 0.18f), radius = 2.2.dp.toPx(), center = c, style = Stroke(0.8f))
+        if (lit) drawCircle(Color.White.copy(alpha = 0.7f), radius = 0.8.dp.toPx(), center = c - Offset(0.6.dp.toPx(), 0.6.dp.toPx()))
+    }
+}
+
+/**
+ * Sculpted OEM-profile keycap: soft drop shadow on the plate, a skirt whose front wall is taller
+ * than the back (viewer slightly above the board), side-lit walls and a concave dished top face.
+ * [depth] moves the whole cap toward the plate (press or locking latch); [press] tints the face.
+ */
+private fun DrawScope.drawMechanicalCap(g: MechCapGeometry, caps: CapColors, depth: Float, press: Float) {
+    val w = size.width
+    val travel = g.travel * depth
+    val r = CornerRadius(g.radius)
+
+    // Plate shadows: a wide ambient one and a tight contact shadow that shrinks as the cap drops.
+    drawRoundRect(
+        color = Color.Black.copy(alpha = 0.06f),
+        topLeft = Offset(-1.dp.toPx(), g.shadowSpace * 0.8f),
+        size = Size(w + 2.dp.toPx(), g.bodyH + 0.5.dp.toPx()),
+        cornerRadius = CornerRadius(g.radius + 1.dp.toPx()),
+    )
+    drawRoundRect(
+        color = Color.Black.copy(alpha = 0.20f * (1f - 0.45f * depth)),
+        topLeft = Offset(0.4.dp.toPx(), travel + (g.shadowSpace - g.travel * depth) * 0.75f + 0.4.dp.toPx()),
+        size = Size(w - 0.8.dp.toPx(), g.bodyH),
+        cornerRadius = r,
+    )
+
+    // Skirt / side walls.
+    val bodyTop = travel
+    drawRoundRect(
+        brush = Brush.verticalGradient(listOf(caps.wallTop, caps.wallBottom), startY = bodyTop, endY = bodyTop + g.bodyH),
+        topLeft = Offset(0f, bodyTop),
+        size = Size(w, g.bodyH),
+        cornerRadius = r,
+    )
+    drawRoundRect(
+        brush = Brush.horizontalGradient(
+            0f to Color.White.copy(alpha = 0.16f),
+            0.22f to Color.Transparent,
+            0.78f to Color.Transparent,
+            1f to Color.Black.copy(alpha = 0.07f),
+        ),
+        topLeft = Offset(0f, bodyTop),
+        size = Size(w, g.bodyH),
+        cornerRadius = r,
+    )
+    drawRoundRect(
+        color = Color.Black.copy(alpha = 0.13f),
+        topLeft = Offset(0.5f, bodyTop + 0.5f),
+        size = Size(w - 1f, g.bodyH - 1f),
+        cornerRadius = r,
+        style = Stroke(width = 1f),
+    )
+
+    // Dished top face.
+    val faceLeft = g.insetX
+    val faceTop = bodyTop + g.insetTop
+    val faceSize = Size(w - g.insetX * 2f, g.bodyH - g.insetTop - g.insetBottom)
+    val faceR = CornerRadius(g.radius * 0.85f)
+    drawRoundRect(
+        brush = Brush.verticalGradient(
+            listOf(lerp(caps.faceTop, caps.pressedTop, press), lerp(caps.faceBottom, caps.pressedBottom, press)),
+            startY = faceTop,
+            endY = faceTop + faceSize.height,
+        ),
+        topLeft = Offset(faceLeft, faceTop),
+        size = faceSize,
+        cornerRadius = faceR,
+    )
+    // Concave dish: the upper half falls into shade, the lower rim catches the light.
+    drawRoundRect(
+        brush = Brush.verticalGradient(
+            0f to Color.Black.copy(alpha = 0.05f),
+            0.45f to Color.Transparent,
+            1f to Color.White.copy(alpha = 0.12f),
+            startY = faceTop,
+            endY = faceTop + faceSize.height,
+        ),
+        topLeft = Offset(faceLeft, faceTop),
+        size = faceSize,
+        cornerRadius = faceR,
+    )
+    drawRoundRect(
+        brush = Brush.verticalGradient(
+            0f to Color.White.copy(alpha = 0.75f),
+            0.5f to Color.White.copy(alpha = 0.0f),
+            1f to Color.Black.copy(alpha = 0.08f),
+            startY = faceTop,
+            endY = faceTop + faceSize.height,
+        ),
+        topLeft = Offset(faceLeft + 0.5f, faceTop + 0.5f),
+        size = Size(faceSize.width - 1f, faceSize.height - 1f),
+        cornerRadius = faceR,
+        style = Stroke(width = 1f),
+    )
 }
 
 @Composable
@@ -724,6 +1003,7 @@ private fun CharCapContent(
     baseColor: Color,
     px: (Float, Float) -> TextUnit,
 ) {
+    val skin = LocalKbSkin.current
     val fnText = spec.fnLabel
     val icon = iconFor(spec.keyCode)
     when {
@@ -731,7 +1011,7 @@ private fun CharCapContent(
             text = fnText,
             fontSize = px(if (fnText.length >= 3) 0.26f else 0.32f, 15f),
             fontWeight = FontWeight.SemiBold,
-            color = KbPalette.textAccent,
+            color = skin.textAccent,
             maxLines = 1,
             softWrap = false,
         )
@@ -753,7 +1033,7 @@ private fun CharCapContent(
             text = if (visual.cursorDragging) "‹  移动光标  ›" else "space",
             fontSize = px(0.24f, 12f),
             fontWeight = if (visual.cursorDragging) FontWeight.SemiBold else FontWeight.Normal,
-            color = if (visual.cursorDragging) KbPalette.textAccent else KbPalette.textSecondary,
+            color = if (visual.cursorDragging) skin.textAccent else skin.textSecondary,
             maxLines = 1,
             softWrap = false,
         )
@@ -773,7 +1053,7 @@ private fun CharCapContent(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy((-1).dp),
                 ) {
-                    Text(spec.shifted, fontSize = px(0.25f, 12f), color = KbPalette.textSecondary, maxLines = 1)
+                    Text(spec.shifted, fontSize = px(0.25f, 12f), color = skin.textSecondary, maxLines = 1)
                     Text(spec.primary, fontSize = px(0.34f, 17f), color = baseColor, maxLines = 1)
                 }
             }
@@ -782,7 +1062,7 @@ private fun CharCapContent(
         else -> Text(
             text = spec.displayText(visual.shiftActive, fn = false),
             fontSize = px(0.44f, 22f),
-            fontWeight = FontWeight.Normal,
+            fontWeight = skin.letterWeight,
             color = baseColor,
             maxLines = 1,
             softWrap = false,
@@ -810,6 +1090,7 @@ private fun PreviewBubble(
     isFnLabel: Boolean,
     density: Density,
 ) {
+    val skin = LocalKbSkin.current
     val shape = RoundedCornerShape(12.dp)
     val wPx = max(rect.width + with(density) { 18.dp.toPx() }, with(density) { 46.dp.toPx() })
     val hPx = rect.height + with(density) { 24.dp.toPx() }
@@ -824,17 +1105,17 @@ private fun PreviewBubble(
             .offset { IntOffset(leftPx.roundToInt(), topPx.roundToInt()) }
             .size(with(density) { wPx.toDp() }, with(density) { hPx.toDp() })
             .shadow(elevation = 10.dp, shape = shape, ambientColor = Color.Black, spotColor = Color.Black)
-            .background(Brush.verticalGradient(listOf(KbPalette.bubbleTop, KbPalette.bubbleBottom)), shape)
-            .border(0.6.dp, Color.White.copy(alpha = 0.14f), shape),
+            .background(Brush.verticalGradient(listOf(skin.bubbleTop, skin.bubbleBottom)), shape)
+            .border(0.6.dp, skin.bubbleBorder, shape),
     ) {
         if (chord != null) {
-            Text(chord, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = KbPalette.textAccent, maxLines = 1)
+            Text(chord, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = skin.textAccent, maxLines = 1)
         }
         Text(
             text = label,
             fontSize = with(density) { min((hPx * 0.42f).toSp().value, if (isFnLabel || label.length > 1) 20f else 30f).sp },
             fontWeight = if (isFnLabel) FontWeight.SemiBold else FontWeight.Normal,
-            color = if (isFnLabel) KbPalette.textAccent else Color.White,
+            color = if (isFnLabel) skin.textAccent else skin.bubbleText,
             maxLines = 1,
             softWrap = false,
         )
@@ -849,6 +1130,7 @@ private fun KeyboardGrabber(
     visual: KeyboardVisual,
     onRowPitchChange: ((Dp?, Boolean) -> Unit)?,
 ) {
+    val skin = LocalKbSkin.current
     val view = LocalView.current
     val density = LocalDensity.current
     val latestPitch by rememberUpdatedState(rowPitch)
@@ -859,10 +1141,10 @@ private fun KeyboardGrabber(
 
     val locked = OmniModifier.entries.filter { visual.mode(it) == ModifierLatchMode.LOCKED }
     val (status, statusColor) = when {
-        !visual.enabled -> "未连接 · 按键暂停发送" to KbPalette.textWarning
-        visual.cursorDragging -> "光标模式 · 左右滑动空格键" to KbPalette.textAccent
-        locked.isNotEmpty() -> "${locked.joinToString(" ") { it.symbol }} 已锁定 · 再点一次解除" to KbPalette.textAccent
-        else -> null to KbPalette.textSecondary
+        !visual.enabled -> "未连接 · 按键暂停发送" to skin.textWarning
+        visual.cursorDragging -> "光标模式 · 左右滑动空格键" to skin.textAccent
+        locked.isNotEmpty() -> "${locked.joinToString(" ") { it.symbol }} 已锁定 · 再点一次解除" to skin.textAccent
+        else -> null to skin.textSecondary
     }
 
     var base = Modifier
@@ -935,7 +1217,7 @@ private fun KeyboardGrabber(
                     .align(Alignment.Center)
                     .size(width = if (dragging) 48.dp else 36.dp, height = 4.dp)
                     .clip(CircleShape)
-                    .background(if (dragging) KbPalette.textAccent else Color.White.copy(alpha = 0.22f)),
+                    .background(if (dragging) skin.textAccent else skin.grabberIdle),
             )
         }
         if (dragging) {
@@ -944,7 +1226,7 @@ private fun KeyboardGrabber(
                 text = "按键高度 ${keyHeight}dp · 双击复原",
                 fontSize = 9.5.sp,
                 fontWeight = FontWeight.Medium,
-                color = KbPalette.textAccent,
+                color = skin.textAccent,
                 maxLines = 1,
                 softWrap = false,
                 modifier = Modifier
@@ -968,6 +1250,7 @@ private fun CenterMiniTrackpad(
     onScroll: (dxPt: Double, dyPt: Double) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val skin = LocalKbSkin.current
     val density = LocalDensity.current.density
     val latestEnabled by rememberUpdatedState(enabled)
     val latestDelta by rememberUpdatedState(onDelta)
@@ -983,8 +1266,8 @@ private fun CenterMiniTrackpad(
             .padding(bottom = 1.5.dp)
             .testTag("omni_split_trackpad")
             .clip(shape)
-            .background(Brush.verticalGradient(listOf(Color(0xFF2A2E39), Color(0xFF232731))))
-            .border(0.7.dp, Color.White.copy(alpha = if (activeTouchPoint != null) 0.16f else 0.08f), shape)
+            .background(Brush.verticalGradient(listOf(skin.trackpadTop, skin.trackpadBottom)))
+            .border(0.7.dp, skin.trackpadBorder.copy(alpha = skin.trackpadBorder.alpha * if (activeTouchPoint != null) 2f else 1f), shape)
             .pointerInput(density) {
                 awaitEachGesture {
                     val firstEvent = awaitPointerEvent()
@@ -1043,16 +1326,27 @@ private fun CenterMiniTrackpad(
             },
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
+            if (skin.mechanical) {
+                // Recessed pad: inner shadow along the top edge, light catching the bottom lip.
+                drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.08f), Color.Transparent), endY = 10.dp.toPx()))
+                drawRect(
+                    Brush.verticalGradient(
+                        listOf(Color.Transparent, Color.White.copy(alpha = 0.55f)),
+                        startY = size.height - 6.dp.toPx(),
+                        endY = size.height,
+                    ),
+                )
+            }
             drawRoundRect(
-                brush = Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.10f), Color.Transparent), endY = size.height * 0.4f),
+                brush = Brush.verticalGradient(listOf(skin.trackpadHighlight, Color.Transparent), endY = size.height * 0.4f),
                 topLeft = Offset(0.5f, 0.5f),
                 size = Size(size.width - 1f, size.height - 1f),
                 cornerRadius = CornerRadius(12.dp.toPx()),
                 style = Stroke(width = 1f),
             )
             activeTouchPoint?.let { pt ->
-                drawCircle(Color(0xFF0A84FF).copy(alpha = 0.20f), radius = 22.dp.toPx(), center = pt)
-                drawCircle(Color(0xFF8CC8FF).copy(alpha = 0.9f), radius = 4.dp.toPx(), center = pt)
+                drawCircle(skin.trackpadTouch, radius = 22.dp.toPx(), center = pt)
+                drawCircle(skin.trackpadTouchDot, radius = 4.dp.toPx(), center = pt)
             }
         }
         Column(
@@ -1069,7 +1363,7 @@ private fun CenterMiniTrackpad(
                     else -> "双指滚动 · 轻点右键"
                 },
                 fontSize = 9.sp,
-                color = KbPalette.textSecondary.copy(alpha = 0.7f),
+                color = skin.textSecondary.copy(alpha = 0.7f),
                 maxLines = 1,
                 softWrap = false,
             )
@@ -1111,13 +1405,15 @@ private fun refAt(rows: List<List<KeySpec>>, deck: Int, row: Int, col: Int) =
 private fun KeyboardPreviewFrame(
     style: OmniKeyboardStyle,
     rowPitch: Dp,
+    theme: OmniKeyboardTheme = OmniKeyboardTheme.GRAPHITE,
     enabled: Boolean = true,
     setup: (OmniKeyTouchEngine, OmniModifierController) -> Unit = { _, _ -> },
 ) {
-    Column(Modifier.fillMaxSize().background(Color(0xFF0B0D12))) {
+    Column(Modifier.fillMaxSize().background(theme.skin().previewBackdrop)) {
         Spacer(Modifier.weight(1f))
         OmniMacKeyboardImpl(
             style = style,
+            theme = theme,
             enabled = enabled,
             onSendRawKey = { _, _ -> },
             onToggleInputSource = {},
@@ -1168,4 +1464,56 @@ private fun PreviewSplitFoldable() {
 @Composable
 private fun PreviewCompactFoldableDisabled() {
     KeyboardPreviewFrame(OmniKeyboardStyle.COMPACT_5_ROW, OmniKeyboardMetrics.WideDefaultRowPitch, enabled = false)
+}
+
+@Preview(name = "机械浅色 · Phone · 5 行全键 · ⌘ 单次 + 按下 C", widthDp = 411, heightDp = 360)
+@Composable
+private fun PreviewMechanicalCompactPhone() {
+    KeyboardPreviewFrame(
+        OmniKeyboardStyle.COMPACT_5_ROW,
+        OmniKeyboardMetrics.DefaultRowPitch,
+        theme = OmniKeyboardTheme.MECHANICAL_LIGHT,
+    ) { engine, _ ->
+        val rows = OmniMacLayouts.compactRows
+        engine.onDown(1, refAt(rows, 0, 4, 3), 0f)
+        engine.onUp(1)
+        engine.onDown(2, refAt(rows, 0, 3, 3), 0f)
+    }
+}
+
+@Preview(name = "机械浅色 · Phone · 4 行超薄 · ⇧ 锁定", widthDp = 411, heightDp = 320)
+@Composable
+private fun PreviewMechanicalSlimPhone() {
+    KeyboardPreviewFrame(
+        OmniKeyboardStyle.SLIM_4_ROW,
+        OmniKeyboardMetrics.DefaultRowPitch,
+        theme = OmniKeyboardTheme.MECHANICAL_LIGHT,
+    ) { engine, _ ->
+        val rows = OmniMacLayouts.slimAlphaRows
+        val shift = refAt(rows, 0, 2, 0)
+        engine.onDown(1, shift, 0f); engine.onUp(1)
+        engine.onDown(2, shift, 0f); engine.onUp(2)
+    }
+}
+
+@Preview(name = "机械浅色 · Foldable · 分体触控", widthDp = 840, heightDp = 400)
+@Composable
+private fun PreviewMechanicalSplitFoldable() {
+    KeyboardPreviewFrame(
+        OmniKeyboardStyle.SPLIT_TRACKPAD,
+        OmniKeyboardMetrics.WideDefaultRowPitch,
+        theme = OmniKeyboardTheme.MECHANICAL_LIGHT,
+    ) { engine, _ ->
+        engine.onDown(1, refAt(OmniMacLayouts.splitRightRows, 1, 2, 1), 0f) // J held (pressed travel)
+    }
+}
+
+@Preview(name = "机械浅色 · Foldable · 5 行全键", widthDp = 840, heightDp = 400)
+@Composable
+private fun PreviewMechanicalCompactFoldable() {
+    KeyboardPreviewFrame(
+        OmniKeyboardStyle.COMPACT_5_ROW,
+        OmniKeyboardMetrics.WideDefaultRowPitch,
+        theme = OmniKeyboardTheme.MECHANICAL_LIGHT,
+    )
 }
