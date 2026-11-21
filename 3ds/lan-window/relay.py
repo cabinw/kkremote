@@ -1,0 +1,99 @@
+"""Local PSK-authenticated 3DS window relay. Session key file is created by the launcher."""
+import argparse
+import hmac
+import ipaddress
+from pathlib import Path
+import secrets
+import socket
+import ssl
+import struct
+import subprocess
+
+
+def read_exact(stream, size):
+    parts = bytearray()
+    while len(parts) < size:
+        chunk = stream.read(size - len(parts))
+        if not chunk:
+            raise EOFError("peer closed")
+        parts.extend(chunk)
+    return parts
+
+
+def serve(peer, target):
+    helper = subprocess.Popen([str(Path(__file__).resolve().parent / ".build/capture"), str(target)],
+                              stdin=subprocess.PIPE, stdout=subprocess.PIPE, bufsize=0)
+    presented = False
+    try:
+        with peer.makefile("rb") as requests:
+            while True:
+                mark, action, x, y = struct.unpack("!BBHH", read_exact(requests, 6))
+                if mark not in (0x31, 0x32) or action > 4 or x >= 400 or y >= 240:
+                    raise ValueError("invalid input frame")
+                if mark == 0x32 and not presented:
+                    print("PEER_DISPLAYED_FRAME", flush=True)
+                    presented = True
+                helper.stdin.write(f"{action} {x} {y}\n".encode("ascii"))
+                header = read_exact(helper.stdout, 5)
+                status, size = struct.unpack("!BI", header)
+                if status > 1 or size > 150000:
+                    raise ValueError("invalid capture frame")
+                peer.sendall(header + read_exact(helper.stdout, size))
+    finally:
+        helper.stdin.close()
+        try:
+            helper.wait(timeout=2)
+        except subprocess.TimeoutExpired:
+            helper.kill()
+            helper.wait()
+        helper.stdout.close()
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("bind", type=ipaddress.IPv4Address)
+    parser.add_argument("peer", type=ipaddress.IPv4Address)
+    parser.add_argument("window", type=int)
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument("--sender", type=Path, help="3dslink executable; generate a fresh LAN session and deploy the client")
+    source.add_argument("--key-file", type=Path, help="use an existing 256-bit session secret for a local integration test")
+    parser.add_argument("--port", type=int, default=39463)
+    args = parser.parse_args()
+    if args.bind.is_unspecified or not args.bind.is_private or not args.peer.is_private:
+        parser.error("select a local LAN interface and a single peer")
+    key = bytes.fromhex(args.key_file.read_text().strip()) if args.key_file else secrets.token_bytes(32)
+    if len(key) != 32:
+        parser.error("need a 256-bit session key")
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    ctx.maximum_version = ctx.minimum_version = ssl.TLSVersion.TLSv1_2
+    ctx.options |= ssl.OP_NO_TICKET
+    ctx.set_ciphers("PSK-AES128-GCM-SHA256")
+    ctx.set_psk_server_callback(lambda name: key if hmac.compare_digest(name or "", "kk3ds") else b"")
+    with socket.create_server((str(args.bind), args.port)) as listener:
+        listener.settimeout(600)
+        print("READY", flush=True)
+        if args.sender:
+            binary = Path(__file__).resolve().parent / ".build/KKRemote-LAN.3dsx"
+            result = subprocess.call([str(args.sender.resolve()), "-a", str(args.peer), str(binary),
+                                      str(args.bind), str(args.port), key.hex()])
+            if result:
+                raise SystemExit("Netloader deployment failed; press Y in hbmenu and retry")
+        while True:
+            try:
+                conn, address = listener.accept()
+            except TimeoutError:
+                break
+            with conn:
+                if address[0] != str(args.peer):
+                    continue
+                try:
+                    conn.settimeout(12)
+                    with ctx.wrap_socket(conn, server_side=True) as peer:
+                        print("TLS_CONNECTED", flush=True)
+                        serve(peer, args.window)
+                except (OSError, EOFError, ValueError) as error:
+                    print("Session closed:", error, flush=True)
+
+
+if __name__ == "__main__":
+    main()
