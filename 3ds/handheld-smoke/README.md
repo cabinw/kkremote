@@ -26,3 +26,7 @@ Mac 和掌机接入同一局域网。在 Homebrew Launcher 的应用列表按实
 ```
 
 以掌机上屏显示 KKRemote、下屏点按后计数增加为真机验证依据。[Homebrew Launcher 的 Netloader 文档](https://github.com/devkitPro/3ds-hbmenu#netloader)
+
+## 真机记录
+
+2026-11-21，在 New 3DS LL 的 Homebrew Launcher 中打开 Netloader，从 Mac 用 3dslink 发送测试程序。操作者确认上屏显示 KKRemote，点按下屏两次后上屏显示 Taps: 2。本次验证覆盖无线发送、程序启动、双屏显示和本地触摸计数。远端 Mac 窗口串流与触控回传另行验证。
