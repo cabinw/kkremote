@@ -49,6 +49,15 @@ def serve(peer, target):
         helper.stdout.close()
 
 
+def psk_context(key):
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    ctx.maximum_version = ctx.minimum_version = ssl.TLSVersion.TLSv1_2
+    ctx.options |= ssl.OP_NO_TICKET
+    ctx.set_ciphers("PSK-AES128-GCM-SHA256")
+    ctx.set_psk_server_callback(lambda name: key if hmac.compare_digest(name or "", "kk3ds") else b"")
+    return ctx
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("bind", type=ipaddress.IPv4Address)
@@ -64,11 +73,7 @@ def main():
     key = bytes.fromhex(args.key_file.read_text().strip()) if args.key_file else secrets.token_bytes(32)
     if len(key) != 32:
         parser.error("need a 256-bit session key")
-    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    ctx.maximum_version = ctx.minimum_version = ssl.TLSVersion.TLSv1_2
-    ctx.options |= ssl.OP_NO_TICKET
-    ctx.set_ciphers("PSK-AES128-GCM-SHA256")
-    ctx.set_psk_server_callback(lambda name: key if hmac.compare_digest(name or "", "kk3ds") else b"")
+    ctx = psk_context(key)
     with socket.create_server((str(args.bind), args.port)) as listener:
         listener.settimeout(600)
         print("READY", flush=True)

@@ -21,4 +21,4 @@ if [[ ! -d ".build/$name.mlmodelc" ]]; then
 fi
 fetch https://media.w3.org/2010/05/sintel/trailer.mp4 .build/sintel.mp4
 echo 'b670602fa00934ca27c4351bb0efe7ea7a07fae57284e44226025eeed7c51254  .build/sintel.mp4' | shasum -a 256 -c -
-swiftc -O -whole-module-optimization Stereo.swift -o .build/stereo
+swiftc -O -whole-module-optimization Converter.swift Encoder.swift Stereo.swift -o .build/stereo
