@@ -29,7 +29,7 @@ import ApplicationServices
               let box = info[kCGWindowBounds as String] as? NSDictionary else { return nil }
         return CGRect(dictionaryRepresentation:box)
     }
-    init?(_ target: RemoteWindow) {
+    static func selectedWindow(_ target: RemoteWindow) -> AXUIElement? {
         let app = AXUIElementCreateApplication(target.processID)
         AXUIElementSetMessagingTimeout(app,0.4)
         guard let cg = Self.cgFrame(target),
@@ -39,8 +39,11 @@ import ApplicationServices
             return WindowTitleIdentity.matches(Self.value(window,kAXTitleAttribute) as? String ?? "",
                                                captureTitle:target.title,application:target.application)
         }
+        return candidates.count == 1 ? candidates[0] : nil
+    }
+    init?(_ target: RemoteWindow) {
         var editable = DarwinBoolean(false)
-        guard candidates.count == 1, let window = candidates.first,
+        guard let window = Self.selectedWindow(target), let cg = Self.cgFrame(target),
               Self.value(window,"AXFullScreen") as? Bool != true,
               AXUIElementIsAttributeSettable(window,kAXSizeAttribute as CFString,&editable) == .success,
               editable.boolValue else { return nil }

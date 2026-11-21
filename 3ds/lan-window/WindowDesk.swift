@@ -15,6 +15,7 @@ import ScreenCaptureKit
     private var selected: Int?
     private var previousWideJPEG = Data()
     private var previousWideView = [Int]()
+    private var reader: PopReader?
     private var keyboardArt = Data()
 
     func run() async throws {
@@ -30,6 +31,17 @@ import ScreenCaptureKit
                 try send(0, try await directory())
                 continue
             }
+            if line.hasPrefix("read ") {
+                let fields = line.split(separator:" ")
+                guard fields.count == 4, let index = Int(fields[1]), entries.indices.contains(index),
+                      let page = UInt16(fields[2]) else { try send(3,Data()); continue }
+                let entry = entries[index]
+                if reader?.windowID != entry.id { reader = PopReader(windowID:entry.id) }
+                let data = try reader!.response(target:entry,page:Int(page),reported:fields[3] == "1")
+                try send(0,data)
+                continue
+            }
+            reader = nil
             let values = line.split(separator:" ").compactMap { Int($0) }
             guard values.count == 6 || values.count == 9 else { throw LabError.message("Invalid window request") }
             let (index, action, value, x, y) = (values[0], values[1], values[2], values[3], values[4])
@@ -105,6 +117,7 @@ import ScreenCaptureKit
         return data
     }
     private func close(restoreSize: Bool = true) async {
+        reader = nil
         previousWideJPEG = Data(); previousWideView = []
         control?.invalidate(); control = nil; focus = nil; selected = nil
         if let stream { try? await stream.stopCapture() }

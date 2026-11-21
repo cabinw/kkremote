@@ -158,12 +158,13 @@ static int hex(char c) {
     return -1;
 }
 int main(int argc,char **argv) {
-    desk_mode=argc==5 && !strcmp(argv[4],"desk");
+    bool open_reader=argc==5 && !strcmp(argv[4],"desk-reader");
+    desk_mode=open_reader || (argc==5 && !strcmp(argv[4],"desk"));
     stereo_avc=argc==5 && !strcmp(argv[4],"stereo-avc");
     stereo_mode=stereo_avc || (argc==5 && !strcmp(argv[4],"stereo"));
     gfxInit(stereo_avc?GSP_RGB565_OES:GSP_BGR8_OES,GSP_BGR8_OES,false); gfxSet3D(stereo_mode);
     if(stereo_mode || desk_mode) osSetSpeedupEnable(true);
-    if(desk_mode) deskInit(); else consoleInit(GFX_BOTTOM,NULL);
+    if(desk_mode) deskInit(open_reader); else consoleInit(GFX_BOTTOM,NULL);
     LightLock_Init(&lock);
     if (stereo_mode) printf("KKRemote | Sintel 3D\n\nMove the 3D slider up for stereo.\nSTART: return to Homebrew Launcher\n");
     else if(!desk_mode) printf("\x1b[1;1HKKRemote | LAN window\n\nSlide: move pointer\nTap / A: left click   B: right click\nD-pad up / down: scroll\nSTART: return to Homebrew Launcher\n");

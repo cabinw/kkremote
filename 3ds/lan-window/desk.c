@@ -18,6 +18,9 @@ static int selected, page, generation, queueHead, queued;
 static bool refresh=true, ready, shown, hover, pad;
 static int zoom=1, viewX,viewY;
 static int cropX,cropY;
+static bool reading, bConsumed;
+static int readerPage, readerPages=1;
+static u64 bSince;
 static float pointerX=200, pointerY=120, scroll;
 static Event events[MAX_ACTIONS];
 static u8 image[W*H*3], scratch[W*H*3], compressed[150000];
@@ -29,7 +32,7 @@ static u64 lastUpdate;
 
 static int limit(int n,int lo,int hi) { return n<lo?lo:n>hi?hi:n; }
 static void freeCatalog(Catalog *c) { if (c) { free(c->cards); free(c); } }
-void deskInit(void) { gfxSetWide(true); LightLock_Init(&mutex); hidSetRepeatParameters(26,5); }
+void deskInit(bool openReader) { reading=openReader; gfxSetWide(true); LightLock_Init(&mutex); hidSetRepeatParameters(26,5); }
 void deskExit(void) { freeCatalog(catalog); }
 static u8 *take(Reader *r,size_t n) {
     if(n>r->size) return NULL;
@@ -90,6 +93,7 @@ static void selectWindow(int next) {
     scroll=next;
     if(next==selected) return;
     generation++;
+    reading=false; readerPage=0; readerPages=1;
     selected=next; ready=false; shown=false; queued=0; hover=false;
     pointerX=200; pointerY=120;
     strcpy(notice,"Opening window");
@@ -113,14 +117,15 @@ void deskReceive(mbedtls_ssl_context *ssl,tjhandle decoder) {
         LightLock_Lock(&mutex);
         int id=selected, revision=generation;
         bool listing=refresh, reported=shown;
-        int scale=zoom;
+        bool reader=reading;
+        int scale=reader?4:zoom;
         viewX=viewportStart(lroundf(pointerX*2),viewX,(800+scale/2)/scale,800);
         viewY=viewportStart(lroundf(pointerY*2),viewY,480/scale,480);
-        int left=viewX,top=viewY;
+        int left=reader?readerPage:viewX,top=reader?0:viewY;
         Event event={0,0,lroundf(pointerX*2),lroundf(pointerY*2)};
         if(listing) { event.action=255; refresh=false; }
         else if(queued) { event=events[queueHead]; queueHead=(queueHead+1)%MAX_ACTIONS; queued--; }
-        else if(hover && shown) { event.action=4; hover=false; }
+        else if(!reader && hover && shown) { event.action=4; hover=false; }
         LightLock_Unlock(&mutex);
         u8 req[]={(u8)(0x60+2*(scale-1)+reported),id,event.action,event.value,event.x>>8,event.x&255,event.y>>8,event.y&255,
                   left>>8,left&255,top>>8,top&255};
@@ -135,11 +140,20 @@ void deskReceive(mbedtls_ssl_context *ssl,tjhandle decoder) {
             free(bytes);
             if(!next) { linkStatus("Bad control layout",0); break; }
             LightLock_Lock(&mutex);
+            readerPage=0; readerPages=1;
             Catalog *old=catalog; catalog=next; selected=next->initial; scroll=selected;
             generation++; ready=false; shown=false; queued=0; hover=false; gesture=0; pressed=-1;
             strcpy(notice,next->count?"Opening window":"No windows - SELECT to refresh");
             LightLock_Unlock(&mutex);
             freeCatalog(old); continue;
+        }
+        int actualPage=0,pageCount=1;
+        if(reader && hdr[0]==0) {
+            u8 pageInfo[4];
+            if(size<4 || !lanTransfer(ssl,false,pageInfo,4)) break;
+            size-=4;
+            actualPage=be16(pageInfo); pageCount=be16(pageInfo+2);
+            if(actualPage>=pageCount) break;
         }
         if(size>sizeof(compressed) || hdr[0]>3) break;
         int w=0,h=0,sub,color;
@@ -148,6 +162,7 @@ void deskReceive(mbedtls_ssl_context *ssl,tjhandle decoder) {
            !decode(decoder,compressed,size,w,h,rotated))) break;
         LightLock_Lock(&mutex);
         if(generation==revision) {
+            if(reader) { readerPage=actualPage; readerPages=pageCount; }
             if(size) {
                 memset(image,0,sizeof(image));
                 for(int x=0;x<w;x++)
@@ -202,13 +217,26 @@ static int hitKey(int x,int y) {
     }
     return -1;
 }
+static void turnPage(int by) {
+    int next=limit(readerPage+by,0,readerPages-1);
+    if(next!=readerPage) {
+        readerPage=next;
+        generation++;
+        ready=shown=false;
+    }
+}
+static void toggleReader(void) {
+    reading=!reading;
+    generation++; ready=shown=false; queued=0; hover=false;
+    readerPage=0; readerPages=1; pressed=-1; gesture=0; notice[0]=0;
+}
 static void touch(u32 down,u32 held,u32 up) {
     if(!catalog) return;
     if(held&KEY_TOUCH) {
         touchPosition p; hidTouchRead(&p);
         if(down&KEY_TOUCH) {
             originX=lastX=p.px; originY=lastY=p.py; dragged=false; originScroll=scroll;
-            gesture=p.py<68?1:p.py<KEYBOARD_TOP?0:pad?3:2;
+            gesture=p.py<68?1:p.py<KEYBOARD_TOP?0:reading?4:pad?3:2;
             pressed=gesture==2?hitKey(p.px,p.py):-1;
         } else {
             if(abs(p.px-originX)>6 || abs(p.py-originY)>6) dragged=true;
@@ -222,6 +250,9 @@ static void touch(u32 down,u32 held,u32 up) {
     if(gesture==1 && catalog->count) {
         int index=dragged?lroundf(scroll):lroundf(scroll+(lastX-160)/(float)STEP);
         selectWindow(limit(index,0,catalog->count-1));
+    } else if(gesture==4) {
+        if(abs(lastY-originY)>18) turnPage(lastY<originY?1:-1);
+        else if(!dragged) turnPage(lastX<160?-1:1);
     } else if(gesture==3 && !dragged) enqueue(1,0);
     else if(gesture==2 && pressed>=0 && hitKey(lastX,lastY)==pressed) {
         int code=catalog->pages[page].keys[pressed].code;
@@ -280,7 +311,14 @@ static void drawBottom(u8 *fb) {
         blit(fb,catalog->cards+i*CARD_W*CARD_H*3,x,2,CARD_W,CARD_H);
         if(i==selected) box(fb,x+7,65,CARD_W-14,3,0x68e7cf);
     }
-    if(pad) {
+    if(reading) {
+        for(int i=0;i<2;i++) {
+            box(fb,4+i*159,KEYBOARD_TOP,153,KEY_H-4,0x192731);
+            bool enabled=i?readerPage+1<readerPages:readerPage>0;
+            for(int dx=-14;dx<=14;dx++)
+                box(fb,80+i*159+dx,154+(i?-1:1)*abs(dx),2,3,enabled?0xaee9e0:0x43545e);
+        }
+    } else if(pad) {
         box(fb,3,KEYBOARD_TOP,314,KEY_H-3,0x223443);
     } else {
         Keyboard *k=&catalog->pages[page];
@@ -296,7 +334,12 @@ void deskUpdate(u32 down,u32 held,u32 up,const char *connection) {
     if(down&KEY_SELECT) { refresh=true; ready=shown=false; queued=0; generation++; }
     if(down&KEY_L) selectWindow(selected-1);
     if(down&KEY_R) selectWindow(selected+1);
-    if(down&KEY_B) {
+    if(down&KEY_B) { bSince=osGetTime(); bConsumed=false; }
+    if((held&KEY_B) && !bConsumed && osGetTime()-bSince>=450) {
+        toggleReader(); bConsumed=true;
+    }
+    if((up&KEY_B) && !bConsumed && reading) { toggleReader(); bConsumed=true; }
+    if((up&KEY_B) && !bConsumed) {
         zoom=zoom%3+1;
         int span=(800+zoom/2)/zoom;
         viewX=limit(lroundf(pointerX*2)-span/2,0,800-span);
@@ -304,32 +347,37 @@ void deskUpdate(u32 down,u32 held,u32 up,const char *connection) {
         generation++; ready=shown=false;
         notice[0]=0;
     }
-    if((down&KEY_ZR) && shown && !refresh) {
+    if(!reading && (down&KEY_ZR) && shown && !refresh) {
         queued=0;
         enqueue(5,0);
         generation++; ready=shown=false; hover=false;
     }
-    if(down&KEY_ZL) { pad=!pad; gesture=0; pressed=-1; }
+    if(!reading && (down&KEY_ZL)) { pad=!pad; gesture=0; pressed=-1; }
     touch(down,held,up);
-    circlePointer(osGetTime());
-    u32 repeat=hidKeysDownRepeat() | down;
-    static const struct { u32 button; u8 code; } arrows[] = {
-        {KEY_DLEFT,130},{KEY_DRIGHT,131},{KEY_DUP,132},{KEY_DDOWN,133}
-    };
-    for(unsigned i=0;i<sizeof(arrows)/sizeof(arrows[0]);i++) {
-        if((repeat & held & arrows[i].button) && ((down & arrows[i].button) || !queued))
-            enqueue(3,arrows[i].code);
+    if(reading) {
+        if(down&KEY_DUP) turnPage(-1);
+        if(down&KEY_DDOWN) turnPage(1);
+    } else {
+        circlePointer(osGetTime());
+        u32 repeat=hidKeysDownRepeat() | down;
+        static const struct { u32 button; u8 code; } arrows[] = {
+            {KEY_DLEFT,130},{KEY_DRIGHT,131},{KEY_DUP,132},{KEY_DDOWN,133}
+        };
+        for(unsigned i=0;i<sizeof(arrows)/sizeof(arrows[0]);i++) {
+            if((repeat & held & arrows[i].button) && ((down & arrows[i].button) || !queued))
+                enqueue(3,arrows[i].code);
+        }
+        if(down&KEY_X) enqueue(3,13);
+        if(down&KEY_Y) enqueue(1,0);
+        if(down&KEY_A) enqueue(2,0);
     }
-    if(down&KEY_X) enqueue(3,13);
-    if(down&KEY_Y) enqueue(1,0);
-    if(down&KEY_A) enqueue(2,0);
     u8 *top=gfxGetFramebuffer(GFX_TOP,GFX_LEFT,NULL,NULL);
     if(ready) {
         memcpy(top,image,sizeof(image));
         int vx=(800+zoom/2)/zoom, vy=480/zoom;
         int cx=(W-deskImageWidth)/2+limit((int)((pointerX*2-cropX+0.5f)*deskImageWidth/vx),0,deskImageWidth-1);
         int cy=(H-deskImageHeight)/2+limit((int)((pointerY*2-cropY+0.5f)*deskImageHeight/vy),0,deskImageHeight-1);
-        drawCursor(top,cx,cy);
+        if(!reading) drawCursor(top,cx,cy);
     } else memset(top,0,sizeof(image));
     if(!catalog || notice[0]) {
         const char *message=catalog?notice:connection;

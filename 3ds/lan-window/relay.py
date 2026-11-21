@@ -59,11 +59,15 @@ def serve_desk(peer):
                     mark, index, action, value, x, y = struct.unpack("!BBBBHH", read_exact(requests, 8))
                     legacy = mark in (0x44, 0x45)
                     detail = mark in (0x56, 0x57)
-                    wide = mark in range(0x60, 0x66)
+                    wide = mark in range(0x60, 0x68)
+                    reading = mark in (0x66, 0x67)
                     if wide:
                         zoom = 1 + (mark - 0x60) // 2
                         left, top = struct.unpack("!HH", read_exact(requests, 4))
-                        if left > 800 - (800 + zoom // 2) // zoom or top > 480 - 480 // zoom:
+                        if reading:
+                            if action not in (0, 255) or top:
+                                raise ValueError("invalid reader request")
+                        elif left > 800 - (800 + zoom // 2) // zoom or top > 480 - 480 // zoom:
                             raise ValueError("invalid wide viewport")
                     if legacy:
                         x, y = x * 2, y * 2
@@ -74,16 +78,22 @@ def serve_desk(peer):
                         last_displayed = None
                     else:
                         command = f"{index} {action} {value} {x} {y} {int(detail)}"
-                        if wide:
+                        if reading:
+                            command = f"read {index} {left} {mark & 1}"
+                        elif wide:
                             command = f"{index} {action} {value} {x} {y} {zoom} {left} {top} {mark & 1}"
                         scale = zoom if wide else 1 + int(detail)
-                        if mark & 1 and last_displayed != (index, wide, scale):
-                            print(f"DESK_DISPLAYED slot={index} wide={int(wide)} zoom={scale}", flush=True)
-                            last_displayed = (index, wide, scale)
+                        view = (index, wide, scale, left if reading else None)
+                        if mark & 1 and last_displayed != view:
+                            if reading:
+                                print(f"READER_DISPLAYED page={left+1}", flush=True)
+                            else:
+                                print(f"DESK_DISPLAYED slot={index} wide={int(wide)} zoom={scale}", flush=True)
+                            last_displayed = view
                     helper.stdin.write((command + "\n").encode("ascii"))
                     header = read_exact(helper.stdout, 5)
                     status, size = struct.unpack("!BI", header)
-                    if status > 3 or size > (2000000 if action == 255 else 150000):
+                    if status > 3 or size > (2000000 if action == 255 else 150004 if reading else 150000):
                         raise ValueError("invalid desktop response")
                     peer.sendall(header + read_exact(helper.stdout, size))
         finally:
@@ -105,6 +115,7 @@ def main():
     parser.add_argument("peer", type=ipaddress.IPv4Address)
     parser.add_argument("window", type=int, nargs="?")
     parser.add_argument("--desk", action="store_true", help="interactive window Dock and keyboard")
+    parser.add_argument("--reader", action="store_true", help="open the desk in PopAgent reading mode")
     source = parser.add_mutually_exclusive_group(required=True)
     source.add_argument("--sender", type=Path, help="3dslink executable; generate a fresh LAN session and deploy the client")
     source.add_argument("--key-file", type=Path, help="use an existing 256-bit session secret for a local integration test")
@@ -112,6 +123,8 @@ def main():
     args = parser.parse_args()
     if args.bind.is_unspecified or not args.bind.is_private or not args.peer.is_private:
         parser.error("select a local LAN interface and a single peer")
+    if args.reader and not args.desk:
+        parser.error("--reader requires --desk")
     if args.desk == (args.window is not None):
         parser.error("select either a window number or --desk")
     key = bytes.fromhex(args.key_file.read_text().strip()) if args.key_file else secrets.token_bytes(32)
@@ -124,7 +137,7 @@ def main():
         if args.sender:
             binary = Path(__file__).resolve().parent / ".build/KKRemote-LAN.3dsx"
             result = subprocess.call([str(args.sender.resolve()), "-a", str(args.peer), str(binary),
-                                      str(args.bind), str(args.port), key.hex()] + (["desk"] if args.desk else []))
+                                      str(args.bind), str(args.port), key.hex()] + (["desk-reader" if args.reader else "desk"] if args.desk else []))
             if result:
                 raise SystemExit("Netloader deployment failed; press Y in hbmenu and retry")
         while True:
