@@ -18,6 +18,7 @@ struct WindowViewport: Codable, Equatable {
     let height: Double
     /// Physical pixels per client point; absent on older clients. Never an AX size.
     var displayScale: Double? = nil
+    var preserveWindowPosition: Bool? = nil
     var isValid: Bool {
         width.isFinite && height.isFinite && (200...2000).contains(width) && (150...2000).contains(height) &&
         (displayScale.map { $0.isFinite && (1...3).contains($0) } ?? true)
@@ -94,6 +95,15 @@ final class HostWindowCatalog {
 /// Explicitly enabled test-Host capability. Only resizes the authenticated selected
 /// window; no keyboard, pointer injection or arbitrary AX commands are exposed.
 @MainActor enum HostWindowLayout {
+    // Some apps expose a generic WindowServer title and a document-specific AX
+    // title. On macOS, use the AX window number when available for an exact
+    // identity match during a position-preserving resize.
+    private typealias GetWindowNumber = @convention(c) (AXUIElement, UnsafeMutablePointer<CGWindowID>) -> AXError
+    private static let getWindowNumber: GetWindowNumber? = {
+        guard let symbol = dlsym(UnsafeMutableRawPointer(bitPattern: -2), "_AXUIElementGetWindow") else { return nil }
+        return unsafeBitCast(symbol, to: GetWindowNumber.self)
+    }()
+
     private struct NativeLease {
         let target:RemoteWindow
         let element:AXUIElement
@@ -201,7 +211,13 @@ final class HostWindowCatalog {
             AXUIElementSetMessagingTimeout(app,1)
             let matches=(attribute(app,kAXWindowsAttribute) as? [AXUIElement] ?? []).filter {
                 guard let r=rect($0),let title=attribute($0,kAXTitleAttribute) as? String else { return false }
-                guard WindowTitleIdentity.matches(title,captureTitle:target.title,application:target.application) else { return false }
+                var number: CGWindowID = 0
+                if viewport.preserveWindowPosition == true, let getWindowNumber,
+                   getWindowNumber($0, &number) == .success, number != 0 {
+                    guard number == target.number else { return false }
+                } else {
+                    guard WindowTitleIdentity.matches(title,captureTitle:target.title,application:target.application) else { return false }
+                }
                 // During AppKit resize animation, CG reports the presentation frame
                 // while AX reports the destination frame. Retain the exact AX object
                 // resolved before mutation, verifying it still belongs to this app.
@@ -278,7 +294,6 @@ final class HostWindowCatalog {
             return
         } else {requested=CGSize(width:viewport.width,height:viewport.height)}
         guard isCurrent() else {throw LabError.message("窗口请求已取消")}
-        var position=usable.origin
         var size=CGSize(width:min(usable.width,requested.width),height:min(usable.height,requested.height))
         guard AXUIElementSetAttributeValue(window,kAXSizeAttribute as CFString,AXValueCreate(.cgSize,&size)!) == .success else {
             throw LabError.message("应用不允许调整窗口尺寸，当前完整缩放显示")
@@ -294,7 +309,14 @@ final class HostWindowCatalog {
         let current=try resolve(known:window)
         // Moving an animating window can restore its old size. Finish the move
         // first, then make the final size request the last frame mutation.
-        _=AXUIElementSetAttributeValue(current,kAXPositionAttribute as CFString,AXValueCreate(.cgPoint,&position)!)
+        var position = usable.origin
+        if viewport.preserveWindowPosition == true {
+            position = CGPoint(x: min(max(frame.minX, usable.minX), usable.maxX-size.width),
+                               y: min(max(frame.minY, usable.minY), usable.maxY-size.height))
+        }
+        if rect(current)?.origin != position {
+            _=AXUIElementSetAttributeValue(current,kAXPositionAttribute as CFString,AXValueCreate(.cgPoint,&position)!)
+        }
         nativeLeases[key(target)]?.applied=nativeRect(current)
         try await Task.sleep(for:.milliseconds(200))
         guard isCurrent() else {throw LabError.message("窗口请求已取消")}

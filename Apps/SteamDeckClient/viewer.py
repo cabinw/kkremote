@@ -2,9 +2,11 @@
 import argparse
 import asyncio
 import base64
+from dataclasses import replace
 import getpass
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import ssl
@@ -14,9 +16,25 @@ import uuid
 
 os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
 import pygame
+from av.video.reformatter import Interpolation
 from aiortc import RTCConfiguration, RTCPeerConnection, RTCSessionDescription
+from aiortc.codecs import CODECS
 from aiortc.mediastreams import MediaStreamError
 from aiortc.sdp import candidate_from_sdp
+
+
+def enable_h264_high_receive():
+    # aiortc 1.16 exposes only level 3.1 by default. Its FFmpeg decoder also
+    # handles the Mac Host's constrained-high profile. This viewer sends no video.
+    codecs = CODECS["video"]
+    profile = "640c33"
+    if any(c.parameters.get("profile-level-id") == profile for c in codecs):
+        return
+    base = next(c for c in codecs if c.mimeType == "video/H264" and c.parameters.get("packetization-mode") == "1")
+    rtx = next(c for c in codecs if c.mimeType == "video/rtx" and c.parameters.get("apt") == base.payloadType)
+    pt = max(c.payloadType for c in codecs) + 1
+    codecs.extend([replace(base, payloadType=pt, parameters={**base.parameters, "profile-level-id": profile}),
+                   replace(rtx, payloadType=pt + 1, parameters={"apt": pt})])
 
 
 def pairing_context(text):
@@ -49,12 +67,29 @@ async def send(writer, message):
     await writer.drain()
 
 
+def fullscreen_viewport(window_width, display_size):
+    width, height = display_size
+    ratio = width / height
+    minimum, maximum = max(200, 150 * ratio), min(2000, 2000 * ratio)
+    if minimum > maximum:
+        return None
+    requested = max(minimum, min(maximum, window_width))
+    # Snap common aspect ratios to whole points without changing the text scale
+    # appreciably (e.g. 1199 wide becomes 1200 × 750 on a 16:10 Deck).
+    step = width // math.gcd(width, height)
+    whole = round(requested / step) * step
+    if minimum <= whole <= maximum and abs(whole - requested) <= requested * 0.01:
+        requested = whole
+    return {"width": requested, "height": requested / ratio, "preserveWindowPosition": True}
+
+
 async def select_window(reader, writer, application):
     async def command(action, **fields):
         await send(writer, {"type": "window", "session": session, "window": {
             "version": 1, "action": action, "requestID": request_id, **fields}})
 
     session = None
+    layout = False
     selected = None
     request_id = str(uuid.uuid4())
     while True:
@@ -64,6 +99,7 @@ async def select_window(reader, writer, application):
         if message["type"] == "offer" and session is None:
             if message.get("windowProtocol") != 1:
                 raise ValueError("Host does not advertise the window catalog")
+            layout = message.get("windowLayout") is True
             session = message["windowSession"]
             await command("list")
         if message["type"] != "window" or message["session"] != session:
@@ -71,7 +107,7 @@ async def select_window(reader, writer, application):
         window = message["window"]
         if window.get("requestID") != request_id or window.get("version") != 1:
             continue
-        if window.get("error"):
+        if window.get("error") and window["action"] != "selected":
             raise RuntimeError("Host could not list or select the requested window")
         if window["action"] == "catalog" and selected is None:
             matches = [w for w in window["windows"] if w["application"].casefold() == application.casefold()]
@@ -79,10 +115,19 @@ async def select_window(reader, writer, application):
                 raise ValueError(f"No visible window for {application}")
             selected = max(matches, key=lambda w: w["widthPoints"] * w["heightPoints"])
             request_id = str(uuid.uuid4())
-            await command("select", windowID=selected["id"])
+            fields = {"windowID": selected["id"]}
+            if layout:
+                pygame.display.init()
+                viewport = fullscreen_viewport(selected["widthPoints"], pygame.display.get_desktop_sizes()[0])
+                if viewport:
+                    fields["viewport"] = viewport
+            await command("select", **fields)
         elif selected and window["action"] == "prepare":
             await command("ready")
         elif selected and window["action"] == "selected" and window["selected"]["id"] == selected["id"]:
+            selected = window["selected"]
+            if window.get("error"):
+                print("Host could not apply the requested window size; fitting the accepted window", flush=True)
             print(f"Selected {application} ({selected['widthPoints']:g} × {selected['heightPoints']:g} points)", flush=True)
             return session, window["mediaSession"]
 
@@ -115,17 +160,22 @@ async def present(track, application):
                 last_frame = clock.time()
                 frame = pending.result()
                 pending = asyncio.create_task(track.recv())
-                rgb = frame.reformat(format="bgra")
+                bounds = screen.get_rect()
+                target = pygame.Rect(0, 0, frame.width, frame.height).fit(bounds)
+                # The Host rounds the capture canvas down to even pixel dimensions.
+                if abs(frame.width - bounds.w * frame.height / bounds.h) <= 2:
+                    target = bounds
+                # Downsample while converting YUV to display pixels. Blit the result 1:1.
+                rgb = frame.reformat(width=target.w, height=target.h, format="bgra",
+                                     interpolation=Interpolation.LANCZOS)
                 plane = rgb.planes[0]
                 image = pygame.image.frombuffer(plane, (rgb.width, rgb.height), "BGRA", pitch=plane.line_size)
-                bounds = screen.get_rect()
-                target = image.get_rect().fit(bounds)
                 screen.fill("black")
-                screen.blit(pygame.transform.smoothscale(image, target.size), target)
+                screen.blit(image, target)
                 pygame.display.flip()
                 count += 1
                 if count == 1 or clock.time() >= next_report:
-                    print(f"Presented frames: {count} · stream {rgb.width}x{rgb.height} · display {bounds.w}x{bounds.h}", flush=True)
+                    print(f"Presented frames: {count} · stream {frame.width}x{frame.height} · content {target.w}x{target.h} · display {bounds.w}x{bounds.h}", flush=True)
                     next_report = clock.time() + 30
         finally:
             pending.cancel()
@@ -136,6 +186,7 @@ async def present(track, application):
 
 async def watch(reader, writer, application):
     window_session, media = await asyncio.wait_for(select_window(reader, writer, application), 25)
+    enable_h264_high_receive()
     pc = RTCPeerConnection(RTCConfiguration(iceServers=[]))
     loop = asyncio.get_running_loop()
     track_ready = loop.create_future()
