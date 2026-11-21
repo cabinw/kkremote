@@ -13,6 +13,8 @@ import ScreenCaptureKit
     private var focus: String?
     private var sequence = 0
     private var selected: Int?
+    private var previousWideJPEG = Data()
+    private var previousWideView = [Int]()
     private var keyboardArt = Data()
 
     func run() async throws {
@@ -29,7 +31,7 @@ import ScreenCaptureKit
                 continue
             }
             let values = line.split(separator:" ").compactMap { Int($0) }
-            guard values.count == 6 else { throw LabError.message("Invalid window request") }
+            guard values.count == 6 || values.count == 9 else { throw LabError.message("Invalid window request") }
             let (index, action, value, x, y) = (values[0], values[1], values[2], values[3], values[4])
             guard entries.indices.contains(index) else { try send(3, Data()); continue }
             let changed = selected != index
@@ -72,7 +74,22 @@ import ScreenCaptureKit
                     if !ok { status = 1 }
                 }
             }
-            try send(status, frames.deskJPEG(detail:values[5] == 1,x:x,y:y))
+            let wide = values.count == 9
+            let zoom = wide ? values[5] : (values[5] == 1 ? 2 : 1)
+            guard (1...3).contains(zoom) else { throw LabError.message("Invalid reading scale") }
+            let left = wide ? values[6] : (zoom == 1 ? 0 : min(400,max(0,x-200)))
+            let top = wide ? values[7] : (zoom == 1 ? 0 : min(240,max(0,y-120)))
+            guard (0...800-(800+zoom/2)/zoom).contains(left), (0...480-480/zoom).contains(top) else {
+                throw LabError.message("Invalid reading region")
+            }
+            let jpeg = frames.deskJPEG(wide:wide,zoom:zoom,left:left,top:top)
+            let view = [zoom,left,top]
+            if wide && values[8] == 1 && !jpeg.isEmpty && view == previousWideView && previousWideJPEG == jpeg {
+                try send(status,Data())
+            } else {
+                if wide && !jpeg.isEmpty { previousWideJPEG=jpeg; previousWideView=view }
+                try send(status,jpeg)
+            }
         }
     }
 
@@ -88,6 +105,7 @@ import ScreenCaptureKit
         return data
     }
     private func close(restoreSize: Bool = true) async {
+        previousWideJPEG = Data(); previousWideView = []
         control?.invalidate(); control = nil; focus = nil; selected = nil
         if let stream { try? await stream.stopCapture() }
         stream = nil; frames = nil; target = nil

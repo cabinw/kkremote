@@ -21,31 +21,36 @@ final class Frames: NSObject, SCStreamOutput, SCStreamDelegate {
     private var cachedRevision = -1
     private var cachedCrop = CGRect.null
     private var cachedJPEG = Data()
-    init(desk: Bool) { self.desk = desk }
+    private let logicalSize: CGSize
+    private var cachedWide = false
+    init(desk: Bool, logicalSize: CGSize) { self.desk = desk; self.logicalSize = logicalSize }
     private var stopped = false
     func isStopped() -> Bool { lock.lock(); defer { lock.unlock() }; return stopped }
     func current() -> Data { lock.lock(); defer { lock.unlock() }; return latest }
-    // Called serially by the desktop relay. Keep the captured 2x surface for detail mode.
-    func deskJPEG(detail: Bool, x: Int, y: Int) -> Data {
+    // Top-screen wide pixels have half the width of a normal 3DS pixel.
+    func deskJPEG(wide: Bool, zoom: Int, left: Int, top: Int) -> Data {
         lock.lock()
         let pixels = source, version = revision
         lock.unlock()
         guard let pixels else { return Data() }
         let ci = CIImage(cvPixelBuffer:pixels)
-        let w = Int(ci.extent.width), h = Int(ci.extent.height)
-        let left = min(400,max(0,x-200)), top = min(240,max(0,y-120))
-        let crop = detail ? CGRect(x:(left*w+400)/800, y:h/2-(top*h+240)/480, width:w/2,height:h/2) : ci.extent
-        if version == cachedRevision && crop == cachedCrop { return cachedJPEG }
-        var image = ci.cropped(to:crop).transformed(by:CGAffineTransform(translationX:-crop.minX,y:-crop.minY))
-        let bounds = CGRect(x:0,y:0,width:w/2,height:h/2)
-        if !detail {
-            image = image.applyingFilter("CILanczosScaleTransform",parameters:[kCIInputScaleKey:0.5,kCIInputAspectRatioKey:1])
-        }
+        let w = ci.extent.width, h = ci.extent.height
+        let spanX = (800 + zoom/2)/zoom, spanY = 480/zoom
+        let crop = CGRect(x:CGFloat(left)*w/800, y:CGFloat(480-top-spanY)*h/480,
+                          width:CGFloat(spanX)*w/800, height:CGFloat(spanY)*h/480)
+        if version == cachedRevision && crop == cachedCrop && wide == cachedWide { return cachedJPEG }
+        let bounds = CGRect(x:0,y:0,width:logicalSize.width*(wide ? 2 : 1),height:logicalSize.height)
+        let sx = bounds.width/crop.width, sy = bounds.height/crop.height
+        // Translate the requested region of the original capture to the output origin.
+        // Filtering the clamped source before the final crop also handles fractional edges.
+        var image = ci.clampedToExtent().transformed(by:CGAffineTransform(translationX:-crop.minX,y:-crop.minY))
+            .applyingFilter("CILanczosScaleTransform",parameters:[kCIInputScaleKey:sy,kCIInputAspectRatioKey:sx/sy])
+            .cropped(to:bounds)
         image = image.clampedToExtent().applyingFilter("CISharpenLuminance",parameters:[kCIInputSharpnessKey:0.28]).cropped(to:bounds)
         let quality = CIImageRepresentationOption(rawValue:kCGImageDestinationLossyCompressionQuality as String)
-        for q in [0.93,0.82,0.68] {
+        for q in [0.94,0.86,0.74,0.57] {
             if let data = context.jpegRepresentation(of:image,colorSpace:color,options:[quality:q]), data.count <= 150000 {
-                cachedRevision=version; cachedCrop=crop; cachedJPEG=data
+                cachedRevision=version; cachedCrop=crop; cachedWide=wide; cachedJPEG=data
                 return data
             }
         }
@@ -77,16 +82,21 @@ final class Frames: NSObject, SCStreamOutput, SCStreamDelegate {
     let scale = min(400 / target.widthPoints, 240 / target.heightPoints)
     config.width = max(1, Int((target.widthPoints * scale).rounded()))
     config.height = max(1, Int((target.heightPoints * scale).rounded()))
+    let logicalSize = CGSize(width:config.width,height:config.height)
+    let filter = SCContentFilter(desktopIndependentWindow:window)
     if desk {
-        fputs("DESK_GEOMETRY source=\(Int(target.widthPoints))x\(Int(target.heightPoints)) output=\(config.width)x\(config.height)\n",stderr)
-        config.width *= 2; config.height *= 2
+        let backing = max(1,CGFloat(filter.pointPixelScale))
+        let density = min(backing, 2400/target.widthPoints, 1440/target.heightPoints)
+        config.width = max(1,Int((target.widthPoints*density).rounded()))
+        config.height = max(1,Int((target.heightPoints*density).rounded()))
+        fputs("DESK_GEOMETRY window=\(Int(target.widthPoints))x\(Int(target.heightPoints)) capture=\(config.width)x\(config.height)\n",stderr)
     }
     config.pixelFormat = kCVPixelFormatType_32BGRA
     config.minimumFrameInterval = CMTime(value: 1, timescale: 15)
     config.queueDepth = 3; config.showsCursor = false
     config.ignoreShadowsSingleWindow = true; config.ignoreGlobalClipSingleWindow = true
-    let frames = Frames(desk:desk)
-    let stream = SCStream(filter: SCContentFilter(desktopIndependentWindow: window), configuration: config, delegate: frames)
+    let frames = Frames(desk:desk,logicalSize:logicalSize)
+    let stream = SCStream(filter: filter, configuration: config, delegate: frames)
     try stream.addStreamOutput(frames, type: .screen, sampleHandlerQueue: DispatchQueue(label: "kkremote.3ds.capture"))
     try await stream.startCapture()
     return (stream,frames)

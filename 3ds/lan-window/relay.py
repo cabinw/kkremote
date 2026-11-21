@@ -59,18 +59,27 @@ def serve_desk(peer):
                     mark, index, action, value, x, y = struct.unpack("!BBBBHH", read_exact(requests, 8))
                     legacy = mark in (0x44, 0x45)
                     detail = mark in (0x56, 0x57)
+                    wide = mark in range(0x60, 0x66)
+                    if wide:
+                        zoom = 1 + (mark - 0x60) // 2
+                        left, top = struct.unpack("!HH", read_exact(requests, 4))
+                        if left > 800 - (800 + zoom // 2) // zoom or top > 480 - 480 // zoom:
+                            raise ValueError("invalid wide viewport")
                     if legacy:
                         x, y = x * 2, y * 2
-                    if (not legacy and mark not in range(0x54, 0x58)) or action not in (0, 1, 2, 3, 4, 5, 255) or x >= 800 or y >= 480:
+                    if (not wide and not legacy and mark not in range(0x54, 0x58)) or action not in (0, 1, 2, 3, 4, 5, 255) or x >= 800 or y >= 480:
                         raise ValueError("invalid desktop request")
                     if action == 255:
                         command = "catalog"
                         last_displayed = None
                     else:
                         command = f"{index} {action} {value} {x} {y} {int(detail)}"
-                        if mark & 1 and last_displayed != (index, detail):
-                            print(f"DESK_DISPLAYED slot={index} detail={int(detail)}", flush=True)
-                            last_displayed = (index, detail)
+                        if wide:
+                            command = f"{index} {action} {value} {x} {y} {zoom} {left} {top} {mark & 1}"
+                        scale = zoom if wide else 1 + int(detail)
+                        if mark & 1 and last_displayed != (index, wide, scale):
+                            print(f"DESK_DISPLAYED slot={index} wide={int(wide)} zoom={scale}", flush=True)
+                            last_displayed = (index, wide, scale)
                     helper.stdin.write((command + "\n").encode("ascii"))
                     header = read_exact(helper.stdout, 5)
                     status, size = struct.unpack("!BI", header)

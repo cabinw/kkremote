@@ -5,7 +5,7 @@
 #include <string.h>
 
 enum { CARD_W=78, CARD_H=62, STEP=84, KEYBOARD_TOP=85, KEY_H=155, MAX_WINDOWS=128,
-       MAX_KEYS=56, MAX_ACTIONS=48, W=400, H=240 };
+       MAX_KEYS=56, MAX_ACTIONS=48, W=800, H=240 };
 typedef struct { int x,y,w,h,code; } Key;
 typedef struct { unsigned count; Key keys[MAX_KEYS]; u8 pixels[320*KEY_H*3]; } Keyboard;
 typedef struct { int count,initial; u8 *cards; Keyboard pages[3]; } Catalog;
@@ -15,7 +15,8 @@ static LightLock mutex;
 static Catalog *catalog;
 static int deskImageWidth,deskImageHeight;
 static int selected, page, generation, queueHead, queued;
-static bool refresh=true, ready, shown, hover, pad, detail;
+static bool refresh=true, ready, shown, hover, pad;
+static int zoom=1, viewX,viewY;
 static int cropX,cropY;
 static float pointerX=200, pointerY=120, scroll;
 static Event events[MAX_ACTIONS];
@@ -28,7 +29,7 @@ static u64 lastUpdate;
 
 static int limit(int n,int lo,int hi) { return n<lo?lo:n>hi?hi:n; }
 static void freeCatalog(Catalog *c) { if (c) { free(c->cards); free(c); } }
-void deskInit(void) { LightLock_Init(&mutex); hidSetRepeatParameters(26,5); }
+void deskInit(void) { gfxSetWide(true); LightLock_Init(&mutex); hidSetRepeatParameters(26,5); }
 void deskExit(void) { freeCatalog(catalog); }
 static u8 *take(Reader *r,size_t n) {
     if(n>r->size) return NULL;
@@ -93,6 +94,12 @@ static void selectWindow(int next) {
     pointerX=200; pointerY=120;
     strcpy(notice,"Opening window");
 }
+static int viewportStart(int cursor,int current,int span,int total) {
+    int margin=span/6;
+    if(cursor<current+margin) current=cursor-margin;
+    if(cursor>=current+span-margin) current=cursor-span+margin+1;
+    return limit(current,0,total-span);
+}
 static void enqueue(u8 action,u8 value) {
     if(!shown || refresh) return;
     if(queued==MAX_ACTIONS) { strcpy(notice,"Input queue full"); return; }
@@ -105,13 +112,18 @@ void deskReceive(mbedtls_ssl_context *ssl,tjhandle decoder) {
     for(;;) {
         LightLock_Lock(&mutex);
         int id=selected, revision=generation;
-        bool listing=refresh, reported=shown, zoom=detail;
+        bool listing=refresh, reported=shown;
+        int scale=zoom;
+        viewX=viewportStart(lroundf(pointerX*2),viewX,(800+scale/2)/scale,800);
+        viewY=viewportStart(lroundf(pointerY*2),viewY,480/scale,480);
+        int left=viewX,top=viewY;
         Event event={0,0,lroundf(pointerX*2),lroundf(pointerY*2)};
         if(listing) { event.action=255; refresh=false; }
         else if(queued) { event=events[queueHead]; queueHead=(queueHead+1)%MAX_ACTIONS; queued--; }
         else if(hover && shown) { event.action=4; hover=false; }
         LightLock_Unlock(&mutex);
-        u8 req[]={(u8)(0x54+(zoom?2:0)+reported),id,event.action,event.value,event.x>>8,event.x&255,event.y>>8,event.y&255};
+        u8 req[]={(u8)(0x60+2*(scale-1)+reported),id,event.action,event.value,event.x>>8,event.x&255,event.y>>8,event.y&255,
+                  left>>8,left&255,top>>8,top&255};
         u8 hdr[5];
         if(!lanTransfer(ssl,true,req,sizeof(req)) || !lanTransfer(ssl,false,hdr,sizeof(hdr))) break;
         uint32_t size=(uint32_t)hdr[1]<<24|(uint32_t)hdr[2]<<16|(uint32_t)hdr[3]<<8|hdr[4];
@@ -142,8 +154,7 @@ void deskReceive(mbedtls_ssl_context *ssl,tjhandle decoder) {
                     memcpy(image+(((W-w)/2+x)*H+(H-h+1)/2)*3,rotated+x*h*3,h*3);
                 // The reticle is normalized to the actual window, including portrait/letterboxed windows.
                 deskImageWidth=w; deskImageHeight=h;
-                cropX=zoom?limit(event.x-200,0,400):0;
-                cropY=zoom?limit(event.y-120,0,240):0;
+                cropX=left; cropY=top;
                 ready=true;
             }
             if(hdr[0]==3) { shown=false; ready=false; strcpy(notice,"Unavailable - SELECT to refresh"); }
@@ -160,8 +171,14 @@ void deskReceive(mbedtls_ssl_context *ssl,tjhandle decoder) {
 }
 static void moveBy(float dx,float dy) {
     int x=lroundf(pointerX*2),y=lroundf(pointerY*2);
-    if(detail) { dx*=0.5f; dy*=0.5f; }
+    dx/=zoom; dy/=zoom;
     pointerX=fminf(399.5f,fmaxf(0,pointerX+dx)); pointerY=fminf(239.5f,fmaxf(0,pointerY+dy));
+    if(ready && zoom>1) {
+        // Never let a click land beyond the image that has reached the handheld.
+        int span=(800+zoom/2)/zoom;
+        pointerX=fminf((cropX+span-1)*0.5f,fmaxf(cropX*0.5f,pointerX));
+        pointerY=fminf((cropY+480/zoom-1)*0.5f,fmaxf(cropY*0.5f,pointerY));
+    }
     if(x!=lroundf(pointerX*2) || y!=lroundf(pointerY*2)) hover=true;
 }
 static void circlePointer(u64 now) {
@@ -226,8 +243,11 @@ static void drawCursor(u8 *fb,int cx,int cy) {
         "wbbwbbw", "wbw wbbw", "ww  wbbw", "     wbbw", "      ww"
     };
     for(unsigned y=0;y<sizeof(rows)/sizeof(rows[0]) && cy+(int)y<H;y++)
-        for(int x=0;rows[y][x] && cx+x<W;x++) {
-            if(rows[y][x]!=' ') pixel(fb,cx+x,cy+y,rows[y][x]=='w'?0xffffff:0x121212);
+        for(int x=0;rows[y][x] && cx+2*x<W;x++) {
+            if(rows[y][x]==' ') continue;
+            u32 color=rows[y][x]=='w'?0xffffff:0x121212;
+            pixel(fb,cx+2*x,cy+y,color);
+            if(cx+2*x+1<W) pixel(fb,cx+2*x+1,cy+y,color);
         }
 }
 static void box(u8 *fb,int x,int y,int w,int h,u32 rgb) {
@@ -241,7 +261,10 @@ static void text(u8 *fb,int x,int y,const char *str,u32 color) {
         if(idx<0 || idx>=f.numChars) continue;
         for(int row=0;row<8;row++)
             for(int col=0;col<8;col++)
-                if(f.gfx[idx*8+row]&(0x80>>col)) pixel(fb,x+col,y+row,color);
+                if(f.gfx[idx*8+row]&(0x80>>col)) {
+                    pixel(fb,2*(x+col),y+row,color);
+                    pixel(fb,2*(x+col)+1,y+row,color);
+                }
     }
 }
 static void blit(u8 *fb,const u8 *src,int x,int y,int w,int h) {
@@ -274,8 +297,12 @@ void deskUpdate(u32 down,u32 held,u32 up,const char *connection) {
     if(down&KEY_L) selectWindow(selected-1);
     if(down&KEY_R) selectWindow(selected+1);
     if(down&KEY_B) {
-        detail=!detail; generation++; ready=shown=false;
-        strcpy(notice,detail?"Opening 2x detail":"Opening full window");
+        zoom=zoom%3+1;
+        int span=(800+zoom/2)/zoom;
+        viewX=limit(lroundf(pointerX*2)-span/2,0,800-span);
+        viewY=limit(lroundf(pointerY*2)-240/zoom,0,480-480/zoom);
+        generation++; ready=shown=false;
+        notice[0]=0;
     }
     if((down&KEY_ZR) && shown && !refresh) {
         queued=0;
@@ -299,7 +326,7 @@ void deskUpdate(u32 down,u32 held,u32 up,const char *connection) {
     u8 *top=gfxGetFramebuffer(GFX_TOP,GFX_LEFT,NULL,NULL);
     if(ready) {
         memcpy(top,image,sizeof(image));
-        int vx=detail?400:800, vy=detail?240:480;
+        int vx=(800+zoom/2)/zoom, vy=480/zoom;
         int cx=(W-deskImageWidth)/2+limit((int)((pointerX*2-cropX+0.5f)*deskImageWidth/vx),0,deskImageWidth-1);
         int cy=(H-deskImageHeight)/2+limit((int)((pointerY*2-cropY+0.5f)*deskImageHeight/vy),0,deskImageHeight-1);
         drawCursor(top,cx,cy);
