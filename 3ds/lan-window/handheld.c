@@ -1,5 +1,6 @@
 #include <3ds.h>
 #include "stereo_player.h"
+#include "desk.h"
 #include <3ds/services/sslc.h>
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
@@ -22,7 +23,7 @@
 enum { W=400, H=240, MAX_JPEG=150000, QUEUE=8 };
 typedef struct { uint8_t action; int x,y; } Input;
 static LightLock lock;
-static bool stopping, displayed, stereo_mode, stereo_avc;
+static bool stopping, displayed, stereo_mode, stereo_avc, desk_mode;
 static int remote_fd=-1, cursor_x=W/2, cursor_y=H/2, count, head;
 static Input queue[QUEUE];
 static char status_text[64]="Opening connection";
@@ -124,7 +125,7 @@ static void network(void *unused) {
         do {r=mbedtls_ssl_handshake(&ssl);} while(r==MBEDTLS_ERR_SSL_WANT_READ || r==MBEDTLS_ERR_SSL_WANT_WRITE);
     }
     if(r) linkStatus("TLS error",r);
-    else { linkStatus("Connected",0); if(stereo_mode) stereoReceive(&ssl,decoder,stereo_avc,net.fd); else receive_frames(&ssl,decoder); }
+    else { linkStatus("Connected",0); if(stereo_mode) stereoReceive(&ssl,decoder,stereo_avc,net.fd); else if(desk_mode) deskReceive(&ssl,decoder); else receive_frames(&ssl,decoder); }
 end:
     LightLock_Lock(&lock); remote_fd=-1; LightLock_Unlock(&lock);
     mbedtls_net_free(&net);
@@ -157,15 +158,16 @@ static int hex(char c) {
     return -1;
 }
 int main(int argc,char **argv) {
+    desk_mode=argc==5 && !strcmp(argv[4],"desk");
     stereo_avc=argc==5 && !strcmp(argv[4],"stereo-avc");
     stereo_mode=stereo_avc || (argc==5 && !strcmp(argv[4],"stereo"));
     gfxInit(stereo_avc?GSP_RGB565_OES:GSP_BGR8_OES,GSP_BGR8_OES,false); gfxSet3D(stereo_mode);
-    if(stereo_mode) osSetSpeedupEnable(true);
-    consoleInit(GFX_BOTTOM,NULL);
+    if(stereo_mode || desk_mode) osSetSpeedupEnable(true);
+    if(desk_mode) deskInit(); else consoleInit(GFX_BOTTOM,NULL);
     LightLock_Init(&lock);
     if (stereo_mode) printf("KKRemote | Sintel 3D\n\nMove the 3D slider up for stereo.\nSTART: return to Homebrew Launcher\n");
-    else printf("\x1b[1;1HKKRemote | LAN window\n\nSlide: move pointer\nTap / A: left click   B: right click\nD-pad up / down: scroll\nSTART: return to Homebrew Launcher\n");
-    bool paired=(argc==4 || stereo_mode) && inet_aton(argv[1],&address) && strlen(argv[3])==64;
+    else if(!desk_mode) printf("\x1b[1;1HKKRemote | LAN window\n\nSlide: move pointer\nTap / A: left click   B: right click\nD-pad up / down: scroll\nSTART: return to Homebrew Launcher\n");
+    bool paired=(argc==4 || stereo_mode || desk_mode) && inet_aton(argv[1],&address) && strlen(argv[3])==64;
     if(paired) {
         long value=strtol(argv[2],NULL,10); paired=value>0 && value<=65535; port=(unsigned short)value;
         for(int i=0;paired && i<32;i++){
@@ -182,6 +184,11 @@ int main(int argc,char **argv) {
     while(aptMainLoop()) {
         hidScanInput(); u32 down=hidKeysDown(),held=hidKeysHeld(),up=hidKeysUp();
         if(down&KEY_START) break;
+        if(desk_mode) {
+            char status[sizeof(status_text)];
+            LightLock_Lock(&lock); memcpy(status,status_text,sizeof(status)); LightLock_Unlock(&lock);
+            deskUpdate(down,held,up,status); continue;
+        }
         if(stereo_mode) {
             if(ticks++%8==0) {
                 LightLock_Lock(&lock); printf("\x1b[7;1H%-38.38s",status_text); LightLock_Unlock(&lock);
@@ -219,6 +226,7 @@ int main(int argc,char **argv) {
         if(R_FAILED(threadJoin(worker,3000000000LL))) svcExitProcess();
         threadFree(worker);
     }
+    if(desk_mode) deskExit();
     if(crypto) sslcExit();
     if(soc) socExit();
     free(memory); gfxExit(); return 0;

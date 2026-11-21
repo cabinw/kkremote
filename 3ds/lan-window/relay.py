@@ -49,6 +49,34 @@ def serve(peer, target):
         helper.stdout.close()
 
 
+def serve_desk(peer):
+    capture = Path(__file__).resolve().parent / ".build/capture"
+    with subprocess.Popen([str(capture), "--desk"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, bufsize=0) as helper:
+        last_displayed = None
+        try:
+            with peer.makefile("rb") as requests:
+                while True:
+                    mark, index, action, value, x, y = struct.unpack("!BBBBHH", read_exact(requests, 8))
+                    if mark not in (0x44, 0x45) or action not in (0, 1, 2, 3, 4, 255) or x >= 400 or y >= 240:
+                        raise ValueError("invalid desktop request")
+                    if action == 255:
+                        command = "catalog"
+                        last_displayed = None
+                    else:
+                        command = f"{index} {action} {value} {x} {y}"
+                        if mark == 0x45 and last_displayed != index:
+                            print(f"DESK_DISPLAYED slot={index}", flush=True)
+                            last_displayed = index
+                    helper.stdin.write((command + "\n").encode("ascii"))
+                    header = read_exact(helper.stdout, 5)
+                    status, size = struct.unpack("!BI", header)
+                    if status > 3 or size > (2000000 if action == 255 else 150000):
+                        raise ValueError("invalid desktop response")
+                    peer.sendall(header + read_exact(helper.stdout, size))
+        finally:
+            helper.stdin.close()
+
+
 def psk_context(key):
     ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     ctx.maximum_version = ctx.minimum_version = ssl.TLSVersion.TLSv1_2
@@ -62,7 +90,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("bind", type=ipaddress.IPv4Address)
     parser.add_argument("peer", type=ipaddress.IPv4Address)
-    parser.add_argument("window", type=int)
+    parser.add_argument("window", type=int, nargs="?")
+    parser.add_argument("--desk", action="store_true", help="interactive window Dock and keyboard")
     source = parser.add_mutually_exclusive_group(required=True)
     source.add_argument("--sender", type=Path, help="3dslink executable; generate a fresh LAN session and deploy the client")
     source.add_argument("--key-file", type=Path, help="use an existing 256-bit session secret for a local integration test")
@@ -70,6 +99,8 @@ def main():
     args = parser.parse_args()
     if args.bind.is_unspecified or not args.bind.is_private or not args.peer.is_private:
         parser.error("select a local LAN interface and a single peer")
+    if args.desk == (args.window is not None):
+        parser.error("select either a window number or --desk")
     key = bytes.fromhex(args.key_file.read_text().strip()) if args.key_file else secrets.token_bytes(32)
     if len(key) != 32:
         parser.error("need a 256-bit session key")
@@ -80,7 +111,7 @@ def main():
         if args.sender:
             binary = Path(__file__).resolve().parent / ".build/KKRemote-LAN.3dsx"
             result = subprocess.call([str(args.sender.resolve()), "-a", str(args.peer), str(binary),
-                                      str(args.bind), str(args.port), key.hex()])
+                                      str(args.bind), str(args.port), key.hex()] + (["desk"] if args.desk else []))
             if result:
                 raise SystemExit("Netloader deployment failed; press Y in hbmenu and retry")
         while True:
@@ -95,7 +126,10 @@ def main():
                     conn.settimeout(12)
                     with ctx.wrap_socket(conn, server_side=True) as peer:
                         print("TLS_CONNECTED", flush=True)
-                        serve(peer, args.window)
+                        if args.desk:
+                            serve_desk(peer)
+                        else:
+                            serve(peer, args.window)
                 except (OSError, EOFError, ValueError) as error:
                     print("Session closed:", error, flush=True)
 

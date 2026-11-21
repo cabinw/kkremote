@@ -15,9 +15,11 @@ final class Frames: NSObject, SCStreamOutput, SCStreamDelegate {
     private var latest = Data()
     private let context = CIContext(options: [.cacheIntermediates: false])
     private let color = CGColorSpace(name: CGColorSpace.sRGB)!
+    private var stopped = false
+    func isStopped() -> Bool { lock.lock(); defer { lock.unlock() }; return stopped }
     func current() -> Data { lock.lock(); defer { lock.unlock() }; return latest }
     func stream(_ stream: SCStream, didStopWithError error: Error) {
-        fputs("Capture stopped: \(error.localizedDescription)\n", stderr); exit(1)
+        lock.lock(); stopped = true; latest.removeAll(); lock.unlock()
     }
     func stream(_ stream: SCStream, didOutputSampleBuffer sample: CMSampleBuffer, of type: SCStreamOutputType) {
         guard let attachments = CMSampleBufferGetSampleAttachmentsArray(sample, createIfNecessary: false) as? [[SCStreamFrameInfo: Any]],
@@ -30,6 +32,25 @@ final class Frames: NSObject, SCStreamOutput, SCStreamDelegate {
         lock.lock(); latest = data; lock.unlock()
     }
 }
+@MainActor func startWindowFeed(_ target: RemoteWindow) async throws -> (SCStream, Frames) {
+    let content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: true)
+    guard let window = content.windows.first(where: { $0.windowID == target.number && $0.owningApplication?.processID == target.processID })
+    else { throw LabError.message("Window closed") }
+    let config = SCStreamConfiguration()
+    let scale = min(400 / target.widthPoints, 240 / target.heightPoints)
+    config.width = max(1, Int((target.widthPoints * scale).rounded()))
+    config.height = max(1, Int((target.heightPoints * scale).rounded()))
+    config.pixelFormat = kCVPixelFormatType_32BGRA
+    config.minimumFrameInterval = CMTime(value: 1, timescale: 15)
+    config.queueDepth = 3; config.showsCursor = false
+    config.ignoreShadowsSingleWindow = true; config.ignoreGlobalClipSingleWindow = true
+    let frames = Frames()
+    let stream = SCStream(filter: SCContentFilter(desktopIndependentWindow: window), configuration: config, delegate: frames)
+    try stream.addStreamOutput(frames, type: .screen, sampleHandlerQueue: DispatchQueue(label: "kkremote.3ds.capture"))
+    try await stream.startCapture()
+    return (stream,frames)
+}
+
 @main struct Capture {
     @MainActor static func main() async {
         do { try await run() } catch { fputs("\(error.localizedDescription)\n", stderr); exit(1) }
@@ -37,6 +58,7 @@ final class Frames: NSObject, SCStreamOutput, SCStreamDelegate {
     @MainActor static func run() async throws {
         _ = NSApplication.shared
         let catalog = HostWindowCatalog()
+        if CommandLine.arguments.dropFirst().first == "--desk" { try await WindowDesk().run(); return }
         let entries = try await catalog.refresh()
         if CommandLine.arguments.dropFirst().first == "--list" {
             for entry in entries { print("\(entry.number)\t\(entry.label)") }
@@ -45,25 +67,12 @@ final class Frames: NSObject, SCStreamOutput, SCStreamDelegate {
         guard let arg = CommandLine.arguments.dropFirst().first, let id = UInt32(arg),
               let target = entries.first(where: { $0.number == id }) else { throw LabError.message("Window unavailable") }
         let input = try HostWindowControl(target: target)
-        let content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: true)
-        guard let window = content.windows.first(where: { $0.windowID == id && $0.owningApplication?.processID == target.processID })
-        else { throw LabError.message("Window closed") }
-        let config = SCStreamConfiguration()
-        let scale = min(400 / target.widthPoints, 240 / target.heightPoints)
-        config.width = max(1, Int((target.widthPoints * scale).rounded()))
-        config.height = max(1, Int((target.heightPoints * scale).rounded()))
-        config.pixelFormat = kCVPixelFormatType_32BGRA
-        config.minimumFrameInterval = CMTime(value: 1, timescale: 15)
-        config.queueDepth = 3; config.showsCursor = false
-        config.ignoreShadowsSingleWindow = true; config.ignoreGlobalClipSingleWindow = true
-        let frames = Frames()
-        let stream = SCStream(filter: SCContentFilter(desktopIndependentWindow: window), configuration: config, delegate: frames)
-        try stream.addStreamOutput(frames, type: .screen, sampleHandlerQueue: DispatchQueue(label: "kkremote.3ds.capture"))
-        try await stream.startCapture()
+        let (stream, frames) = try await startWindowFeed(target)
         defer { input.invalidate() }
         var sequence = 0
         // The TLS bridge sends one bounded request, reads one response, then repeats.
         while let line = await Task.detached(operation: { readLine() }).value {
+            if frames.isStopped() { throw LabError.message("Window capture stopped") }
             let fields = line.split(separator: " ").compactMap { Int($0) }
             guard fields.count == 3, (0...4).contains(fields[0]), (0..<400).contains(fields[1]),
                   (0..<240).contains(fields[2]) else { throw LabError.message("Invalid input") }
