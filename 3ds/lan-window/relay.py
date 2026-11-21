@@ -61,7 +61,7 @@ def serve_desk(peer):
                     detail = mark in (0x56, 0x57)
                     if legacy:
                         x, y = x * 2, y * 2
-                    if (not legacy and mark not in range(0x54, 0x58)) or action not in (0, 1, 2, 3, 4, 255) or x >= 800 or y >= 480:
+                    if (not legacy and mark not in range(0x54, 0x58)) or action not in (0, 1, 2, 3, 4, 5, 255) or x >= 800 or y >= 480:
                         raise ValueError("invalid desktop request")
                     if action == 255:
                         command = "catalog"

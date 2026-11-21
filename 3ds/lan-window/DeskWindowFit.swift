@@ -61,8 +61,9 @@ import ApplicationServices
         }
         return nil
     }
-    func fit() async {
-        guard setSize(CGSize(width:400,height:240)) else { return }
+    func fit(width: Int) async {
+        let requested = CGSize(width:width,height:width*3/5)
+        guard setSize(requested) else { return }
         applied = Self.frame(element)
         guard let actual = await settled() else { return }
         applied = actual

@@ -4,6 +4,7 @@ import ScreenCaptureKit
 @MainActor final class WindowDesk {
     private let catalog = HostWindowCatalog()
     private var entries = [RemoteWindow]()
+    private var preferredWidths = [String:Int]()
     private var fit: DeskWindowFit?
     private var target: RemoteWindow?
     private var stream: SCStream?
@@ -32,13 +33,22 @@ import ScreenCaptureKit
             let (index, action, value, x, y) = (values[0], values[1], values[2], values[3], values[4])
             guard entries.indices.contains(index) else { try send(3, Data()); continue }
             let changed = selected != index
-            if changed {
-                await close()
+            let app = entries[index].application
+            let sizes = app.caseInsensitiveCompare("PopAgent") == .orderedSame ? [640,800,960] : [400,640,800,960]
+            var width = preferredWidths[app] ?? sizes[0]
+            let resizing = !changed && action == 5
+            if resizing {
+                let current = sizes.firstIndex(of:width) ?? 0
+                width = sizes[(current+1) % sizes.count]
+                preferredWidths[app] = width
+            }
+            if changed || resizing {
+                await close(restoreSize:changed)
                 selected = index
                 do {
                     let initial = try await catalog.resolve(entries[index].id)
-                    fit = DeskWindowFit(initial)
-                    await fit?.fit()
+                    if fit == nil { fit = DeskWindowFit(initial) }
+                    await fit?.fit(width:width)
                     let entry = try await catalog.current(initial)
                     let feed = try await startWindowFeed(entry,desk:true)
                     target = entry; (stream,frames) = feed
@@ -54,7 +64,7 @@ import ScreenCaptureKit
                 } else if action == 1 || action == 2 {
                     if !(await perform(action == 1 ? "click" : "secondary", x:x, y:y)) { status = 1 }
                 } else if action == 3 {
-                    let special = [8:"backspace",9:"tab",13:"return",27:"escape"]
+                    let special = [8:"backspace",9:"tab",13:"return",27:"escape",130:"left",131:"right",132:"up",133:"down"]
                     let ok: Bool
                     if let key = special[value] { ok = await perform("key", key:key) }
                     else if (32...126).contains(value) { ok = await perform("insertText", text:String(UnicodeScalar(value)!)) }
@@ -77,11 +87,11 @@ import ScreenCaptureKit
         data.append(keyboardArt)
         return data
     }
-    private func close() async {
+    private func close(restoreSize: Bool = true) async {
         control?.invalidate(); control = nil; focus = nil; selected = nil
         if let stream { try? await stream.stopCapture() }
         stream = nil; frames = nil; target = nil
-        await fit?.restore(); fit = nil
+        if restoreSize { await fit?.restore(); fit = nil }
     }
     private func send(_ status: UInt8, _ data: Data) throws {
         var packet = Data([status])

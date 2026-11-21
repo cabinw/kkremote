@@ -20,16 +20,15 @@ static int cropX,cropY;
 static float pointerX=200, pointerY=120, scroll;
 static Event events[MAX_ACTIONS];
 static u8 image[W*H*3], scratch[W*H*3], compressed[150000];
-static char notice[44]="Connecting";
+static char notice[44];
 static int pressed=-1, originX, originY, lastX, lastY, gesture;
 static float originScroll;
 static bool dragged;
-static int lastDX,lastDY;
-static u64 directionSince,lastUpdate;
+static u64 lastUpdate;
 
 static int limit(int n,int lo,int hi) { return n<lo?lo:n>hi?hi:n; }
 static void freeCatalog(Catalog *c) { if (c) { free(c->cards); free(c); } }
-void deskInit(void) { LightLock_Init(&mutex); }
+void deskInit(void) { LightLock_Init(&mutex); hidSetRepeatParameters(26,5); }
 void deskExit(void) { freeCatalog(catalog); }
 static u8 *take(Reader *r,size_t n) {
     if(n>r->size) return NULL;
@@ -150,7 +149,7 @@ void deskReceive(mbedtls_ssl_context *ssl,tjhandle decoder) {
             if(hdr[0]==3) { shown=false; ready=false; strcpy(notice,"Unavailable - SELECT to refresh"); }
             else if(hdr[0]==2) strcpy(notice,"View only - input unavailable");
             else if(hdr[0]==1) strcpy(notice,"Input refused - click field again");
-            else if(size && (event.action || !shown)) strcpy(notice,zoom?"2x Detail   B Full   Y Left   A Right":"Circle Pad   B Detail   Y Left   A Right");
+            else if(size && (event.action || !shown)) notice[0]=0;
         }
         bool waiting=!catalog || !catalog->count;
         LightLock_Unlock(&mutex);
@@ -165,8 +164,7 @@ static void moveBy(float dx,float dy) {
     pointerX=fminf(399.5f,fmaxf(0,pointerX+dx)); pointerY=fminf(239.5f,fmaxf(0,pointerY+dy));
     if(x!=lroundf(pointerX*2) || y!=lroundf(pointerY*2)) hover=true;
 }
-static void direction(u32 held,u64 now) {
-    int dx=!!(held&KEY_DRIGHT)-!!(held&KEY_DLEFT),dy=!!(held&KEY_DDOWN)-!!(held&KEY_DUP);
+static void circlePointer(u64 now) {
     float dt=fminf(0.05f,(now-lastUpdate)/1000.0f); lastUpdate=now;
     circlePosition stick;
     hidCircleRead(&stick);
@@ -176,17 +174,7 @@ static void direction(u32 held,u64 now) {
         float amount=fminf(1.0f,(radius-18.0f)/132.0f);
         float step=dt*(25.0f*amount+435.0f*amount*amount)/radius;
         moveBy(stick.dx*step,-stick.dy*step);
-        lastDX=lastDY=0; directionSince=now;
-        return;
     }
-    if(dx!=lastDX || dy!=lastDY) {
-        directionSince=now; lastDX=dx; lastDY=dy;
-        moveBy(dx,dy); return;
-    }
-    if((!dx && !dy) || now-directionSince<155) return;
-    float t=fminf(1,(now-directionSince-155)/760.0f);
-    float pixels=dt*(36+340*t*t*(3-2*t))*(dx&&dy?0.707107f:1);
-    moveBy(dx*pixels,dy*pixels);
 }
 static int hitKey(int x,int y) {
     if(!catalog) return -1;
@@ -230,6 +218,18 @@ static void pixel(u8 *fb,int x,int y,u32 rgb) {
     u8 *p=fb+(x*H+H-1-y)*3;
     p[0]=rgb; p[1]=rgb>>8; p[2]=rgb>>16;
 }
+// The top-left tip is the host click hotspot. White edging remains visible on dark windows.
+static void drawCursor(u8 *fb,int cx,int cy) {
+    static const char *const rows[] = {
+        "w", "ww", "wbw", "wbbw", "wbbbw", "wbbbbw", "wbbbbbw",
+        "wbbbbbbw", "wbbbbbbbw", "wbbbbbbbbw", "wbbbbw wwww",
+        "wbbwbbw", "wbw wbbw", "ww  wbbw", "     wbbw", "      ww"
+    };
+    for(unsigned y=0;y<sizeof(rows)/sizeof(rows[0]) && cy+(int)y<H;y++)
+        for(int x=0;rows[y][x] && cx+x<W;x++) {
+            if(rows[y][x]!=' ') pixel(fb,cx+x,cy+y,rows[y][x]=='w'?0xffffff:0x121212);
+        }
+}
 static void box(u8 *fb,int x,int y,int w,int h,u32 rgb) {
     for(int i=limit(x,0,320);i<limit(x+w,0,320);i++)
         for(int j=limit(y,0,240);j<limit(y+h,0,240);j++) pixel(fb,i,j,rgb);
@@ -248,20 +248,17 @@ static void blit(u8 *fb,const u8 *src,int x,int y,int w,int h) {
     for(int i=limit(-x,0,w);i<limit(320-x,0,w);i++)
         memcpy(fb+((i+x)*H+H-y-h)*3,src+i*h*3,h*3);
 }
-static void drawBottom(u8 *fb,const char *connection) {
+static void drawBottom(u8 *fb) {
     memset(fb,0,320*240*3);
-    if(!catalog) { text(fb,10,106,connection,0x76eed5); return; }
+    if(!catalog) return;
     int nearest=lroundf(scroll);
     for(int i=limit(nearest-3,0,catalog->count);i<limit(nearest+4,0,catalog->count);i++) {
         int x=lroundf(160-CARD_W/2+(i-scroll)*STEP);
         blit(fb,catalog->cards+i*CARD_W*CARD_H*3,x,2,CARD_W,CARD_H);
         if(i==selected) box(fb,x+7,65,CARD_W-14,3,0x68e7cf);
     }
-    text(fb,5,73,notice,0xade8dc);
     if(pad) {
         box(fb,3,KEYBOARD_TOP,314,KEY_H-3,0x223443);
-        text(fb,64,147,"Slide to move  Tap to click",0xedf4f5);
-        text(fb,91,171,"X  Show keyboard",0x75e1cb);
     } else {
         Keyboard *k=&catalog->pages[page];
         blit(fb,k->pixels,0,KEYBOARD_TOP,320,KEY_H);
@@ -280,9 +277,23 @@ void deskUpdate(u32 down,u32 held,u32 up,const char *connection) {
         detail=!detail; generation++; ready=shown=false;
         strcpy(notice,detail?"Opening 2x detail":"Opening full window");
     }
-    if(down&KEY_X) { pad=!pad; gesture=0; pressed=-1; }
+    if((down&KEY_ZR) && shown && !refresh) {
+        queued=0;
+        enqueue(5,0);
+        generation++; ready=shown=false; hover=false;
+    }
+    if(down&KEY_ZL) { pad=!pad; gesture=0; pressed=-1; }
     touch(down,held,up);
-    direction(held,osGetTime());
+    circlePointer(osGetTime());
+    u32 repeat=hidKeysDownRepeat() | down;
+    static const struct { u32 button; u8 code; } arrows[] = {
+        {KEY_DLEFT,130},{KEY_DRIGHT,131},{KEY_DUP,132},{KEY_DDOWN,133}
+    };
+    for(unsigned i=0;i<sizeof(arrows)/sizeof(arrows[0]);i++) {
+        if((repeat & held & arrows[i].button) && ((down & arrows[i].button) || !queued))
+            enqueue(3,arrows[i].code);
+    }
+    if(down&KEY_X) enqueue(3,13);
     if(down&KEY_Y) enqueue(1,0);
     if(down&KEY_A) enqueue(2,0);
     u8 *top=gfxGetFramebuffer(GFX_TOP,GFX_LEFT,NULL,NULL);
@@ -291,13 +302,13 @@ void deskUpdate(u32 down,u32 held,u32 up,const char *connection) {
         int vx=detail?400:800, vy=detail?240:480;
         int cx=(W-deskImageWidth)/2+limit((int)((pointerX*2-cropX+0.5f)*deskImageWidth/vx),0,deskImageWidth-1);
         int cy=(H-deskImageHeight)/2+limit((int)((pointerY*2-cropY+0.5f)*deskImageHeight/vy),0,deskImageHeight-1);
-        for(int dy=-5;dy<=5;dy++) for(int dx=-5;dx<=5;dx++) {
-            if(abs(dx)>1 && abs(dy)>1) continue;
-            int x=cx+dx,y=cy+dy;
-            if(x>=0 && y>=0 && x<W && y<H) pixel(top,x,y,dx==0||dy==0?0x8bffdf:0x11242c);
-        }
+        drawCursor(top,cx,cy);
     } else memset(top,0,sizeof(image));
-    drawBottom(gfxGetFramebuffer(GFX_BOTTOM,GFX_LEFT,NULL,NULL),connection);
+    if(!catalog || notice[0]) {
+        const char *message=catalog?notice:connection;
+        text(top,5,ready?228:112,message,0xade8dc);
+    }
+    drawBottom(gfxGetFramebuffer(GFX_BOTTOM,GFX_LEFT,NULL,NULL));
     int revision=generation;
     bool drew=ready;
     LightLock_Unlock(&mutex);
