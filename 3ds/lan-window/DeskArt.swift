@@ -40,10 +40,9 @@ import AppKit
     }
     static func card(_ window: RemoteWindow) throws -> Data {
         try jpeg(78,62) {
-            fill(NSRect(x:0,y:0,width:78,height:62), surface, radius:8)
-            NSRunningApplication(processIdentifier:window.processID)?.icon?.draw(in:NSRect(x:25,y:31,width:28,height:28))
-            label(window.application, in:NSRect(x:2,y:15,width:74,height:16),size:11,color:.white,bold:true)
-            label(window.title, in:NSRect(x:2,y:2,width:74,height:13),size:9,color:.lightGray)
+            let icon = NSRunningApplication(processIdentifier:window.processID)?.icon
+                ?? NSWorkspace.shared.icon(for: .applicationBundle)
+            icon.draw(in:NSRect(x:12,y:4,width:54,height:54))
         }
     }
     static func keyboard(_ page: Int) throws -> Data {

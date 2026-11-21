@@ -15,7 +15,8 @@ static LightLock mutex;
 static Catalog *catalog;
 static int deskImageWidth,deskImageHeight;
 static int selected, page, generation, queueHead, queued;
-static bool refresh=true, ready, shown, hover, pad;
+static bool refresh=true, ready, shown, hover, pad, detail;
+static int cropX,cropY;
 static float pointerX=200, pointerY=120, scroll;
 static Event events[MAX_ACTIONS];
 static u8 image[W*H*3], scratch[W*H*3], compressed[150000];
@@ -96,7 +97,7 @@ static void selectWindow(int next) {
 static void enqueue(u8 action,u8 value) {
     if(!shown || refresh) return;
     if(queued==MAX_ACTIONS) { strcpy(notice,"Input queue full"); return; }
-    events[(queueHead+queued)%MAX_ACTIONS]=(Event){action,value,lroundf(pointerX),lroundf(pointerY)};
+    events[(queueHead+queued)%MAX_ACTIONS]=(Event){action,value,lroundf(pointerX*2),lroundf(pointerY*2)};
     queued++;
 }
 void deskReceive(mbedtls_ssl_context *ssl,tjhandle decoder) {
@@ -105,13 +106,13 @@ void deskReceive(mbedtls_ssl_context *ssl,tjhandle decoder) {
     for(;;) {
         LightLock_Lock(&mutex);
         int id=selected, revision=generation;
-        bool listing=refresh, reported=shown;
-        Event event={0,0,lroundf(pointerX),lroundf(pointerY)};
+        bool listing=refresh, reported=shown, zoom=detail;
+        Event event={0,0,lroundf(pointerX*2),lroundf(pointerY*2)};
         if(listing) { event.action=255; refresh=false; }
         else if(queued) { event=events[queueHead]; queueHead=(queueHead+1)%MAX_ACTIONS; queued--; }
         else if(hover && shown) { event.action=4; hover=false; }
         LightLock_Unlock(&mutex);
-        u8 req[]={reported?0x45:0x44,id,event.action,event.value,event.x>>8,event.x&255,event.y>>8,event.y&255};
+        u8 req[]={(u8)(0x54+(zoom?2:0)+reported),id,event.action,event.value,event.x>>8,event.x&255,event.y>>8,event.y&255};
         u8 hdr[5];
         if(!lanTransfer(ssl,true,req,sizeof(req)) || !lanTransfer(ssl,false,hdr,sizeof(hdr))) break;
         uint32_t size=(uint32_t)hdr[1]<<24|(uint32_t)hdr[2]<<16|(uint32_t)hdr[3]<<8|hdr[4];
@@ -141,12 +142,15 @@ void deskReceive(mbedtls_ssl_context *ssl,tjhandle decoder) {
                 for(int x=0;x<w;x++)
                     memcpy(image+(((W-w)/2+x)*H+(H-h+1)/2)*3,rotated+x*h*3,h*3);
                 // The reticle is normalized to the actual window, including portrait/letterboxed windows.
-                deskImageWidth=w; deskImageHeight=h; ready=true;
+                deskImageWidth=w; deskImageHeight=h;
+                cropX=zoom?limit(event.x-200,0,400):0;
+                cropY=zoom?limit(event.y-120,0,240):0;
+                ready=true;
             }
             if(hdr[0]==3) { shown=false; ready=false; strcpy(notice,"Unavailable - SELECT to refresh"); }
             else if(hdr[0]==2) strcpy(notice,"View only - input unavailable");
             else if(hdr[0]==1) strcpy(notice,"Input refused - click field again");
-            else if(size && (event.action || !shown)) strcpy(notice,"L/R Window   Y Click   A Right   X Pad");
+            else if(size && (event.action || !shown)) strcpy(notice,zoom?"2x Detail   B Full   Y Left   A Right":"Circle Pad   B Detail   Y Left   A Right");
         }
         bool waiting=!catalog || !catalog->count;
         LightLock_Unlock(&mutex);
@@ -156,13 +160,25 @@ void deskReceive(mbedtls_ssl_context *ssl,tjhandle decoder) {
     LightLock_Lock(&mutex); shown=false; ready=false; strcpy(notice,"Disconnected - START to exit"); LightLock_Unlock(&mutex);
 }
 static void moveBy(float dx,float dy) {
-    int x=lroundf(pointerX),y=lroundf(pointerY);
-    pointerX=fminf(399,fmaxf(0,pointerX+dx)); pointerY=fminf(239,fmaxf(0,pointerY+dy));
-    if(x!=lroundf(pointerX) || y!=lroundf(pointerY)) hover=true;
+    int x=lroundf(pointerX*2),y=lroundf(pointerY*2);
+    if(detail) { dx*=0.5f; dy*=0.5f; }
+    pointerX=fminf(399.5f,fmaxf(0,pointerX+dx)); pointerY=fminf(239.5f,fmaxf(0,pointerY+dy));
+    if(x!=lroundf(pointerX*2) || y!=lroundf(pointerY*2)) hover=true;
 }
 static void direction(u32 held,u64 now) {
     int dx=!!(held&KEY_DRIGHT)-!!(held&KEY_DLEFT),dy=!!(held&KEY_DDOWN)-!!(held&KEY_DUP);
     float dt=fminf(0.05f,(now-lastUpdate)/1000.0f); lastUpdate=now;
+    circlePosition stick;
+    hidCircleRead(&stick);
+    float radius=hypotf(stick.dx,stick.dy);
+    if(radius>18) {
+        // Radial dead zone and progressive gain give the same speed on diagonals.
+        float amount=fminf(1.0f,(radius-18.0f)/132.0f);
+        float step=dt*(25.0f*amount+435.0f*amount*amount)/radius;
+        moveBy(stick.dx*step,-stick.dy*step);
+        lastDX=lastDY=0; directionSince=now;
+        return;
+    }
     if(dx!=lastDX || dy!=lastDY) {
         directionSince=now; lastDX=dx; lastDY=dy;
         moveBy(dx,dy); return;
@@ -260,6 +276,10 @@ void deskUpdate(u32 down,u32 held,u32 up,const char *connection) {
     if(down&KEY_SELECT) { refresh=true; ready=shown=false; queued=0; generation++; }
     if(down&KEY_L) selectWindow(selected-1);
     if(down&KEY_R) selectWindow(selected+1);
+    if(down&KEY_B) {
+        detail=!detail; generation++; ready=shown=false;
+        strcpy(notice,detail?"Opening 2x detail":"Opening full window");
+    }
     if(down&KEY_X) { pad=!pad; gesture=0; pressed=-1; }
     touch(down,held,up);
     direction(held,osGetTime());
@@ -268,8 +288,9 @@ void deskUpdate(u32 down,u32 held,u32 up,const char *connection) {
     u8 *top=gfxGetFramebuffer(GFX_TOP,GFX_LEFT,NULL,NULL);
     if(ready) {
         memcpy(top,image,sizeof(image));
-        int cx=(W-deskImageWidth)/2+lroundf(pointerX*(deskImageWidth-1)/399);
-        int cy=(H-deskImageHeight)/2+lroundf(pointerY*(deskImageHeight-1)/239);
+        int vx=detail?400:800, vy=detail?240:480;
+        int cx=(W-deskImageWidth)/2+limit((int)((pointerX*2-cropX+0.5f)*deskImageWidth/vx),0,deskImageWidth-1);
+        int cy=(H-deskImageHeight)/2+limit((int)((pointerY*2-cropY+0.5f)*deskImageHeight/vy),0,deskImageHeight-1);
         for(int dy=-5;dy<=5;dy++) for(int dx=-5;dx<=5;dx++) {
             if(abs(dx)>1 && abs(dy)>1) continue;
             int x=cx+dx,y=cy+dy;

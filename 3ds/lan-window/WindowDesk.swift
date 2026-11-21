@@ -4,6 +4,7 @@ import ScreenCaptureKit
 @MainActor final class WindowDesk {
     private let catalog = HostWindowCatalog()
     private var entries = [RemoteWindow]()
+    private var fit: DeskWindowFit?
     private var target: RemoteWindow?
     private var stream: SCStream?
     private var frames: Frames?
@@ -14,6 +15,12 @@ import ScreenCaptureKit
     private var keyboardArt = Data()
 
     func run() async throws {
+        signal(SIGPIPE, SIG_IGN)
+        do { try await serve() }
+        catch { await close(); throw error }
+        await close()
+    }
+    private func serve() async throws {
         for page in 0..<3 { keyboardArt.append(try DeskArt.keyboard(page)) }
         while let line = await Task.detached(operation: { readLine() }).value {
             if line == "catalog" {
@@ -21,7 +28,7 @@ import ScreenCaptureKit
                 continue
             }
             let values = line.split(separator:" ").compactMap { Int($0) }
-            guard values.count == 5 else { throw LabError.message("Invalid window request") }
+            guard values.count == 6 else { throw LabError.message("Invalid window request") }
             let (index, action, value, x, y) = (values[0], values[1], values[2], values[3], values[4])
             guard entries.indices.contains(index) else { try send(3, Data()); continue }
             let changed = selected != index
@@ -29,8 +36,11 @@ import ScreenCaptureKit
                 await close()
                 selected = index
                 do {
-                    let entry = try await catalog.resolve(entries[index].id)
-                    let feed = try await startWindowFeed(entry)
+                    let initial = try await catalog.resolve(entries[index].id)
+                    fit = DeskWindowFit(initial)
+                    await fit?.fit()
+                    let entry = try await catalog.current(initial)
+                    let feed = try await startWindowFeed(entry,desk:true)
                     target = entry; (stream,frames) = feed
                     control = try? HostWindowControl(target:entry)
                     if control != nil { _ = await perform("focus") }
@@ -52,9 +62,8 @@ import ScreenCaptureKit
                     if !ok { status = 1 }
                 }
             }
-            try send(status, frames.current())
+            try send(status, frames.deskJPEG(detail:values[5] == 1,x:x,y:y))
         }
-        await close()
     }
 
     private func directory() async throws -> Data {
@@ -72,6 +81,7 @@ import ScreenCaptureKit
         control?.invalidate(); control = nil; focus = nil; selected = nil
         if let stream { try? await stream.stopCapture() }
         stream = nil; frames = nil; target = nil
+        await fit?.restore(); fit = nil
     }
     private func send(_ status: UInt8, _ data: Data) throws {
         var packet = Data([status])
@@ -84,7 +94,7 @@ import ScreenCaptureKit
         guard let control, let target else { return false }
         sequence += 1
         let action = WindowInput(lease:control.lease,sequence:sequence,kind:kind,
-            x:(Double(x)+0.5)*target.widthPoints/400,y:(Double(y)+0.5)*target.heightPoints/240,
+            x:(Double(x)+0.5)*target.widthPoints/800,y:(Double(y)+0.5)*target.heightPoints/480,
             text:text,focus:focus,key:key)
         let (state,error): (WindowControlState?,String?) = await withCheckedContinuation { reply in
             control.enqueue(id:String(sequence),input:action) { reply.resume(returning:($0,$1)) }
@@ -108,7 +118,7 @@ import ScreenCaptureKit
         guard let entry = list.first(where:{ $0[kCGWindowNumber as String] as? UInt32 == target.number &&
                                              $0[kCGWindowOwnerPID as String] as? Int32 == target.processID }),
               let frame = bounds(entry) else { return }
-        let point = CGPoint(x:frame.minX+(Double(x)+0.5)*frame.width/400, y:frame.minY+(Double(y)+0.5)*frame.height/240)
+        let point = CGPoint(x:frame.minX+(Double(x)+0.5)*frame.width/800, y:frame.minY+(Double(y)+0.5)*frame.height/480)
         guard list.first(where:{ ($0[kCGWindowAlpha as String] as? Double ?? 1) > 0 &&
                                   bounds($0)?.contains(point) == true })?[kCGWindowNumber as String] as? UInt32 == target.number else { return }
         CGEvent(mouseEventSource:nil,mouseType:.mouseMoved,mouseCursorPosition:point,mouseButton:.left)?.post(tap:.cghidEventTap)

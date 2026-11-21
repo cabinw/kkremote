@@ -57,16 +57,20 @@ def serve_desk(peer):
             with peer.makefile("rb") as requests:
                 while True:
                     mark, index, action, value, x, y = struct.unpack("!BBBBHH", read_exact(requests, 8))
-                    if mark not in (0x44, 0x45) or action not in (0, 1, 2, 3, 4, 255) or x >= 400 or y >= 240:
+                    legacy = mark in (0x44, 0x45)
+                    detail = mark in (0x56, 0x57)
+                    if legacy:
+                        x, y = x * 2, y * 2
+                    if (not legacy and mark not in range(0x54, 0x58)) or action not in (0, 1, 2, 3, 4, 255) or x >= 800 or y >= 480:
                         raise ValueError("invalid desktop request")
                     if action == 255:
                         command = "catalog"
                         last_displayed = None
                     else:
-                        command = f"{index} {action} {value} {x} {y}"
-                        if mark == 0x45 and last_displayed != index:
-                            print(f"DESK_DISPLAYED slot={index}", flush=True)
-                            last_displayed = index
+                        command = f"{index} {action} {value} {x} {y} {int(detail)}"
+                        if mark & 1 and last_displayed != (index, detail):
+                            print(f"DESK_DISPLAYED slot={index} detail={int(detail)}", flush=True)
+                            last_displayed = (index, detail)
                     helper.stdin.write((command + "\n").encode("ascii"))
                     header = read_exact(helper.stdout, 5)
                     status, size = struct.unpack("!BI", header)
