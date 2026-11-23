@@ -34,6 +34,7 @@ struct IOSLabView: View {
     private var isPhone: Bool { UIDevice.current.userInterfaceIdiom == .phone }
     @AppStorage("viewerDuoLayout") private var preferDuoLayout = false
     @State private var hasHinge = false
+    @State private var hingeClosed = false
     private var usesDuoLayout: Bool { hasHinge || preferDuoLayout }
     @State private var page = 0
     @State private var fullscreen = false
@@ -72,7 +73,7 @@ struct IOSLabView: View {
         }
         .background {
             if #available(iOS 27.1, *) {
-                DuoHingeObserver { hasHinge = true }.allowsHitTesting(false)
+                DuoHingeObserver { closed in hasHinge = true; hingeClosed = closed }.allowsHitTesting(false)
             }
         }
         .sheet(isPresented: Binding(get: { (isPhone || usesDuoLayout) && page == 1 }, set: { if !$0 { page = 0 } })) {
@@ -81,7 +82,7 @@ struct IOSLabView: View {
                     .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { page = 0 } } }
             }
         }
-        .sheet(isPresented: $phoneWindows) { RemoteWindowsView(model: model) { phoneWindows = false } }
+        .sheet(isPresented: Binding(get: { phoneWindows && !usesDuoLayout }, set: { if !$0 { phoneWindows = false } })) { RemoteWindowsView(model: model) { phoneWindows = false } }
         .sheet(isPresented: $diagnostics) { diagnosticSheet }
         .sheet(isPresented: $licenseVisible) { licenseSheet }
         .sheet(isPresented: $interactionPractice) { MobileInputPracticeView() }
@@ -167,7 +168,7 @@ struct IOSLabView: View {
     @ViewBuilder private var clientWorkspace: some View {
         if usesDuoLayout && model.running {
             DuoWorkspace(model: model, viewport: viewport, keyboard: phoneText,
-                         choose: { phoneWindows = true; model.refreshRemoteWindows() },
+                         showingDock: $phoneWindows,
                          settings: { page = 1 }, video: { streamContent }, tools: { sessionTools })
         } else if isPhone || usesDuoLayout {
             phoneWorkspace
@@ -435,7 +436,7 @@ struct IOSLabView: View {
             "selectedID":model.selectedRemoteWindow?.id ?? "","frames":model.sample.framesDecoded,
             "codec":model.sample.codec,"transfer":model.sample.decodedPixelFormat?["transfer"] ?? "",
             "width":model.sample.width,"height":model.sample.height,"zoom":viewport.zoom,
-            "duoLayout":usesDuoLayout,"hasHinge":hasHinge,"isDesktop":model.selectedRemoteWindow?.displayID != nil,
+            "hingeClosed":hingeClosed,"dockIconCount":model.remoteAppIcons.count,"duoLayout":usesDuoLayout,"hasHinge":hasHinge,"isDesktop":model.selectedRemoteWindow?.displayID != nil,
             "controllable":model.canControl,"inputAcknowledged":model.inputAcknowledged,
             "keyboardSupported":model.directKeyboardSupported,"keyboardFocusReady":model.controlState?.focus != nil,
             "controlError":model.controlError ?? "","inputQueueCount":model.inputQueueCount,

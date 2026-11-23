@@ -135,6 +135,7 @@ final class LabModel: ObservableObject {
     private var viewerMediaStopped = false
     private var windowTimeout: DispatchWorkItem?
     @Published private(set) var windowSupported = false
+    @Published private(set) var remoteAppIcons: [String: Data] = [:]
     @Published private(set) var remoteWindows: [RemoteWindow] = []
     @Published private(set) var selectedRemoteWindow: RemoteWindow?
     @Published private(set) var windowBusy = false
@@ -300,7 +301,7 @@ final class LabModel: ObservableObject {
         catalogLoading = true; windowError = nil
         let request = UUID().uuidString
         catalogRequestID = request
-        sendWindow(WindowMessage(action: "list", requestID: request, includeDesktop: requestsMainDisplay ? true : nil))
+        sendWindow(WindowMessage(action: "list", requestID: request, includeDesktop: requestsMainDisplay ? true : nil, includeAppIcons: requestsMainDisplay ? true : nil))
         let token = generation
         DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in
             guard let self, self.generation == token, self.catalogLoading, self.catalogRequestID == request else { return }
@@ -445,6 +446,7 @@ final class LabModel: ObservableObject {
         case "catalog":
             guard command.requestID == catalogRequestID else { return }
             catalogRequestID = nil; catalogLoading = false
+            remoteAppIcons = command.appIcons ?? [:]
             remoteWindows = Array((command.windows ?? []).prefix(256))
             windowError = command.error
             scheduleWindowLayout()
@@ -514,9 +516,18 @@ final class LabModel: ObservableObject {
                 guard let self else { return }
                 defer { if self.generation == token { self.catalogLoading = false } }
                 do {
-                    let windows = try await self.windowCatalog.refresh(includeDesktop: self.sharesMainDisplay && command.includeDesktop == true)
+                    let windows = try await self.windowCatalog.refresh(includeDesktop: self.sharesMainDisplay && command.includeDesktop == true,
+                                                                       includeAppIcons: command.includeAppIcons == true)
                     guard self.generation == token else { return }
-                    self.sendWindow(WindowMessage(action: "catalog", requestID: command.requestID, windows: windows))
+                    var reply = WindowMessage(action: "catalog", requestID: command.requestID, windows: windows)
+                    if command.includeAppIcons == true {
+                        reply.appIcons = [:]
+                        let packet = SignalMessage(type: "window", session: self.windowSession, window: reply)
+                        if let baseBytes = try? JSONEncoder().encode(packet).count {
+                            reply.appIcons = HostWindowCatalog.appIcons(for: windows, budget: SignalTransport.maximumMessage - baseBytes)
+                        }
+                    }
+                    self.sendWindow(reply)
                 } catch {
                     guard self.generation == token else { return }
                     self.sendWindow(WindowMessage(action: "catalog", requestID: command.requestID, error: "无法读取窗口目录，请检查主机屏幕录制权限"))
@@ -664,7 +675,7 @@ final class LabModel: ObservableObject {
         windowTimeout?.cancel(); windowTimeout = nil; pendingWindowRequest = nil; pendingWindowTarget = nil
         windowShortcutsSupported = false; expectedMediaSession = nil; windowSession = ""; windowSupported = false
         windowLayoutSupported=false; appliedWindowViewport=nil; pendingWindowViewport=nil;layoutDebounce?.cancel()
-        windowBusy = false; catalogLoading = false; catalogRequestID = nil; remoteWindows = []; selectedRemoteWindow = nil
+        windowBusy = false; catalogLoading = false; catalogRequestID = nil; remoteWindows = []; remoteAppIcons = [:]; selectedRemoteWindow = nil
         windowError = nil; windowStatus = "连接后可查看远端窗口"
         engine?.stop(); engine = nil; signal?.stop(); signal = nil
         demoHost?.stop(); demoHost = nil

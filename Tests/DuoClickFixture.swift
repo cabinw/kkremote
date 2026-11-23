@@ -41,7 +41,8 @@ final class ClickCounter: NSView {
     }
 }
 
-guard CommandLine.arguments.count == 2, let display = NSScreen.screens.first else { exit(2) }
+let twoWindows = CommandLine.arguments.dropFirst(2).elementsEqual(["--two-windows"])
+guard (CommandLine.arguments.count == 2 || twoWindows), let display = NSScreen.screens.first else { exit(2) }
 let app = NSApplication.shared
 app.setActivationPolicy(.regular)
 let size = CGSize(width: 640, height: 420)
@@ -50,6 +51,10 @@ let rect = CGRect(x: display.frame.midX - size.width / 2, y: display.frame.midY 
 let window = NSWindow(contentRect: rect, styleMask: [.titled, .closable], backing: .buffered, defer: false)
 window.title = "KKRemote Duo Click Fixture"
 window.contentView = ClickCounter(result: URL(fileURLWithPath: CommandLine.arguments[1]))
+let secondary: NSWindow? = twoWindows ? NSWindow(contentRect: NSRect(x: 40, y: 70, width: 250, height: 160),
+    styleMask: [.titled], backing: .buffered, defer: false) : nil
+secondary?.title = "KKRemote Dock Secondary"
+secondary?.orderFront(nil)
 window.makeKeyAndOrderFront(nil)
 app.activate()
 app.run()

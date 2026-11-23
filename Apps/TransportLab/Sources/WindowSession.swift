@@ -11,6 +11,8 @@ struct RemoteWindow: Codable, Identifiable, Equatable {
     let widthPoints: Double
     let heightPoints: Double
     var displayID: UInt32? = nil
+    var applicationID: String? = nil
+    var dockKey: String { (applicationID?.isEmpty == false ? applicationID : nil) ?? "pid:\(processID)" }
     var label: String { title.isEmpty ? application : "\(application) · \(title)" }
 }
 
@@ -40,6 +42,8 @@ struct WindowMessage: Codable {
     var input: WindowInput? = nil
     var controlState: WindowControlState? = nil
     var includeDesktop: Bool? = nil
+    var includeAppIcons: Bool? = nil
+    var appIcons: [String: Data]? = nil
 }
 
 #if os(macOS)
@@ -50,7 +54,7 @@ import ApplicationServices
 final class HostWindowCatalog {
     private var entries: [String: RemoteWindow] = [:]
 
-    func refresh(includeDesktop: Bool = false) async throws -> [RemoteWindow] {
+    func refresh(includeDesktop: Bool = false, includeAppIcons: Bool = false) async throws -> [RemoteWindow] {
         // Only advertise windows on the current desktop. Hidden helper/autofill
         // surfaces otherwise look selectable but can produce no captured frames.
         let content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: true)
@@ -62,7 +66,8 @@ final class HostWindowCatalog {
                 processID: window.owningApplication!.processID,
                 application: String(window.owningApplication!.applicationName.prefix(64)),
                 title: String((window.title ?? "").prefix(128)),
-                widthPoints: window.frame.width, heightPoints: window.frame.height)
+                widthPoints: window.frame.width, heightPoints: window.frame.height,
+                applicationID: includeAppIcons ? window.owningApplication?.bundleIdentifier : nil)
         }.sorted { ($0.application, $0.title, $0.number) < ($1.application, $1.title, $1.number) }
         if includeDesktop, let display = content.displays.first(where: { $0.displayID == CGMainDisplayID() }) {
             windows.append(Self.desktop(display, handle: UUID().uuidString))
@@ -70,6 +75,36 @@ final class HostWindowCatalog {
         // A fresh directory invalidates old unselected handles, including after close/reopen.
         entries = Dictionary(uniqueKeysWithValues: windows.map { ($0.id, $0) })
         return windows
+    }
+
+    // Keep the catalog inside the existing signaling frame, even with many applications.
+    @MainActor static func appIcons(for windows: [RemoteWindow], budget: Int) -> [String: Data] {
+        let groups = Dictionary(grouping: windows.filter { $0.displayID == nil }, by: \.dockKey)
+        var icons: [String: Data] = [:]
+        var remaining = budget
+        for key in groups.keys.sorted() {
+            guard let window = groups[key]?.first,
+                  let icon = NSRunningApplication(processIdentifier: window.processID)?.icon else { continue }
+            for pixels in [48, 24, 16] {
+                guard let bitmap = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: pixels, pixelsHigh: pixels,
+                          bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                          colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0),
+                      let context = NSGraphicsContext(bitmapImageRep: bitmap) else { continue }
+                NSGraphicsContext.saveGraphicsState()
+                NSGraphicsContext.current = context
+                context.imageInterpolation = .high
+                icon.draw(in: NSRect(x: 0, y: 0, width: pixels, height: pixels),
+                          from: .zero, operation: .copy, fraction: 1)
+                NSGraphicsContext.restoreGraphicsState()
+                guard let data = bitmap.representation(using: .png, properties: [:]),
+                      let bytes = try? JSONEncoder().encode([key: data]).count,
+                      bytes <= min(remaining, max(0, budget) / max(1, groups.count)) else { continue }
+                icons[key] = data
+                remaining -= bytes
+                break
+            }
+        }
+        return icons
     }
 
     private static func desktop(_ display: SCDisplay, handle: String) -> RemoteWindow {

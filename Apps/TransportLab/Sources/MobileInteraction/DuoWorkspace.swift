@@ -1,54 +1,108 @@
 #if os(iOS) && canImport(WebRTC)
   import SwiftUI
-  import CoreImage
-  import WebRTC
 
   @available(iOS 27.1, *)
   struct DuoHingeObserver: UIViewRepresentable {
-    let detected: () -> Void
+    let detected: (Bool) -> Void
     func makeUIView(context: Context) -> UIView {
       let view = UIView()
       view.addInteraction(
         UIHingeInteraction { _, update in
-          if update.hinge != nil { Task { @MainActor in detected() } }
+          if let hinge = update.hinge {
+            let closed = hinge.status == .closed
+            Task { @MainActor in detected(closed) }
+          }
         })
       return view
     }
     func updateUIView(_ view: UIView, context: Context) {}
   }
 
-  /// Cards are populated from windows the user actually viewed, one small image per selection.
-  private final class DuoFramePreview: NSObject, RTCVideoRenderer {
-    private let lock = NSLock()
-    private var taken = false
-    private let complete: (UIImage) -> Void
-    init(complete: @escaping (UIImage) -> Void) { self.complete = complete }
-    func setSize(_ size: CGSize) {}
-    func renderFrame(_ frame: RTCVideoFrame?) {
-      guard let native = frame?.buffer as? RTCCVPixelBuffer else { return }
-      lock.lock()
-      let capture = !taken
-      taken = true
-      lock.unlock()
-      guard capture else { return }
-      let buffer = native.pixelBuffer
-      DispatchQueue.global(qos: .utility).async { [complete] in
-        let image = CIImage(cvPixelBuffer: buffer)
-        let scale = min(160 / image.extent.width, 90 / image.extent.height)
-        let small = image.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
-        if let cg = CIContext().createCGImage(small, from: small.extent) {
-          DispatchQueue.main.async { complete(UIImage(cgImage: cg)) }
+  private struct DockIcon: View, Equatable {
+    let data: Data?
+    let name: String
+
+    var body: some View {
+      if let data, let image = UIImage(data: data) {
+        Image(uiImage: image.withRenderingMode(.alwaysOriginal)).resizable().renderingMode(
+          .original
+        ).scaledToFit()
+      } else {
+        ZStack {
+          RoundedRectangle(cornerRadius: 8).fill(.quaternary)
+          Text(String(name.prefix(1))).font(.headline)
         }
       }
     }
   }
 
-  private struct DuoWindowIdentity: Hashable {
-    let processID: Int32
-    let number: UInt32
-    init(_ window: RemoteWindow) {
-      processID = window.processID
-      number = window.number
+  private struct DuoDockPicker: View {
+    @ObservedObject var model: LabModel
+    let select: (RemoteWindow) -> Void
+    @Binding var expandedApp: String?
+
+    var body: some View {
+      let groups = Dictionary(
+        grouping: model.remoteWindows.filter { $0.displayID == nil }, by: \.dockKey)
+      let apps = groups.values.compactMap(\.first).sorted {
+        ($0.application, $0.dockKey) < ($1.application, $1.dockKey)
+      }
+      VStack(alignment: .leading, spacing: 8) {
+        if let key = expandedApp, let windows = groups[key], let first = windows.first {
+          Button {
+            expandedApp = nil
+          } label: {
+            Label(first.application, systemImage: "chevron.backward")
+          }
+          ScrollView {
+            VStack(alignment: .leading) {
+              ForEach(windows) { window in
+                Button {
+                  select(window)
+                } label: {
+                  Text(window.title.isEmpty ? window.application : window.title)
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(
+                      Rectangle())
+                }
+                .disabled(model.catalogLoading || model.windowBusy)
+                .accessibilityIdentifier("remoteWindowRow-\(window.number)")
+              }
+            }
+          }
+        } else if apps.isEmpty {
+          if model.catalogLoading {
+            ProgressView()
+          } else {
+            Text(model.windowError ?? "没有可共享的应用窗口")
+            Button("刷新", systemImage: "arrow.clockwise") { model.refreshRemoteWindows() }
+          }
+        } else {
+          ScrollView {
+            LazyVGrid(
+              columns: [GridItem(.adaptive(minimum: 48, maximum: 58), spacing: 6)], spacing: 6
+            ) {
+              ForEach(apps, id: \.dockKey) { app in
+                Button {
+                  if groups[app.dockKey]?.count == 1 {
+                    select(app)
+                  } else {
+                    expandedApp = app.dockKey
+                  }
+                } label: {
+                  DockIcon(data: model.remoteAppIcons[app.dockKey], name: app.application)
+                    .equatable().frame(width: 40, height: 40)
+                    .frame(minWidth: 48, minHeight: 48).contentShape(Rectangle())
+                }
+                .accessibilityLabel(app.application)
+                .accessibilityIdentifier("duoDockApp-\(app.processID)")
+                .disabled(model.catalogLoading || model.windowBusy)
+              }
+            }
+          }
+        }
+      }
+      .padding(12).frame(idealWidth: 240, idealHeight: 170)
+      .buttonStyle(.plain)
     }
   }
 
@@ -56,30 +110,103 @@
     @ObservedObject var model: LabModel
     @ObservedObject var viewport: MobileInteractionSession
     @ObservedObject var keyboard: MobileTextSession
-    let choose: () -> Void
+    @Binding var showingDock: Bool
     let settings: () -> Void
     @ViewBuilder var video: () -> Video
     @ViewBuilder var tools: () -> Tools
     @State private var modifiers = Set<String>()
-    @State private var recent: [DuoWindowIdentity] = []
-    @State private var pictures: [DuoWindowIdentity: UIImage] = [:]
-    @State private var previewTrack: RTCVideoTrack?
-    @State private var preview: DuoFramePreview?
     @State private var cursor: CGPoint?
     @State private var shortcutHint: String?
     @State private var choosingDesktop = false
+    @State private var expandedApp: String?
+    @State private var recentApps: [String] = []
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     private let tile = Color(white: 0.14)
     private var desktop: RemoteWindow? { model.remoteWindows.first { $0.displayID != nil } }
     private var canType: Bool {
       model.canControl && model.directKeyboardSupported
         && model.selectedRemoteWindow?.displayID == nil
     }
-    private var windows: [RemoteWindow] {
-      let list = model.remoteWindows.filter { $0.displayID == nil }
-      return recent.compactMap { id in list.first { DuoWindowIdentity($0) == id } }
+    var body: some View {
+      NavigationStack {
+        content
+          .navigationBarTitleDisplayMode(.inline)
+          .toolbar {
+            ToolbarItem(placement: .bottomBar) { dockButton }
+            if #available(iOS 27.1, *) {
+              ForEach(recentApps.prefix(verticalSizeClass == .compact ? 1 : 2), id: \.self) { key in
+                ToolbarItem(placement: .bottomBar) { recentButton(key) }
+                  .axisBehavior(.verticalPreferred)
+              }
+            }
+            ToolbarItemGroup(placement: .bottomBar) {
+              Button("桌面", systemImage: "desktopcomputer") { choosingDesktop = true }
+                .disabled(desktop == nil || model.windowBusy || model.catalogLoading)
+                .accessibilityIdentifier("duoDesktop")
+              Button(
+                "键盘", systemImage: keyboard.focused ? "keyboard.chevron.compact.down" : "keyboard"
+              ) {
+                if keyboard.focused {
+                  keyboard.cancel()
+                } else {
+                  focusIfNeeded()
+                  keyboard.focused = true
+                }
+              }.disabled(!canType).accessibilityIdentifier("phoneKeyboard")
+              Menu("会话", systemImage: "ellipsis") { tools() }
+                .accessibilityIdentifier("phoneMenu")
+              Button("设置", systemImage: "gearshape", action: settings)
+                .accessibilityIdentifier("duoSettings")
+            }
+          }
+      }
+      .preferredColorScheme(.dark)
     }
 
-    var body: some View {
+    @ViewBuilder private func recentButton(_ key: String) -> some View {
+      let windows = model.remoteWindows.filter {
+        $0.displayID == nil && $0.dockKey == key
+      }
+      if let app = windows.first {
+        Button {
+          if windows.count == 1 {
+            model.selectRemoteWindow(app)
+          } else {
+            expandedApp = key
+            showingDock = true
+          }
+        } label: {
+          DockIcon(data: model.remoteAppIcons[key], name: app.application)
+            .equatable().frame(width: 26, height: 26)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(app.application)
+        .accessibilityIdentifier("duoRecentApp-\(app.processID)")
+        .disabled(model.catalogLoading || model.windowBusy)
+      }
+    }
+
+    private var dockButton: some View {
+      Button("Dock", systemImage: "square.grid.2x2") {
+        expandedApp = nil
+        showingDock = true
+      }
+      .accessibilityIdentifier("duoDock")
+      .disabled(!model.windowSupported || model.windowBusy)
+      .popover(isPresented: $showingDock) {
+        DuoDockPicker(
+          model: model,
+          select: { window in
+            showingDock = false
+            model.selectRemoteWindow(window)
+          }, expandedApp: $expandedApp
+        )
+        .onAppear { model.refreshRemoteWindows() }
+        .presentationCompactAdaptation(.popover)
+      }
+    }
+
+    private var content: some View {
       GeometryReader { proxy in
         let sideBySide = proxy.size.width > proxy.size.height * 1.55 && !keyboard.focused
         let layout =
@@ -89,36 +216,33 @@
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .layoutPriority(1)
           VStack(spacing: 7) {
-            toolbar
             keys
             if let shortcutHint { Text(shortcutHint).font(.caption).foregroundStyle(.secondary) }
             if !keyboard.focused { pad }
           }
           .frame(
             width: sideBySide ? proxy.size.width * 0.40 : nil,
-            height: sideBySide ? nil : (keyboard.focused ? 95 : max(115, proxy.size.height * 0.47)))
+            height: sideBySide ? nil : (keyboard.focused ? 48 : max(115, proxy.size.height * 0.47)))
         }
         .padding(6)
       }
       .background(Color.black.ignoresSafeArea())
-      .preferredColorScheme(.dark)
       .background {
         RemoteKeyboardCapture(session: keyboard, onText: sendText, onKey: sendKey)
           .frame(width: 1, height: 1).clipped()
       }
       .onChange(of: model.selectedRemoteWindow?.id, initial: true) { _, _ in
+        if let selected = model.selectedRemoteWindow, selected.displayID == nil,
+          let app = model.remoteWindows.first(where: {
+            $0.processID == selected.processID && $0.number == selected.number
+          })
+        {
+          recentApps = [app.dockKey] + recentApps.filter { $0 != app.dockKey }.prefix(1)
+        }
         cursor = nil
         modifiers.removeAll()
         keyboard.cancel()
-        if let window = model.selectedRemoteWindow, window.displayID == nil {
-          recent.removeAll { $0 == DuoWindowIdentity(window) }
-          recent.insert(DuoWindowIdentity(window), at: 0)
-          recent = Array(recent.prefix(12))
-          pictures = pictures.filter { recent.contains($0.key) }
-        }
-        bindPreview()
       }
-      .onChange(of: model.track.map(ObjectIdentifier.init)) { _, _ in bindPreview() }
       .onChange(of: model.windowBusy) { _, busy in
         if busy {
           keyboard.cancel()
@@ -127,7 +251,6 @@
         }
       }
       .onDisappear {
-        unbindPreview()
         keyboard.cancel()
       }
       .confirmationDialog("共享 Mac 主显示器", isPresented: $choosingDesktop) {
@@ -137,61 +260,6 @@
       }
     }
 
-    private var toolbar: some View {
-      HStack(spacing: 5) {
-        button("窗口", "rectangle.stack", action: choose)
-          .accessibilityIdentifier("phoneChooseWindow")
-          .disabled(!model.windowSupported || model.windowBusy)
-        ScrollView(.horizontal) {
-          HStack(spacing: 5) {
-            ForEach(windows) { window in
-              Button {
-                model.selectRemoteWindow(window)
-              } label: {
-                ZStack(alignment: .bottomLeading) {
-                  if let image = pictures[DuoWindowIdentity(window)] {
-                    Image(uiImage: image).resizable().scaledToFill()
-                  }
-                  Text(window.title.isEmpty ? window.application : window.title)
-                    .font(.caption2).lineLimit(1).padding(3)
-                    .background(.black.opacity(0.70))
-                }
-                .frame(width: 83, height: 44).clipped()
-                .background(tile, in: RoundedRectangle(cornerRadius: 8))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                .overlay(
-                  RoundedRectangle(cornerRadius: 8).stroke(
-                    model.selectedRemoteWindow?.number == window.number
-                      && model.selectedRemoteWindow?.displayID == nil ? Color.accentColor : .clear,
-                    lineWidth: 2))
-              }.accessibilityLabel(window.label).disabled(model.catalogLoading || model.windowBusy)
-            }
-          }
-        }.scrollIndicators(.hidden).frame(maxWidth: .infinity)
-        Menu {
-          tools()
-        } label: {
-          tileLabel("会话", "ellipsis")
-        }
-        .accessibilityIdentifier("phoneMenu")
-        button("桌面", "desktopcomputer") { choosingDesktop = true }
-          .disabled(desktop == nil || model.windowBusy || model.catalogLoading)
-          .accessibilityIdentifier("duoDesktop")
-        button("设置", "gearshape", action: settings)
-      }
-      .buttonStyle(.plain).foregroundStyle(.white)
-    }
-
-    private func tileLabel(_ text: String, _ icon: String) -> some View {
-      VStack(spacing: 2) {
-        Image(systemName: icon)
-        Text(text).font(.caption2)
-      }
-      .frame(minWidth: 39, minHeight: 44).background(tile, in: RoundedRectangle(cornerRadius: 9))
-    }
-    private func button(_ text: String, _ icon: String, action: @escaping () -> Void) -> some View {
-      Button(action: action) { tileLabel(text, icon) }
-    }
     private var keys: some View {
       HStack(spacing: 4) {
         ScrollView(.horizontal) {
@@ -217,18 +285,6 @@
             }
           }
         }.scrollIndicators(.hidden)
-        Button {
-          if keyboard.focused {
-            keyboard.cancel()
-          } else {
-            focusIfNeeded()
-            keyboard.focused = true
-          }
-        } label: {
-          Image(systemName: keyboard.focused ? "keyboard.chevron.compact.down" : "keyboard")
-            .frame(minWidth: 44, minHeight: 40).background(
-              tile, in: RoundedRectangle(cornerRadius: 8))
-        }.disabled(!canType).accessibilityLabel("键盘").accessibilityIdentifier("phoneKeyboard")
       }.buttonStyle(.plain).foregroundStyle(.white)
     }
 
@@ -309,26 +365,6 @@
       }
     }
 
-    private func unbindPreview() {
-      if let preview, let previewTrack { previewTrack.remove(preview) }
-      preview = nil
-      previewTrack = nil
-    }
-    private func bindPreview() {
-      unbindPreview()
-      guard let track = model.track, let window = model.selectedRemoteWindow,
-        window.displayID == nil
-      else { return }
-      let renderer = DuoFramePreview { [weak track] image in
-        guard let track, model.track === track, model.selectedRemoteWindow?.id == window.id else {
-          return
-        }
-        pictures[DuoWindowIdentity(window)] = image
-      }
-      previewTrack = track
-      preview = renderer
-      track.add(renderer)
-    }
   }
 
   private struct DuoPadGestures: UIViewRepresentable {
