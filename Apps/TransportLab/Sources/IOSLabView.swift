@@ -35,6 +35,7 @@ struct IOSLabView: View {
     @AppStorage("viewerDuoLayout") private var preferDuoLayout = false
     @State private var hasHinge = false
     @State private var hingeClosed = false
+    @State private var hingePartiallyOpen = false
     private var usesDuoLayout: Bool { hasHinge || preferDuoLayout }
     @State private var page = 0
     @State private var fullscreen = false
@@ -73,7 +74,11 @@ struct IOSLabView: View {
         }
         .background {
             if #available(iOS 27.1, *) {
-                DuoHingeObserver { closed in hasHinge = true; hingeClosed = closed }.allowsHitTesting(false)
+                DuoHingeObserver { status in
+                    if status != nil { hasHinge = true }
+                    hingeClosed = status == .closed
+                    hingePartiallyOpen = status == .partiallyOpen
+                }.allowsHitTesting(false)
             }
         }
         .sheet(isPresented: Binding(get: { (isPhone || usesDuoLayout) && page == 1 }, set: { if !$0 { page = 0 } })) {
@@ -168,7 +173,7 @@ struct IOSLabView: View {
     @ViewBuilder private var clientWorkspace: some View {
         if usesDuoLayout && model.running {
             DuoWorkspace(model: model, viewport: viewport, keyboard: phoneText,
-                         showingDock: $phoneWindows,
+                         showingDock: $phoneWindows, partiallyOpen: hingePartiallyOpen,
                          settings: { page = 1 }, video: { streamContent }, tools: { sessionTools })
         } else if isPhone || usesDuoLayout {
             phoneWorkspace
@@ -436,7 +441,7 @@ struct IOSLabView: View {
             "selectedID":model.selectedRemoteWindow?.id ?? "","frames":model.sample.framesDecoded,
             "codec":model.sample.codec,"transfer":model.sample.decodedPixelFormat?["transfer"] ?? "",
             "width":model.sample.width,"height":model.sample.height,"zoom":viewport.zoom,
-            "hingeClosed":hingeClosed,"dockIconCount":model.remoteAppIcons.count,"duoLayout":usesDuoLayout,"hasHinge":hasHinge,"isDesktop":model.selectedRemoteWindow?.displayID != nil,
+            "hingePartiallyOpen":hingePartiallyOpen,"hingeClosed":hingeClosed,"dockIconCount":model.remoteAppIcons.count,"duoLayout":usesDuoLayout,"hasHinge":hasHinge,"isDesktop":model.selectedRemoteWindow?.displayID != nil,
             "controllable":model.canControl,"inputAcknowledged":model.inputAcknowledged,
             "keyboardSupported":model.directKeyboardSupported,"keyboardFocusReady":model.controlState?.focus != nil,
             "controlError":model.controlError ?? "","inputQueueCount":model.inputQueueCount,

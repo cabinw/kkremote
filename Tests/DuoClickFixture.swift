@@ -4,6 +4,14 @@ import AppKit
 final class ClickCounter: NSView {
     let result: URL
     var hits = 0
+    var keyEvents: [String] = []
+    override var acceptsFirstResponder: Bool { true }
+
+    override func keyDown(with event: NSEvent) {
+        let modifier = event.modifierFlags.contains(.capsLock) ? "caps" : (event.modifierFlags.contains(.shift) ? "shift" : "plain")
+        keyEvents.append("\(event.keyCode) \(modifier)")
+        try? keyEvents.joined(separator: "\n").write(to: result.appendingPathExtension("keys"), atomically: true, encoding: .utf8)
+    }
 
     init(result: URL) {
         self.result = result
@@ -15,6 +23,7 @@ final class ClickCounter: NSView {
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 
     override func mouseDown(with event: NSEvent) {
+        window?.makeFirstResponder(self)
         hits += 1
         // Hold this owned target above other windows for the following desktop click.
         if hits == 1, let window {

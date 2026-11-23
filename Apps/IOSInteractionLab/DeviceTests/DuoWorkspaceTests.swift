@@ -90,6 +90,67 @@ final class DuoWorkspaceTests: XCTestCase {
         print("DUO_DOCK all five controls on right")
     }
 
+    func testFoldKeyboardWindowAndDesktop() throws {
+        continueAfterFailure = false
+        app.launchArguments = ["--viewer-ui-review"]
+        app.launch()
+        XCTAssertTrue(app.buttons["phoneConnect"].waitForExistence(timeout: 12))
+        print("FOLD_POSE partial=\(state()["hingePartiallyOpen"] ?? false) closed=\(state()["hingeClosed"] ?? false)")
+        try XCTSkipUnless(state()["hingePartiallyOpen"] as? Bool == true, "Place Duo in laptop posture")
+        app.buttons["phoneConnect"].tap()
+        observe("Host catalog unavailable") { $0["supported"] as? Bool == true }
+        let a = app.buttons["duoKey-a"]
+        XCTAssertTrue(a.waitForExistence(timeout: 5), "Use a horizontal fold with the inner display active")
+        chooseFixtureFromDock()
+        expectPicture(desktop: false)
+        let surface = app.otherElements["viewportGestureSurface"]
+        let menu = app.buttons["duoDock"]
+        XCTAssertLessThanOrEqual(surface.frame.maxY, menu.frame.minY)
+        XCTAssertLessThanOrEqual(menu.frame.maxY, app.buttons["duoKey-F1"].frame.minY)
+        print("FOLD_LAYOUT screen=\(app.frame.size) video=\(surface.frame) menu=\(menu.frame) A=\(a.frame)")
+        func clickSurface() {
+            let before = state()["inputAcknowledged"] as? Int ?? 0
+            surface.coordinate(withNormalizedOffset: .init(dx: 0.5, dy: 0.5)).tap()
+            observe("Window click not acknowledged") { ($0["inputAcknowledged"] as? Int ?? 0) > before }
+        }
+        func tapKey(_ key: String) {
+            let before = state()["inputAcknowledged"] as? Int ?? 0
+            app.buttons["duoKey-" + key].firstMatch.tap()
+            observe("Keyboard input not acknowledged") {
+                ($0["inputAcknowledged"] as? Int ?? 0) > before && ($0["inputQueueCount"] as? Int) == 0
+            }
+        }
+        clickSurface()
+        tapKey("a")
+        app.buttons["duoKey-shift"].firstMatch.tap()
+        tapKey("b")
+        tapKey("F2")
+        app.buttons["duoKey-fn"].tap()
+        tapKey("down")
+        app.buttons["duoKey-caps"].tap()
+        tapKey("d")
+        app.buttons["duoKey-caps"].tap()
+        let selectedID = state()["selectedID"] as? String
+        let mode = app.buttons["duoFoldInputMode"]
+        mode.tap()
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "duoTrackpad").firstMatch.isHittable)
+        mode.tap()
+        XCTAssertTrue(a.isHittable)
+        XCTAssertEqual(state()["selectedID"] as? String, selectedID)
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = "Duo-Fold-Keyboard"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        app.buttons["duoDesktop"].tap()
+        app.buttons["显示完整桌面"].tap()
+        expectPicture(desktop: true)
+        app.buttons["duoKey-x"].tap()
+        observe("Desktop keyboard should wait for a selected input window") { !($0["controlError"] as? String ?? "").isEmpty }
+        clickSurface()
+        tapKey("c")
+        tapKey("right")
+    }
+
     func testPhysicalWindowAndDesktop() throws {
         continueAfterFailure = false
         app.launchArguments = ["--viewer-ui-review"]
@@ -98,6 +159,7 @@ final class DuoWorkspaceTests: XCTestCase {
         try XCTSkipUnless(state()["duoLayout"] as? Bool == true, "Requires the Duo workspace")
         app.buttons["phoneConnect"].tap()
         observe("Host catalog unavailable") { $0["supported"] as? Bool == true }
+        try XCTSkipIf(app.buttons["duoKey-a"].exists, "Run the touch-workspace test with the fold closed or flat")
         chooseFixtureFromDock()
         expectPicture(desktop: false)
         tapTrackpad()

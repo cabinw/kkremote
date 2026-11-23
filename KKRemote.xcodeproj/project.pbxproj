@@ -12,6 +12,7 @@
 		0BB119551A97BC66FAA982A9 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B803EFD91995BFC401600592 /* PrivacyInfo.xcprivacy */; };
 		11FA5A81ABBB2E4C8D15B334 /* RTPTrace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24D442A5AFD1A6EF4A3560C4 /* RTPTrace.swift */; };
 		18601150B83D55735A4CE474 /* ResourceTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 471571BF3DBA878589225EA8 /* ResourceTelemetry.swift */; };
+		A14399DF80D6A1B1BB420D11 /* DuoMacKeyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E1B3596F84A0C3D1E579BD5 /* DuoMacKeyboard.swift */; };
 		B325302AC3AF5DD3D5881454 /* DuoWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5C646B6364D4A6BE1DA11E9 /* DuoWorkspace.swift */; };
 		1A172D0ECD53B92EC82E6228 /* IPhoneWindowWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30D087D23A0255F49EA2EB67 /* IPhoneWindowWorkspace.swift */; };
 		1FA2D500E19B3C107327CA6F /* WindowEdgeAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E507D884965CCFA4F7EAD8F /* WindowEdgeAppearance.swift */; };
@@ -53,6 +54,7 @@
 		723E87B0BD329EEE9CFF5706 /* SDKDropDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = C017CA04EF0234BC6F74E044 /* SDKDropDiagnostics.swift */; };
 		74D8047E121DC9CC9B0ACDC3 /* HDRTestPattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E5E1B9B9465A540A5A60935 /* HDRTestPattern.swift */; };
 		7548621DF487D8F93C08AC97 /* ResourceTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 471571BF3DBA878589225EA8 /* ResourceTelemetry.swift */; };
+		05ADC43511DCF751305992BC /* DuoMacKeyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E1B3596F84A0C3D1E579BD5 /* DuoMacKeyboard.swift */; };
 		9E8BA7E9F983BA70A9466005 /* DuoWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5C646B6364D4A6BE1DA11E9 /* DuoWorkspace.swift */; };
 		77BB3EA817A6083420991247 /* IPhoneWindowWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30D087D23A0255F49EA2EB67 /* IPhoneWindowWorkspace.swift */; };
 		7B7FA50F7D6A5379E4EFF624 /* DatagramBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E611FAAC103A193A4412063 /* DatagramBridge.swift */; };
@@ -125,6 +127,7 @@
 		201C970C6C92C5CE6B2798B4 /* KKRemoteLabMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KKRemoteLabMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		24D442A5AFD1A6EF4A3560C4 /* RTPTrace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTPTrace.swift; sourceTree = "<group>"; };
 		2E5E1B9B9465A540A5A60935 /* HDRTestPattern.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HDRTestPattern.swift; sourceTree = "<group>"; };
+		2E1B3596F84A0C3D1E579BD5 /* DuoMacKeyboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuoMacKeyboard.swift; sourceTree = "<group>"; };
 		F5C646B6364D4A6BE1DA11E9 /* DuoWorkspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuoWorkspace.swift; sourceTree = "<group>"; };
 		30D087D23A0255F49EA2EB67 /* IPhoneWindowWorkspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPhoneWindowWorkspace.swift; sourceTree = "<group>"; };
 		34C93B3564E3CB5A3783A885 /* TransportImpairment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransportImpairment.swift; sourceTree = "<group>"; };
@@ -283,6 +286,7 @@
 			children = (
 				1F9823A2605FEB6A28EA214A /* InteractionGestureMachine.swift */,
 				5B0F11A057B752F425A08104 /* IPhoneOfflineWorkspace.swift */,
+				2E1B3596F84A0C3D1E579BD5 /* DuoMacKeyboard.swift */,
 				F5C646B6364D4A6BE1DA11E9 /* DuoWorkspace.swift */,
 				30D087D23A0255F49EA2EB67 /* IPhoneWindowWorkspace.swift */,
 				4F68DBB215CA2E661521E21F /* IPhoneXPreview.swift */,
@@ -425,6 +429,7 @@
 				E1ACCD636FC7FE7BABBAA469 /* HEVCCodec.swift in Sources */,
 				43ED559B591E819B18100A02 /* IOSLabView.swift in Sources */,
 				289ADB7E983124E3C11C9E41 /* IPhoneOfflineWorkspace.swift in Sources */,
+				A14399DF80D6A1B1BB420D11 /* DuoMacKeyboard.swift in Sources */,
 				B325302AC3AF5DD3D5881454 /* DuoWorkspace.swift in Sources */,
 				1A172D0ECD53B92EC82E6228 /* IPhoneWindowWorkspace.swift in Sources */,
 				33E6D7F0F4D8F831E38D1530 /* IPhoneXPreview.swift in Sources */,
@@ -480,6 +485,7 @@
 				331E69A877B874E328F56943 /* HEVCCodec.swift in Sources */,
 				B48F9D8FFA296C8B632DA495 /* IOSLabView.swift in Sources */,
 				E5F068C79D3EB3C6F81F23C5 /* IPhoneOfflineWorkspace.swift in Sources */,
+				05ADC43511DCF751305992BC /* DuoMacKeyboard.swift in Sources */,
 				9E8BA7E9F983BA70A9466005 /* DuoWorkspace.swift in Sources */,
 				77BB3EA817A6083420991247 /* IPhoneWindowWorkspace.swift in Sources */,
 				ADAFE808C17D826E33A79A57 /* IPhoneXPreview.swift in Sources */,

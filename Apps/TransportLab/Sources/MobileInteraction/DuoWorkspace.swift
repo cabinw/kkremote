@@ -3,15 +3,13 @@
 
   @available(iOS 27.1, *)
   struct DuoHingeObserver: UIViewRepresentable {
-    let detected: (Bool) -> Void
+    let detected: (UIHinge.Status?) -> Void
     func makeUIView(context: Context) -> UIView {
       let view = UIView()
       view.addInteraction(
         UIHingeInteraction { _, update in
-          if let hinge = update.hinge {
-            let closed = hinge.status == .closed
-            Task { @MainActor in detected(closed) }
-          }
+          let status = update.hinge?.status
+          Task { @MainActor in detected(status) }
         })
       return view
     }
@@ -111,6 +109,7 @@
     @ObservedObject var viewport: MobileInteractionSession
     @ObservedObject var keyboard: MobileTextSession
     @Binding var showingDock: Bool
+    let partiallyOpen: Bool
     let settings: () -> Void
     @ViewBuilder var video: () -> Video
     @ViewBuilder var tools: () -> Tools
@@ -118,6 +117,7 @@
     @State private var cursor: CGPoint?
     @State private var shortcutHint: String?
     @State private var choosingDesktop = false
+    @State private var foldTrackpad = false
     @State private var expandedApp: String?
     @State private var recentApps: [String] = []
     @Environment(\.verticalSizeClass) private var verticalSizeClass
@@ -128,8 +128,56 @@
         && model.selectedRemoteWindow?.displayID == nil
     }
     var body: some View {
+      GeometryReader { geometry in
+        if let division = horizontalFold(in: geometry) {
+          foldedContent(division, size: geometry.size)
+        } else {
+          touchWorkspace
+        }
+      }
+      .preferredColorScheme(.dark)
+      .background(Color.black.ignoresSafeArea())
+      .background {
+        RemoteKeyboardCapture(session: keyboard, onText: sendText, onKey: sendKey)
+          .frame(width: 1, height: 1).clipped()
+      }
+      .onChange(of: model.selectedRemoteWindow?.id, initial: true) { _, _ in
+        if let selected = model.selectedRemoteWindow, selected.displayID == nil,
+          let app = model.remoteWindows.first(where: {
+            $0.processID == selected.processID && $0.number == selected.number
+          })
+        {
+          recentApps = [app.dockKey] + recentApps.filter { $0 != app.dockKey }.prefix(1)
+        }
+        cursor = nil
+        modifiers.removeAll()
+        keyboard.cancel()
+      }
+      .onChange(of: model.windowBusy) { _, busy in
+        if busy {
+          keyboard.cancel()
+          cursor = nil
+          modifiers.removeAll()
+        }
+      }
+      .onChange(of: partiallyOpen) { _, _ in
+        foldTrackpad = false
+        keyboard.cancel()
+        modifiers.removeAll()
+      }
+      .onDisappear {
+        keyboard.cancel()
+      }
+      .confirmationDialog("共享 Mac 主显示器", isPresented: $choosingDesktop) {
+        Button("显示完整桌面") { if let desktop { model.selectRemoteWindow(desktop) } }
+      } message: {
+        Text("主显示器上的窗口和通知都会出现在 Duo 上。")
+      }
+    }
+
+    private var touchWorkspace: some View {
       NavigationStack {
-        content
+        touchContent
           .navigationBarTitleDisplayMode(.inline)
           .toolbar {
             ToolbarItem(placement: .bottomBar) { dockButton }
@@ -140,9 +188,7 @@
               }
             }
             ToolbarItemGroup(placement: .bottomBar) {
-              Button("桌面", systemImage: "desktopcomputer") { choosingDesktop = true }
-                .disabled(desktop == nil || model.windowBusy || model.catalogLoading)
-                .accessibilityIdentifier("duoDesktop")
+              desktopButton
               Button(
                 "键盘", systemImage: keyboard.focused ? "keyboard.chevron.compact.down" : "keyboard"
               ) {
@@ -153,17 +199,84 @@
                   keyboard.focused = true
                 }
               }.disabled(!canType).accessibilityIdentifier("phoneKeyboard")
-              Menu("会话", systemImage: "ellipsis") { tools() }
-                .accessibilityIdentifier("phoneMenu")
-              Button("设置", systemImage: "gearshape", action: settings)
-                .accessibilityIdentifier("duoSettings")
+              sessionButtons
             }
           }
       }
-      .preferredColorScheme(.dark)
     }
 
-    @ViewBuilder private func recentButton(_ key: String) -> some View {
+    private var desktopButton: some View {
+      Button("桌面", systemImage: "desktopcomputer") { choosingDesktop = true }
+        .disabled(desktop == nil || model.windowBusy || model.catalogLoading)
+        .accessibilityIdentifier("duoDesktop")
+    }
+
+    @ViewBuilder private var sessionButtons: some View {
+      Menu("会话", systemImage: "ellipsis") { tools() }
+        .accessibilityIdentifier("phoneMenu")
+      Button("设置", systemImage: "gearshape", action: settings)
+        .accessibilityIdentifier("duoSettings")
+    }
+
+    private func horizontalFold(in geometry: GeometryProxy) -> CGRect? {
+      let bounds = CGRect(origin: .zero, size: geometry.size)
+      if #available(iOS 27.1, *), partiallyOpen {
+        for region in geometry.reservedRegions(kind: .division) where region.isActive {
+          let frame = region.frame
+          if frame.width > frame.height, frame.minY > 0, frame.maxY < bounds.height {
+            return frame
+          }
+        }
+      }
+      return nil
+    }
+
+    private func foldedContent(_ fold: CGRect, size: CGSize) -> some View {
+      VStack(spacing: 0) {
+        video().overlay { if foldTrackpad { pointerOverlay } }.padding(6)
+          .frame(maxWidth: .infinity).frame(height: fold.minY)
+        Color.black.frame(height: fold.height).accessibilityHidden(true)
+        VStack(spacing: 4) {
+          HStack(spacing: 2) {
+            Button(
+              foldTrackpad ? "键盘" : "触控板",
+              systemImage: foldTrackpad ? "keyboard" : "rectangle.and.hand.point.up.left"
+            ) {
+              foldTrackpad.toggle()
+            }.accessibilityIdentifier("duoFoldInputMode")
+            dockButton
+            ForEach(recentApps, id: \.self) { recentButton($0, inFold: true) }
+            desktopButton
+            Spacer(minLength: 0)
+            sessionButtons
+          }
+          .labelStyle(.iconOnly).buttonStyle(FoldMenuButtonStyle())
+          .controlSize(.large)
+          .foregroundStyle(.white)
+          .frame(height: min(44, (size.height - fold.maxY) * 0.17))
+          .accessibilityElement(children: .contain).accessibilityIdentifier("duoFoldMenu")
+          if foldTrackpad {
+            pad
+          } else {
+            DuoMacKeyboard { key, flags in
+              focusIfNeeded()
+              model.sendInput(kind: "key", key: key, modifiers: flags)
+            }
+            .id(model.selectedRemoteWindow?.id)
+            .disabled(!model.canControl || !model.physicalKeyboardSupported)
+          }
+        }
+        .padding(6)
+        .frame(height: size.height - fold.maxY)
+        .background(Color(white: 0.15))
+      }
+      .onAppear {
+        keyboard.cancel()
+        foldTrackpad = false
+      }
+    }
+
+    @ViewBuilder private func recentButton(_ key: String, inFold: Bool = false) -> some View {
       let windows = model.remoteWindows.filter {
         $0.displayID == nil && $0.dockKey == key
       }
@@ -178,6 +291,8 @@
         } label: {
           DockIcon(data: model.remoteAppIcons[key], name: app.application)
             .equatable().frame(width: 26, height: 26)
+            .frame(width: inFold ? 44 : 26, height: inFold ? 44 : 26)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(app.application)
@@ -206,7 +321,7 @@
       }
     }
 
-    private var content: some View {
+    private var touchContent: some View {
       GeometryReader { proxy in
         let sideBySide = proxy.size.width > proxy.size.height * 1.55 && !keyboard.focused
         let layout =
@@ -225,38 +340,6 @@
             height: sideBySide ? nil : (keyboard.focused ? 48 : max(115, proxy.size.height * 0.47)))
         }
         .padding(6)
-      }
-      .background(Color.black.ignoresSafeArea())
-      .background {
-        RemoteKeyboardCapture(session: keyboard, onText: sendText, onKey: sendKey)
-          .frame(width: 1, height: 1).clipped()
-      }
-      .onChange(of: model.selectedRemoteWindow?.id, initial: true) { _, _ in
-        if let selected = model.selectedRemoteWindow, selected.displayID == nil,
-          let app = model.remoteWindows.first(where: {
-            $0.processID == selected.processID && $0.number == selected.number
-          })
-        {
-          recentApps = [app.dockKey] + recentApps.filter { $0 != app.dockKey }.prefix(1)
-        }
-        cursor = nil
-        modifiers.removeAll()
-        keyboard.cancel()
-      }
-      .onChange(of: model.windowBusy) { _, busy in
-        if busy {
-          keyboard.cancel()
-          cursor = nil
-          modifiers.removeAll()
-        }
-      }
-      .onDisappear {
-        keyboard.cancel()
-      }
-      .confirmationDialog("共享 Mac 主显示器", isPresented: $choosingDesktop) {
-        Button("显示完整桌面") { if let desktop { model.selectRemoteWindow(desktop) } }
-      } message: {
-        Text("主显示器上的窗口和通知都会出现在 Duo 上。")
       }
     }
 
@@ -365,6 +448,16 @@
       }
     }
 
+  }
+
+  private struct FoldMenuButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+      configuration.label
+        .font(.system(size: 20, weight: .medium))
+        .frame(minWidth: 44, minHeight: 44)
+        .contentShape(Rectangle())
+        .opacity(configuration.isPressed ? 0.55 : 1)
+    }
   }
 
   private struct DuoPadGestures: UIViewRepresentable {
