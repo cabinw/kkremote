@@ -441,6 +441,8 @@ struct IOSLabView: View {
             "selectedID":model.selectedRemoteWindow?.id ?? "","frames":model.sample.framesDecoded,
             "codec":model.sample.codec,"transfer":model.sample.decodedPixelFormat?["transfer"] ?? "",
             "width":model.sample.width,"height":model.sample.height,"zoom":viewport.zoom,
+            "openAppCount":Set(model.remoteWindows.filter { $0.displayID == nil }.map(\.dockKey)).count,
+            "orderedDockAppCount":model.remoteDockOrder.count,
             "hingePartiallyOpen":hingePartiallyOpen,"hingeClosed":hingeClosed,"dockIconCount":model.remoteAppIcons.count,"duoLayout":usesDuoLayout,"hasHinge":hasHinge,"isDesktop":model.selectedRemoteWindow?.displayID != nil,
             "controllable":model.canControl,"inputAcknowledged":model.inputAcknowledged,
             "keyboardSupported":model.directKeyboardSupported,"keyboardFocusReady":model.controlState?.focus != nil,

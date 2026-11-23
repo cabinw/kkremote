@@ -103,6 +103,25 @@ final class DuoWorkspaceTests: XCTestCase {
         XCTAssertTrue(a.waitForExistence(timeout: 5), "Use a horizontal fold with the inner display active")
         chooseFixtureFromDock()
         expectPicture(desktop: false)
+        let strip = app.scrollViews["duoFoldDockStrip"]
+        XCTAssertTrue(strip.exists)
+        let buttons = strip.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "duoStripApp-"))
+        let expectedApps = try XCTUnwrap(state()["openAppCount"] as? Int)
+        XCTAssertEqual(buttons.count, expectedApps)
+        XCTAssertTrue((0...expectedApps).contains(state()["orderedDockAppCount"] as? Int ?? -1))
+        let chooser = app.buttons["duoDock"]
+        let modeButton = app.buttons["duoFoldInputMode"]
+        XCTAssertLessThanOrEqual(chooser.frame.maxX, strip.frame.minX + 1)
+        XCTAssertLessThanOrEqual(strip.frame.maxX, modeButton.frame.minX + 1)
+        XCTAssertLessThan(modeButton.frame.midX, app.buttons["duoDesktop"].frame.midX)
+        XCTAssertLessThan(app.buttons["duoDesktop"].frame.midX, app.buttons["phoneMenu"].frame.midX)
+        let last = buttons.element(boundBy: expectedApps - 1)
+        if last.frame.midX > strip.frame.maxX {
+            let firstX = buttons.firstMatch.frame.midX
+            strip.swipeLeft()
+            XCTAssertLessThan(buttons.firstMatch.frame.midX, firstX)
+        }
+        print("FOLD_DOCK apps=\(expectedApps) ordered=\(state()["orderedDockAppCount"] ?? 0) strip=\(strip.frame)")
         let surface = app.otherElements["viewportGestureSurface"]
         let menu = app.buttons["duoDock"]
         XCTAssertLessThanOrEqual(surface.frame.maxY, menu.frame.minY)
@@ -166,6 +185,39 @@ final class DuoWorkspaceTests: XCTestCase {
         clickSurface()
         tapKey("c")
         tapKey("right")
+        let fixtureIcon = strip.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@", "Fixture")).firstMatch
+        XCTAssertTrue(fixtureIcon.exists)
+        for _ in 0..<24 {
+            if strip.frame.contains(CGPoint(x: fixtureIcon.frame.midX, y: fixtureIcon.frame.midY)) { break }
+            if fixtureIcon.frame.midX < strip.frame.minX { strip.swipeRight() } else { strip.swipeLeft() }
+        }
+        fixtureIcon.tap()
+        let windowRow = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND label == %@",
+                                                         "remoteWindowRow-", fixture)).firstMatch
+        if windowRow.waitForExistence(timeout: 1) { windowRow.tap() }
+        expectPicture(desktop: false)
+    }
+
+    // The Mac-side runner opens and closes the dedicated fixture at these two checkpoints.
+    func testFoldDockFollowsWindowLifetime() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["DUO_TEST_LIVE_DOCK"] == "1",
+                          "Requires the Mac-side window lifetime fixture")
+        continueAfterFailure = false
+        app.launchArguments = ["--viewer-ui-review"]
+        app.launch()
+        try XCTSkipUnless(state()["hingePartiallyOpen"] as? Bool == true, "Place Duo in laptop posture")
+        app.buttons["phoneConnect"].tap()
+        let strip = app.scrollViews["duoFoldDockStrip"]
+        observe("Expected the initial app catalog") { ($0["openAppCount"] as? Int ?? 0) > 0 }
+        let icon = strip.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@", "Fixture")).firstMatch
+        XCTAssertFalse(icon.exists)
+        print("FOLD_WATCH_READY")
+        XCTAssertTrue(icon.waitForExistence(timeout: 30))
+        print("FOLD_WATCH_OPEN")
+        let gone = NSPredicate { _, _ in !icon.exists }
+        let expectation = XCTNSPredicateExpectation(predicate: gone, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [expectation], timeout: 30), .completed)
+        print("FOLD_WATCH_CLOSED")
     }
 
     func testPhysicalWindowAndDesktop() throws {

@@ -44,6 +44,8 @@ struct WindowMessage: Codable {
     var includeDesktop: Bool? = nil
     var includeAppIcons: Bool? = nil
     var appIcons: [String: Data]? = nil
+    var includeDockOrder: Bool? = nil
+    var dockOrder: [String]? = nil
 }
 
 #if os(macOS)
@@ -75,6 +77,45 @@ final class HostWindowCatalog {
         // A fresh directory invalidates old unselected handles, including after close/reopen.
         entries = Dictionary(uniqueKeysWithValues: windows.map { ($0.id, $0) })
         return windows
+    }
+
+    // Detect open/close/minimize without rebuilding the ScreenCaptureKit catalog or its PNGs.
+    static func visibleWindowIDs() -> Set<UInt32>? {
+        guard let rows = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID)
+                as? [[String: Any]] else { return nil }
+        let others = rows.compactMap { row -> UInt32? in
+            guard row[kCGWindowLayer as String] as? Int == 0,
+                  row[kCGWindowOwnerPID as String] as? Int32 != ProcessInfo.processInfo.processIdentifier,
+                  let bounds = row[kCGWindowBounds as String] as? NSDictionary,
+                  let rect = CGRect(dictionaryRepresentation: bounds), rect.width > 100, rect.height > 100 else { return nil }
+            return row[kCGWindowNumber as String] as? UInt32
+        }
+        return Set(others)
+    }
+
+    // Use Dock's accessible order when available. Keep only apps in this window catalog.
+    @MainActor static func dockOrder(for windows: [RemoteWindow]) -> [String]? {
+        guard AXIsProcessTrusted(),
+              let dock = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.dock").first else { return nil }
+        func attribute(_ item: AXUIElement, _ key: String) -> AnyObject? {
+            var value: CFTypeRef?
+            guard AXUIElementCopyAttributeValue(item, key as CFString, &value) == .success else { return nil }
+            return value
+        }
+        let root = AXUIElementCreateApplication(dock.processIdentifier)
+        guard let children = attribute(root, kAXChildrenAttribute) as? [AXUIElement],
+              let list = children.first(where: { attribute($0, kAXRoleAttribute) as? String == kAXListRole }),
+              let tiles = attribute(list, kAXChildrenAttribute) as? [AXUIElement] else { return nil }
+        let apps = windows.filter { $0.displayID == nil }
+        var visible = Set(apps.map(\.dockKey))
+        var order: [String] = []
+        for tile in tiles {
+            guard attribute(tile, kAXSubroleAttribute) as? String == kAXApplicationDockItemSubrole,
+                  let url = attribute(tile, kAXURLAttribute) as? URL, url.isFileURL,
+                  let id = Bundle(url: url)?.bundleIdentifier, visible.remove(id) != nil else { continue }
+            order.append(id)
+        }
+        return order
     }
 
     // Keep the catalog inside the existing signaling frame, even with many applications.

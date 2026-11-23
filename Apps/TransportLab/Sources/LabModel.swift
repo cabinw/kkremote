@@ -136,6 +136,7 @@ final class LabModel: ObservableObject {
     private var viewerMediaStopped = false
     private var windowTimeout: DispatchWorkItem?
     @Published private(set) var windowSupported = false
+    @Published private(set) var remoteDockOrder: [String] = []
     @Published private(set) var remoteAppIcons: [String: Data] = [:]
     @Published private(set) var remoteWindows: [RemoteWindow] = []
     @Published private(set) var selectedRemoteWindow: RemoteWindow?
@@ -145,6 +146,7 @@ final class LabModel: ObservableObject {
     @Published private(set) var windowStatus = "连接后可查看远端窗口"
     #if os(macOS)
     private let windowCatalog = HostWindowCatalog()
+    private var dockCatalogMonitor: Task<Void, Never>?
     private var displayPointer: HostDisplayPointer?
     private var hostControl: HostWindowControl?
     #endif
@@ -304,7 +306,7 @@ final class LabModel: ObservableObject {
         catalogLoading = true; windowError = nil
         let request = UUID().uuidString
         catalogRequestID = request
-        sendWindow(WindowMessage(action: "list", requestID: request, includeDesktop: requestsMainDisplay ? true : nil, includeAppIcons: requestsMainDisplay ? true : nil))
+        sendWindow(WindowMessage(action: "list", requestID: request, includeDesktop: requestsMainDisplay ? true : nil, includeAppIcons: requestsMainDisplay ? true : nil, includeDockOrder: requestsMainDisplay ? true : nil))
         let token = generation
         DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in
             guard let self, self.generation == token, self.catalogLoading, self.catalogRequestID == request else { return }
@@ -446,9 +448,12 @@ final class LabModel: ObservableObject {
             if let state=command.controlState { controlState=state }
             inputAcknowledged += 1;inputQueueCount=queuedInputs.count
             sendNextInput()
+        case "catalogChanged":
+            if requestsMainDisplay { refreshRemoteWindows() }
         case "catalog":
             guard command.requestID == catalogRequestID else { return }
             catalogRequestID = nil; catalogLoading = false
+            remoteDockOrder = command.dockOrder ?? []
             remoteAppIcons = command.appIcons ?? [:]
             remoteWindows = Array((command.windows ?? []).prefix(256))
             windowError = command.error
@@ -488,6 +493,23 @@ final class LabModel: ObservableObject {
         }
     }
 
+    #if os(macOS)
+    @MainActor private func watchDockCatalog(_ baseline: Set<UInt32>?, generation token: UUID) {
+        dockCatalogMonitor?.cancel()
+        guard let baseline else { return }
+        dockCatalogMonitor = Task { @MainActor [weak self] in
+            while !Task.isCancelled {
+                do { try await Task.sleep(for: .seconds(3)) } catch { return }
+                guard let self, self.generation == token else { return }
+                guard !self.windowBusy, !self.catalogLoading, let current = HostWindowCatalog.visibleWindowIDs(),
+                      current != baseline else { continue }
+                // Retry on the next tick if the viewer was busy switching sources.
+                self.sendWindow(WindowMessage(action: "catalogChanged", requestID: UUID().uuidString))
+            }
+        }
+    }
+    #endif
+
     private func receiveHostWindow(_ command: WindowMessage) {
         #if os(macOS)
         let token = generation
@@ -519,11 +541,13 @@ final class LabModel: ObservableObject {
                 guard let self else { return }
                 defer { if self.generation == token { self.catalogLoading = false } }
                 do {
+                    let watchedIDs = command.includeDockOrder == true ? HostWindowCatalog.visibleWindowIDs() : nil
                     let windows = try await self.windowCatalog.refresh(includeDesktop: self.sharesMainDisplay && command.includeDesktop == true,
                                                                        includeAppIcons: command.includeAppIcons == true)
                     guard self.generation == token else { return }
                     var reply = WindowMessage(action: "catalog", requestID: command.requestID, windows: windows)
                     if command.includeAppIcons == true {
+                        if command.includeDockOrder == true { reply.dockOrder = HostWindowCatalog.dockOrder(for: windows) }
                         reply.appIcons = [:]
                         let packet = SignalMessage(type: "window", session: self.windowSession, window: reply)
                         if let baseBytes = try? JSONEncoder().encode(packet).count {
@@ -531,6 +555,7 @@ final class LabModel: ObservableObject {
                         }
                     }
                     self.sendWindow(reply)
+                    self.watchDockCatalog(watchedIDs, generation: token)
                 } catch {
                     guard self.generation == token else { return }
                     self.sendWindow(WindowMessage(action: "catalog", requestID: command.requestID, error: "无法读取窗口目录，请检查主机屏幕录制权限"))
@@ -664,6 +689,7 @@ final class LabModel: ObservableObject {
 
     func stop() {
         #if os(macOS)
+        dockCatalogMonitor?.cancel(); dockCatalogMonitor = nil
         if nativeWorkspaceDisplayID != nil {
             if Thread.isMainThread { MainActor.assumeIsolated { _=HostWindowLayout.restoreNativeWindows() } }
             else {Task { @MainActor in await HostWindowLayout.restoreNativeWindows().value }}
@@ -678,7 +704,7 @@ final class LabModel: ObservableObject {
         windowTimeout?.cancel(); windowTimeout = nil; pendingWindowRequest = nil; pendingWindowTarget = nil
         physicalKeyboardSupported = false; windowShortcutsSupported = false; expectedMediaSession = nil; windowSession = ""; windowSupported = false
         windowLayoutSupported=false; appliedWindowViewport=nil; pendingWindowViewport=nil;layoutDebounce?.cancel()
-        windowBusy = false; catalogLoading = false; catalogRequestID = nil; remoteWindows = []; remoteAppIcons = [:]; selectedRemoteWindow = nil
+        windowBusy = false; catalogLoading = false; catalogRequestID = nil; remoteWindows = []; remoteDockOrder = []; remoteAppIcons = [:]; selectedRemoteWindow = nil
         windowError = nil; windowStatus = "连接后可查看远端窗口"
         engine?.stop(); engine = nil; signal?.stop(); signal = nil
         demoHost?.stop(); demoHost = nil

@@ -34,17 +34,31 @@
     }
   }
 
+  // The identity of an app survives catalog refreshes and changes of the selected window.
+  private struct DuoDockCatalog {
+    let windows: [String: [RemoteWindow]]
+    let apps: [RemoteWindow]
+
+    init(_ catalog: [RemoteWindow], order: [String]) {
+      let groups = Dictionary(grouping: catalog.filter { $0.displayID == nil }, by: \.dockKey)
+      windows = groups
+      var remaining = Set(groups.keys)
+      let sorted = order.filter { remaining.remove($0) != nil }.compactMap { groups[$0]?.first }
+      apps = sorted + remaining.compactMap { groups[$0]?.first }.sorted {
+        ($0.application, $0.dockKey) < ($1.application, $1.dockKey)
+      }
+    }
+  }
+
   private struct DuoDockPicker: View {
     @ObservedObject var model: LabModel
     let select: (RemoteWindow) -> Void
     @Binding var expandedApp: String?
 
     var body: some View {
-      let groups = Dictionary(
-        grouping: model.remoteWindows.filter { $0.displayID == nil }, by: \.dockKey)
-      let apps = groups.values.compactMap(\.first).sorted {
-        ($0.application, $0.dockKey) < ($1.application, $1.dockKey)
-      }
+      let catalog = DuoDockCatalog(model.remoteWindows, order: model.remoteDockOrder)
+      let groups = catalog.windows
+      let apps = catalog.apps
       VStack(alignment: .leading, spacing: 8) {
         if let key = expandedApp, let windows = groups[key], let first = windows.first {
           Button {
@@ -235,23 +249,22 @@
     private func foldedContent(_ fold: CGRect, size: CGSize, insets: EdgeInsets) -> some View {
       VStack(spacing: 0) {
         video().overlay { if foldTrackpad { pointerOverlay } }
-          .frame(width: size.width + insets.leading + insets.trailing, height: fold.minY + insets.top)
+          .frame(width: size.width + insets.leading + insets.trailing, height: fold.midY + insets.top)
           .clipped()
           // Extend only the video to the glass. Keep the lower controls in their safe area.
           .padding(EdgeInsets(top: -insets.top, leading: -insets.leading, bottom: 0, trailing: -insets.trailing))
-        Color.black.frame(height: fold.height).accessibilityHidden(true)
+        Color.black.frame(height: fold.maxY - fold.midY).accessibilityHidden(true)
         VStack(spacing: 4) {
           HStack(spacing: 2) {
+            dockButton
+            foldDockStrip
             Button(
               foldTrackpad ? "键盘" : "触控板",
               systemImage: foldTrackpad ? "keyboard" : "rectangle.and.hand.point.up.left"
             ) {
               foldTrackpad.toggle()
             }.accessibilityIdentifier("duoFoldInputMode")
-            dockButton
-            ForEach(recentApps, id: \.self) { recentButton($0, inFold: true) }
             desktopButton
-            Spacer(minLength: 0)
             sessionButtons
           }
           .labelStyle(.iconOnly).buttonStyle(FoldMenuButtonStyle())
@@ -282,33 +295,47 @@
       .onDisappear { viewport.setFoldPanelWidth(false) }
     }
 
-    @ViewBuilder private func recentButton(_ key: String, inFold: Bool = false) -> some View {
-      let windows = model.remoteWindows.filter {
-        $0.displayID == nil && $0.dockKey == key
-      }
-      if let app = windows.first {
-        Button {
-          if windows.count == 1 {
-            model.selectRemoteWindow(app)
-          } else {
-            expandedApp = key
-            showingDock = true
+    private var foldDockStrip: some View {
+      let catalog = DuoDockCatalog(model.remoteWindows, order: model.remoteDockOrder)
+      return ScrollView(.horizontal) {
+        HStack(spacing: 2) {
+          ForEach(catalog.apps, id: \.dockKey) { app in
+            appButton(app, windows: catalog.windows[app.dockKey] ?? [], inStrip: true)
           }
-        } label: {
-          DockIcon(data: model.remoteAppIcons[key], name: app.application)
-            .equatable().frame(width: 26, height: 26)
-            .frame(width: inFold ? 44 : 26, height: inFold ? 44 : 26)
-            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel(app.application)
-        .accessibilityIdentifier("duoRecentApp-\(app.processID)")
-        .disabled(model.catalogLoading || model.windowBusy)
       }
+      .scrollIndicators(.hidden)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .accessibilityIdentifier("duoFoldDockStrip")
+    }
+
+    @ViewBuilder private func recentButton(_ key: String) -> some View {
+      let windows = model.remoteWindows.filter { $0.displayID == nil && $0.dockKey == key }
+      if let app = windows.first { appButton(app, windows: windows, inStrip: false) }
+    }
+
+    private func appButton(_ app: RemoteWindow, windows: [RemoteWindow], inStrip: Bool) -> some View {
+      Button {
+        if windows.count == 1 {
+          model.selectRemoteWindow(app)
+        } else {
+          expandedApp = app.dockKey
+          showingDock = true
+        }
+      } label: {
+        DockIcon(data: model.remoteAppIcons[app.dockKey], name: app.application)
+          .equatable().frame(width: inStrip ? 32 : 26, height: inStrip ? 32 : 26)
+          .frame(width: inStrip ? 44 : 26, height: inStrip ? 44 : 26)
+          .contentShape(Rectangle())
+      }
+      .buttonStyle(.plain)
+      .accessibilityLabel(app.application)
+      .accessibilityIdentifier((inStrip ? "duoStripApp-" : "duoRecentApp-") + String(app.processID))
+      .disabled(model.catalogLoading || model.windowBusy)
     }
 
     private var dockButton: some View {
-      Button("Dock", systemImage: "square.grid.2x2") {
+      Button("选择 App", systemImage: "square.grid.2x2") {
         expandedApp = nil
         showingDock = true
       }
