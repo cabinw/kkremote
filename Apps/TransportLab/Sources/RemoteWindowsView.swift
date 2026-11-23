@@ -36,7 +36,7 @@ struct RemoteWindowsView: View {
     let dismiss: () -> Void
     @State private var search = ""
     private var filteredWindows: [RemoteWindow] {
-        model.remoteWindows.filter { search.isEmpty || $0.label.localizedCaseInsensitiveContains(search) }
+        model.remoteWindows.filter { $0.displayID == nil && (search.isEmpty || $0.label.localizedCaseInsensitiveContains(search)) }
     }
 
     var body: some View {
@@ -48,7 +48,7 @@ struct RemoteWindowsView: View {
                     }
                     if model.catalogLoading {
                         HStack { ProgressView(); Text("正在读取主机窗口…") }
-                    } else if model.remoteWindows.isEmpty {
+                    } else if !model.remoteWindows.contains(where: { $0.displayID == nil }) {
                         Text("没有可捕获窗口。请在 Mac 打开应用窗口后刷新，并检查屏幕录制权限。")
                             .foregroundStyle(.secondary)
                     } else if filteredWindows.isEmpty {

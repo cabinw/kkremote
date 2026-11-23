@@ -32,6 +32,9 @@ struct IOSLabView: View {
     @State private var remotePointer: CGPoint?
     @State private var remotePressed: CGPoint?
     private var isPhone: Bool { UIDevice.current.userInterfaceIdiom == .phone }
+    @AppStorage("viewerDuoLayout") private var preferDuoLayout = false
+    @State private var hasHinge = false
+    private var usesDuoLayout: Bool { hasHinge || preferDuoLayout }
     @State private var page = 0
     @State private var fullscreen = false
     @State private var diagnostics = false
@@ -67,7 +70,12 @@ struct IOSLabView: View {
                     .allowsHitTesting(false)
             }
         }
-        .sheet(isPresented: Binding(get: { isPhone && page == 1 }, set: { if !$0 { page = 0 } })) {
+        .background {
+            if #available(iOS 27.1, *) {
+                DuoHingeObserver { hasHinge = true }.allowsHitTesting(false)
+            }
+        }
+        .sheet(isPresented: Binding(get: { (isPhone || usesDuoLayout) && page == 1 }, set: { if !$0 { page = 0 } })) {
             NavigationStack {
                 settings.navigationTitle("设置").navigationBarTitleDisplayMode(.inline)
                     .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { page = 0 } } }
@@ -77,6 +85,10 @@ struct IOSLabView: View {
         .sheet(isPresented: $diagnostics) { diagnosticSheet }
         .sheet(isPresented: $licenseVisible) { licenseSheet }
         .sheet(isPresented: $interactionPractice) { MobileInputPracticeView() }
+        .onChange(of: usesDuoLayout, initial: true) { _, enabled in
+            model.requestsMainDisplay = enabled
+            if model.running { model.refreshRemoteWindows() }
+        }
         .onChange(of: page) { _, _ in viewport.invalidate() }
         .onChange(of:model.canControl) { _,enabled in viewport.enableRemoteInput(enabled);if !enabled { phoneText.cancel();remotePressed=nil } }
         .onChange(of:model.controlError) { _,error in if error != nil { phoneText.cancel() } }
@@ -153,7 +165,15 @@ struct IOSLabView: View {
     #endif
 
     @ViewBuilder private var clientWorkspace: some View {
-        if isPhone { phoneWorkspace } else { labWorkspace }
+        if usesDuoLayout && model.running {
+            DuoWorkspace(model: model, viewport: viewport, keyboard: phoneText,
+                         choose: { phoneWindows = true; model.refreshRemoteWindows() },
+                         settings: { page = 1 }, video: { streamContent }, tools: { sessionTools })
+        } else if isPhone || usesDuoLayout {
+            phoneWorkspace
+        } else {
+            labWorkspace
+        }
     }
 
     private var phoneWorkspace: some View {
@@ -167,33 +187,9 @@ struct IOSLabView: View {
             onKeyboardFocus:{ model.sendInput(kind:"focus") },
             onKeyboardText:{ model.sendInput(kind:"insertText",text:$0) },
             onKeyboardKey:{ model.sendInput(kind:"key",key:$0) },
-            canEnterText:model.directKeyboardSupported,edgeColor:edgeAppearance.color,
+            canEnterText:model.directKeyboardSupported && model.selectedRemoteWindow?.displayID == nil,edgeColor:edgeAppearance.color,
             chooseWindow: { phoneWindows = true; model.refreshRemoteWindows() }) {
-                Picker("画面显示",selection:$desktopColors) {
-                    Text("桌面").tag(true)
-                    Text("HDR").tag(false)
-                }
-                if let warning=model.windowError { Text(warning) }
-                if model.canControl {
-                    Button("回车",systemImage:"return") { model.sendInput(kind:"key",key:"return") }
-                    Button("退格",systemImage:"delete.left") { model.sendInput(kind:"key",key:"backspace") }
-                    Button("取消编辑",systemImage:"escape") { model.sendInput(kind:"key",key:"escape") }
-                }
-                Button("连接设置", systemImage: "gearshape") { page = 1 }
-                    .accessibilityIdentifier("phoneConnectionSettingsMenu")
-                Button("详细数据", systemImage: "waveform.path.ecg") { diagnostics = true }
-                if model.track != nil && model.windowSupported {
-                    Button("停止观看，保留连接",systemImage:"stop.circle") { model.selectRemoteWindow(nil) }
-                        .disabled(model.windowBusy || model.catalogLoading).accessibilityIdentifier("phoneStopViewing")
-                }
-                #if targetEnvironment(simulator)
-                if wpsReview != nil {
-                    Toggle("去除编码留黑", isOn: $wpsTrimPadding)
-                    Text("真实桌面 WPS · 当前只读")
-                }
-                Button("iPhone 离线预览", systemImage: "iphone") { phonePreview = true }.disabled(model.running)
-                #endif
-                if model.running || resumeTask != nil { Button(resumeTask != nil ? "取消重连" : "断开连接", systemImage: "xmark.circle", role: .destructive) { resumeTask?.cancel();resumeTask = nil;resumeProfile = nil;awaitingResumeCatalog = false;model.stop() } }
+                sessionTools
             } content: {
                 if model.track != nil || model.running || resumeTask != nil { streamContent }
                 else {
@@ -218,6 +214,34 @@ struct IOSLabView: View {
                 }
             }
             .ignoresSafeArea(.keyboard,edges:phoneText.focused ? []:.bottom)
+    }
+
+    @ViewBuilder private var sessionTools: some View {
+        Picker("画面显示",selection:$desktopColors) {
+            Text("桌面色彩").tag(true)
+            Text("HDR").tag(false)
+        }
+        if let warning=model.windowError { Text(warning) }
+        if model.canControl && model.selectedRemoteWindow?.displayID == nil {
+            Button("回车",systemImage:"return") { model.sendInput(kind:"key",key:"return") }
+            Button("退格",systemImage:"delete.left") { model.sendInput(kind:"key",key:"backspace") }
+            Button("取消编辑",systemImage:"escape") { model.sendInput(kind:"key",key:"escape") }
+        }
+        Button("连接设置", systemImage: "gearshape") { page = 1 }
+            .accessibilityIdentifier("phoneConnectionSettingsMenu")
+        Button("详细数据", systemImage: "waveform.path.ecg") { diagnostics = true }
+        if model.track != nil && model.windowSupported {
+            Button("停止观看，保留连接",systemImage:"stop.circle") { model.selectRemoteWindow(nil) }
+                .disabled(model.windowBusy || model.catalogLoading).accessibilityIdentifier("phoneStopViewing")
+        }
+        #if targetEnvironment(simulator)
+        if wpsReview != nil {
+            Toggle("去除编码留黑", isOn: $wpsTrimPadding)
+            Text("真实桌面 WPS · 当前只读")
+        }
+        Button("iPhone 离线预览", systemImage: "iphone") { phonePreview = true }.disabled(model.running)
+        #endif
+        if model.running || resumeTask != nil { Button(resumeTask != nil ? "取消重连" : "断开连接", systemImage: "xmark.circle", role: .destructive) { resumeTask?.cancel();resumeTask = nil;resumeProfile = nil;awaitingResumeCatalog = false;model.stop() } }
     }
 
     private var labWorkspace: some View {
@@ -282,26 +306,28 @@ struct IOSLabView: View {
         }.scrollBounceBehavior(.basedOnSize).scrollDisabled(fullscreen)
     }
 
+    private var videoSurround: Color { usesDuoLayout ? .black : edgeAppearance.background }
+
     private var streamContent: some View {
         ZStack {
-            edgeAppearance.background
+            videoSurround
             if model.windowBusy {
                 VStack(spacing: 10) { ProgressView(); Text("正在切换窗口…") }
                     .foregroundStyle(.primary)
             } else if let track = model.track {
                 MobileViewport(session: viewport, source: workspaceSourceSize,
-                    target: "\(model.selectedRemoteWindow?.id ?? "default")-\(ObjectIdentifier(track))",background:edgeAppearance.background,encodedPixels: pixelAlignmentSource,geometryContent: { geometry in
+                    target: "\(model.selectedRemoteWindow?.id ?? "default")-\(ObjectIdentifier(track))",background:videoSurround,encodedPixels: pixelAlignmentSource,geometryContent: { geometry in
                     // Host aspect-fits at the encoded canvas origin; remove only
                     // known padding. The same source-point geometry drives touch mapping.
                     let size = geometry.contentSize
                     let scale = max(size.width/videoSourceSize.width,size.height/videoSourceSize.height)
                     let rendererSize = geometry.pixelExact ? size : CGSize(width:videoSourceSize.width*scale,height:videoSourceSize.height*scale)
-                    ColorManagedVideo(track:track,desktopColors:isPhone && desktopColors).id(isPhone && desktopColors)
+                    ColorManagedVideo(track:track,desktopColors:(isPhone || usesDuoLayout) && desktopColors).id((isPhone || usesDuoLayout) && desktopColors)
                         .frame(width:rendererSize.width,height:rendererSize.height)
                         .frame(width:size.width,height:size.height,alignment:.topLeading).clipped()
                         // HEVC is opaque: the captured macOS corner surround cannot
                         // reveal the App background until the window silhouette is clipped.
-                        .clipShape(RoundedRectangle(cornerRadius:isPhone && model.selectedRemoteWindow != nil ? 20*size.width/workspaceSourceSize.width:0,style:.continuous))
+                        .clipShape(RoundedRectangle(cornerRadius:isPhone && !usesDuoLayout && model.selectedRemoteWindow != nil ? 20*size.width/workspaceSourceSize.width:0,style:.continuous))
                 })
                 .allowsHitTesting(hasVideo)
                 .opacity(hasVideo ? 1 : 0)
@@ -323,8 +349,8 @@ struct IOSLabView: View {
         }
         .background {
             GeometryReader { proxy in
-                Color.clear.onAppear { if isPhone && !phoneWindows && !phoneText.focused { model.updateWindowViewport(proxy.size,displayScale:Double(displayScale)) } }
-                    .onChange(of:proxy.size) { _,size in if isPhone && !phoneWindows && !phoneText.focused { model.updateWindowViewport(size,displayScale:Double(displayScale)) } }
+                Color.clear.onAppear { if (isPhone || usesDuoLayout) && !phoneWindows && !phoneText.focused { model.updateWindowViewport(proxy.size,displayScale:Double(displayScale)) } }
+                    .onChange(of:proxy.size) { _,size in if (isPhone || usesDuoLayout) && !phoneWindows && !phoneText.focused { model.updateWindowViewport(size,displayScale:Double(displayScale)) } }
             }
         }
     }
@@ -395,7 +421,7 @@ struct IOSLabView: View {
     private func restoreViewing(from windows:[RemoteWindow]) {
         guard model.windowSupported,!model.catalogLoading,!model.windowBusy else { return }
         awaitingResumeCatalog = false
-        if let old = resumeWindow,let fresh = windows.first(where: {
+        if let old = resumeWindow,(old.displayID == nil || usesDuoLayout),let fresh = windows.first(where: {
             $0.number == old.number && $0.processID == old.processID && $0.title == old.title
         }) { model.selectRemoteWindow(fresh) }
         else { phoneWindows = true }
@@ -409,6 +435,7 @@ struct IOSLabView: View {
             "selectedID":model.selectedRemoteWindow?.id ?? "","frames":model.sample.framesDecoded,
             "codec":model.sample.codec,"transfer":model.sample.decodedPixelFormat?["transfer"] ?? "",
             "width":model.sample.width,"height":model.sample.height,"zoom":viewport.zoom,
+            "duoLayout":usesDuoLayout,"hasHinge":hasHinge,"isDesktop":model.selectedRemoteWindow?.displayID != nil,
             "controllable":model.canControl,"inputAcknowledged":model.inputAcknowledged,
             "keyboardSupported":model.directKeyboardSupported,"keyboardFocusReady":model.controlState?.focus != nil,
             "controlError":model.controlError ?? "","inputQueueCount":model.inputQueueCount,
@@ -573,6 +600,11 @@ struct IOSLabView: View {
                 portField("媒体端口", value: $preferences.profile.mediaPort)
             } header: { Text("常用连接 · 自动保存到此设备") }
               footer: { Text(preferences.saveError ?? "修改会保留，下次连接时生效。") }
+            Section("工作区") {
+                Toggle("使用 Duo 触控板布局", isOn: Binding(
+                    get: { usesDuoLayout }, set: { preferDuoLayout = $0 }
+                )).disabled(hasHinge)
+            }
             Section("传输设置") {
                 Picker("媒体路径", selection: $preferences.profile.route) {
                     Text("固定 UDP v2").tag(MediaRoute.ponteUDP)
