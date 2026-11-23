@@ -11,6 +11,16 @@ struct WindowInput: Codable {
     var text: String? = nil
     var focus: String? = nil
     var key: String? = nil
+    var modifiers: [String]? = nil
+    static let navigationKeys = ["return","escape","backspace","tab","left","right","up","down","home","end","deleteForward"]
+    // macOS ANSI virtual key codes for modifier chords delivered to the selected process.
+    static let shortcutCodes: [String: UInt16] = [
+        "a":0, "s":1, "d":2, "f":3, "h":4, "g":5, "z":6, "x":7, "c":8, "v":9,
+        "b":11, "q":12, "w":13, "e":14, "r":15, "y":16, "t":17, "1":18, "2":19,
+        "3":20, "4":21, "6":22, "5":23, "=":24, "9":25, "7":26, "-":27, "8":28,
+        "0":29, "]":30, "o":31, "u":32, "[":33, "i":34, "p":35, "l":37, "j":38,
+        "'":39, "k":40, ";":41, ",":43, "/":44, "n":45, "m":46, ".":47, " ":49
+    ]
     func valid(width: Double, height: Double) -> Bool {
         guard sequence > 0, !lease.isEmpty else { return false }
         switch kind {
@@ -20,7 +30,10 @@ struct WindowInput: Codable {
             return true
         case "focus": return true
         case "insertText": return text.map { !$0.isEmpty && $0.utf16.count <= 4000 && !$0.contains("\0") } == true && focus != nil
-        case "key": return ["return","escape","backspace","tab","left","right","up","down","home","end","deleteForward"].contains(key ?? "")
+        case "key":
+            let flags = modifiers ?? []
+            guard flags.count <= 4, flags.allSatisfy({ ["cmd","shift","opt","ctrl"].contains($0) }) else { return false }
+            return Self.navigationKeys.contains(key ?? "") || (!flags.isEmpty && Self.shortcutCodes[key ?? ""] != nil)
         default: return false
         }
     }
@@ -33,6 +46,51 @@ struct WindowControlState: Codable {
 #if os(macOS)
 import AppKit
 import ApplicationServices
+
+/// Pointer events for an explicitly selected display. Coordinates are in display points.
+final class HostDisplayPointer {
+    let lease = UUID().uuidString
+    let display: RemoteWindow
+    private var lastSequence = 0
+
+    init(_ display: RemoteWindow) throws {
+        guard display.displayID != nil, AXIsProcessTrusted() else { throw LabError.message("桌面指针需要辅助功能权限") }
+        self.display = display
+    }
+
+    func dispatch(_ input: WindowInput) throws {
+        guard let id = display.displayID, id == CGMainDisplayID(), CGDisplayIsActive(id) != 0,
+              AXIsProcessTrusted(), input.lease == lease, input.sequence > lastSequence,
+              input.valid(width: display.widthPoints, height: display.heightPoints),
+              let x = input.x, let y = input.y else { throw LabError.message("桌面输入目标已失效") }
+        let frame = CGDisplayBounds(id)
+        guard frame.size == CGSize(width: display.widthPoints, height: display.heightPoints) else {
+            throw LabError.message("桌面尺寸已变化，请重新选择")
+        }
+        lastSequence = input.sequence
+        let point = CGPoint(x: frame.minX + x, y: frame.minY + y)
+        switch input.kind {
+        case "click", "secondary":
+            let right = input.kind == "secondary"
+            let button: CGMouseButton = right ? .right : .left
+            guard let down = CGEvent(mouseEventSource: nil, mouseType: right ? .rightMouseDown : .leftMouseDown, mouseCursorPosition: point, mouseButton: button),
+                  let up = CGEvent(mouseEventSource: nil, mouseType: right ? .rightMouseUp : .leftMouseUp, mouseCursorPosition: point, mouseButton: button) else { throw LabError.message("无法创建桌面点击") }
+            for event in [down, up] {
+                event.flags = []
+                event.setIntegerValueField(.mouseEventClickState, value: 1)
+                event.post(tap: .cghidEventTap)
+            }
+        case "scroll":
+            guard let dx = input.dx, let dy = input.dy,
+                  let event = CGEvent(scrollWheelEvent2Source: nil, units: .pixel, wheelCount: 2,
+                                      wheel1: Int32(dy.rounded()), wheel2: Int32(dx.rounded()), wheel3: 0)
+            else { throw LabError.message("无法创建桌面滚动") }
+            event.location = point
+            event.post(tap: .cghidEventTap)
+        default: throw LabError.message("桌面模式仅支持指针与滚动")
+        }
+    }
+}
 
 /// An optional test-Host executor. No mouse button is held across wire messages.
 final class HostWindowControl {
@@ -269,7 +327,10 @@ final class HostWindowControl {
         case "key":
             try validateKeyboard(input)
             let codes:[String:CGKeyCode] = ["return":36,"escape":53,"backspace":51,"tab":48,"left":123,"right":124,"down":125,"up":126,"home":115,"end":119,"deleteForward":117]
-            try key(codes[input.key!]!)
+            guard let name=input.key,let code=codes[name] ?? WindowInput.shortcutCodes[name] else { throw LabError.message("无效快捷键") }
+            let masks: [String:CGEventFlags] = ["shift":.maskShift,"cmd":.maskCommand,"ctrl":.maskControl,"opt":.maskAlternate]
+            let flags=(input.modifiers ?? []).compactMap { masks[$0] }.reduce(CGEventFlags()) { $0.union($1) }
+            try key(code,flags:flags)
         case "insertText":
             try validateKeyboard(input)
             try await insertText(input.text!)

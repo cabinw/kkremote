@@ -185,7 +185,7 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
     var onFailure: ((String) -> Void)?
     var onSourceFailure: ((String) -> Void)?
 
-    init(isHost: Bool, preset: LabPreset, route: MediaRoute = .directICE, endpointHost: String = "", mediaPort: UInt16 = 45991, receiveDepth: Int = 16, bridgeTransport: BridgeTransportKind = .network, captureWindowID: UInt32? = nil, expectedWindowProcessID: Int32? = nil, nativeWindowPixels: Bool = false, windowViewport: WindowViewport? = nil, requiresNativeClientPixels: Bool = false, hdr: Bool = false, sdrReceiver: Bool = false, traceDirectory: URL? = nil) throws {
+    init(isHost: Bool, preset: LabPreset, route: MediaRoute = .directICE, endpointHost: String = "", mediaPort: UInt16 = 45991, receiveDepth: Int = 16, bridgeTransport: BridgeTransportKind = .network, captureWindowID: UInt32? = nil, captureDisplayID: UInt32? = nil, expectedWindowProcessID: Int32? = nil, nativeWindowPixels: Bool = false, windowViewport: WindowViewport? = nil, requiresNativeClientPixels: Bool = false, hdr: Bool = false, sdrReceiver: Bool = false, traceDirectory: URL? = nil) throws {
         self.traceDirectory = traceDirectory
         encoderTelemetry = EncoderTelemetry(trace: traceDirectory != nil ? FrameTrace(role: isHost ? "sender" : "receiver",
             probes: ["sdkDropDiagnostics": WebRTCRuntime.sdkDropDiagnostics, "frameDropperDisabled": WebRTCRuntime.disableFrameDropperForSelfTest],
@@ -252,7 +252,7 @@ final class PeerEngine: NSObject, RTCPeerConnectionDelegate, RTCDataChannelDeleg
                 let trace = self?.encoderTelemetry.trace
                 #if os(macOS)
                 if let captureWindowID {
-                    return WindowCaptureSource(source: videoSource, preset: preset, windowID: captureWindowID, expectedProcessID: expectedWindowProcessID, hdr: hdr, nativeWindowPixels: nativeWindowPixels, viewport: windowViewport, requiresNativeClientPixels: requiresNativeClientPixels, trace: trace) { [weak self] message in
+                    return WindowCaptureSource(source: videoSource, preset: preset, windowID: captureWindowID, displayID: captureDisplayID, expectedProcessID: expectedWindowProcessID, hdr: hdr, nativeWindowPixels: nativeWindowPixels, viewport: windowViewport, requiresNativeClientPixels: requiresNativeClientPixels, trace: trace) { [weak self] message in
                         guard let self, !self.stopped else { return }
                         if let onSourceFailure = self.onSourceFailure { onSourceFailure(message) }
                         else { self.onFailure?(message) }

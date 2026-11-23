@@ -14,7 +14,7 @@ struct CaptureWindow: Codable, Identifiable {
     let heightPoints: Double
 }
 
-/// One explicitly selected window. Closing it ends capture; we never fall back to a display.
+/// Captures the selected window or display. Losing a window ends its capture.
 /// Lifecycle runs on the main queue; delivery and diagnostic counters share a small lock.
 final class WindowCaptureSource: NSObject, LabVideoSource, SCStreamOutput, SCStreamDelegate {
     // Explicit local CLI diagnostic only; never negotiated by the remote peer.
@@ -23,6 +23,7 @@ final class WindowCaptureSource: NSObject, LabVideoSource, SCStreamOutput, SCStr
     private let capturer: RTCVideoCapturer
     private let preset: LabPreset
     private let windowID: UInt32
+    private let displayID: UInt32?
     private let expectedProcessID: Int32?
     private let hdr: Bool
     private let nativeWindowPixels: Bool
@@ -47,8 +48,9 @@ final class WindowCaptureSource: NSObject, LabVideoSource, SCStreamOutput, SCStr
     private let trace: FrameTrace?
     private var callbackID: UInt64 = 0
 
-    init(source: RTCVideoSource, preset: LabPreset, windowID: UInt32, expectedProcessID: Int32? = nil, hdr: Bool = false, nativeWindowPixels: Bool = false, viewport: WindowViewport? = nil, requiresNativeClientPixels:Bool = false, trace: FrameTrace? = nil, onFailure: @escaping (String) -> Void) {
+    init(source: RTCVideoSource, preset: LabPreset, windowID: UInt32, displayID: UInt32? = nil, expectedProcessID: Int32? = nil, hdr: Bool = false, nativeWindowPixels: Bool = false, viewport: WindowViewport? = nil, requiresNativeClientPixels:Bool = false, trace: FrameTrace? = nil, onFailure: @escaping (String) -> Void) {
         self.nativeWindowPixels = nativeWindowPixels
+        self.displayID = displayID
         self.viewport=viewport
         self.requiresNativeClientPixels=requiresNativeClientPixels
         self.trace = trace
@@ -74,13 +76,22 @@ final class WindowCaptureSource: NSObject, LabVideoSource, SCStreamOutput, SCStr
             do {
                 let content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: false)
                 guard !self.stopped else { return }
-                guard let window = content.windows.first(where: { $0.windowID == self.windowID && (self.expectedProcessID == nil || $0.owningApplication?.processID == self.expectedProcessID) }) else {
-                    throw LabError.message("选定窗口已关闭或不可捕获，请重新选择窗口")
+                let filter: SCContentFilter
+                if let id = self.displayID {
+                    guard id == CGMainDisplayID(), let display = content.displays.first(where: { $0.displayID == id }) else {
+                        throw LabError.message("选定的主显示器不可用")
+                    }
+                    filter = SCContentFilter(display: display, excludingWindows: [])
+                } else {
+                    guard let window = content.windows.first(where: { $0.windowID == self.windowID &&
+                        (self.expectedProcessID == nil || $0.owningApplication?.processID == self.expectedProcessID) }) else {
+                        throw LabError.message("选定窗口已关闭或不可捕获，请重新选择窗口")
+                    }
+                    filter = SCContentFilter(desktopIndependentWindow: window)
                 }
-                let filter = SCContentFilter(desktopIndependentWindow: window)
                 let config = self.hdr ? SCStreamConfiguration(preset: .captureHDRStreamCanonicalDisplay) : SCStreamConfiguration()
                 config.width = self.preset.width; config.height = self.preset.height
-                if self.nativeWindowPixels,let pixels=MobileWindowSizing.capturePixels(for:filter.contentRect.size,
+                if self.nativeWindowPixels || self.displayID != nil,let pixels=MobileWindowSizing.capturePixels(for:filter.contentRect.size,
                     pointPixelScale:CGFloat(filter.pointPixelScale),maximumPixels:CGFloat(self.preset.width*self.preset.height)) {
                     config.captureResolution = .best
                     config.width=Int(pixels.width);config.height=Int(pixels.height)
@@ -92,12 +103,12 @@ final class WindowCaptureSource: NSObject, LabVideoSource, SCStreamOutput, SCStr
                 config.minimumFrameInterval = .zero
                 config.pixelFormat = self.hdr ? HDRFormat.pixelFormat : kCVPixelFormatType_32BGRA
                 config.queueDepth = Self.diagnosticQueueDepth
-                config.showsCursor = false; config.showMouseClicks = false
+                config.showsCursor = self.displayID != nil; config.showMouseClicks = false
                 config.capturesAudio = false; config.captureMicrophone = false
                 config.ignoreShadowsSingleWindow = true
                 config.ignoreGlobalClipSingleWindow = true
                 config.preservesAspectRatio = true; config.scalesToFit = true
-                if self.requiresNativeClientPixels {
+                if self.requiresNativeClientPixels && self.displayID == nil {
                     guard let viewport=self.viewport,viewport.isValid,let scale=viewport.displayScale else {throw LabError.message("原生像素捕获缺少客户端像素密度")}
                     let native=CGSize(width:filter.contentRect.width*CGFloat(filter.pointPixelScale),height:filter.contentRect.height*CGFloat(filter.pointPixelScale))
                     guard let target=MobileWindowSizing.nativeClientPixels(viewport:CGSize(width:viewport.width,height:viewport.height),displayScale:scale) else {throw LabError.message("原生像素目标无效")}
@@ -117,7 +128,7 @@ final class WindowCaptureSource: NSObject, LabVideoSource, SCStreamOutput, SCStr
                 config.colorSpaceName = self.hdr ? CGColorSpace.itur_2100_PQ : CGColorSpace.sRGB
                 if self.hdr { config.colorMatrix = kCVImageBufferYCbCrMatrix_ITU_R_2020 }
                 else { config.captureDynamicRange = .SDR }
-                if self.hdr,self.nativeWindowPixels,WebRTCRuntime.windowTextQuality,
+                if self.displayID == nil,self.hdr,self.nativeWindowPixels,WebRTCRuntime.windowTextQuality,
                    let viewport=self.viewport,viewport.isValid,let scale=viewport.displayScale,
                    let pixels=MobileWindowSizing.encodingPixels(for:filter.contentRect.size,nativeScale:CGFloat(filter.pointPixelScale),
                     viewport:CGSize(width:viewport.width,height:viewport.height),displayScale:CGFloat(scale),maximumPixels:CGFloat(self.preset.width*self.preset.height)) {

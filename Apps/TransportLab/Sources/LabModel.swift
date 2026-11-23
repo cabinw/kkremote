@@ -106,6 +106,9 @@ final class LabModel: ObservableObject {
     private var catalogRequestID: String?
     private var pendingWindowRequest: String?
     private var pendingWindowTarget: RemoteWindow?
+    @Published private(set) var windowShortcutsSupported = false
+    var sharesMainDisplay = false
+    var requestsMainDisplay = false
     var enablesWindowControl = false
     @Published private(set) var windowControlSupported = false
     @Published private(set) var controlLease: String?
@@ -140,6 +143,7 @@ final class LabModel: ObservableObject {
     @Published private(set) var windowStatus = "连接后可查看远端窗口"
     #if os(macOS)
     private let windowCatalog = HostWindowCatalog()
+    private var displayPointer: HostDisplayPointer?
     private var hostControl: HostWindowControl?
     #endif
     var decodedFrames: Int { engine?.frameCounter.received ?? 0 }
@@ -209,6 +213,7 @@ final class LabModel: ObservableObject {
         let engine = try PeerEngine(isHost: isHost, preset: activePreset, route: activeRoute,
             endpointHost: connectedHost, mediaPort: mediaPortNumber, receiveDepth: activeReceiveDepth,
             bridgeTransport: activeBridgeTransport, captureWindowID: isHost ? captureWindowID : nil,
+            captureDisplayID: isHost ? selectedRemoteWindow?.displayID : nil,
             expectedWindowProcessID: isHost ? selectedRemoteWindow?.processID : nil,
             nativeWindowPixels:isHost && enablesWindowLayout, windowViewport:isHost ? pendingWindowViewport:nil,
             requiresNativeClientPixels:isHost && nativeWorkspaceDisplayID != nil,
@@ -222,6 +227,7 @@ final class LabModel: ObservableObject {
             if isHost && message.type == "offer" {
                 message.windowProtocol = WindowMessage.version; message.windowSession = self.windowSession
                 message.windowLayout = self.enablesWindowLayout
+                message.windowShortcuts = self.enablesWindowControl
                 message.windowControl = self.enablesWindowControl
                 message.windowKeyboard = self.enablesWindowControl
             }
@@ -277,6 +283,7 @@ final class LabModel: ObservableObject {
             windowSession = session; windowSupported = true
             windowLayoutSupported = message.windowLayout == true
             windowControlSupported = message.windowControl == true
+            windowShortcutsSupported = message.windowShortcuts == true
             directKeyboardSupported = message.windowKeyboard == true
             windowStatus = "可选择远端窗口 · 只读"
             if first { refreshRemoteWindows() }
@@ -293,7 +300,7 @@ final class LabModel: ObservableObject {
         catalogLoading = true; windowError = nil
         let request = UUID().uuidString
         catalogRequestID = request
-        sendWindow(WindowMessage(action: "list", requestID: request))
+        sendWindow(WindowMessage(action: "list", requestID: request, includeDesktop: requestsMainDisplay ? true : nil))
         let token = generation
         DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in
             guard let self, self.generation == token, self.catalogLoading, self.catalogRequestID == request else { return }
@@ -314,15 +321,15 @@ final class LabModel: ObservableObject {
         guard delta != .zero else { return }
         sendInput(kind:"scroll",x:scrollPoint.x,y:scrollPoint.y,dx:max(-1000,min(1000,delta.width)),dy:max(-1000,min(1000,delta.height)))
     }
-    @discardableResult func sendInput(kind:String,x:Double? = nil,y:Double? = nil,dx:Double? = nil,dy:Double? = nil,text:String? = nil,key:String? = nil,id:String = UUID().uuidString) -> Bool {
+    @discardableResult func sendInput(kind:String,x:Double? = nil,y:Double? = nil,dx:Double? = nil,dy:Double? = nil,text:String? = nil,key:String? = nil,modifiers:[String]? = nil,id:String = UUID().uuidString) -> Bool {
         guard canControl,let lease=controlLease,let window=selectedRemoteWindow,let media=expectedMediaSession else { return false }
         if controlError != nil,["insertText","key"].contains(kind) { return false }
-        if ["insertText","key","focus"].contains(kind),!directKeyboardSupported { controlError="远端尚不支持直接键盘输入";return false }
+        if ["insertText","key","focus"].contains(kind),window.displayID != nil || !directKeyboardSupported { controlError="远端尚不支持直接键盘输入";return false }
         guard queuedInputs.count < 128,queuedInputs.reduce(0,{$0+($1.input?.text?.utf16.count ?? 0)})+(text?.utf16.count ?? 0)<=8192 else {
             failInput("输入积压，已暂停键盘，请重新点击窗口");return false
         }
         inputSequence += 1
-        let input=WindowInput(lease:lease,sequence:inputSequence,kind:kind,x:x,y:y,dx:dx,dy:dy,text:text,focus:controlState?.focus ?? "pending",key:key)
+        let input=WindowInput(lease:lease,sequence:inputSequence,kind:kind,x:x,y:y,dx:dx,dy:dy,text:text,focus:controlState?.focus ?? "pending",key:key,modifiers:modifiers)
         guard input.valid(width:window.widthPoints,height:window.heightPoints) else { failInput("输入内容超出限制，未发送");return false }
         controlError=nil
         queuedInputs.append(WindowMessage(action:"input",requestID:id,windowID:window.id,mediaSession:media,input:input))
@@ -357,7 +364,7 @@ final class LabModel: ObservableObject {
     private func resetControl() {
         scrollWork?.cancel();scrollWork=nil;scrollDelta = .zero
         #if os(macOS)
-        hostControl?.invalidate();hostControl=nil
+        displayPointer=nil;hostControl?.invalidate();hostControl=nil
         #endif
         controlLease=nil;controlState=nil;controlError=nil;queuedInputs.removeAll();inputQueueCount=0
         inputPending.removeAll();inputTimers.values.forEach{$0.cancel()};inputTimers.removeAll();inputSequence=0
@@ -374,7 +381,7 @@ final class LabModel: ObservableObject {
         layoutDebounce?.cancel()
         let work=DispatchWorkItem { [weak self] in
             guard let self,self.running,self.mode != "host",self.windowLayoutSupported,
-                  !self.windowBusy,!self.catalogLoading,let window=self.selectedRemoteWindow,
+                  !self.windowBusy,!self.catalogLoading,let window=self.selectedRemoteWindow, window.displayID == nil,
                   let size=self.desiredWindowViewport,size != self.appliedWindowViewport else { return }
             self.windowBusy=true;self.windowError=nil
             self.windowStatus="正在适配窗口…"
@@ -393,7 +400,7 @@ final class LabModel: ObservableObject {
         windowStatus = window == nil ? "正在停止观看…" : "正在切换窗口…"
         let request = UUID().uuidString
         pendingWindowRequest = request
-        pendingWindowViewport = window != nil && windowLayoutSupported ? desiredWindowViewport : nil
+        pendingWindowViewport = window != nil && window?.displayID == nil && windowLayoutSupported ? desiredWindowViewport : nil
         sendWindow(WindowMessage(action: window == nil ? "unsubscribe" : "select", requestID: request, windowID: window?.id, viewport:pendingWindowViewport))
         armWindowTimeout(request)
     }
@@ -481,6 +488,15 @@ final class LabModel: ObservableObject {
         let token = generation
         switch command.action {
         case "input":
+            if let pointer=displayPointer, sharesMainDisplay, enablesWindowControl, !windowBusy,
+               command.windowID == selectedRemoteWindow?.id, command.mediaSession == expectedMediaSession,
+               let input=command.input {
+                do {
+                    try pointer.dispatch(input)
+                    sendWindow(WindowMessage(action:"inputResult",requestID:command.requestID,controlState:WindowControlState()))
+                } catch { sendWindow(WindowMessage(action:"inputResult",requestID:command.requestID,error:error.localizedDescription)) }
+                return
+            }
             guard enablesWindowControl,!windowBusy,let executor=hostControl,
                 command.windowID == selectedRemoteWindow?.id,command.mediaSession == expectedMediaSession,let input=command.input else {
                 sendWindow(WindowMessage(action:"inputResult",requestID:command.requestID,error:"当前窗口暂不可操控"));return
@@ -498,7 +514,7 @@ final class LabModel: ObservableObject {
                 guard let self else { return }
                 defer { if self.generation == token { self.catalogLoading = false } }
                 do {
-                    let windows = try await self.windowCatalog.refresh()
+                    let windows = try await self.windowCatalog.refresh(includeDesktop: self.sharesMainDisplay && command.includeDesktop == true)
                     guard self.generation == token else { return }
                     self.sendWindow(WindowMessage(action: "catalog", requestID: command.requestID, windows: windows))
                 } catch {
@@ -517,7 +533,7 @@ final class LabModel: ObservableObject {
                 do {
                     let target: RemoteWindow?
                     if command.action == "resize" {
-                        guard self.enablesWindowLayout,let selected=self.selectedRemoteWindow,
+                        guard self.enablesWindowLayout,let selected=self.selectedRemoteWindow,selected.displayID == nil,
                               selected.id == command.windowID,command.viewport?.isValid == true else {
                             throw LabError.message("窗口尺寸请求不可用")
                         }
@@ -562,7 +578,7 @@ final class LabModel: ObservableObject {
             #if os(macOS)
             await HostWindowLayout.restoreNativeWindows(except:target).value
             guard self.generation == token,self.pendingWindowRequest == request else {return}
-            if let target,let viewport,self.enablesWindowLayout {
+            if let target,target.displayID == nil,let viewport,self.enablesWindowLayout {
                 do { try await HostWindowLayout.resize(target,viewport:viewport,workspaceDisplayID:self.nativeWorkspaceDisplayID,maximumPixels:CGFloat(self.activePreset.width*self.activePreset.height),isCurrent:{self.generation==token && self.pendingWindowRequest==request}) }
                 catch {
                     guard self.generation==token,self.pendingWindowRequest==request else {return}
@@ -579,12 +595,17 @@ final class LabModel: ObservableObject {
             guard self.generation == token,self.pendingWindowRequest == request else { return }
             self.windowTimeout?.cancel()
             self.captureWindowID=accepted?.number;self.selectedRemoteWindow=accepted
-            self.activeVideoSource=accepted == nil ? "none":"window"
+            self.activeVideoSource = accepted?.displayID != nil ? "display" : (accepted == nil ? "none" : "window")
             do {
                 if accepted != nil { try self.makeEngine(isHost:true) }
                 self.expectedMediaSession=self.engine?.sessionID
                 #if os(macOS)
-                if self.enablesWindowControl,let accepted {
+                if self.sharesMainDisplay, self.enablesWindowControl, let accepted, accepted.displayID != nil {
+                    do {
+                        self.displayPointer = try HostDisplayPointer(accepted)
+                        self.controlLease = self.displayPointer?.lease
+                    } catch { warning = error.localizedDescription }
+                } else if self.enablesWindowControl,let accepted,accepted.displayID == nil {
                     do { self.hostControl=try HostWindowControl(target:accepted) }
                     catch { warning=error.localizedDescription }
                     self.controlLease=self.hostControl?.lease
@@ -641,7 +662,7 @@ final class LabModel: ObservableObject {
         generation = UUID(); engineGeneration = UUID()
         diagnosticStopTimer?.invalidate(); diagnosticStopTimer = nil
         windowTimeout?.cancel(); windowTimeout = nil; pendingWindowRequest = nil; pendingWindowTarget = nil
-        expectedMediaSession = nil; windowSession = ""; windowSupported = false
+        windowShortcutsSupported = false; expectedMediaSession = nil; windowSession = ""; windowSupported = false
         windowLayoutSupported=false; appliedWindowViewport=nil; pendingWindowViewport=nil;layoutDebounce?.cancel()
         windowBusy = false; catalogLoading = false; catalogRequestID = nil; remoteWindows = []; selectedRemoteWindow = nil
         windowError = nil; windowStatus = "连接后可查看远端窗口"

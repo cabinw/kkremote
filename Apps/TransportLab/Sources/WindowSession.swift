@@ -10,6 +10,7 @@ struct RemoteWindow: Codable, Identifiable, Equatable {
     let title: String
     let widthPoints: Double
     let heightPoints: Double
+    var displayID: UInt32? = nil
     var label: String { title.isEmpty ? application : "\(application) · \(title)" }
 }
 
@@ -38,6 +39,7 @@ struct WindowMessage: Codable {
     var controlLease: String? = nil
     var input: WindowInput? = nil
     var controlState: WindowControlState? = nil
+    var includeDesktop: Bool? = nil
 }
 
 #if os(macOS)
@@ -48,11 +50,11 @@ import ApplicationServices
 final class HostWindowCatalog {
     private var entries: [String: RemoteWindow] = [:]
 
-    func refresh() async throws -> [RemoteWindow] {
+    func refresh(includeDesktop: Bool = false) async throws -> [RemoteWindow] {
         // Only advertise windows on the current desktop. Hidden helper/autofill
         // surfaces otherwise look selectable but can produce no captured frames.
         let content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: true)
-        let windows = content.windows.filter {
+        var windows = content.windows.filter {
             $0.windowLayer == 0 && $0.frame.width > 100 && $0.frame.height > 100 &&
             $0.owningApplication != nil && $0.owningApplication?.processID != ProcessInfo.processInfo.processIdentifier
         }.prefix(128).map { window in
@@ -62,13 +64,23 @@ final class HostWindowCatalog {
                 title: String((window.title ?? "").prefix(128)),
                 widthPoints: window.frame.width, heightPoints: window.frame.height)
         }.sorted { ($0.application, $0.title, $0.number) < ($1.application, $1.title, $1.number) }
+        if includeDesktop, let display = content.displays.first(where: { $0.displayID == CGMainDisplayID() }) {
+            windows.append(Self.desktop(display, handle: UUID().uuidString))
+        }
         // A fresh directory invalidates old unselected handles, including after close/reopen.
         entries = Dictionary(uniqueKeysWithValues: windows.map { ($0.id, $0) })
         return windows
     }
 
+    private static func desktop(_ display: SCDisplay, handle: String) -> RemoteWindow {
+        RemoteWindow(id: handle, number: display.displayID, processID: 0, application: "Mac",
+                     title: "主显示器", widthPoints: display.frame.width, heightPoints: display.frame.height,
+                     displayID: display.displayID)
+    }
+
     func resolve(_ handle: String) async throws -> RemoteWindow {
         guard let entry = entries[handle] else { throw LabError.message("窗口列表已更新，请刷新后重新选择") }
+        if entry.displayID != nil { return try await current(entry) }
         let content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: false)
         guard let window = content.windows.first(where: { $0.windowID == entry.number &&
             $0.owningApplication?.processID == entry.processID && $0.windowLayer == 0 }) else {
@@ -82,6 +94,12 @@ final class HostWindowCatalog {
     func current(_ entry: RemoteWindow) async throws -> RemoteWindow {
         // Selected handles survive a directory refresh, but never a process/window replacement.
         let content = try await SCShareableContent.excludingDesktopWindows(true,onScreenWindowsOnly:false)
+        if let id = entry.displayID {
+            guard id == CGMainDisplayID(), let display = content.displays.first(where: { $0.displayID == id }) else {
+                throw LabError.message("主显示器已改变，请重新选择")
+            }
+            return Self.desktop(display, handle: entry.id)
+        }
         guard let window = content.windows.first(where: { $0.windowID == entry.number &&
             $0.owningApplication?.processID == entry.processID && $0.windowLayer == 0 }) else {
             throw LabError.message("窗口已关闭或不可捕获")

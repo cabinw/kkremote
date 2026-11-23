@@ -19,7 +19,7 @@ enum LabCLI {
             var flags = Set<String>()
             var options: [String: String] = [:], i = 0
             while i < args.count {
-                if ["--window-text-quality", "--mobile-window-control", "--mobile-window-layout", "--self-test", "--persistent-host", "--list-windows", "--hdr", "--simulate-loss", "--sdr-receiver", "--sdk-drop-diagnostics", "--disable-frame-dropper", "--sample-journal"].contains(args[i]) {
+                if ["--window-text-quality", "--mobile-window-control", "--share-main-display", "--mobile-window-layout", "--self-test", "--persistent-host", "--list-windows", "--hdr", "--simulate-loss", "--sdr-receiver", "--sdk-drop-diagnostics", "--disable-frame-dropper", "--sample-journal"].contains(args[i]) {
                     guard flags.insert(args[i]).inserted else { throw LabError.message("重复参数") }
                     i += 1; continue
                 }
@@ -45,6 +45,7 @@ enum LabCLI {
                 try model.beginSampleJournal(to: URL(fileURLWithPath: path).deletingPathExtension().appendingPathExtension("samples.jsonl"))
             }
             model.enablesWindowLayout = flags.contains("--mobile-window-layout")
+            model.sharesMainDisplay = flags.contains("--share-main-display")
             model.enablesWindowControl = flags.contains("--mobile-window-control")
             model.hdr = flags.contains("--hdr")
             if let value=options["--native-workspace-display-id"] {
