@@ -106,6 +106,7 @@ final class LabModel: ObservableObject {
     private var catalogRequestID: String?
     private var pendingWindowRequest: String?
     private var pendingWindowTarget: RemoteWindow?
+    @Published private(set) var physicalKeyboardSupported = false
     @Published private(set) var windowShortcutsSupported = false
     var sharesMainDisplay = false
     var requestsMainDisplay = false
@@ -228,6 +229,7 @@ final class LabModel: ObservableObject {
             if isHost && message.type == "offer" {
                 message.windowProtocol = WindowMessage.version; message.windowSession = self.windowSession
                 message.windowLayout = self.enablesWindowLayout
+                message.physicalKeyboard = self.enablesWindowControl
                 message.windowShortcuts = self.enablesWindowControl
                 message.windowControl = self.enablesWindowControl
                 message.windowKeyboard = self.enablesWindowControl
@@ -284,6 +286,7 @@ final class LabModel: ObservableObject {
             windowSession = session; windowSupported = true
             windowLayoutSupported = message.windowLayout == true
             windowControlSupported = message.windowControl == true
+            physicalKeyboardSupported = message.physicalKeyboard == true
             windowShortcutsSupported = message.windowShortcuts == true
             directKeyboardSupported = message.windowKeyboard == true
             windowStatus = "可选择远端窗口 · 只读"
@@ -325,7 +328,7 @@ final class LabModel: ObservableObject {
     @discardableResult func sendInput(kind:String,x:Double? = nil,y:Double? = nil,dx:Double? = nil,dy:Double? = nil,text:String? = nil,key:String? = nil,modifiers:[String]? = nil,id:String = UUID().uuidString) -> Bool {
         guard canControl,let lease=controlLease,let window=selectedRemoteWindow,let media=expectedMediaSession else { return false }
         if controlError != nil,["insertText","key"].contains(kind) { return false }
-        if ["insertText","key","focus"].contains(kind),window.displayID != nil || !directKeyboardSupported { controlError="远端尚不支持直接键盘输入";return false }
+        if ["insertText","key","focus"].contains(kind),!directKeyboardSupported || (window.displayID != nil && (!physicalKeyboardSupported || kind == "insertText")) { controlError="远端尚不支持直接键盘输入";return false }
         guard queuedInputs.count < 128,queuedInputs.reduce(0,{$0+($1.input?.text?.utf16.count ?? 0)})+(text?.utf16.count ?? 0)<=8192 else {
             failInput("输入积压，已暂停键盘，请重新点击窗口");return false
         }
@@ -494,8 +497,8 @@ final class LabModel: ObservableObject {
                command.windowID == selectedRemoteWindow?.id, command.mediaSession == expectedMediaSession,
                let input=command.input {
                 do {
-                    try pointer.dispatch(input)
-                    sendWindow(WindowMessage(action:"inputResult",requestID:command.requestID,controlState:WindowControlState()))
+                    let state = try pointer.dispatch(input)
+                    sendWindow(WindowMessage(action:"inputResult",requestID:command.requestID,controlState:state))
                 } catch { sendWindow(WindowMessage(action:"inputResult",requestID:command.requestID,error:error.localizedDescription)) }
                 return
             }
@@ -673,7 +676,7 @@ final class LabModel: ObservableObject {
         generation = UUID(); engineGeneration = UUID()
         diagnosticStopTimer?.invalidate(); diagnosticStopTimer = nil
         windowTimeout?.cancel(); windowTimeout = nil; pendingWindowRequest = nil; pendingWindowTarget = nil
-        windowShortcutsSupported = false; expectedMediaSession = nil; windowSession = ""; windowSupported = false
+        physicalKeyboardSupported = false; windowShortcutsSupported = false; expectedMediaSession = nil; windowSession = ""; windowSupported = false
         windowLayoutSupported=false; appliedWindowViewport=nil; pendingWindowViewport=nil;layoutDebounce?.cancel()
         windowBusy = false; catalogLoading = false; catalogRequestID = nil; remoteWindows = []; remoteAppIcons = [:]; selectedRemoteWindow = nil
         windowError = nil; windowStatus = "连接后可查看远端窗口"

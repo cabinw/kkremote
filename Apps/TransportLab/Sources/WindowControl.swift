@@ -12,14 +12,19 @@ struct WindowInput: Codable {
     var focus: String? = nil
     var key: String? = nil
     var modifiers: [String]? = nil
-    static let navigationKeys = ["return","escape","backspace","tab","left","right","up","down","home","end","deleteForward"]
+    static let specialCodes: [String: UInt16] = [
+        "return":36, "escape":53, "backspace":51, "tab":48, "left":123, "right":124, "down":125,
+        "up":126, "home":115, "end":119, "deleteForward":117, "pageUp":116, "pageDown":121,
+        "F1":122, "F2":120, "F3":99, "F4":118, "F5":96, "F6":97, "F7":98, "F8":100,
+        "F9":101, "F10":109, "F11":103, "F12":111
+    ]
     // macOS ANSI virtual key codes for modifier chords delivered to the selected process.
     static let shortcutCodes: [String: UInt16] = [
         "a":0, "s":1, "d":2, "f":3, "h":4, "g":5, "z":6, "x":7, "c":8, "v":9,
         "b":11, "q":12, "w":13, "e":14, "r":15, "y":16, "t":17, "1":18, "2":19,
         "3":20, "4":21, "6":22, "5":23, "=":24, "9":25, "7":26, "-":27, "8":28,
         "0":29, "]":30, "o":31, "u":32, "[":33, "i":34, "p":35, "l":37, "j":38,
-        "'":39, "k":40, ";":41, ",":43, "/":44, "n":45, "m":46, ".":47, " ":49
+        "'":39, "k":40, ";":41, ",":43, "/":44, "n":45, "m":46, ".":47, " ":49, "\\":42, "`":50
     ]
     func valid(width: Double, height: Double) -> Bool {
         guard sequence > 0, !lease.isEmpty else { return false }
@@ -32,8 +37,8 @@ struct WindowInput: Codable {
         case "insertText": return text.map { !$0.isEmpty && $0.utf16.count <= 4000 && !$0.contains("\0") } == true && focus != nil
         case "key":
             let flags = modifiers ?? []
-            guard flags.count <= 4, flags.allSatisfy({ ["cmd","shift","opt","ctrl"].contains($0) }) else { return false }
-            return Self.navigationKeys.contains(key ?? "") || (!flags.isEmpty && Self.shortcutCodes[key ?? ""] != nil)
+            guard flags.count <= 5, flags.allSatisfy({ ["cmd","shift","opt","ctrl","caps"].contains($0) }) else { return false }
+            return Self.specialCodes[key ?? ""] != nil || Self.shortcutCodes[key ?? ""] != nil
         default: return false
         }
     }
@@ -47,27 +52,70 @@ struct WindowControlState: Codable {
 import AppKit
 import ApplicationServices
 
-/// Pointer events for an explicitly selected display. Coordinates are in display points.
+private extension WindowInput {
+    func postKey(to pid: pid_t) throws {
+        guard let key, let code = Self.specialCodes[key] ?? Self.shortcutCodes[key],
+              let down = CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: true),
+              let up = CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: false)
+        else { throw LabError.message("无效按键") }
+        let masks: [String: CGEventFlags] = ["shift": .maskShift, "cmd": .maskCommand, "ctrl": .maskControl, "opt": .maskAlternate, "caps": .maskAlphaShift]
+        let flags = (modifiers ?? []).compactMap { masks[$0] }.reduce(CGEventFlags()) { $0.union($1) }
+        for event in [down, up] { event.flags = flags; event.postToPid(pid) }
+    }
+}
+
+/// Input for an explicitly selected display. Pointer coordinates are in display points.
 final class HostDisplayPointer {
     let lease = UUID().uuidString
     let display: RemoteWindow
     private var lastSequence = 0
+    private var clickedWindow: AXUIElement?
+    private var keyboardFocus: (pid: pid_t, window: AXUIElement, token: String)?
+    private var state: WindowControlState { WindowControlState(focus: keyboardFocus?.token) }
+
+    private func windowAt(_ point: CGPoint) -> AXUIElement? {
+        var element: AXUIElement?
+        guard AXUIElementCopyElementAtPosition(AXUIElementCreateSystemWide(), Float(point.x), Float(point.y), &element) == .success,
+              let element else { return nil }
+        if (HostWindowControl.attribute(element, kAXRoleAttribute) as? String) == kAXWindowRole { return element }
+        guard let owner = HostWindowControl.attribute(element, kAXWindowAttribute),
+              CFGetTypeID(owner) == AXUIElementGetTypeID() else { return nil }
+        return (owner as! AXUIElement)
+    }
 
     init(_ display: RemoteWindow) throws {
         guard display.displayID != nil, AXIsProcessTrusted() else { throw LabError.message("桌面指针需要辅助功能权限") }
         self.display = display
     }
 
-    func dispatch(_ input: WindowInput) throws {
+    func dispatch(_ input: WindowInput) throws -> WindowControlState {
         guard let id = display.displayID, id == CGMainDisplayID(), CGDisplayIsActive(id) != 0,
               AXIsProcessTrusted(), input.lease == lease, input.sequence > lastSequence,
-              input.valid(width: display.widthPoints, height: display.heightPoints),
-              let x = input.x, let y = input.y else { throw LabError.message("桌面输入目标已失效") }
+              input.valid(width: display.widthPoints, height: display.heightPoints) else { throw LabError.message("桌面输入目标已失效") }
         let frame = CGDisplayBounds(id)
         guard frame.size == CGSize(width: display.widthPoints, height: display.heightPoints) else {
             throw LabError.message("桌面尺寸已变化，请重新选择")
         }
         lastSequence = input.sequence
+        if input.kind == "focus" || input.kind == "key" {
+            guard let window = clickedWindow, let pid = NSWorkspace.shared.frontmostApplication?.processIdentifier,
+                  let focused = HostWindowControl.attribute(AXUIElementCreateApplication(pid), kAXFocusedWindowAttribute),
+                  CFEqual(focused, window), let windowFrame = HostWindowControl.rect(window), frame.intersects(windowFrame)
+            else {
+                clickedWindow = nil
+                keyboardFocus = nil
+                throw LabError.message("请先在上屏点选要输入的 Mac 窗口")
+            }
+            if input.kind == "focus" {
+                keyboardFocus = (pid, window, UUID().uuidString)
+            } else {
+                guard let focus = keyboardFocus, input.focus == focus.token, pid == focus.pid, CFEqual(window, focus.window)
+                else { throw LabError.message("桌面输入焦点已改变，请重新点选窗口") }
+                try input.postKey(to: pid)
+            }
+            return state
+        }
+        guard let x = input.x, let y = input.y else { throw LabError.message("桌面坐标无效") }
         let point = CGPoint(x: frame.minX + x, y: frame.minY + y)
         switch input.kind {
         case "click", "secondary":
@@ -75,6 +123,8 @@ final class HostDisplayPointer {
             let button: CGMouseButton = right ? .right : .left
             guard let down = CGEvent(mouseEventSource: nil, mouseType: right ? .rightMouseDown : .leftMouseDown, mouseCursorPosition: point, mouseButton: button),
                   let up = CGEvent(mouseEventSource: nil, mouseType: right ? .rightMouseUp : .leftMouseUp, mouseCursorPosition: point, mouseButton: button) else { throw LabError.message("无法创建桌面点击") }
+            keyboardFocus = nil
+            clickedWindow = windowAt(point)
             for event in [down, up] {
                 event.flags = []
                 event.setIntegerValueField(.mouseEventClickState, value: 1)
@@ -87,8 +137,9 @@ final class HostDisplayPointer {
             else { throw LabError.message("无法创建桌面滚动") }
             event.location = point
             event.post(tap: .cghidEventTap)
-        default: throw LabError.message("桌面模式仅支持指针与滚动")
+        default: throw LabError.message("不支持的桌面输入")
         }
+        return state
     }
 }
 
@@ -157,11 +208,11 @@ final class HostWindowControl {
             self.processing=false
         }
     }
-    private static func attribute(_ element:AXUIElement,_ key:String)->CFTypeRef? {
+    fileprivate static func attribute(_ element:AXUIElement,_ key:String)->CFTypeRef? {
         var value:CFTypeRef?
         guard AXUIElementCopyAttributeValue(element,key as CFString,&value) == .success else { return nil };return value
     }
-    private static func rect(_ element:AXUIElement)->CGRect? {
+    fileprivate static func rect(_ element:AXUIElement)->CGRect? {
         guard let p=attribute(element,kAXPositionAttribute),let s=attribute(element,kAXSizeAttribute),
             CFGetTypeID(p)==AXValueGetTypeID(),CFGetTypeID(s)==AXValueGetTypeID() else { return nil }
         var point=CGPoint.zero,size=CGSize.zero
@@ -326,11 +377,7 @@ final class HostWindowControl {
             try requireUncovered(event.location);event.post(tap:.cghidEventTap)
         case "key":
             try validateKeyboard(input)
-            let codes:[String:CGKeyCode] = ["return":36,"escape":53,"backspace":51,"tab":48,"left":123,"right":124,"down":125,"up":126,"home":115,"end":119,"deleteForward":117]
-            guard let name=input.key,let code=codes[name] ?? WindowInput.shortcutCodes[name] else { throw LabError.message("无效快捷键") }
-            let masks: [String:CGEventFlags] = ["shift":.maskShift,"cmd":.maskCommand,"ctrl":.maskControl,"opt":.maskAlternate]
-            let flags=(input.modifiers ?? []).compactMap { masks[$0] }.reduce(CGEventFlags()) { $0.union($1) }
-            try key(code,flags:flags)
+            try input.postKey(to: target.processID)
         case "insertText":
             try validateKeyboard(input)
             try await insertText(input.text!)

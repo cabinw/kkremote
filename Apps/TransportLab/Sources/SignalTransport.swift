@@ -19,6 +19,7 @@ struct SignalMessage: Codable {
     var windowLayout: Bool? = nil
     var windowControl: Bool? = nil
     var windowShortcuts: Bool? = nil
+    var physicalKeyboard: Bool? = nil
     var windowKeyboard: Bool? = nil
     var window: WindowMessage? = nil
 }
