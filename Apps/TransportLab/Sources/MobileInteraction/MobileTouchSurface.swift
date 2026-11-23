@@ -32,18 +32,24 @@ final class MobileTouchRecognizer: UIGestureRecognizer {
         self.session = session; token = session.resetToken
         super.init(target: nil, action: nil)
         cancelsTouchesInView = true
-        machine.directScroll = session.directScroll; machine.relative = session.relative; machine.inspect = session.inspect || !session.inputEnabled
+        configureMachine()
+    }
+    private func configureMachine() {
+        machine.directScroll = session.directScroll
+        machine.relative = session.relative
+        machine.inspect = session.inspect || !session.inputEnabled
+        machine.pansWithTwoFingers = session.fitsFoldPanelWidth && session.geometry.contentSize.height > session.viewport.height + 0.5
     }
     func synchronize() {
         guard token != session.resetToken else { return }
         abort(); token = session.resetToken
-        machine.directScroll = session.directScroll; machine.relative = session.relative; machine.inspect = session.inspect || !session.inputEnabled
+        configureMachine()
     }
     func abort() {
         session.cancel()
         if contacts.isEmpty {
             machine = InteractionGestureMachine()
-            machine.directScroll = session.directScroll; machine.relative = session.relative; machine.inspect = session.inspect || !session.inputEnabled
+            configureMachine()
         } else {
             _ = machine.cancel()
             if state == .began || state == .changed { state = .cancelled }
@@ -52,7 +58,7 @@ final class MobileTouchRecognizer: UIGestureRecognizer {
     override func reset() {
         super.reset(); contacts = [:]
         machine = InteractionGestureMachine()
-        machine.directScroll = session.directScroll; machine.relative = session.relative; machine.inspect = session.inspect || !session.inputEnabled
+        configureMachine()
     }
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
         for touch in touches { nextID += 1; contacts[ObjectIdentifier(touch)] = (nextID, touch) }

@@ -130,7 +130,8 @@
     var body: some View {
       GeometryReader { geometry in
         if let division = horizontalFold(in: geometry) {
-          foldedContent(division, size: geometry.size)
+          foldedContent(division, size: geometry.size, insets: geometry.safeAreaInsets)
+            .statusBarHidden()
         } else {
           touchWorkspace
         }
@@ -231,10 +232,13 @@
       return nil
     }
 
-    private func foldedContent(_ fold: CGRect, size: CGSize) -> some View {
+    private func foldedContent(_ fold: CGRect, size: CGSize, insets: EdgeInsets) -> some View {
       VStack(spacing: 0) {
-        video().overlay { if foldTrackpad { pointerOverlay } }.padding(6)
-          .frame(maxWidth: .infinity).frame(height: fold.minY)
+        video().overlay { if foldTrackpad { pointerOverlay } }
+          .frame(width: size.width + insets.leading + insets.trailing, height: fold.minY + insets.top)
+          .clipped()
+          // Extend only the video to the glass. Keep the lower controls in their safe area.
+          .padding(EdgeInsets(top: -insets.top, leading: -insets.leading, bottom: 0, trailing: -insets.trailing))
         Color.black.frame(height: fold.height).accessibilityHidden(true)
         VStack(spacing: 4) {
           HStack(spacing: 2) {
@@ -271,9 +275,11 @@
         .background(Color(white: 0.15))
       }
       .onAppear {
+        viewport.setFoldPanelWidth(true)
         keyboard.cancel()
         foldTrackpad = false
       }
+      .onDisappear { viewport.setFoldPanelWidth(false) }
     }
 
     @ViewBuilder private func recentButton(_ key: String, inFold: Bool = false) -> some View {
@@ -408,9 +414,13 @@
       let g = viewport.geometry
       guard model.canControl, g.isValid else { return }
       let p = pointer()
-      cursor = CGPoint(
+      let next = CGPoint(
         x: min(max(0, p.x + delta.x / g.scale), g.source.width - 0.01),
         y: min(max(0, p.y + delta.y / g.scale), g.source.height - 0.01))
+      cursor = next
+      if viewport.fitsFoldPanelWidth {
+        viewport.reveal(CGRect(origin: next, size: CGSize(width: 1, height: 1)))
+      }
     }
     private func click(_ secondary: Bool) {
       guard model.canControl, viewport.geometry.isValid else { return }

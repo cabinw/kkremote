@@ -15,6 +15,7 @@ struct InteractionGestureMachine {
     var directScroll = false
     var relative = false
     var inspect = false
+    var pansWithTwoFingers = false
     private var initial: [Contact] = []
     private var last: [Contact] = []
     private var beganAt: TimeInterval = 0
@@ -83,8 +84,8 @@ struct InteractionGestureMachine {
                 return [.zoom(currentDistance / startDistance, startCenter), .pan(delta(center, startCenter))]
             }
             if hypot(center.x - startCenter.x, center.y - startCenter.y) > 8 {
-                intent = inspect ? .pan : .scroll
-                return inspect ? [.pan(delta(center, startCenter))] : [.scrollBegan(startCenter), .scroll(delta(center, startCenter))]
+                intent = (inspect || pansWithTwoFingers) ? .pan : .scroll
+                return intent == .pan ? [.pan(delta(center, startCenter))] : [.scrollBegan(startCenter), .scroll(delta(center, startCenter))]
             }
             return []
         }

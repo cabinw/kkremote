@@ -107,6 +107,22 @@ final class DuoWorkspaceTests: XCTestCase {
         let menu = app.buttons["duoDock"]
         XCTAssertLessThanOrEqual(surface.frame.maxY, menu.frame.minY)
         XCTAssertLessThanOrEqual(menu.frame.maxY, app.buttons["duoKey-F1"].frame.minY)
+        func expectEdgeToEdgePicture() throws {
+            XCTAssertEqual(surface.frame.minX, app.frame.minX, accuracy: 0.5)
+            XCTAssertEqual(surface.frame.maxX, app.frame.maxX, accuracy: 0.5)
+            XCTAssertEqual(surface.frame.minY, app.frame.minY, accuracy: 0.5)
+            let snapshot = state()
+            let width = try XCTUnwrap(snapshot["contentWidth"] as? Double)
+            let height = try XCTUnwrap(snapshot["contentHeight"] as? Double)
+            let sourceWidth = try XCTUnwrap(snapshot["sourceWidth"] as? Double)
+            let sourceHeight = try XCTUnwrap(snapshot["sourceHeight"] as? Double)
+            XCTAssertEqual(try XCTUnwrap(snapshot["x"] as? Double), 0, accuracy: 0.5)
+            XCTAssertEqual(try XCTUnwrap(snapshot["y"] as? Double), 0, accuracy: 0.5)
+            XCTAssertEqual(width, surface.frame.width, accuracy: 0.5)
+            XCTAssertEqual(height, width * sourceHeight / sourceWidth, accuracy: 0.5)
+            print("FOLD_PICTURE surface=\(surface.frame) content=\(width)x\(height)")
+        }
+        try expectEdgeToEdgePicture()
         print("FOLD_LAYOUT screen=\(app.frame.size) video=\(surface.frame) menu=\(menu.frame) A=\(a.frame)")
         func clickSurface() {
             let before = state()["inputAcknowledged"] as? Int ?? 0
@@ -144,6 +160,7 @@ final class DuoWorkspaceTests: XCTestCase {
         app.buttons["duoDesktop"].tap()
         app.buttons["显示完整桌面"].tap()
         expectPicture(desktop: true)
+        try expectEdgeToEdgePicture()
         app.buttons["duoKey-x"].tap()
         observe("Desktop keyboard should wait for a selected input window") { !($0["controlError"] as? String ?? "").isEmpty }
         clickSurface()

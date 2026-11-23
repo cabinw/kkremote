@@ -50,6 +50,20 @@ struct ViewportGeometryTests {
         check(ViewportGeometry(source: wide, viewport: .zero).sourcePoint(at: .zero) == nil, "Zero viewport disables mapping")
         check(ViewportGeometry(source: wide, viewport: phone, zoom: .nan).zoom == 1, "Invalid zoom is sanitized")
         check(ViewportGeometry(source: wide, viewport: phone, zoom: 99).zoom == 4, "Zoom has a bound")
+        let upperPanel = CGSize(width: 669, height: 456)
+        let panel = ViewportGeometry(source: wide, viewport: upperPanel, fitsWidth: true)
+        check(panel.contentRect.origin == .zero && close(panel.contentRect.width, upperPanel.width),
+              "The Duo picture starts at the glass and spans its width")
+        check(panel.contentRect.maxY < upperPanel.height && panel.sourcePoint(at: CGPoint(x: 5, y: 455)) == nil,
+              "The space below a wide desktop cannot produce clicks")
+        let tallSource = CGSize(width: 600, height: 900)
+        let panned = ViewportGeometry(source: tallSource, viewport: upperPanel,
+                                     offset: CGSize(width: 0, height: -2000), fitsWidth: true)
+        check(close(panned.contentRect.maxY, upperPanel.height), "A tall Duo window stops at its bottom edge")
+        let corner = CGPoint(x: 668, y: 455)
+        let sourceCorner = panned.sourcePoint(at: corner)!
+        check(sourceCorner.y > 899 && panned.displayPoint(for: sourceCorner) == corner,
+              "Edge clicks map into the same visible source row after panning")
         let nativeSource = CGSize(width:645,height:1309)
         let nativePixels = CGSize(width:1290,height:2618)
         let nativeViewport = CGSize(width:430,height:873)

@@ -39,13 +39,19 @@ final class MobileInteractionSession: ObservableObject {
         self.localInputPreview = localInputPreview; self.directScroll = directScroll
     }
     @Published private(set) var keyboardPresented = false
+    @Published private(set) var fitsFoldPanelWidth = false
+    func setFoldPanelWidth(_ enabled: Bool) {
+        guard enabled != fitsFoldPanelWidth else { return }
+        fitsFoldPanelWidth = enabled
+        fit()
+    }
     var fitsKeyboardWidth: Bool { locksWholeWindow && keyboardPresented }
     func setKeyboardPresented(_ value:Bool) {
         guard keyboardPresented != value else { return };cancel();keyboardPresented=value;zoom=1;offset = .zero;resetToken += 1
     }
     func makeGeometry(source: CGSize, viewport: CGSize, encodedPixels: CGSize?, displayScale: CGFloat) -> ViewportGeometry {
         ViewportGeometry(source: source, viewport: viewport, zoom: zoom, offset: offset, fillsViewport: fillsViewport,
-                         fitsWidth: fitsKeyboardWidth, encodedPixels: encodedPixels, displayScale: displayScale)
+                         fitsWidth: fitsFoldPanelWidth || fitsKeyboardWidth, encodedPixels: encodedPixels, displayScale: displayScale)
     }
     var geometry: ViewportGeometry { makeGeometry(source: source, viewport: viewport, encodedPixels: encodedPixels, displayScale: displayScale) }
 
@@ -58,7 +64,7 @@ final class MobileInteractionSession: ObservableObject {
         self.encodedPixels = encodedPixels; self.displayScale = displayScale
         // New decoder telemetry must not alter the user's current zoom/pan.
         if !layoutChanged { resetToken += 1; return }
-        if sameWindow && !locksWholeWindow {
+        if sameWindow && !locksWholeWindow && !fitsFoldPanelWidth {
             // A keyboard changes the visible area, not the window. Preserve the
             // point at the center and its display scale instead of jumping to fit.
             let center = CGPoint(x: (previous.viewport.width / 2 - previous.contentRect.minX) / previous.scale,
@@ -78,18 +84,26 @@ final class MobileInteractionSession: ObservableObject {
     /// Reveal an acknowledged source-space focus rectangle without changing zoom.
     func reveal(_ rect: CGRect, padding: CGFloat = 16) {
         let g = geometry
-        guard !locksWholeWindow, g.isValid, !rect.isNull, !rect.isEmpty,
+        guard (!locksWholeWindow || fitsFoldPanelWidth), g.isValid, !rect.isNull, !rect.isEmpty,
               [rect.minX, rect.minY, rect.maxX, rect.maxY].allSatisfy({ $0.isFinite }) else { return }
         let start = g.displayPoint(for: rect.origin)
         let end = g.displayPoint(for: CGPoint(x: rect.maxX, y: rect.maxY))
         let dx = start.x < padding ? padding - start.x : min(0, viewport.width - padding - end.x)
         let dy = start.y < padding ? padding - start.y : min(0, viewport.height - padding - end.y)
+        if fitsFoldPanelWidth {
+            panFoldPanel(by: dy)
+            return
+        }
         offset = ViewportGeometry(source: source, viewport: viewport, zoom: zoom,
             offset: CGSize(width: offset.width + dx, height: offset.height + dy), fillsViewport: fillsViewport).clampedOffset
     }
+    private func panFoldPanel(by dy: CGFloat) {
+        let limit = min(0, viewport.height - geometry.contentSize.height)
+        offset.height = min(0, max(limit, offset.height + dy))
+    }
     func fit() {
         cancel(); zoom = 1; offset = .zero
-        if fillsViewport {
+        if fillsViewport && !fitsFoldPanelWidth {
             // Start at the window's top-left, keeping row labels and the first column visible.
             let size = geometry.contentSize
             offset = CGSize(width:max(0,(size.width-viewport.width)/2),height:max(0,(size.height-viewport.height)/2))
@@ -115,11 +129,12 @@ final class MobileInteractionSession: ObservableObject {
         let geometry = self.geometry
         switch action {
         case let .zoom(factor, anchor):
-            guard !locksWholeWindow else { return }
+            guard !fitsFoldPanelWidth, !locksWholeWindow else { return }
             cancel()
             let next = geometry.zoomed(to: zoom * factor, anchor: anchor)
             zoom = next.zoom; offset = next.clampedOffset
         case let .pan(delta):
+            if fitsFoldPanelWidth { panFoldPanel(by: delta.height); return }
             guard !locksWholeWindow else { return }
             offset = ViewportGeometry(source: source, viewport: viewport, zoom: zoom,
                 offset: CGSize(width: offset.width + delta.width, height: offset.height + delta.height), fillsViewport: fillsViewport).clampedOffset
