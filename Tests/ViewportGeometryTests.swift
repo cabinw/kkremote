@@ -56,6 +56,21 @@ struct ViewportGeometryTests {
               "The Duo picture starts at the glass and spans its width")
         check(panel.contentRect.maxY < upperPanel.height && panel.sourcePoint(at: CGPoint(x: 5, y: 455)) == nil,
               "The space below a wide desktop cannot produce clicks")
+        // A wide desktop moves down as a whole; a portrait desktop must still fit both dimensions.
+        for desktop in [CGSize(width: 1194, height: 771), CGSize(width: 800, height: 1200)] {
+            let upper = CGSize(width: 669, height: 475.67)
+            let g = ViewportGeometry(source: desktop, viewport: upper)
+            let r = g.contentRect
+            check(close(r.midX, upper.width / 2) && close(r.midY, upper.height / 2), "Center the entire desktop")
+            check(r.minX >= -0.001 && r.minY >= -0.001 && r.maxX <= upper.width + 0.001 && r.maxY <= upper.height + 0.001,
+                  "All desktop edges remain visible")
+            check(close(r.width / r.height, desktop.width / desktop.height), "Preserve the desktop aspect ratio")
+            let margin = r.minY > 1 ? CGPoint(x: upper.width / 2, y: 0) : CGPoint(x: 0, y: upper.height / 2)
+            check(g.sourcePoint(at: margin) == nil, "The margin beside a centered desktop does not send input")
+            let dock = CGPoint(x: desktop.width * 0.7, y: desktop.height - 1)
+            let mapped = g.sourcePoint(at: g.displayPoint(for: dock))!
+            check(close(mapped.x, dock.x) && close(mapped.y, dock.y), "A click on the lower desktop row maps to its source")
+        }
         let tallSource = CGSize(width: 600, height: 900)
         let panned = ViewportGeometry(source: tallSource, viewport: upperPanel,
                                      offset: CGSize(width: 0, height: -2000), fitsWidth: true)

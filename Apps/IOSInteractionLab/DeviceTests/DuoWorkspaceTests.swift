@@ -126,7 +126,7 @@ final class DuoWorkspaceTests: XCTestCase {
         let menu = app.buttons["duoDock"]
         XCTAssertLessThanOrEqual(surface.frame.maxY, menu.frame.minY)
         XCTAssertLessThanOrEqual(menu.frame.maxY, app.buttons["duoKey-F1"].frame.minY)
-        func expectEdgeToEdgePicture() throws {
+        func expectPictureGeometry(desktop: Bool) throws {
             XCTAssertEqual(surface.frame.minX, app.frame.minX, accuracy: 0.5)
             XCTAssertEqual(surface.frame.maxX, app.frame.maxX, accuracy: 0.5)
             XCTAssertEqual(surface.frame.minY, app.frame.minY, accuracy: 0.5)
@@ -135,13 +135,18 @@ final class DuoWorkspaceTests: XCTestCase {
             let height = try XCTUnwrap(snapshot["contentHeight"] as? Double)
             let sourceWidth = try XCTUnwrap(snapshot["sourceWidth"] as? Double)
             let sourceHeight = try XCTUnwrap(snapshot["sourceHeight"] as? Double)
-            XCTAssertEqual(try XCTUnwrap(snapshot["x"] as? Double), 0, accuracy: 0.5)
-            XCTAssertEqual(try XCTUnwrap(snapshot["y"] as? Double), 0, accuracy: 0.5)
-            XCTAssertEqual(width, surface.frame.width, accuracy: 0.5)
-            XCTAssertEqual(height, width * sourceHeight / sourceWidth, accuracy: 0.5)
-            print("FOLD_PICTURE surface=\(surface.frame) content=\(width)x\(height)")
+            let x = try XCTUnwrap(snapshot["x"] as? Double)
+            let y = try XCTUnwrap(snapshot["y"] as? Double)
+            let scale = desktop ? min(surface.frame.width / sourceWidth, surface.frame.height / sourceHeight)
+                                : surface.frame.width / sourceWidth
+            XCTAssertEqual(width, sourceWidth * scale, accuracy: 0.5)
+            XCTAssertEqual(height, sourceHeight * scale, accuracy: 0.5)
+            XCTAssertEqual(x, (surface.frame.width - width) / 2, accuracy: 0.5)
+            XCTAssertEqual(y, desktop ? (surface.frame.height - height) / 2 : 0, accuracy: 0.5)
+            print("FOLD_PICTURE desktop=\(desktop) surface=\(surface.frame) content=(\(x), \(y), \(width), \(height))")
         }
-        try expectEdgeToEdgePicture()
+        try expectPictureGeometry(desktop: false)
+        let windowBottom = surface.frame.maxY
         print("FOLD_LAYOUT screen=\(app.frame.size) video=\(surface.frame) menu=\(menu.frame) A=\(a.frame)")
         func clickSurface() {
             let before = state()["inputAcknowledged"] as? Int ?? 0
@@ -179,7 +184,8 @@ final class DuoWorkspaceTests: XCTestCase {
         app.buttons["duoDesktop"].tap()
         app.buttons["显示完整桌面"].tap()
         expectPicture(desktop: true)
-        try expectEdgeToEdgePicture()
+        try expectPictureGeometry(desktop: true)
+        XCTAssertGreaterThanOrEqual(surface.frame.maxY, windowBottom)
         app.buttons["duoKey-x"].tap()
         observe("Desktop keyboard should wait for a selected input window") { !($0["controlError"] as? String ?? "").isEmpty }
         clickSurface()
@@ -196,6 +202,8 @@ final class DuoWorkspaceTests: XCTestCase {
                                                          "remoteWindowRow-", fixture)).firstMatch
         if windowRow.waitForExistence(timeout: 1) { windowRow.tap() }
         expectPicture(desktop: false)
+        try expectPictureGeometry(desktop: false)
+        XCTAssertEqual(surface.frame.maxY, windowBottom, accuracy: 0.5)
     }
 
     // The Mac-side runner opens and closes the dedicated fixture at these two checkpoints.

@@ -39,18 +39,21 @@ final class MobileInteractionSession: ObservableObject {
         self.localInputPreview = localInputPreview; self.directScroll = directScroll
     }
     @Published private(set) var keyboardPresented = false
-    @Published private(set) var fitsFoldPanelWidth = false
-    func setFoldPanelWidth(_ enabled: Bool) {
-        guard enabled != fitsFoldPanelWidth else { return }
-        fitsFoldPanelWidth = enabled
+    enum FoldSource { case window, desktop }
+    @Published private(set) var foldSource: FoldSource?
+    var fitsFoldPanelWidth: Bool { foldSource == .window }
+    private var locksScaling: Bool { locksWholeWindow || foldSource != nil }
+    func setFoldSource(_ source: FoldSource?) {
+        guard source != foldSource else { return }
+        foldSource = source
         fit()
     }
-    var fitsKeyboardWidth: Bool { locksWholeWindow && keyboardPresented }
+    var fitsKeyboardWidth: Bool { foldSource == nil && locksWholeWindow && keyboardPresented }
     func setKeyboardPresented(_ value:Bool) {
         guard keyboardPresented != value else { return };cancel();keyboardPresented=value;zoom=1;offset = .zero;resetToken += 1
     }
     func makeGeometry(source: CGSize, viewport: CGSize, encodedPixels: CGSize?, displayScale: CGFloat) -> ViewportGeometry {
-        ViewportGeometry(source: source, viewport: viewport, zoom: zoom, offset: offset, fillsViewport: fillsViewport,
+        ViewportGeometry(source: source, viewport: viewport, zoom: zoom, offset: offset, fillsViewport: foldSource == nil && fillsViewport,
                          fitsWidth: fitsFoldPanelWidth || fitsKeyboardWidth, encodedPixels: encodedPixels, displayScale: displayScale)
     }
     var geometry: ViewportGeometry { makeGeometry(source: source, viewport: viewport, encodedPixels: encodedPixels, displayScale: displayScale) }
@@ -64,7 +67,7 @@ final class MobileInteractionSession: ObservableObject {
         self.encodedPixels = encodedPixels; self.displayScale = displayScale
         // New decoder telemetry must not alter the user's current zoom/pan.
         if !layoutChanged { resetToken += 1; return }
-        if sameWindow && !locksWholeWindow && !fitsFoldPanelWidth {
+        if sameWindow && !locksScaling {
             // A keyboard changes the visible area, not the window. Preserve the
             // point at the center and its display scale instead of jumping to fit.
             let center = CGPoint(x: (previous.viewport.width / 2 - previous.contentRect.minX) / previous.scale,
@@ -84,7 +87,7 @@ final class MobileInteractionSession: ObservableObject {
     /// Reveal an acknowledged source-space focus rectangle without changing zoom.
     func reveal(_ rect: CGRect, padding: CGFloat = 16) {
         let g = geometry
-        guard (!locksWholeWindow || fitsFoldPanelWidth), g.isValid, !rect.isNull, !rect.isEmpty,
+        guard (!locksScaling || fitsFoldPanelWidth), g.isValid, !rect.isNull, !rect.isEmpty,
               [rect.minX, rect.minY, rect.maxX, rect.maxY].allSatisfy({ $0.isFinite }) else { return }
         let start = g.displayPoint(for: rect.origin)
         let end = g.displayPoint(for: CGPoint(x: rect.maxX, y: rect.maxY))
@@ -103,7 +106,7 @@ final class MobileInteractionSession: ObservableObject {
     }
     func fit() {
         cancel(); zoom = 1; offset = .zero
-        if fillsViewport && !fitsFoldPanelWidth {
+        if fillsViewport && foldSource == nil {
             // Start at the window's top-left, keeping row labels and the first column visible.
             let size = geometry.contentSize
             offset = CGSize(width:max(0,(size.width-viewport.width)/2),height:max(0,(size.height-viewport.height)/2))
@@ -111,7 +114,7 @@ final class MobileInteractionSession: ObservableObject {
         pointer = nil; resetToken += 1
     }
     func setFillsViewport(_ value: Bool) { fillsViewport = locksWholeWindow ? false : value; fit() }
-    func zoomIn() { guard !locksWholeWindow else { return }; cancel(); zoom = min(4, zoom + 0.5); resetToken += 1 }
+    func zoomIn() { guard !locksScaling else { return }; cancel(); zoom = min(4, zoom + 0.5); resetToken += 1 }
     func toggleMode() {
         cancel(); relative.toggle(); pointer = nil; resetToken += 1
         status = relative ? "滑动控制指针" : "点击画面检查坐标"
@@ -129,13 +132,13 @@ final class MobileInteractionSession: ObservableObject {
         let geometry = self.geometry
         switch action {
         case let .zoom(factor, anchor):
-            guard !fitsFoldPanelWidth, !locksWholeWindow else { return }
+            guard !locksScaling else { return }
             cancel()
             let next = geometry.zoomed(to: zoom * factor, anchor: anchor)
             zoom = next.zoom; offset = next.clampedOffset
         case let .pan(delta):
             if fitsFoldPanelWidth { panFoldPanel(by: delta.height); return }
-            guard !locksWholeWindow else { return }
+            guard !locksScaling else { return }
             offset = ViewportGeometry(source: source, viewport: viewport, zoom: zoom,
                 offset: CGSize(width: offset.width + delta.width, height: offset.height + delta.height), fillsViewport: fillsViewport).clampedOffset
         case .cancel: cancel()

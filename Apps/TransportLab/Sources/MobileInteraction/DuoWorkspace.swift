@@ -247,13 +247,16 @@
     }
 
     private func foldedContent(_ fold: CGRect, size: CGSize, insets: EdgeInsets) -> some View {
-      VStack(spacing: 0) {
+      let source: MobileInteractionSession.FoldSource = model.selectedRemoteWindow?.displayID == nil ? .window : .desktop
+      // Center the complete desktop in the upper panel. Give the width-fitted window a little more clearance.
+      let pictureBottom = source == .desktop ? fold.midY : fold.minY + fold.height / 4
+      return VStack(spacing: 0) {
         video().overlay { if foldTrackpad { pointerOverlay } }
-          .frame(width: size.width + insets.leading + insets.trailing, height: fold.midY + insets.top)
+          .frame(width: size.width + insets.leading + insets.trailing, height: pictureBottom + insets.top)
           .clipped()
           // Extend only the video to the glass. Keep the lower controls in their safe area.
           .padding(EdgeInsets(top: -insets.top, leading: -insets.leading, bottom: 0, trailing: -insets.trailing))
-        Color.black.frame(height: fold.maxY - fold.midY).accessibilityHidden(true)
+        Color.black.frame(height: fold.maxY - pictureBottom).accessibilityHidden(true)
         VStack(spacing: 4) {
           HStack(spacing: 2) {
             dockButton
@@ -287,12 +290,12 @@
         .frame(height: size.height - fold.maxY)
         .background(Color(white: 0.15))
       }
+      .onChange(of: source, initial: true) { _, value in viewport.setFoldSource(value) }
       .onAppear {
-        viewport.setFoldPanelWidth(true)
         keyboard.cancel()
         foldTrackpad = false
       }
-      .onDisappear { viewport.setFoldPanelWidth(false) }
+      .onDisappear { viewport.setFoldSource(nil) }
     }
 
     private var foldDockStrip: some View {
