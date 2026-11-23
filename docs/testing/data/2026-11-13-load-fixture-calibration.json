@@ -1,0 +1,657 @@
+{
+  "date": "2026-11-13",
+  "task": "T01",
+  "status": "in_progress_load_threshold_not_met",
+  "settings": {
+    "width": 2560,
+    "height": 1440,
+    "fpsCeiling": 60,
+    "megabitsCeiling": 20,
+    "codec": "HEVC Main10 PQ",
+    "route": "fixed-udp-v2",
+    "bridge": "socket",
+    "pacing": "interactive",
+    "playout": "realtime"
+  },
+  "hostBinarySHA256": "91e83a7288e90299ff0f5e92be1c1fcc058713e41cefb5e66b4de930115ad457",
+  "finalFixtureSHA256": "181f1f9d6f64e80185a04312496dd7f9bc4afa206b27cfccc6e5f715f36fb4e5",
+  "assets": {
+    "fixtureID": "bbb-highmotion-60-v1",
+    "sourceName": "bbb_sunflower_2160p_60fps_normal.mp4",
+    "sourceSHA256": "35db9a007021f1b0066993e1d2c4448c83a8b279f799c97d33cbba73980a8a36",
+    "sourceMetadata": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "profile": "High",
+          "width": 3840,
+          "height": 2160,
+          "pix_fmt": "yuv420p",
+          "r_frame_rate": "60/1",
+          "avg_frame_rate": "60/1",
+          "bit_rate": "8002648",
+          "nb_frames": "38072"
+        }
+      ],
+      "format": {
+        "duration": "634.566666",
+        "size": "673223862",
+        "tags": {
+          "title": "Big Buck Bunny, Sunflower version",
+          "comment": "Creative Commons Attribution 3.0 - http://bbb3d.renderfarming.net"
+        }
+      }
+    },
+    "requestedStartSeconds": 420,
+    "requestedDurationSeconds": 30,
+    "method": "video stream copy, keyframe preroll possible; no interpolation or re-encoding",
+    "sourceCredit": "Big Buck Bunny, Sunflower version / Blender Foundation / CC BY 3.0",
+    "sourceURL": "https://download.blender.org/demo/movies/BBB/",
+    "dynamicRange": "SDR source; capturing in a PQ stream does not make this an HDR-mastered scene",
+    "clipSHA256": "eee62a9500feb42e5253f640216f4971512fa56bf14e071620cb4dccf4e555a8",
+    "clipMetadata": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "profile": "High",
+          "width": 3840,
+          "height": 2160,
+          "pix_fmt": "yuv420p",
+          "r_frame_rate": "60/1",
+          "avg_frame_rate": "60/1",
+          "bit_rate": "13671231",
+          "nb_frames": "2010"
+        }
+      ],
+      "format": {
+        "duration": "33.500000",
+        "size": "57270989",
+        "tags": {
+          "title": "Big Buck Bunny, Sunflower version",
+          "comment": "Creative Commons Attribution 3.0 - http://bbb3d.renderfarming.net"
+        }
+      }
+    },
+    "photo": {
+      "file": "photo.jpg",
+      "clipTimeSeconds": 9,
+      "jpegQuality": 2,
+      "sha256": "e734c34a338baa7911633791abcabdb0c00507a1ef2df91932fb67f6f95f3d8e"
+    }
+  },
+  "trials": [
+    {
+      "id": "native60-video",
+      "scope": "existing remote fixed-UDP-v2/Ponte session, host-only load observation",
+      "host": {
+        "reportSHA256": "62d4cd04026dacac465cdc28012fd9a7fbe6e834df2d2a05f39645608071b0b6",
+        "samples": 45,
+        "observedSeconds": 43.9989337916486,
+        "frameCounterFPS": 60.001453955711455,
+        "payloadMbps": 2.841211393711729,
+        "payloadIntervalMinMbps": 0.578682903676057,
+        "payloadIntervalMaxMbps": 10.50227361611141,
+        "intervalsAtLeast15Mbps": 0,
+        "width": 2560,
+        "height": 1440,
+        "codec": "video/H265",
+        "encodeMillisecondsMean": 7.965555555555537,
+        "sendDelayMillisecondsMean": 1.2470943473874418,
+        "nackDelta": 0,
+        "pliDelta": 0,
+        "encoderTargetMbpsMean": 10.615311111111112,
+        "captureFormat": {
+          "width": 2560,
+          "height": 1440,
+          "sourceWidthPoints": 1280,
+          "sourceHeightPoints": 720,
+          "pointPixelScale": 2,
+          "pixelFormat": {
+            "height": "1440",
+            "matrix": "ITU_R_2020",
+            "pixelFormat": "2016686640",
+            "primaries": "ITU_R_2020",
+            "transfer": "SMPTE_ST_2084_PQ",
+            "width": "2560"
+          }
+        },
+        "submissionErrorDelta": 0,
+        "retransmittedPacketsSentDelta": 0
+      },
+      "sourceObservation": {
+        "mode": "video",
+        "epoch": 1,
+        "elapsed": 82.55,
+        "paused": false,
+        "visibility": "visible",
+        "raf": 6633,
+        "rafMaxMs": 17.8,
+        "videoCallbacks": 4707,
+        "uniqueMediaTimes": 4707,
+        "videoMaxMs": 66.6,
+        "loops": 2,
+        "videoTotal": 4951,
+        "videoDropped": 125,
+        "videoSize": [
+          3840,
+          2160
+        ],
+        "viewport": [
+          1224,
+          617
+        ],
+        "scale": 2
+      }
+    },
+    {
+      "id": "dom-scroll",
+      "scope": "existing remote fixed-UDP-v2/Ponte session, host-only load observation",
+      "host": {
+        "reportSHA256": "e44c42d350a565c656817f2ca0ae12576b6020af2fde1cf47edafbb867042f2b",
+        "samples": 45,
+        "observedSeconds": 43.997755666670855,
+        "frameCounterFPS": 60.003060610654074,
+        "payloadMbps": 4.682192281822535,
+        "payloadIntervalMinMbps": 3.463368570328482,
+        "payloadIntervalMaxMbps": 5.837751622467462,
+        "intervalsAtLeast15Mbps": 0,
+        "width": 2560,
+        "height": 1440,
+        "codec": "video/H265",
+        "encodeMillisecondsMean": 11.521863171868727,
+        "sendDelayMillisecondsMean": 3.0596853627803573,
+        "nackDelta": 0,
+        "pliDelta": 0,
+        "encoderTargetMbpsMean": 14.835066666666666,
+        "captureFormat": {
+          "width": 2560,
+          "height": 1440,
+          "sourceWidthPoints": 1280,
+          "sourceHeightPoints": 720,
+          "pointPixelScale": 2,
+          "pixelFormat": {
+            "height": "1440",
+            "matrix": "ITU_R_2020",
+            "pixelFormat": "2016686640",
+            "primaries": "ITU_R_2020",
+            "transfer": "SMPTE_ST_2084_PQ",
+            "width": "2560"
+          }
+        },
+        "submissionErrorDelta": 0,
+        "retransmittedPacketsSentDelta": 0
+      },
+      "sourceObservation": {
+        "mode": "scroll",
+        "epoch": 2,
+        "elapsed": 80.31,
+        "paused": false,
+        "visibility": "visible",
+        "raf": 8965,
+        "rafMaxMs": 33.3,
+        "videoCallbacks": 1,
+        "uniqueMediaTimes": 1,
+        "videoMaxMs": 0,
+        "loops": 0,
+        "videoTotal": 1,
+        "videoDropped": 0,
+        "videoSize": [
+          3840,
+          2160
+        ],
+        "viewport": [
+          1224,
+          617
+        ],
+        "scale": 2
+      }
+    },
+    {
+      "id": "photo-transform",
+      "scope": "existing remote fixed-UDP-v2/Ponte session, host-only load observation",
+      "host": {
+        "reportSHA256": "fa06aee2ad2d0108b99c65d9970a547592f5bfde8527d70cc0e70092667a3cb1",
+        "samples": 34,
+        "observedSeconds": 34.000502000009874,
+        "frameCounterFPS": 59.99911413070923,
+        "payloadMbps": 1.8786275567337638,
+        "payloadIntervalMinMbps": 1.2225778468833213,
+        "payloadIntervalMaxMbps": 2.532346336562496,
+        "intervalsAtLeast15Mbps": 0,
+        "width": 2560,
+        "height": 1440,
+        "codec": "video/H265",
+        "encodeMillisecondsMean": 10.29903077652293,
+        "sendDelayMillisecondsMean": 0.18699050906605175,
+        "nackDelta": 0,
+        "pliDelta": 0,
+        "encoderTargetMbpsMean": 14.809794117647058,
+        "captureFormat": {
+          "width": 2560,
+          "height": 1440,
+          "sourceWidthPoints": 1280,
+          "sourceHeightPoints": 720,
+          "pointPixelScale": 2,
+          "pixelFormat": {
+            "height": "1440",
+            "matrix": "ITU_R_2020",
+            "pixelFormat": "2016686640",
+            "primaries": "ITU_R_2020",
+            "transfer": "SMPTE_ST_2084_PQ",
+            "width": "2560"
+          }
+        },
+        "submissionErrorDelta": 0,
+        "retransmittedPacketsSentDelta": 0
+      },
+      "sourceObservation": {
+        "mode": "photo",
+        "epoch": 2,
+        "elapsed": 91.18,
+        "paused": false,
+        "visibility": "visible",
+        "raf": 9358,
+        "rafMaxMs": 17.8,
+        "videoCallbacks": 0,
+        "uniqueMediaTimes": 0,
+        "videoMaxMs": 0,
+        "loops": 0,
+        "videoTotal": 0,
+        "videoDropped": 0,
+        "videoSize": [
+          3840,
+          2160
+        ],
+        "viewport": [
+          1224,
+          617
+        ],
+        "scale": 2
+      }
+    },
+    {
+      "id": "diagram-pan-zoom",
+      "scope": "existing remote fixed-UDP-v2/Ponte session, host-only load observation",
+      "host": {
+        "reportSHA256": "9a734ed3d614533d3f7f07e67dafe13d81f8c9b47dbfc933749174191cc500d9",
+        "samples": 45,
+        "observedSeconds": 43.99964570833254,
+        "frameCounterFPS": 60.00048312889128,
+        "payloadMbps": 10.322622391343172,
+        "payloadIntervalMinMbps": 6.039590570108717,
+        "payloadIntervalMaxMbps": 13.843298725842612,
+        "intervalsAtLeast15Mbps": 0,
+        "width": 2560,
+        "height": 1440,
+        "codec": "video/H265",
+        "encodeMillisecondsMean": 8.179070009158945,
+        "sendDelayMillisecondsMean": 1.5648218970775527,
+        "nackDelta": 0,
+        "pliDelta": 0,
+        "encoderTargetMbpsMean": 14.789244444444444,
+        "captureFormat": {
+          "width": 2560,
+          "height": 1440,
+          "sourceWidthPoints": 1280,
+          "sourceHeightPoints": 720,
+          "pointPixelScale": 2,
+          "pixelFormat": {
+            "height": "1440",
+            "matrix": "ITU_R_2020",
+            "pixelFormat": "2016686640",
+            "primaries": "ITU_R_2020",
+            "transfer": "SMPTE_ST_2084_PQ",
+            "width": "2560"
+          }
+        },
+        "submissionErrorDelta": 0,
+        "retransmittedPacketsSentDelta": 0
+      },
+      "sourceObservation": {
+        "mode": "diagram",
+        "epoch": 1,
+        "elapsed": 140.63,
+        "paused": false,
+        "visibility": "visible",
+        "raf": 13831,
+        "rafMaxMs": 50.7,
+        "videoCallbacks": 1,
+        "uniqueMediaTimes": 1,
+        "videoMaxMs": 0,
+        "loops": 0,
+        "videoTotal": 4,
+        "videoDropped": 0,
+        "videoSize": [
+          3840,
+          2160
+        ],
+        "viewport": [
+          1224,
+          617
+        ],
+        "scale": 2
+      }
+    },
+    {
+      "id": "diagram-rotate",
+      "scope": "existing remote fixed-UDP-v2/Ponte session, host-only load observation",
+      "host": {
+        "reportSHA256": "e9d5d90260edd2cf5730fb57ba451e176f4811e0c979599204b27604fed7cae0",
+        "samples": 40,
+        "observedSeconds": 38.99986499999068,
+        "frameCounterFPS": 60.00020769304097,
+        "payloadMbps": 11.092681064411465,
+        "payloadIntervalMinMbps": 5.883822918207238,
+        "payloadIntervalMaxMbps": 13.526976852119251,
+        "intervalsAtLeast15Mbps": 0,
+        "width": 2560,
+        "height": 1440,
+        "codec": "video/H265",
+        "encodeMillisecondsMean": 9.379087246457354,
+        "sendDelayMillisecondsMean": 1.608842668593879,
+        "nackDelta": 0,
+        "pliDelta": 0,
+        "encoderTargetMbpsMean": 15.738475,
+        "captureFormat": {
+          "width": 2560,
+          "height": 1440,
+          "sourceWidthPoints": 1280,
+          "sourceHeightPoints": 720,
+          "pointPixelScale": 2,
+          "pixelFormat": {
+            "height": "1440",
+            "matrix": "ITU_R_2020",
+            "pixelFormat": "2016686640",
+            "primaries": "ITU_R_2020",
+            "transfer": "SMPTE_ST_2084_PQ",
+            "width": "2560"
+          }
+        },
+        "submissionErrorDelta": 0,
+        "retransmittedPacketsSentDelta": 0
+      },
+      "sourceObservation": {
+        "mode": "diagram",
+        "epoch": 1,
+        "elapsed": 184.04,
+        "paused": false,
+        "visibility": "visible",
+        "raf": 16609,
+        "rafMaxMs": 66.7,
+        "videoCallbacks": 1,
+        "uniqueMediaTimes": 1,
+        "videoMaxMs": 0,
+        "loops": 0,
+        "videoTotal": 4,
+        "videoDropped": 0,
+        "videoSize": [
+          3840,
+          2160
+        ],
+        "viewport": [
+          1224,
+          617
+        ],
+        "scale": 2
+      }
+    },
+    {
+      "id": "static-detail",
+      "scope": "existing remote fixed-UDP-v2/Ponte session, host-only load observation",
+      "host": {
+        "reportSHA256": "5412054b300756b9c3fbc19bf96e8619aa2f957c74997d90a4d7133e3337d825",
+        "samples": 19,
+        "observedSeconds": 18.00100029166788,
+        "frameCounterFPS": 59.99666587972333,
+        "payloadMbps": 0.8263567445685396,
+        "payloadIntervalMinMbps": 0.3341713185262599,
+        "payloadIntervalMaxMbps": 1.4677084922593648,
+        "intervalsAtLeast15Mbps": 0,
+        "width": 2560,
+        "height": 1440,
+        "codec": "video/H265",
+        "encodeMillisecondsMean": 7.514912280701561,
+        "sendDelayMillisecondsMean": 2.8468692768271606,
+        "nackDelta": 0,
+        "pliDelta": 0,
+        "encoderTargetMbpsMean": 10.111263157894737,
+        "captureFormat": {
+          "width": 2560,
+          "height": 1440,
+          "sourceWidthPoints": 1280,
+          "sourceHeightPoints": 720,
+          "pointPixelScale": 2,
+          "pixelFormat": {
+            "height": "1440",
+            "matrix": "ITU_R_2020",
+            "pixelFormat": "2016686640",
+            "primaries": "ITU_R_2020",
+            "transfer": "SMPTE_ST_2084_PQ",
+            "width": "2560"
+          }
+        },
+        "submissionErrorDelta": 0,
+        "retransmittedPacketsSentDelta": 0
+      },
+      "sourceObservation": {
+        "mode": "static",
+        "epoch": 1,
+        "motionSpeed": 1,
+        "immersive": false,
+        "elapsed": 87.49,
+        "paused": false,
+        "visibility": "visible",
+        "raf": 7817,
+        "rafMaxMs": 50,
+        "videoCallbacks": 1,
+        "uniqueMediaTimes": 1,
+        "videoMaxMs": 0,
+        "loops": 0,
+        "videoTotal": 4,
+        "videoDropped": 0,
+        "videoSize": [
+          3840,
+          2160
+        ],
+        "viewport": [
+          1224,
+          617
+        ],
+        "scale": 2
+      }
+    },
+    {
+      "id": "local-diagram-speed1",
+      "scope": "single-Mac loopback calibration while remote host remains active; not isolated performance baseline",
+      "host": {
+        "reportSHA256": "8e86f288b2ab5ee1f735936f9248a64f7837affe18716aea90fcc8c399d9e362",
+        "samples": 34,
+        "observedSeconds": 33.00949662498897,
+        "frameCounterFPS": 59.982738376600786,
+        "payloadMbps": 12.904247187990626,
+        "payloadIntervalMinMbps": 12.067239457320959,
+        "payloadIntervalMaxMbps": 14.285900850405724,
+        "intervalsAtLeast15Mbps": 0,
+        "width": 2560,
+        "height": 1440,
+        "codec": "video/H265",
+        "encodeMillisecondsMean": 4.50161973097102,
+        "sendDelayMillisecondsMean": 1.8437641155780635,
+        "nackDelta": 0,
+        "pliDelta": 0,
+        "encoderTargetMbpsMean": 18.03358823529412,
+        "captureFormat": {
+          "width": 2560,
+          "height": 1440,
+          "sourceWidthPoints": 1280,
+          "sourceHeightPoints": 720,
+          "pointPixelScale": 2,
+          "pixelFormat": {
+            "height": "1440",
+            "matrix": "ITU_R_2020",
+            "pixelFormat": "2016686640",
+            "primaries": "ITU_R_2020",
+            "transfer": "SMPTE_ST_2084_PQ",
+            "width": "2560"
+          }
+        },
+        "submissionErrorDelta": 0,
+        "retransmittedPacketsSentDelta": 0
+      },
+      "viewer": {
+        "reportSHA256": "0c4fc63dc0c35cfc665ad3bd77bafd8f90ac82b63526c13924b1908deddd891f",
+        "samples": 35,
+        "observedSeconds": 33.99870216666022,
+        "frameCounterFPS": 60.00229038155648,
+        "payloadMbps": 12.90410551112801,
+        "payloadIntervalMinMbps": 12.21227864976058,
+        "payloadIntervalMaxMbps": 14.287919948756418,
+        "intervalsAtLeast15Mbps": 0,
+        "width": 2560,
+        "height": 1440,
+        "codec": "video/H265",
+        "encodeMillisecondsMean": null,
+        "sendDelayMillisecondsMean": null,
+        "nackDelta": 0,
+        "pliDelta": 0,
+        "sdkFreezeDelta": 0,
+        "sdkDroppedDelta": 0,
+        "receiveBufferMeanMs": 2.4829851769218165,
+        "renderCallbackGapMaxMs": 101.9572083314415
+      }
+    },
+    {
+      "id": "local-diagram-speed3",
+      "scope": "single-Mac loopback calibration while remote host remains active; not isolated performance baseline",
+      "host": {
+        "reportSHA256": "6d166d4fc41f0dc904540610ec511edc142ad83644c3752dc02a621407461dde",
+        "samples": 34,
+        "observedSeconds": 32.99963762497646,
+        "frameCounterFPS": 60.00065887091427,
+        "payloadMbps": 13.146421694996098,
+        "payloadIntervalMinMbps": 11.961270076145292,
+        "payloadIntervalMaxMbps": 14.381855978263825,
+        "intervalsAtLeast15Mbps": 0,
+        "width": 2560,
+        "height": 1440,
+        "codec": "video/H265",
+        "encodeMillisecondsMean": 4.401470588235294,
+        "sendDelayMillisecondsMean": 1.4959988921303893,
+        "nackDelta": 0,
+        "pliDelta": 0,
+        "encoderTargetMbpsMean": 18.318470588235293,
+        "captureFormat": {
+          "width": 2560,
+          "height": 1440,
+          "sourceWidthPoints": 1280,
+          "sourceHeightPoints": 720,
+          "pointPixelScale": 2,
+          "pixelFormat": {
+            "height": "1440",
+            "matrix": "ITU_R_2020",
+            "pixelFormat": "2016686640",
+            "primaries": "ITU_R_2020",
+            "transfer": "SMPTE_ST_2084_PQ",
+            "width": "2560"
+          }
+        },
+        "submissionErrorDelta": 0,
+        "retransmittedPacketsSentDelta": 0
+      },
+      "viewer": {
+        "reportSHA256": "faae48fb1bb00d3873542023e93c1e4ceb5ddead8ba7276410f41a170cf2c686",
+        "samples": 34,
+        "observedSeconds": 32.99955962499371,
+        "frameCounterFPS": 60.00080069251462,
+        "payloadMbps": 13.15021936448289,
+        "payloadIntervalMinMbps": 11.934362080536399,
+        "payloadIntervalMaxMbps": 14.382334339385526,
+        "intervalsAtLeast15Mbps": 0,
+        "width": 2560,
+        "height": 1440,
+        "codec": "video/H265",
+        "encodeMillisecondsMean": null,
+        "sendDelayMillisecondsMean": null,
+        "nackDelta": 0,
+        "pliDelta": 0,
+        "sdkFreezeDelta": 0,
+        "sdkDroppedDelta": 0,
+        "receiveBufferMeanMs": 2.0279865468782963,
+        "renderCallbackGapMaxMs": 82.23554166033864
+      }
+    },
+    {
+      "id": "local-diagram-speed3-immersive",
+      "scope": "single-Mac loopback calibration while remote host remains active; not isolated performance baseline",
+      "host": {
+        "reportSHA256": "126ae626ccd5ac4b87b879ee8ab023f707b3e42989384a31f95da13b1f60d4c0",
+        "samples": 35,
+        "observedSeconds": 33.99544754164526,
+        "frameCounterFPS": 60.00803482586748,
+        "payloadMbps": 12.960454880326504,
+        "payloadIntervalMinMbps": 12.278009310129535,
+        "payloadIntervalMaxMbps": 13.745301547539885,
+        "intervalsAtLeast15Mbps": 0,
+        "width": 2560,
+        "height": 1440,
+        "codec": "video/H265",
+        "encodeMillisecondsMean": 4.655509863851069,
+        "sendDelayMillisecondsMean": 1.5360973151665525,
+        "nackDelta": 0,
+        "pliDelta": 0,
+        "encoderTargetMbpsMean": 18.24357142857143,
+        "captureFormat": {
+          "width": 2560,
+          "height": 1440,
+          "sourceWidthPoints": 1280,
+          "sourceHeightPoints": 720,
+          "pointPixelScale": 2,
+          "pixelFormat": {
+            "height": "1440",
+            "matrix": "ITU_R_2020",
+            "pixelFormat": "2016686640",
+            "primaries": "ITU_R_2020",
+            "transfer": "SMPTE_ST_2084_PQ",
+            "width": "2560"
+          }
+        },
+        "submissionErrorDelta": 0,
+        "retransmittedPacketsSentDelta": 0
+      },
+      "viewer": {
+        "reportSHA256": "d8b599bafe405118009bed7eddb9e6e8b033bf853a3e942596c06f4fe89136d2",
+        "samples": 35,
+        "observedSeconds": 33.999465041648364,
+        "frameCounterFPS": 60.000944059003835,
+        "payloadMbps": 12.958923426009264,
+        "payloadIntervalMinMbps": 12.284193931451602,
+        "payloadIntervalMaxMbps": 13.745356678615204,
+        "intervalsAtLeast15Mbps": 0,
+        "width": 2560,
+        "height": 1440,
+        "codec": "video/H265",
+        "encodeMillisecondsMean": null,
+        "sendDelayMillisecondsMean": null,
+        "nackDelta": 0,
+        "pliDelta": 0,
+        "sdkFreezeDelta": 0,
+        "sdkDroppedDelta": 0,
+        "receiveBufferMeanMs": 2.2899178730864396,
+        "renderCallbackGapMaxMs": 90.61887499410659
+      }
+    }
+  ],
+  "limits": [
+    "Remote trials contain host data only; no new phone receive/display acceptance is claimed.",
+    "Local loops ran with the existing remote host active, and qualify only the fixture load range.",
+    "No tested steady interval reached 15 Mbps; T01 saturation acceptance remains open.",
+    "All new sources are SDR content in a PQ capture transport; previous HDR film/gray remain color references.",
+    "Browser source observations were taken after runs and are not synchronized receiver or optical timing.",
+    "Initial exploratory fixture revisions were not archived byte-for-byte; later collector --fixture archives exact input.",
+    "Raw local self-test host networkLabel inherits Surge Ponte; actual route is loopback, as recorded in test scope."
+  ]
+}

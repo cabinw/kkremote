@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KKRemote Repeatable Load Fixture</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#10151d;color:#e8edf3;font:13px system-ui}header{height:48px;display:flex;align-items:center;gap:9px;padding:6px 12px}button{padding:6px 10px;border:1px solid #5d7188;border-radius:5px;background:#263c51;color:white;cursor:pointer}button[aria-pressed=true]{background:#326d58}#elapsed{margin-left:auto;font:12px monospace}.stage{height:calc(100vh - 110px);overflow:hidden}#film{background:#000}video{width:100%;height:100%;object-fit:contain}#text{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px;background:#777}.pane{overflow:hidden;padding:0 10px;background:#fafaf8;color:#17231e}.pane:nth-child(even){background:#152333;color:#e1eaf4}.pane h2{font-size:15px;margin:9px 0}.pane p{font-size:12px;line-height:1.55;margin:7px 0}.code{font:11px/1.55 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere}.rule{height:.5px;background:currentColor;margin:8px 0}.detail-line{font-size:10px}.ramp{height:24px;background:linear-gradient(90deg,#000,#fff)}#detail{background:white;color:#172222;padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:20px}.detail-block{border:1px solid #ccc;padding:12px}.detail-block p{margin:6px 0}.detail-block h2{margin:0 0 12px;font-size:18px}.fine-grid{height:80px;background:repeating-linear-gradient(90deg,#fff 0,#fff 1px,#111 1px,#111 2px)}footer{height:62px;padding:5px 12px;overflow:hidden;font:10px/1.5 ui-monospace,monospace;color:#c1cfda}#metrics{white-space:pre-wrap;font-size:10px;margin:0}[hidden]{display:none!important}
+body.immersive header,body.immersive footer{display:none}body.immersive .stage{height:100vh}#leaveImmersive{display:none;position:fixed;top:6px;right:6px;z-index:10;opacity:.6;font-size:10px;padding:3px 7px}body.immersive #leaveImmersive{display:block}</style>
+<header><b>T01 · 可重复负载</b><button data-mode="video">60 fps 视频</button><button data-mode="scroll">快速文字滚动</button><button data-mode="static">静态细节</button><button data-mode="photo">图像缩放旋转</button><button data-mode="diagram">密集图纸缩放</button><label style="font-size:11px">运动 <select id="motionSpeed" aria-label="运动速度"><option value="1">1×</option><option value="2">2×</option><option value="3">3×</option></select></label><button id="immersive">内容铺满</button><button id="restart">重置片段与计数</button><button id="pause">暂停 / 继续</button><span id="elapsed"></span></header>
+<button id="leaveImmersive">退出铺满 / Esc</button><section id="film" class="stage"><video src="clip.mp4" muted loop playsinline preload="auto"></video></section>
+<section id="text" class="stage" hidden></section>
+<section id="photo" class="stage" hidden style="position:relative;background:#000"><img src="photo.jpg" alt="Big Buck Bunny 原片高细节帧，连续缩放旋转测试" style="width:100%;height:100%;object-fit:cover;will-change:transform"></section>
+<section id="diagram" class="stage" hidden style="background:#f8faf7;position:relative"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 800" style="width:100%;height:100%;will-change:transform" role="img" aria-label="确定性电路图纸式负载，连续缩放和平移"></svg></section>
+<section id="detail" class="stage" hidden></section>
+<footer><div id="description"></div><pre id="metrics" aria-label="测试源观测"></pre></footer>
+<script>
+'use strict';
+const $=s=>document.querySelector(s),video=$('video'),text=$('#text'),detail=$('#detail');
+let motionSpeed=[1,2,3].includes(Number(new URLSearchParams(location.search).get('speed')))?Number(new URLSearchParams(location.search).get('speed')):1;$('#motionSpeed').value=String(motionSpeed);$('#motionSpeed').onchange=()=>{motionSpeed=Number($('#motionSpeed').value);reset()};
+$('#immersive').onclick=()=>{document.body.classList.add('immersive');reset()};$('#leaveImmersive').onclick=()=>document.body.classList.remove('immersive');document.addEventListener('keydown',e=>{if(e.key==='Escape')document.body.classList.remove('immersive')});if(new URLSearchParams(location.search).get('immersive')==='1')document.body.classList.add('immersive');
+const phrases=['窗口捕获、编码与传输都应保留精细文字。','The quick brown fox jumps over the lazy dog.','几何版本与输入焦点共同决定操作目标。','每帧时间戳只在已知时钟域中比较。','0123456789 ABC abc [] {} () +−= / |'];
+let schematic='';
+for(let y=0;y<32;y++)for(let x=0;x<64;x++){
+ const px=x*25,py=y*25,n=y*64+x,color=['#273d50','#734d22','#236452','#5d4275'][(x+y)%4];
+ schematic+=`<g stroke="${color}" stroke-width=".65" fill="none"><rect x="${px+3}" y="${py+4}" width="15" height="11"/><path d="M${px} ${py+8}h3m15 0h7m-15 7v6h${9+(n%4)}v-7"/><circle cx="${px+21}" cy="${py+8}" r="1.6"/></g><text x="${px+3}" y="${py+12}" font-size="5.5" fill="${color}" font-family="monospace">R${n}</text><text x="${px+3}" y="${py+24}" font-size="4" fill="#364840">${100+n*7}Ω</text>`;
+}
+$('#diagram svg').innerHTML=schematic;
+const diagramPanels = new URLSearchParams(location.search).get('panels') === '4' ? 4 : 1;
+if (diagramPanels === 4) {
+ const original=$('#diagram svg'); $('#diagram').style.cssText+=';display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr';
+ original.remove();
+ for(let i=0;i<4;i++){const tile=document.createElement('div');tile.style.cssText='overflow:hidden;min-height:0';const svg=original.cloneNode(true);tile.append(svg);$('#diagram').append(tile);}
+}
+// Explicit source-load control: identical SVG content, rasterized once at 3200×1600.
+// This isolates media throughput from repeated browser SVG rasterization; legacy DOM stays selectable.
+const diagramRaster = new URLSearchParams(location.search).get('raster') === '1';
+let diagramRasterReady = !diagramRaster;
+if (diagramRaster) {
+ const svg=$('#diagram svg').cloneNode(true);svg.setAttribute('width','3200');svg.setAttribute('height','1600');svg.removeAttribute('style');
+ const svgURL=URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(svg)],{type:'image/svg+xml'}));
+ const source=new Image();
+ source.onload=()=>{const canvas=document.createElement('canvas');canvas.width=3200;canvas.height=1600;canvas.getContext('2d').drawImage(source,0,0,3200,1600);URL.revokeObjectURL(svgURL);
+  const bitmap=canvas.toDataURL('image/png');const readiness=[];
+  for(const old of document.querySelectorAll('#diagram svg')){const img=new Image();img.alt='同一电路图纸的预栅格化图像，连续缩放和平移';img.style.cssText='width:100%;height:100%;object-fit:contain;will-change:transform';img.src=bitmap;old.replaceWith(img);readiness.push(img.decode());}
+  Promise.all(readiness).then(()=>{diagramRasterReady=true;reset()}).catch(()=>{$('#description').textContent='图纸栅格化加载失败'});
+ };source.onerror=()=>{$('#description').textContent='SVG 图纸加载失败';URL.revokeObjectURL(svgURL)};source.src=svgURL;
+}
+const strictStatic = new URLSearchParams(location.search).get('strict') === '1';
+const cycleEnabled = new URLSearchParams(location.search).get('mode') === 'cycle';
+const requestedScenes = (new URLSearchParams(location.search).get('cycleScenes') || 'diagram,scroll,video').split(',');
+const cycleScenes = requestedScenes.length >= 1 && requestedScenes.length <= 3 && requestedScenes.every(x=>['diagram','scroll','video'].includes(x)) && new Set(requestedScenes).size === requestedScenes.length ? requestedScenes : ['diagram','scroll','video'];
+const requestedPhase = Number(new URLSearchParams(location.search).get('phaseSeconds'));
+const cyclePhaseSeconds = requestedPhase >= 30 && requestedPhase <= 300 ? requestedPhase : 120;
+const cycleOrigin = performance.now(); let cyclePhase = -1;
+for(let c=0;c<4;c++){
+ const pane=document.createElement('article');pane.className='pane';
+ for(let r=0;r<100;r++){
+  const section=document.createElement('section');
+  section.innerHTML=`<h2>${String(r+1).padStart(3,'0')} / ${['文档','代码','日志','说明'][c]}</h2><p>${phrases[(r+c)%phrases.length]} ${phrases[(r+c+1)%phrases.length]}</p><div class="code">frame_${r*7+c} = capture(timestamp + ${r*17});\nif (geometry.epoch !== ${r+c}) await nextFrame();\n// viewport ${2560-r} × ${1440+c} · sample ${(r*7919+c*3571)%65521}</div><div class="rule"></div><span class="detail-line">10 px 中文细节 · ${phrases[(r+2*c)%phrases.length]}</span>`;
+  pane.append(section);
+ }
+ text.append(pane);
+}
+for(const dark of [false,true]){
+ const block=document.createElement('article');block.className='detail-block';
+ if(dark){block.style.background='#152333';block.style.color='#eef3f9'}
+ block.innerHTML='<h2>静态清晰度 / Retina detail</h2>'+[9,10,11,12,14,18,24].map(n=>`<p style="font-size:${n}px">${n}px 中文细节 · ABC xyz 0123456789 [] {} +−=</p>`).join('')+'<div class="rule"></div><div class="fine-grid"></div><p>1 CSS px 黑白线（2× 屏幕对应 2 个源像素）</p><div class="ramp"></div>';
+ detail.append(block);
+}
+let mode='video',paused=false,epoch=0,origin=performance.now(),last=0,raf=0,rafMax=0,presented=0,videoMax=0,videoLast=0,lastMedia=-1,unique=0,loops=0,baseTotal=0,baseDropped=0,reportTime=0;
+function reset(){epoch++;origin=performance.now();last=0;raf=0;rafMax=0;presented=0;videoMax=0;videoLast=0;lastMedia=-1;unique=0;loops=0;reportTime=0;const q=video.getVideoPlaybackQuality();baseTotal=q.totalVideoFrames;baseDropped=q.droppedVideoFrames;for(const p of text.children)p.scrollTop=0;}
+function setMode(next){mode=next;paused=false;$('#film').hidden=next!=='video';text.hidden=next!=='scroll';detail.hidden=next!=='static';$('#photo').hidden=next!=='photo';$('#diagram').hidden=next!=='diagram';document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===next)));reset();if(next==='video'){video.currentTime=0;video.play().catch(()=>{$('#description').textContent='点击 60 fps 视频开始播放'})}else video.pause();$('#description').textContent=next==='video'?'Big Buck Bunny / Blender Foundation / CC BY 3.0 · 原生 4K60 SDR 片段 · 不是 HDR 母版 · 无声':next==='diagram'?'程序生成的电路图纸式 SVG · 2048 个带文字器件 · 确定性平移 / 缩放 / 旋转 · 非随机像素噪声':next==='photo'?'Blender / CC BY 3.0 原片图像 · 照片查看器式连续缩放 / 旋转 · 程序化运动，非原生影片帧':next==='scroll'?'4 栏真实 DOM 排版 · 固定文字与确定性滚动速度 · 无随机噪声 / 插帧':'固定文字、细线与灰阶 · 静态时捕获低帧率不计为丢帧';}
+document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));$('#restart').onclick=()=>setMode(mode);$('#pause').onclick=()=>{paused=!paused;if(mode==='video'){if(paused)video.pause();else video.play()}else if(!paused)reset()};
+function tick(now){if(cycleEnabled){const phase=Math.floor((now-cycleOrigin)/(cyclePhaseSeconds*1000))%cycleScenes.length;if(phase!==cyclePhase){cyclePhase=phase;setMode(cycleScenes[phase]);}}raf++;if(last)rafMax=Math.max(rafMax,now-last);last=now;const sec=(now-origin)/1000,u=sec*motionSpeed;if(!paused&&mode==='diagram')for(const [i,svg] of [...document.querySelectorAll('#diagram svg,#diagram img')].entries())svg.style.transform=`translate(${Math.sin(u*.8+i)*8}%,${Math.cos(u*.7+i)*8}%) scale(${1.25+.2*Math.sin(u*1.3+i)}) rotate(${12*Math.sin(u*.9+i)}deg)`;if(!paused&&mode==='photo')$('#photo img').style.transform=`translate(${Math.sin(u*.7)*12}%,${Math.cos(u*.9)*12}%) scale(${1.5+.45*Math.sin(u*1.1)}) rotate(${18*Math.sin(u*.6)}deg)`;if(!paused&&mode==='scroll')for(const [i,p] of [...text.children].entries()){const span=p.scrollHeight-p.clientHeight;p.scrollTop=(u*(480+i*173)+i*521)%span;}if(now-reportTime>=1000&&!(strictStatic&&mode==='static'&&reportTime>0)){const q=video.getVideoPlaybackQuality();$('#elapsed').textContent=`${mode} · ${sec.toFixed(1)} s · #${epoch}`;$('#metrics').textContent=JSON.stringify({mode,epoch,motionSpeed,diagramPanels,diagramRaster,diagramRasterReady,strictStatic,cycleEnabled,cycleScenes,cyclePhase,cyclePhaseSeconds,immersive:document.body.classList.contains('immersive'),elapsed:Math.round(sec*100)/100,paused,visibility:document.visibilityState,raf,rafMaxMs:Math.round(rafMax*100)/100,videoCallbacks:presented,uniqueMediaTimes:unique,videoMaxMs:Math.round(videoMax*100)/100,loops,videoTotal:q.totalVideoFrames-baseTotal,videoDropped:q.droppedVideoFrames-baseDropped,videoSize:[video.videoWidth,video.videoHeight],viewport:[innerWidth,innerHeight],scale:devicePixelRatio});reportTime=now;}requestAnimationFrame(tick)}
+function vf(now,m){presented++;if(videoLast)videoMax=Math.max(videoMax,now-videoLast);videoLast=now;if(m.mediaTime!==lastMedia)unique++;if(lastMedia>=0&&m.mediaTime<lastMedia)loops++;lastMedia=m.mediaTime;video.requestVideoFrameCallback(vf)}
+video.requestVideoFrameCallback(vf);setMode(['static','scroll','photo','diagram'].includes(new URLSearchParams(location.search).get('mode'))?new URLSearchParams(location.search).get('mode'):'video');requestAnimationFrame(tick);
+</script></html>

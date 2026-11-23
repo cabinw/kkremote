@@ -1,0 +1,538 @@
+{
+  "date": "2026-11-13",
+  "scope": "single Mac loopback, not remote Ponte",
+  "codec": "H.264 High 5.1 SDR",
+  "route": "fixed-udp-v2",
+  "transport": "socket",
+  "pacing": "interactive",
+  "warmupExcludedSeconds": 10,
+  "bitrateCeilingMbps": 20,
+  "targetFPS": 60,
+  "windowPoints": [
+    1280,
+    720
+  ],
+  "pixelScale": 2,
+  "outputPixels": [
+    2560,
+    1440
+  ],
+  "cases": {
+    "scroll_initial_1over60": {
+      "runID": "839a9d779cfa",
+      "host": {
+        "sampleCount": 26,
+        "counterSpanSeconds": 24.99954529167735,
+        "pixels": [
+          2560,
+          1440
+        ],
+        "fps": {
+          "sourceFrames": 56.44102656818078,
+          "framesEncoded": 56.44102656818078,
+          "framesDecoded": 0.0,
+          "captureDetails.completeFrames": 56.44102656818078,
+          "encoderDetails.submittedFrames": 56.44102656818078
+        },
+        "means": {
+          "videoMbps": 2.7394600189609064,
+          "encodeMilliseconds": 8.326695234589973,
+          "sendDelayMilliseconds": 0.022948015568554997,
+          "controlRTTMilliseconds": 1.1828781923076923
+        },
+        "p95OfIntervalMeans": {
+          "videoMbps": 3.674568264864452,
+          "encodeMilliseconds": 8.51785714285715,
+          "sendDelayMilliseconds": 0.0049674267100977155,
+          "controlRTTMilliseconds": 1.795709
+        },
+        "counterDeltas": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "framesDropped": 0,
+          "pliCount": 0,
+          "retransmittedPacketsSent": 0,
+          "retransmittedPacketsReceived": null,
+          "encoderDetails.submissionErrors": 0,
+          "bridge.queueDrops": 0,
+          "bridge.expiredAssemblies": 0
+        },
+        "sdkFPSRange": [
+          55,
+          57
+        ],
+        "maxFrameGapMilliseconds": 0,
+        "captureLast": {
+          "callbackGapMillisecondsMax": 24.395208340138197,
+          "callbackGapMillisecondsP95": 23.683458333835006,
+          "completeFrames": 1967,
+          "height": 1440,
+          "idleFrames": 0,
+          "invalidFrames": 0,
+          "otherFrames": 0,
+          "pointPixelScale": 2,
+          "sourceHeightPoints": 720,
+          "sourceWidthPoints": 1280,
+          "width": 2560,
+          "windowServerAgeMillisecondsMax": 0.603333319304511,
+          "windowServerAgeMillisecondsP95": 0.5279583274386823
+        }
+      },
+      "viewer": {
+        "sampleCount": 26,
+        "counterSpanSeconds": 24.99994395833346,
+        "pixels": [
+          2560,
+          1440
+        ],
+        "fps": {
+          "sourceFrames": 0.0,
+          "framesEncoded": 0.0,
+          "framesDecoded": 56.44012651994999,
+          "captureDetails.completeFrames": null,
+          "encoderDetails.submittedFrames": null
+        },
+        "means": {
+          "videoMbps": 2.7394941498130074,
+          "decodeMilliseconds": 2.25315913582032,
+          "jitterBufferMilliseconds": 19.633660132849606,
+          "controlRTTMilliseconds": 1.2218365
+        },
+        "p95OfIntervalMeans": {
+          "videoMbps": 3.6740007698947377,
+          "decodeMilliseconds": 2.3658928571428572,
+          "jitterBufferMilliseconds": 24.03251785714287,
+          "controlRTTMilliseconds": 2.263416
+        },
+        "counterDeltas": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "framesDropped": 0,
+          "pliCount": 0,
+          "retransmittedPacketsSent": null,
+          "retransmittedPacketsReceived": 150,
+          "encoderDetails.submissionErrors": null,
+          "bridge.queueDrops": 0,
+          "bridge.expiredAssemblies": 0
+        },
+        "sdkFPSRange": [
+          55,
+          57
+        ],
+        "maxFrameGapMilliseconds": 27.338250016327947,
+        "captureLast": null
+      }
+    },
+    "scroll_native_cadence_smoke": {
+      "runID": "eaf1e40a358e",
+      "host": {
+        "sampleCount": 31,
+        "counterSpanSeconds": 29.999592249980196,
+        "pixels": [
+          2560,
+          1440
+        ],
+        "fps": {
+          "sourceFrames": 59.93414793833362,
+          "framesEncoded": 59.93414793833362,
+          "framesDecoded": 0.0,
+          "captureDetails.completeFrames": 59.93414793833362,
+          "encoderDetails.submittedFrames": 59.93414793833362
+        },
+        "means": {
+          "videoMbps": 2.851143736376911,
+          "encodeMilliseconds": 8.845334426827046,
+          "sendDelayMilliseconds": 0.02112689950015308,
+          "controlRTTMilliseconds": 1.3328051612903227
+        },
+        "p95OfIntervalMeans": {
+          "videoMbps": 3.8495828330817523,
+          "encodeMilliseconds": 9.249999999999996,
+          "sendDelayMilliseconds": 0.003304812834224639,
+          "controlRTTMilliseconds": 2.081625
+        },
+        "counterDeltas": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "framesDropped": 0,
+          "pliCount": 0,
+          "retransmittedPacketsSent": 0,
+          "retransmittedPacketsReceived": null,
+          "encoderDetails.submissionErrors": 0,
+          "bridge.queueDrops": 0,
+          "bridge.expiredAssemblies": 0
+        },
+        "sdkFPSRange": [
+          59,
+          60
+        ],
+        "maxFrameGapMilliseconds": 0,
+        "captureLast": {
+          "callbackGapMillisecondsMax": 18.45983334351331,
+          "callbackGapMillisecondsP95": 17.840916640125215,
+          "completeFrames": 2387,
+          "height": 1440,
+          "idleFrames": 0,
+          "invalidFrames": 0,
+          "otherFrames": 0,
+          "pointPixelScale": 2,
+          "sourceHeightPoints": 720,
+          "sourceWidthPoints": 1280,
+          "width": 2560,
+          "windowServerAgeMillisecondsMax": 0.5565000174101442,
+          "windowServerAgeMillisecondsP95": 0.5265416693873703
+        }
+      },
+      "viewer": {
+        "sampleCount": 31,
+        "counterSpanSeconds": 29.99974479165394,
+        "pixels": [
+          2560,
+          1440
+        ],
+        "fps": {
+          "sourceFrames": 0.0,
+          "framesEncoded": 0.0,
+          "framesDecoded": 59.933843187233094,
+          "captureDetails.completeFrames": null,
+          "encoderDetails.submittedFrames": null
+        },
+        "means": {
+          "videoMbps": 2.8516583740667225,
+          "decodeMilliseconds": 2.20856566429743,
+          "jitterBufferMilliseconds": 21.221383426101035,
+          "controlRTTMilliseconds": 1.5454610322580646
+        },
+        "p95OfIntervalMeans": {
+          "videoMbps": 3.848179877518205,
+          "decodeMilliseconds": 2.342383333333335,
+          "jitterBufferMilliseconds": 25.966333333333342,
+          "controlRTTMilliseconds": 2.165916
+        },
+        "counterDeltas": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "framesDropped": 0,
+          "pliCount": 0,
+          "retransmittedPacketsSent": null,
+          "retransmittedPacketsReceived": 183,
+          "encoderDetails.submissionErrors": null,
+          "bridge.queueDrops": 0,
+          "bridge.expiredAssemblies": 0
+        },
+        "sdkFPSRange": [
+          59,
+          60
+        ],
+        "maxFrameGapMilliseconds": 21.62045834120363,
+        "captureLast": null
+      }
+    },
+    "scroll_120": {
+      "runID": "25205372bb7a",
+      "host": {
+        "sampleCount": 111,
+        "counterSpanSeconds": 109.99903104166151,
+        "pixels": [
+          2560,
+          1440
+        ],
+        "fps": {
+          "sourceFrames": 59.945982592360835,
+          "framesEncoded": 59.93689160319002,
+          "framesDecoded": 0.0,
+          "captureDetails.completeFrames": 59.945982592360835,
+          "encoderDetails.submittedFrames": 59.945982592360835
+        },
+        "means": {
+          "videoMbps": 2.935434218465091,
+          "encodeMilliseconds": 8.604057475091096,
+          "sendDelayMilliseconds": 0.0010497760870146133,
+          "controlRTTMilliseconds": 1.2843266396396396
+        },
+        "p95OfIntervalMeans": {
+          "videoMbps": 4.0800108871935326,
+          "encodeMilliseconds": 8.866666666666609,
+          "sendDelayMilliseconds": 0.0017843601895734685,
+          "controlRTTMilliseconds": 2.884667
+        },
+        "counterDeltas": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "framesDropped": 0,
+          "pliCount": 0,
+          "retransmittedPacketsSent": 0,
+          "retransmittedPacketsReceived": null,
+          "encoderDetails.submissionErrors": 0,
+          "bridge.queueDrops": 0,
+          "bridge.expiredAssemblies": 0
+        },
+        "sdkFPSRange": [
+          59,
+          61
+        ],
+        "maxFrameGapMilliseconds": 0,
+        "captureLast": {
+          "callbackGapMillisecondsMax": 18.787499982863665,
+          "callbackGapMillisecondsP95": 18.17725002183579,
+          "completeFrames": 7183,
+          "height": 1440,
+          "idleFrames": 0,
+          "invalidFrames": 0,
+          "otherFrames": 0,
+          "pointPixelScale": 2,
+          "sourceHeightPoints": 720,
+          "sourceWidthPoints": 1280,
+          "width": 2560,
+          "windowServerAgeMillisecondsMax": 0.659125013044104,
+          "windowServerAgeMillisecondsP95": 0.587500020628795
+        }
+      },
+      "viewer": {
+        "sampleCount": 111,
+        "counterSpanSeconds": 109.9999550000066,
+        "pixels": [
+          2560,
+          1440
+        ],
+        "fps": {
+          "sourceFrames": 0.0,
+          "framesEncoded": 0.0,
+          "framesDecoded": 59.93638815579156,
+          "captureDetails.completeFrames": null,
+          "encoderDetails.submittedFrames": null
+        },
+        "means": {
+          "videoMbps": 2.935414563742968,
+          "decodeMilliseconds": 2.1832035166591988,
+          "jitterBufferMilliseconds": 12.988966965423328,
+          "controlRTTMilliseconds": 1.2559984774774775
+        },
+        "p95OfIntervalMeans": {
+          "videoMbps": 4.080917969904428,
+          "decodeMilliseconds": 2.281733333333325,
+          "jitterBufferMilliseconds": 13.827133333333327,
+          "controlRTTMilliseconds": 1.888375
+        },
+        "counterDeltas": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "framesDropped": 0,
+          "pliCount": 0,
+          "retransmittedPacketsSent": null,
+          "retransmittedPacketsReceived": 679,
+          "encoderDetails.submissionErrors": null,
+          "bridge.queueDrops": 0,
+          "bridge.expiredAssemblies": 0
+        },
+        "sdkFPSRange": [
+          59,
+          60
+        ],
+        "maxFrameGapMilliseconds": 55.04962499253452,
+        "captureLast": null
+      }
+    },
+    "video_120": {
+      "runID": "2f315e1139c5",
+      "host": {
+        "sampleCount": 111,
+        "counterSpanSeconds": 109.99993395831552,
+        "pixels": [
+          2560,
+          1440
+        ],
+        "fps": {
+          "sourceFrames": 59.91821779181849,
+          "framesEncoded": 59.909126877269586,
+          "framesDecoded": 0.0,
+          "captureDetails.completeFrames": 59.91821779181849,
+          "encoderDetails.submittedFrames": 59.91821779181849
+        },
+        "means": {
+          "videoMbps": 5.103539446624367,
+          "encodeMilliseconds": 8.5455242304803,
+          "sendDelayMilliseconds": 0.6526802254031602,
+          "controlRTTMilliseconds": 1.472707963963964
+        },
+        "p95OfIntervalMeans": {
+          "videoMbps": 11.219961690650965,
+          "encodeMilliseconds": 8.915254237288194,
+          "sendDelayMilliseconds": 2.907982843137254,
+          "controlRTTMilliseconds": 2.855666
+        },
+        "counterDeltas": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "framesDropped": 0,
+          "pliCount": 0,
+          "retransmittedPacketsSent": 0,
+          "retransmittedPacketsReceived": null,
+          "encoderDetails.submissionErrors": 0,
+          "bridge.queueDrops": 0,
+          "bridge.expiredAssemblies": 0
+        },
+        "sdkFPSRange": [
+          59,
+          61
+        ],
+        "maxFrameGapMilliseconds": 0,
+        "captureLast": {
+          "callbackGapMillisecondsMax": 18.172791664255783,
+          "callbackGapMillisecondsP95": 17.891208321088925,
+          "completeFrames": 7180,
+          "height": 1440,
+          "idleFrames": 0,
+          "invalidFrames": 0,
+          "otherFrames": 0,
+          "pointPixelScale": 2,
+          "sourceHeightPoints": 720,
+          "sourceWidthPoints": 1280,
+          "width": 2560,
+          "windowServerAgeMillisecondsMax": 0.5934166838414967,
+          "windowServerAgeMillisecondsP95": 0.5725416704080999
+        }
+      },
+      "viewer": {
+        "sampleCount": 111,
+        "counterSpanSeconds": 109.99992229166673,
+        "pixels": [
+          2560,
+          1440
+        ],
+        "fps": {
+          "sourceFrames": 0.0,
+          "framesEncoded": 0.0,
+          "framesDecoded": 59.92731506228882,
+          "captureDetails.completeFrames": null,
+          "encoderDetails.submittedFrames": null
+        },
+        "means": {
+          "videoMbps": 5.103441510065954,
+          "decodeMilliseconds": 2.332411009481279,
+          "jitterBufferMilliseconds": 23.554838799983646,
+          "controlRTTMilliseconds": 1.298432063063063
+        },
+        "p95OfIntervalMeans": {
+          "videoMbps": 11.225837841897567,
+          "decodeMilliseconds": 2.8476000000000092,
+          "jitterBufferMilliseconds": 33.95881967213112,
+          "controlRTTMilliseconds": 1.945083
+        },
+        "counterDeltas": {
+          "freezeCount": 0,
+          "packetsLost": 0,
+          "nackCount": 0,
+          "framesDropped": 0,
+          "pliCount": 0,
+          "retransmittedPacketsSent": null,
+          "retransmittedPacketsReceived": 589,
+          "encoderDetails.submissionErrors": null,
+          "bridge.queueDrops": 0,
+          "bridge.expiredAssemblies": 0
+        },
+        "sdkFPSRange": [
+          59,
+          61
+        ],
+        "maxFrameGapMilliseconds": 45.021666679531336,
+        "captureLast": null
+      }
+    }
+  },
+  "browserRAFCounterCheck": {
+    "elapsedSeconds": 35.292,
+    "frames": 2115,
+    "fps": 59.928595715742944
+  },
+  "remoteBuild5": {
+    "status": "real scrolling and video received on build 5; after changing host display from 47.95 to 60 Hz and restarting capture, user confirmed approximately 60 fps and smooth video",
+    "receiverReportAvailable": false,
+    "scroll": {
+      "phase": "scroll",
+      "sessionNumber": 2,
+      "scope": "remote iPhone build 5 via user-reported Ponte; host telemetry only",
+      "warmupRule": "exclude first 600 encoded frames",
+      "samples": 58,
+      "seconds": 57.000045624998165,
+      "encodedFPS": 59.929776591299174,
+      "sourceFPS": 59.94732043690553,
+      "videoMbpsMean": 2.8563960997000613,
+      "controlRTTMeanMs": 16.619586189655173,
+      "sendDelayMeanMs": 0.0251344862663458,
+      "counterDelta": {
+        "nackCount": 0,
+        "pliCount": 0,
+        "retransmittedPacketsSent": 0,
+        "probeExpired": 0
+      },
+      "receiverReportAvailable": false,
+      "userFeedback": "已连接，有画面，滚动流畅"
+    },
+    "video47_95Hz": {
+      "userFeedback": "最高48fps未见卡顿",
+      "verifiedHostDisplayRefreshHz": 47.95,
+      "browserRafCounterFPS": 47.960903269295585,
+      "browserVideoDecoderCounterFPS": 59.99325918436131,
+      "result": "not a stable 60 fps source; real display/capture cadence limits observed"
+    },
+    "video60Hz": {
+      "userFeedback": "约 60 fps，流畅",
+      "hostDisplayRefreshHz": 60,
+      "captureSessionRestarted": true,
+      "receiverReportAvailable": false,
+      "hostObservation": {
+        "scope": "remote iPhone build 5, host-only telemetry; not receiver latency/freeze metrics",
+        "phase": "video-60hz-restarted",
+        "warmupRule": "exclude functional-check interval plus 10 seconds",
+        "samples": 121,
+        "spanSeconds": 120.00029504168197,
+        "hostDisplayRefreshHz": 60,
+        "encodedFPS": 58.87485524553069,
+        "sourceFPS": 58.87485524553069,
+        "captureFPS": 58.87485524553069,
+        "sdkFPSRange": [
+          40,
+          60
+        ],
+        "sdkIntervalsBelow58": 14,
+        "means": {
+          "videoMbps": 5.075387635812117,
+          "encodeMilliseconds": 8.072991305707552,
+          "sendDelayMilliseconds": 0.8901503299559743,
+          "controlRTTMilliseconds": 16.332478289256198
+        },
+        "p95OfIntervalMeans": {
+          "videoMbps": 10.70834519202901,
+          "encodeMilliseconds": 8.266666666666703,
+          "sendDelayMilliseconds": 4.486376254180617,
+          "controlRTTMilliseconds": 19.177416
+        },
+        "counterDeltas": {
+          "nackCount": 0,
+          "pliCount": 0,
+          "retransmittedPacketsSent": 0,
+          "probeExpired": 0
+        },
+        "userFeedback": "约 60 fps，流畅",
+        "receiverReportAvailable": false,
+        "captureCallbackGapMaxMs": 36.26445835107006
+      }
+    }
+  },
+  "macBinarySHA256": "fac216fa22c98376f26639793e48098153beb5871c196251817bd67a3e00a498",
+  "validation": {
+    "macSignedRelease": "passed",
+    "iOSSimulatorCompile": "passed",
+    "realWindowPersistentReconnect": "passed: two valid media sessions, wrong key rejected, unchanged private key, bounded live and session reports",
+    "newIOSUpload": false,
+    "automaticDisplayRefreshChangeRecovery": false
+  }
+}

@@ -7,6 +7,14 @@ enum MediaDatagramTests {
         func host(_ session: String = "test") throws -> MediaDatagramCodec { try MediaDatagramCodec(secret: key, session: session, isHost: true) }
         func viewer() throws -> MediaDatagramCodec { try MediaDatagramCodec(secret: key, session: "test", isHost: false) }
         var sender = try host(), receiver = try viewer()
+        var gapSender = try host(), gapReceiver = try viewer()
+        let ordered = (0..<3).map { _ in gapSender.seal(Data(count: 20))[0] }
+        _ = gapReceiver.open(ordered[2], now: 0)
+        precondition(gapReceiver.sequenceHoles == 2 && gapReceiver.largestSequenceGap == 2)
+        _ = gapReceiver.open(ordered[0], now: 0)
+        _ = gapReceiver.open(ordered[1], now: 0)
+        _ = gapReceiver.open(ordered[1], now: 0)
+        precondition(gapReceiver.sequenceHoles == 0 && gapReceiver.reorderedPackets == 2 && gapReceiver.acceptedPackets == 3)
         for size in [1, 8, 1168, 1169, 1199, 1200, 1201, 1248, 1249, 4096, 16384] {
             let payload = Data((0..<size).map { UInt8($0 % 251) })
             let frames = sender.seal(payload)

@@ -11,6 +11,10 @@ final class LoopbackDatagramPort {
     private var destination: sockaddr_in?
     var onPacket: ((Data) -> Void)?
     private(set) var dropped = 0
+    private(set) var rejectedSources = 0
+    private(set) var sendErrors = 0
+    private(set) var unboundSends = 0
+    private(set) var invalidSizes = 0
 
     init(queue: DispatchQueue) throws {
         self.queue = queue
@@ -42,8 +46,8 @@ final class LoopbackDatagramPort {
         source = reader; reader.resume()
     }
     func setPeer(port: UInt16) { destination = Self.address(port: port) }
-    func send(_ data: Data) {
-        guard fd >= 0, var destination else { dropped += 1; return }
+    @discardableResult func send(_ data: Data) -> Bool {
+        guard fd >= 0, var destination else { dropped += 1; unboundSends += 1; return false }
         let sent = data.withUnsafeBytes { bytes in
             withUnsafePointer(to: &destination) { pointer in
                 pointer.withMemoryRebound(to: sockaddr.self, capacity: 1) {
@@ -51,11 +55,16 @@ final class LoopbackDatagramPort {
                 }
             }
         }
-        if sent != data.count { dropped += 1 }
+        if sent != data.count { dropped += 1; sendErrors += 1 }
+        return sent == data.count
     }
-    func stop() {
-        guard fd >= 0 else { return }
-        if let source { source.cancel(); self.source = nil } else { Darwin.close(fd) }
+    func stop(completion: @escaping () -> Void = {}) {
+        guard fd >= 0 else { completion(); return }
+        let descriptor = fd
+        if let source {
+            source.setCancelHandler { Darwin.close(descriptor); completion() }
+            source.cancel(); self.source = nil
+        } else { Darwin.close(fd); completion() }
         fd = -1; destination = nil; onPacket = nil
     }
     deinit { stop() }
@@ -72,8 +81,9 @@ final class LoopbackDatagramPort {
                 pointer.withMemoryRebound(to: sockaddr.self, capacity: 1) { Darwin.recvfrom(fd, &bytes, bytes.count, 0, $0, &length) }
             }
             if count < 0 { return }
-            guard count > 0, count <= MediaDatagramCodec.maximumInnerBytes, let destination,
-                  sender.sin_addr.s_addr == destination.sin_addr.s_addr, sender.sin_port == destination.sin_port else { dropped += 1; continue }
+            guard count > 0, count <= MediaDatagramCodec.maximumInnerBytes else { dropped += 1; invalidSizes += 1; continue }
+            guard let destination, sender.sin_addr.s_addr == destination.sin_addr.s_addr,
+                  sender.sin_port == destination.sin_port else { dropped += 1; rejectedSources += 1; continue }
             onPacket?(Data(bytes.prefix(count)))
         }
     }

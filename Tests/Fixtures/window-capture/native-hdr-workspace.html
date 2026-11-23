@@ -1,0 +1,22 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8">
+<title>KKRemote HDR Workspace Browser</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:white;color:#15181d;font:16px/1.55 system-ui}header{padding:12px 16px;background:#edf3fa;border-bottom:1px solid #adc0d8}h1{font-size:19px;margin:0}button{font:inherit;font-size:12px;padding:5px 9px;margin:5px 3px 0 0}section{padding:12px 16px}video{width:100%;display:block;background:#000}#stage{position:relative}#levels{position:absolute;left:0;right:0;top:35%;display:grid;grid-template-columns:repeat(8,1fr);font:9px monospace;text-align:center;color:#fff;pointer-events:none}#levels span{background:#0008}p{margin:6px 0}table{border-collapse:collapse;width:100%;font-size:12px}td,th{border:1px solid #a4a8b1;padding:5px;text-align:left}.sample{white-space:nowrap}#clock{font:10px monospace;color:#485666}#grating{height:14px;width:100px;background:repeating-linear-gradient(to right,#000 0 calc(1px/3),#fff calc(1px/3) calc(2px/3))}#scroll{height:270px;overflow:auto;border:1px solid #b2bcc8;padding:8px}.blue{color:#005ec4}.red{color:#c92125}
+</style>
+<header><h1>真实浏览器 · HDR / HiDPI</h1><div id="clock"></div><button id="gray">HDR 灰阶</button><button id="film">HDR 影片</button><button id="motion">滚动</button></header>
+<div id="stage"><video muted loop playsinline preload="auto"></video><div id="levels"></div></div>
+<section><p style="font-size:11px">上方数字为源文件 PQ 亮度；下方为 SDR 文本。</p>
+<p class="sample" style="font-size:9px">9pt Aa 0123456789 中文细节</p><p class="sample" style="font-size:11px">11pt 文本清晰度 Office / Browser</p><p class="sample" style="font-size:14px">14pt 原生重绘，保持字号</p><p class="sample red">红色文字 123.45</p><p class="sample blue">蓝色文字 ABC 中文</p><div id="grating"></div>
+<div id="scroll"></div></section>
+<script>
+const video=document.querySelector('video'),levels=document.querySelector('#levels'),scroll=document.querySelector('#scroll');
+// Browser layout zoom: fonts and vectors are rasterized again at this size.
+document.documentElement.style.zoom='1.5';
+let phase='gray',moving=false,frames=0,start=performance.now();
+levels.innerHTML=[10,25,50,100,203,400,700,1000].map(n=>`<span>${n}</span>`).join('');
+scroll.innerHTML='<table><tr><th>项目</th><th>数值</th><th>状态</th></tr>'+Array.from({length:80},(_,i)=>`<tr><td>测试行 ${i+1}</td><td>${(123.45+i).toFixed(2)}</td><td>清晰 / 正常</td></tr>`).join('')+'</table>';
+function setPhase(p){phase=p;video.src=p==='gray'?'gray.mp4':'hdr.mp4';levels.style.display=p==='gray'?'grid':'none';video.play();}
+document.querySelector('#gray').onclick=()=>setPhase('gray');document.querySelector('#film').onclick=()=>setPhase('film');document.querySelector('#motion').onclick=()=>moving=!moving;
+function tick(t){frames++;if(moving)scroll.scrollTop=(t/20)%(scroll.scrollHeight-scroll.clientHeight);document.querySelector('#clock').textContent=`${new Date().toISOString().slice(11,23)} · ${phase} · DPR ${devicePixelRatio}`;requestAnimationFrame(tick)}requestAnimationFrame(tick);
+window.workspaceTest={setPhase,setScrolling:v=>moving=v,stats:()=>({phase,moving,frames,seconds:(performance.now()-start)/1000,dpr:devicePixelRatio,contentZoom:document.documentElement.style.zoom,innerWidth,innerHeight,outerWidth,outerHeight,hdr:matchMedia('(dynamic-range: high)').matches,videoReady:video.readyState,videoTime:video.currentTime,video:video.getBoundingClientRect().toJSON(),scroll:scroll.getBoundingClientRect().toJSON(),grating:document.querySelector('#grating').getBoundingClientRect().toJSON()})};setPhase('gray');
+</script></html>

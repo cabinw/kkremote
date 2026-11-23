@@ -1,0 +1,52 @@
+name: KKRemoteInteraction
+options:
+  deploymentTarget:
+    iOS: "18.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    GENERATE_INFOPLIST_FILE: YES
+    CODE_SIGNING_ALLOWED: NO
+    TARGETED_DEVICE_FAMILY: "1,2"
+    SUPPORTED_PLATFORMS: iphonesimulator
+targets:
+  KKRemoteInteraction:
+    type: application
+    platform: iOS
+    sources:
+      - Sources
+      - ../TransportLab/Sources/MobileInteraction
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cabinw.kkremote.interaction.simulator
+        INFOPLIST_KEY_CFBundleDisplayName: KKRemote 交互原型
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+  InteractionUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [Tests]
+    dependencies:
+      - target: KKRemoteInteraction
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cabinw.kkremote.interaction.uitests
+        TEST_TARGET_NAME: KKRemoteInteraction
+  InteractionNativeTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [NativeTests]
+    dependencies:
+      - target: KKRemoteInteraction
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cabinw.kkremote.interaction.nativetests
+schemes:
+  KKRemoteInteraction:
+    build:
+      targets:
+        KKRemoteInteraction: all
+    test:
+      targets: [InteractionNativeTests, InteractionUITests]

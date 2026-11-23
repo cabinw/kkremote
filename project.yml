@@ -27,12 +27,20 @@ targets:
   KKRemoteLab:
     type: application
     platform: iOS
+    info:
+      path: Config/TransportLabIOS-Info.plist
+      properties:
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        KKRemoteDefaultHost: $(KKREMOTE_DEFAULT_HOST)
+        KKRemoteDefaultPairingCode: $(KKREMOTE_DEFAULT_PAIRING_CODE)
     sources:
       - Apps/TransportLab/Sources
       - Apps/TransportLab/Resources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.cabinw.kkremote.lab
+        CODE_SIGN_ENTITLEMENTS: Config/TransportLabIOS.entitlements
         TARGETED_DEVICE_FAMILY: "1,2"
         SUPPORTS_MACCATALYST: NO
         # The binary SDK references capture APIs; the lab never activates them.

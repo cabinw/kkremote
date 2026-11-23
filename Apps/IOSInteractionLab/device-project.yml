@@ -1,0 +1,57 @@
+name: KKRemoteDeviceReview
+options:
+  deploymentTarget:
+    iOS: "18.0"
+configFiles:
+  Debug: ../../Config/Shared.xcconfig
+  Release: ../../Config/Shared.xcconfig
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    SWIFT_STRICT_CONCURRENCY: minimal
+    GENERATE_INFOPLIST_FILE: YES
+    CODE_SIGN_STYLE: Automatic
+    TARGETED_DEVICE_FAMILY: "1,2"
+    MARKETING_VERSION: 0.1.0
+    CURRENT_PROJECT_VERSION: 13
+packages:
+  WebRTC:
+    url: https://github.com/stasel/WebRTC.git
+    exactVersion: 157.0.0
+targets:
+  KKRemoteLab:
+    type: application
+    platform: iOS
+    sources:
+      - ../TransportLab/Sources
+      - ../TransportLab/Resources
+    dependencies:
+      - package: WebRTC
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cabinw.kkremote.lab
+        INFOPLIST_FILE: $(SRCROOT)/../../Config/TransportLabIOS-Info.plist
+        CODE_SIGN_ENTITLEMENTS: $(SRCROOT)/../../Config/TransportLabIOS.entitlements
+        INFOPLIST_KEY_CFBundleDisplayName: KKRemote Lab
+        INFOPLIST_KEY_NSLocalNetworkUsageDescription: 连接您选择的 Mac，观看应用窗口。
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+  DeviceViewerTests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [DeviceTests]
+    dependencies:
+      - target: KKRemoteLab
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cabinw.kkremote.viewer-review.tests
+        TEST_TARGET_NAME: KKRemoteLab
+schemes:
+  KKRemoteLab:
+    build:
+      targets:
+        KKRemoteLab: all
+    test:
+      config: Release
+      targets: [DeviceViewerTests]
